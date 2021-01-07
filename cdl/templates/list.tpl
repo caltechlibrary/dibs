@@ -19,8 +19,9 @@
             <tr>
               <th scope="col">Barcode</th>
               <th scope="col">Title</th>
+              <th scope="col">Author</th>
               <th scope="col">TIND Record</th>
-              <th scope="col">Num. copies</th>
+              <th scope="col">Loan copies</th>
             </tr>
           </thead>
           <tbody>
@@ -28,7 +29,8 @@
             <tr scope="row">
               <td>{{item.barcode}}</td>
               <td>{{item.title}}</td>
-              <td>{{item.tind_id}}</td>
+              <td>{{item.author}}</td>
+              <td><a href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.tind_id}}</a></td>
               <td>{{item.num_copies}}</td>
             </tr>
           %end
