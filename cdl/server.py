@@ -1,7 +1,7 @@
 from   decouple import config
 import bottle
-from   bottle import route, run, template
-from   bottle import get, post, request
+from   bottle import route, run, template, request
+from   bottle import get, post, request, redirect, response
 from   peewee import *
 from   os import path
 
@@ -16,9 +16,22 @@ def list_items():
     return template(path.join(config('TEMPLATE_DIR'), 'list'),
                     items = Item.select())
 
+
 @get('/add')
-def list_items():
-    return "add page"
+def add():
+    return template(path.join(config('TEMPLATE_DIR'), 'add'))
+
+
+@post('/add')
+def add_item():
+    barcode = request.POST.inputBarcode.strip()
+    title = request.POST.inputTitle.strip()
+    author = request.POST.inputAuthor.strip()
+    copies = request.POST.inputCopies.strip()
+    tind_id = request.POST.inputTindId.strip()
+
+    new_item = Item.create(barcode = barcode, title = title, author = author,
+                           tind_id = tind_id, num_copies = copies)
 
 
 # Server runner.
