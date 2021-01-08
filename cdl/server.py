@@ -33,6 +33,13 @@ def add_item():
     new_item = Item.create(barcode = barcode, title = title, author = author,
                            tind_id = tind_id, num_copies = copies)
 
+@post('/remove')
+def remove_item():
+    barcode = request.POST.barcode.strip()
+    Item.delete().where(Item.barcode == barcode).execute()
+    redirect('/list')
+
+
 
 # Server runner.
 # .............................................................................

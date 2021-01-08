@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link href="https://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
 
+    </script>
+
   </head>
   
   <body>
@@ -22,7 +24,8 @@
                 <th scope="col">Title</th>
                 <th scope="col">Author</th>
                 <th scope="col">TIND Record</th>
-                <th scope="col">Loan copies</th>
+                <th scope="col" align="center">Loan copies</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -32,7 +35,12 @@
                 <td>{{item.title}}</td>
                 <td>{{item.author}}</td>
                 <td><a href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.tind_id}}</a></td>
-                <td>{{item.num_copies}}</td>
+                <td align="center">{{item.num_copies}}</td>
+                <form action="/remove" method="POST"
+                      onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
+                  <input type="hidden" name="barcode" value="{{item.barcode}}">
+                  <td><input type="submit" name="Remove" value="Remove" class="btn btn-danger btn-sm m-0"/></td>
+                </form>
               </tr>
             %end
             </tbody>
