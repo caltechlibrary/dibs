@@ -16,6 +16,10 @@ def list_items():
     return template(path.join(config('TEMPLATE_DIR'), 'list'),
                     items = Item.select())
 
+@get('/add')
+def list_items():
+    return "add page"
+
 
 # Server runner.
 # .............................................................................
