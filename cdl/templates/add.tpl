@@ -48,8 +48,13 @@
             <label for="inputCopies" class="sr-only">Copies</label>
             <input type="copies" name="inputCopies" id="inputCopies" class="form-control" placeholder="# copies to be made available" required>
             
-            <div class="py-4 mx-auto" style="width: 150px">
-              <button id="btnAdd" class="btn btn-primary btn-block" type="button">Add</button>
+            <div class="py-4">
+              <div class="btn-toolbar mx-auto" style="width: 240px;">
+                <button class="btn btn-default mx-2" style="width: 100px" type="reset"
+                        onclick="window.location='/list';return false;">Cancel</button></a>
+                <button class="btn btn-primary mx-2" style="width: 100px"
+                        id="btnAdd" type="button">Add</button>
+              </div>
             </div>
           </form>
         </div>
