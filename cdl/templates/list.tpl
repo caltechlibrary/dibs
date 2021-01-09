@@ -23,8 +23,9 @@
                 <th scope="col">Barcode</th>
                 <th scope="col">Title</th>
                 <th scope="col">Author</th>
-                <th scope="col">TIND Record</th>
+                <th scope="col" align="center">TIND</th>
                 <th scope="col" align="center">Loan copies</th>
+                <th></th>
                 <th></th>
               </tr>
             </thead>
@@ -32,14 +33,15 @@
             %for item in items:
               <tr scope="row">
                 <td>{{item.barcode}}</td>
-                <td>{{item.title}}</td>
+                <td><a href="">{{item.title}}</a></td>
                 <td>{{item.author}}</td>
                 <td><a href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.tind_id}}</a></td>
                 <td align="center">{{item.num_copies}}</td>
+                <td><a href="" class="btn btn-secondary btn-sm">Share link</a></td>
                 <form action="/remove" method="POST"
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
                   <input type="hidden" name="barcode" value="{{item.barcode}}">
-                  <td><input type="submit" name="Remove" value="Remove" class="btn btn-danger btn-sm m-0"/></td>
+                  <td><input type="submit" name="Remove" value="Remove" class="btn btn-danger btn-sm"/></td>
                 </form>
               </tr>
             %end
