@@ -5,7 +5,8 @@
     <title>List of items currently available in the Caltech Digital Loan system</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <link href="https://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
 
   </head>
   
@@ -38,7 +39,8 @@
                 <td align="center">{{item.duration}}</td>
                 <td align="center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
-                <td><a href="" class="btn btn-secondary btn-sm">Share link</a></td>
+                <td><button type="button" class="btn btn-secondary btn-sm" data-clipboard-action="copy"
+                            data-clipboard-text="http://localhost:8080/loan/{{item.barcode}}">Share link</button></td>
 
                 <form action="/remove" method="POST"
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
@@ -57,5 +59,10 @@
       </div>
     </div>
   </body>
+
+  <!-- This call to ClipboardJS must come after the page is defined. -->
+  <script>
+   new ClipboardJS('.btn');
+  </script>
 
 </html>
