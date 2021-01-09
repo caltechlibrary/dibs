@@ -48,6 +48,10 @@ def remove_item():
     redirect('/list')
 
 
+@route('/loan/<barcode>', method = 'GET')
+def loan_item(barcode):
+    print(f'loaing out {barcode}')
+
 
 # Server runner.
 # .............................................................................
