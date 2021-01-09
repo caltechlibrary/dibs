@@ -7,8 +7,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link href="https://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
 
-    </script>
-
   </head>
   
   <body>
@@ -39,7 +37,9 @@
                 <td align="center">{{item.num_copies}}</td>
                 <td align="center">{{item.duration}}</td>
                 <td align="center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
+
                 <td><a href="" class="btn btn-secondary btn-sm">Share link</a></td>
+
                 <form action="/remove" method="POST"
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
                   <input type="hidden" name="barcode" value="{{item.barcode}}">
