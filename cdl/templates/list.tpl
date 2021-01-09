@@ -48,7 +48,7 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <a href="/add"><button type="button" class="btn btn-primary m-0">Add new item</button></a>
+          <a href="/add" class="btn btn-primary m-0">Add new item</a>
         </div>
       </div>
     </div>
