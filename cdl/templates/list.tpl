@@ -35,7 +35,7 @@
                 <td>{{item.barcode}}</td>
                 <td><a href="">{{item.title}}</a></td>
                 <td>{{item.author}}</td>
-                <td><a href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.tind_id}}</a></td>
+                <td><a target="_blank" rel="noopener noreferrer" href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.tind_id}}</a></td>
                 <td align="center">{{item.num_copies}}</td>
                 <td><a href="" class="btn btn-secondary btn-sm">Share link</a></td>
                 <form action="/remove" method="POST"

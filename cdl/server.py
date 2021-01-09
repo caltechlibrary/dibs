@@ -1,3 +1,4 @@
+from   datetime import datetime
 from   decouple import config
 import bottle
 from   bottle import route, run, template, request
@@ -5,16 +6,22 @@ from   bottle import get, post, request, redirect, response
 from   peewee import *
 from   os import path
 
-from .database import Item
+from .database import Item, Loan
 
 
 # Service endpoints.
 # .............................................................................
 
-@get('/list') # or @route('/view')
+@get('/list')
 def list_items():
     return template(path.join(config('TEMPLATE_DIR'), 'list'),
                     items = Item.select())
+
+
+@get('/status')
+def add():
+    return template(path.join(config('TEMPLATE_DIR'), 'status'),
+                    loans = Loan.select())
 
 
 @get('/add')
