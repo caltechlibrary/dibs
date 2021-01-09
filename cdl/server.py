@@ -15,7 +15,8 @@ from .database import Item, Loan
 @get('/list')
 def list_items():
     return template(path.join(config('TEMPLATE_DIR'), 'list'),
-                    items = Item.select())
+                    items = Item.select(),
+                    loans = Loan.select())
 
 
 @get('/status')

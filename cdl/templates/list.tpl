@@ -23,8 +23,9 @@
                 <th scope="col">Barcode</th>
                 <th scope="col">Title</th>
                 <th scope="col">Author</th>
-                <th scope="col" align="center">TIND</th>
-                <th scope="col" align="center">Loan copies</th>
+                <th scope="col" style="text-align: center">Available<br>copies</th>
+                <th scope="col" style="text-align: center">Loan<br>duration (hrs)</th>
+                <th scope="col" style="text-align: center">Copies<br>in use</th>
                 <th></th>
                 <th></th>
               </tr>
@@ -33,10 +34,11 @@
             %for item in items:
               <tr scope="row">
                 <td>{{item.barcode}}</td>
-                <td><a href="">{{item.title}}</a></td>
+                <td><a target="_blank" rel="noopener noreferrer" href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.title}}</a></td>
                 <td>{{item.author}}</td>
-                <td><a target="_blank" rel="noopener noreferrer" href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.tind_id}}</a></td>
                 <td align="center">{{item.num_copies}}</td>
+                <td align="center">{{item.duration}}</td>
+                <td align="center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
                 <td><a href="" class="btn btn-secondary btn-sm">Share link</a></td>
                 <form action="/remove" method="POST"
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
