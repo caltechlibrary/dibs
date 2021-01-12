@@ -31,12 +31,12 @@ Item.create(barcode    = '350470000611207',
             title      = 'Pack my bag',
             author     = 'Green',
             tind_id    = 466498,
-            num_copies = 2,
+            num_copies = 3,
             duration   = 6
 )
 
 Loan.create(item = Item.select().where(Item.barcode == '350470000611207'),
-            patron = 'mhucka@library.caltech.edu',
+            user = 'mhucka@library.caltech.edu',
             started = datetime.now(),
             endtime = datetime.now() + timedelta(hours = 2)
 )
