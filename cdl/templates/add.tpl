@@ -46,6 +46,8 @@
             <input type="tindId" name="inputTindId" id="inputTindId" class="form-control" placeholder="TIND Id" required>
             <label for="inputCopies" class="sr-only">Copies</label>
             <input type="copies" name="inputCopies" id="inputCopies" class="form-control" placeholder="# copies to be made available" required>
+            <label for="inputDuration" class="sr-only">Loan duration (in hours)</label>
+            <input type="duration" name="inputDuration" id="inputDuration" class="form-control" placeholder="hours per loan" required>
             
             <div class="py-4">
               <div class="btn-toolbar mx-auto" style="width: 240px;">

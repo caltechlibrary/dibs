@@ -40,7 +40,7 @@
                 <td align="center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
                 <td><button type="button" class="btn btn-secondary btn-sm" data-clipboard-action="copy"
-                            data-clipboard-text="http://localhost:8080/loan/{{item.barcode}}">Share link</button></td>
+                            data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">Copy share link</button></td>
 
                 <form action="/remove" method="POST"
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">

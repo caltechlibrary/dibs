@@ -51,6 +51,6 @@ class Item(BaseModel):
 class Loan(BaseModel):
     loanid  = AutoField()
     item    = ForeignKeyField(Item, column_name = 'itemid', backref = 'loanref')
-    patron  = TextField()               # Login, probably someone@caltech.edu
+    user    = TextField()               # Login, probably someone@caltech.edu
     started = DateTimeField()           # When did the patron start the loan?
     endtime = DateTimeField()           # When does the loan end?
