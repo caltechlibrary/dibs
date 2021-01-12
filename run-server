@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    run-server
+# @brief   Simple server control program for DIBS experiment
+# @author  Michael Hucka <mhucka@caltech.edu>
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+# Initial imports. More things are imported later below.
+
+import pkg_resources
+import os
+from   os import path
+import sys
+from   sys import exit
+
+
+# Sanity-check the run-time environment before attempting anything else.
+# .............................................................................
+
+here = path.dirname(sys.argv[0])
+
+if not path.exists(path.join(here, 'requirements.txt')):
+    print('‼️  Expected to be in same directory as requirements.txt')
+    exit(1)
+else:
+    with open('requirements.txt', 'r') as req_file:
+        try:
+            pkg_resources.require(req_file)
+        except pkg_resources.DistributionNotFound as ex:
+            print('‼️  Not all Python dependencies have been installed.')
+            print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
+            exit(1)
+
+if not path.exists(path.join(here, 'settings.ini')):
+    print('‼️  settings.ini file not found in {here}')
+    exit(1)
+
+
+# Import more requirements and define the main entry point.
+# .............................................................................
+
+from   boltons.debugutils import pdb_on_signal
+from   commonpy.data_utils import timestamp
+import plac
+import sidetrack
+import signal
+if __debug__:
+    from sidetrack import set_debug, log, logr
+
+from   dibs.server import Server
+
+
+@plac.annotations(
+    host  = ('host name or address to use for the web server',    'option'),
+    port  = ('port number for the web server',                    'option'),
+    debug = ('write detailed trace to "OUT" ("-" means console)', 'option', '@'),
+)
+
+def main(host = 'H', port = 'P', debug = 'OUT'):
+    '''Server control script for DIBS experimental server.'''
+
+    # Set up debug logging as soon as possible, if requested ------------------
+
+    if debug != 'OUT':
+        if __debug__: set_debug(True, debug)
+        import faulthandler
+        faulthandler.enable()
+        if not sys.platform.startswith('win'):
+            # Even with a different signal, I can't get this to work on Win.
+            pdb_on_signal(signal.SIGUSR1)
+
+    # Do the real work --------------------------------------------------------
+
+    if __debug__: log('='*8 + f' started {timestamp()} ' + '='*8)
+
+    server = Server(host = 'localhost' if host == 'H' else host,
+                    port = 8080        if port == 'P' else port)
+    server.run()
+
+    if __debug__: log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
+
+
+# Main invocation.
+# .............................................................................
+
+if __name__ == '__main__':
+    plac.call(main)
