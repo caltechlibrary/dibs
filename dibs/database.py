@@ -1,5 +1,9 @@
 '''
-schema.py: object definitions for the database
+database.py: object definitions for the database
+
+This uses Peewee (http://docs.peewee-orm.com/en/latest/), a small ORM that
+allows writing database code entirely in terms of Python objects without
+having to know much about SQL.
 '''
 
 from decouple import config

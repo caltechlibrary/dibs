@@ -8,6 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <script>
+     // Implement simple AJAX data posting for the add button and redirect
+     // the browser to the location received as the response.
      $(function() {
        $('#btnAdd').click(function() {
          $.ajax({
@@ -16,7 +18,7 @@
            type: 'POST',
            success: function(response) {
              console.log(response);
-             location.href = "/list";
+             location.href = response;
            },
            error: function(error) {
              console.log(error);

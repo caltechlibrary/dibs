@@ -38,13 +38,17 @@ if not path.exists(path.join(here, 'settings.ini')):
     exit(1)
 
 
-# Import more requirements and define the main entry point.
+# Define the main entry point.
 # .............................................................................
+# Import 3rd-party dependencies here, after the tests above for their existence
+# in the user's environment.  Not importing them at the top of the file is
+# arguably against Pythonic best practices, but IMHO testing for the packages
+# first lets us give a more informative error if anything is missing.
 
 from   boltons.debugutils import pdb_on_signal
 from   commonpy.data_utils import timestamp
+from   commonpy.string_utils import antiformat
 import plac
-import sidetrack
 import signal
 if __debug__:
     from sidetrack import set_debug, log, logr
@@ -53,18 +57,19 @@ from   dibs.server import Server
 
 
 @plac.annotations(
-    host  = ('host name or address to use for the web server',    'option'),
-    port  = ('port number for the web server',                    'option'),
-    debug = ('write detailed trace to "OUT" ("-" means console)', 'option', '@'),
+    address   = ('host name or address to use for the web server',     'option', 'a'),
+    port      = ('port number for the web server',                     'option', 'p'),
+    no_reload = ("turn off Bottle's auto-reloader (default: turn on)", 'flag',   'R'),
+    debug     = ('write detailed trace to "OUT" ("-" means console)',  'option', '@'),
 )
 
-def main(host = 'H', port = 'P', debug = 'OUT'):
+def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
     '''Server control script for DIBS experimental server.'''
 
     # Set up debug logging as soon as possible, if requested ------------------
 
     if debug != 'OUT':
-        if __debug__: set_debug(True, debug)
+        if __debug__: set_debug(True, debug, extra = '%(threadName)s')
         import faulthandler
         faulthandler.enable()
         if not sys.platform.startswith('win'):
@@ -73,17 +78,38 @@ def main(host = 'H', port = 'P', debug = 'OUT'):
 
     # Do the real work --------------------------------------------------------
 
-    if __debug__: log('='*8 + f' started {timestamp()} ' + '='*8)
+    # See http://bottlepy.org/docs/dev/tutorial.html#auto-reloading for an
+    # important note about Bottle: when it's running in auto-reload mode,
+    # "the main process will not start a server, but spawn a new child
+    # process using the same command line arguments used to start the main
+    # process. All module-level code is executed at least twice".  We can test
+    # if we're in the child process by looking for a variable set by Bottle.
 
-    server = Server(host = 'localhost' if host == 'H' else host,
-                    port = 8080        if port == 'P' else port)
-    server.run()
+    if __debug__ and not ('BOTTLE_CHILD' in os.environ):
+        log('='*8 + f' started {timestamp()} ' + '='*8)
 
-    if __debug__: log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
+    try:
+        server = Server(host   = 'localhost' if address == 'A' else address,
+                        port   = 8080        if port == 'P' else port,
+                        debug  = False       if debug == 'OUT' else debug,
+                        reload = not no_reload)
+        server.run()
+    except KeyboardInterrupt as ex:
+        print('⚠️ Interrupted by user -- exiting')
+    except Exception as ex:
+        exception = sys.exc_info()
+        msg = antiformat(exception[1])
+        print(f'‼️  Encountered error {exception[0].__name__}: {msg}')
+        if __debug__:
+            from traceback import format_exception
+            details = ''.join(format_exception(*exception))
+            logr(f'Exception: {msg}\n{details}')
+
+    if __debug__ and not ('BOTTLE_CHILD' in os.environ):
+        log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
 
 
 # Main invocation.
 # .............................................................................
 
-if __name__ == '__main__':
-    plac.call(main)
+plac.call(main)

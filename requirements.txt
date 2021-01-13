@@ -1,8 +1,9 @@
 boltons         >= 20.2.0
+bottle          >= 0.12.0
 bun             >= 0.0.5
 commonpy        >= 1.0.0
-bottle          >= 0.12.0
 peewee          >= 3.14.0
 plac            >= 1.2.0
+python-daemon   >= 2.2.4
 python-decouple >= 3.4
 sidetrack       >= 1.3.0
