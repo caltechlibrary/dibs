@@ -84,9 +84,8 @@ def add_item():
 
     remove_expired_loans()
     if __debug__: log(f'creating new item for barcode {barcode}, title {title}')
-    new_item = Item.create(barcode = barcode, title = title, author = author,
-                           tind_id = tind_id, num_copies = copies,
-                           duration = duration)
+    Item.create(barcode = barcode, title = title, author = author,
+                tind_id = tind_id, num_copies = copies, duration = duration)
     return '/list'
 
 
@@ -97,15 +96,13 @@ def remove_item():
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
     remove_expired_loans()
-    # Guard against trying to delete a nonexistent item.
-    try:
-        item = Item.get(Item.barcode == barcode)
-        # Don't forget to delete any loans involving this item.
-        if list(Loan.select(Loan.item == item)):
-            Loan.delete().where(Loan.item == item).execute()
-        Item.delete().where(Item.barcode == barcode).execute()
-    except DoesNotExist as ex:
-        if __debug__: log(f'there is no item with barcode {barcode}')
+    item = item_for_barcode(barcode)
+    if not item:
+        redirect('/list')
+    # Don't forget to delete any loans involving this item.
+    if list(Loan.select(Loan.item == item)):
+        Loan.delete().where(Loan.item == item).execute()
+    Item.delete().where(Item.barcode == barcode).execute()
     redirect('/list')
 
 
@@ -119,19 +116,18 @@ def show_item_info(barcode):
     if __debug__: log(f'get /item invoked on barcode {barcode} by user {user}')
 
     remove_expired_loans()
-    try:
-        item = Item.get(Item.barcode == barcode)
-        loans = list(Loan.select().where(Loan.item == item))
-        if any(loan.user for loan in loans if user == loan.user):
-            if __debug__: log(f'user already has a copy of {barcode} loaned out')
-            if __debug__: log(f'redirecting user to viewer for {barcode}')
-            return f'Pretend this is the viewer page for {barcode}'
-        available = len(loans) < item.num_copies
-        return template(path.join(_TEMPLATE_DIR, 'item'), item = item,
-                        available = available)
-    except DoesNotExist as ex:
-        if __debug__: log(f'there is no item with barcode {barcode}')
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    item = item_for_barcode(barcode)
+    if not item:
+        return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
+                        barcode = barcode)
+    loans = list(Loan.select().where(Loan.item == item))
+    if any(loan.user for loan in loans if user == loan.user):
+        if __debug__: log(f'user already has a copy of {barcode} loaned out')
+        if __debug__: log(f'redirecting user to viewer for {barcode}')
+        return f'Pretend this is the viewer page for {barcode}'
+    available = len(loans) < item.num_copies
+    return template(path.join(_TEMPLATE_DIR, 'item'),
+                    item = item, available = available)
 
 
 @post('/loan')
@@ -142,30 +138,27 @@ def loan_item():
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
     remove_expired_loans()
-    try:
-        item = Item.get(Item.barcode == barcode)
-        loans = list(Loan.select().where(Loan.item == item))
-        if any(loan.user for loan in loans if user == loan.user):
-            # Shouldn't be able to reach this point b/c the item page shouldn't
-            # make a loan available for this user & item combo. But if
-            # something weird happens (e.g., double posting), we might.
-            if __debug__: log(f'user already has a copy of {barcode} loaned out')
-            if __debug__: log(f'redirecting user to viewer for {barcode}')
-            return f'Pretend this is the viewer page for {barcode}'
-        if len(loans) >= item.num_copies:
-            # This shouldn't be possible, but catch it anyway.
-            if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-            return f'/item/{barcode}'
-
-        # The user is allowed to loan out this item.
-        now = datetime.now()
-        Loan.create(item = item.itemid, user = user, started = now,
-                    endtime = now + timedelta(hours = item.duration))
-        if __debug__: log(f'new loan created for {barcode} for {user}')
-        return f'/view/{barcode}'
-    except DoesNotExist as ex:
-        if __debug__: log(f'there is no item with barcode {barcode}')
+    item = item_for_barcode(barcode)
+    if not item:
         return f'/nonexistent/{barcode}'
+    loans = list(Loan.select().where(Loan.item == item))
+    if any(loan.user for loan in loans if user == loan.user):
+        # Shouldn't be able to reach this point b/c the item page shouldn't
+        # make a loan available for this user & item combo. But if
+        # something weird happens (e.g., double posting), we might.
+        if __debug__: log(f'user already has a copy of {barcode} loaned out')
+        if __debug__: log(f'redirecting user to viewer for {barcode}')
+        return f'Pretend this is the viewer page for {barcode}'
+    if len(loans) >= item.num_copies:
+        # This shouldn't be possible, but catch it anyway.
+        if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
+        return f'/item/{barcode}'
+    # OK, the user is allowed to loan out this item.
+    now = datetime.now()
+    Loan.create(item = item.itemid, user = user, started = now,
+                endtime = now + timedelta(hours = item.duration))
+    if __debug__: log(f'new loan created for {barcode} for {user}')
+    return f'/view/{barcode}'
 
 
 @get('/view/<barcode:int>')
@@ -175,18 +168,16 @@ def send_item_to_viewer(barcode):
     if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
 
     remove_expired_loans()
-    try:
-        item = Item.get(Item.barcode == barcode)
-        loans = list(Loan.select().where(Loan.item == item))
-        if any(loan.user for loan in loans if user == loan.user):
-            if __debug__: log(f'returning loan URL for {barcode} for {user}')
-            return f'Pretend this is the viewer page for {barcode}'
-        else:
-            if __debug__: log(f'user {user} does not have {barcode} loaned out')
-            return template(path.join(_TEMPLATE_DIR, 'notallowed'))
-    except DoesNotExist as ex:
-        if __debug__: log(f'there is no item with barcode {barcode}')
+    item = item_for_barcode(barcode)
+    if not item:
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    loans = list(Loan.select().where(Loan.item == item))
+    if any(loan.user for loan in loans if user == loan.user):
+        if __debug__: log(f'returning loan URL for {barcode} for {user}')
+        return f'Pretend this is the viewer page for {barcode}'
+    else:
+        if __debug__: log(f'user {user} does not have {barcode} loaned out')
+        return template(path.join(_TEMPLATE_DIR, 'notallowed'))
 
 
 @get('/return/<barcode:int>')
@@ -196,24 +187,22 @@ def return_item(barcode):
     if __debug__: log(f'get /return invoked on barcode {barcode} by user {user}')
 
     remove_expired_loans()
-    try:
-        item = Item.get(Item.barcode == barcode)
-        loans = list(Loan.select().where(Loan.item == item))
-        user_loans = [loan for loan in loans if user == loan.user]
-        if len(user_loans) > 1:
-            # Internal error -- users should not have more than one loan of an
-            # item. Right now, we simply log it and move on.
-            if __debug__: log(f'error: more than one loan for {barcode} by {user}')
-        elif user_loans:
-            # Normal case: user has loaned a copy of item. Delete the record.
-            if __debug__: log(f'deleting loan record for {barcode} by {user}')
-            user_loans[0].delete_instance()
-        else:
-            # User does not have this item loaned out. Ignore the request.
-            if __debug__: log(f'user {user} does not have {barcode} loaned out')
-    except DoesNotExist as ex:
-        if __debug__: log(f'there is no item with barcode {barcode}')
+    item = item_for_barcode(barcode)
+    if not item:
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    loans = list(Loan.select().where(Loan.item == item))
+    user_loans = [loan for loan in loans if user == loan.user]
+    if len(user_loans) > 1:
+        # Internal error -- users should not have more than one loan of an
+        # item. Right now, we simply log it and move on.
+        if __debug__: log(f'error: more than one loan for {barcode} by {user}')
+    elif user_loans:
+        # Normal case: user has loaned a copy of item. Delete the record.
+        if __debug__: log(f'deleting loan record for {barcode} by {user}')
+        user_loans[0].delete_instance()
+    else:
+        # User does not have this item loaned out. Ignore the request.
+        if __debug__: log(f'user {user} does not have {barcode} loaned out')
 
 
 # Error pages.
@@ -275,3 +264,11 @@ def remove_expired_loans():
         if datetime.now() >= loan.endtime:
             print(f'deleting expired loan for {loan.user}')
             loan.delete_instance()
+
+
+def item_for_barcode(barcode):
+    try:
+        return Item.get(Item.barcode == barcode)
+    except DoesNotExist as ex:
+        if __debug__: log(f'there is no item with barcode {barcode}')
+        return None
