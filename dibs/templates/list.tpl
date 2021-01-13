@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
-
   </head>
   
   <body>
@@ -39,13 +38,18 @@
                 <td align="center">{{item.duration}}</td>
                 <td align="center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
-                <td><button type="button" class="btn btn-secondary btn-sm" data-clipboard-action="copy"
-                            data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">Copy share link</button></td>
+                <td><button type="button" class="btn btn-secondary btn-sm"
+                            data-clipboard-action="copy"
+                            data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">
+                  Copy share link</button>
+                </td>
 
-                <form action="/remove" method="POST"
+                <td><form action="/remove" method="POST"
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
                   <input type="hidden" name="barcode" value="{{item.barcode}}">
-                  <td><input type="submit" name="Remove" value="Remove" class="btn btn-danger btn-sm"/></td>
+                  <input type="submit" name="Remove" value="Remove"
+                             class="btn btn-danger btn-sm"/>
+                </td>
                 </form>
               </tr>
             %end
@@ -62,7 +66,7 @@
 
   <!-- This call to ClipboardJS must come after the page is defined. -->
   <script>
-   new ClipboardJS('.btn');
+   new ClipboardJS(".btn");
   </script>
 
 </html>

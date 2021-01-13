@@ -10,6 +10,7 @@ from   datetime import datetime, timedelta
 from   decouple import config
 import bottle
 from   bottle import request, response, route, template, get, post, error
+from   bottle import redirect, HTTPResponse
 import logging
 from   peewee import *
 import os
@@ -105,8 +106,7 @@ def remove_item():
         Item.delete().where(Item.barcode == barcode).execute()
     except DoesNotExist as ex:
         if __debug__: log(f'there is no item with barcode {barcode}')
-    return template(path.join(_TEMPLATE_DIR, 'list'),
-                    items = Item.select(), loans = Loan.select())
+    redirect('/list')
 
 
 # User endpoints.
