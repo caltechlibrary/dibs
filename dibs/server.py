@@ -9,7 +9,7 @@ from   contextlib import redirect_stderr
 from   datetime import datetime, timedelta
 from   decouple import config
 import bottle
-from   bottle import redirect, request, response, route, template, get, post
+from   bottle import request, response, route, template, get, post, error
 import logging
 from   peewee import *
 import os
@@ -123,10 +123,9 @@ def show_item_info(barcode):
         item = Item.get(Item.barcode == barcode)
         loans = list(Loan.select().where(Loan.item == item))
         if any(loan.user for loan in loans if user == loan.user):
-            # FIXME tell user they've already loaned one copy
             if __debug__: log(f'user already has a copy of {barcode} loaned out')
-            return template(path.join(_TEMPLATE_DIR, 'item'), item = item,
-                            available = False)
+            if __debug__: log(f'redirecting user to viewer for {barcode}')
+            return f'Pretend this is the viewer page for {barcode}'
         available = len(loans) < item.num_copies
         return template(path.join(_TEMPLATE_DIR, 'item'), item = item,
                         available = available)
@@ -146,26 +145,27 @@ def loan_item():
     try:
         item = Item.get(Item.barcode == barcode)
         loans = list(Loan.select().where(Loan.item == item))
-        if len(loans) >= item.num_copies:
-            # The item page shouldn't make loans available to this user, but we
-            # might reach this point some other way. FIXME tell user can't loan.
-            if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-            return f'/item/{barcode}'
         if any(loan.user for loan in loans if user == loan.user):
-            # FIXME tell user they've already loaned one copy.
+            # Shouldn't be able to reach this point b/c the item page shouldn't
+            # make a loan available for this user & item combo. But if
+            # something weird happens (e.g., double posting), we might.
             if __debug__: log(f'user already has a copy of {barcode} loaned out')
+            if __debug__: log(f'redirecting user to viewer for {barcode}')
+            return f'Pretend this is the viewer page for {barcode}'
+        if len(loans) >= item.num_copies:
+            # This shouldn't be possible, but catch it anyway.
+            if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
             return f'/item/{barcode}'
 
         # The user is allowed to loan out this item.
-        Loan.create(item = item.itemid,
-                    user = user,
-                    started = datetime.now(),
-                    endtime = datetime.now() + timedelta(hours = item.duration))
+        now = datetime.now()
+        Loan.create(item = item.itemid, user = user, started = now,
+                    endtime = now + timedelta(hours = item.duration))
         if __debug__: log(f'new loan created for {barcode} for {user}')
         return f'/view/{barcode}'
     except DoesNotExist as ex:
         if __debug__: log(f'there is no item with barcode {barcode}')
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+        return f'/nonexistent/{barcode}'
 
 
 @get('/view/<barcode:int>')
@@ -183,8 +183,7 @@ def send_item_to_viewer(barcode):
             return f'Pretend this is the viewer page for {barcode}'
         else:
             if __debug__: log(f'user {user} does not have {barcode} loaned out')
-            return template(path.join(_TEMPLATE_DIR, 'notallowed'),
-                            item = Item.get(Item.barcode == barcode))
+            return template(path.join(_TEMPLATE_DIR, 'notallowed'))
     except DoesNotExist as ex:
         if __debug__: log(f'there is no item with barcode {barcode}')
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
@@ -215,6 +214,30 @@ def return_item(barcode):
     except DoesNotExist as ex:
         if __debug__: log(f'there is no item with barcode {barcode}')
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+
+
+# Error pages.
+# .............................................................................
+
+@get('/nonexistent')
+@get('/nonexistent/<barcode:int>')
+def nonexistent_item(barcode = None):
+    '''Serve as an endpoint for telling users about nonexistent items.'''
+    if __debug__: log(f'nonexistent_item called with {barcode}')
+    return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+
+
+@error(404)
+def error404(error):
+    if __debug__: log(f'error404 called with {error}')
+    return template(path.join(_TEMPLATE_DIR, 'error'),
+                    code = error.status_code, message = error.body)
+
+
+@error(405)
+def error405(error):
+    if __debug__: log(f'error405 called with {error}')
+    return template(path.join(_TEMPLATE_DIR, 'notallowed'))
 
 
 # Server runner.
