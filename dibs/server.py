@@ -82,7 +82,6 @@ def add_item():
     tind_id  = request.POST.inputTindId.strip()
     duration = request.POST.inputDuration.strip()
 
-    remove_expired_loans()
     if __debug__: log(f'creating new item for barcode {barcode}, title {title}')
     Item.create(barcode = barcode, title = title, author = author,
                 tind_id = tind_id, num_copies = copies, duration = duration)
@@ -118,8 +117,7 @@ def show_item_info(barcode):
     remove_expired_loans()
     item = item_for_barcode(barcode)
     if not item:
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
-                        barcode = barcode)
+        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
     loans = list(Loan.select().where(Loan.item == item))
     if any(loan.user for loan in loans if user == loan.user):
         if __debug__: log(f'user already has a copy of {barcode} loaned out')
