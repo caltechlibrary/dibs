@@ -52,19 +52,20 @@
   
   <body>
     <div class="container-fluid">
-      <h2 class="mx-auto" style="width: 100%; text-align: center">
+      <h2 class="mx-auto text-center" style="width: 100%">
         {{item.title}}
       </h2>
-      <h3 class="mx-auto" style="width: 400px; text-align: center">
+      <h3 class="mx-auto text-center" style="width: 400px">
         <em>by {{item.author}}</em>
       </h3>
       <hr>
 
       <div class="py-4">
-        <p class="mx-auto" style="width: 400px; text-align: center">
-          This title is currently <span id="not-available">not</span> available for digital loan.
+        <p class="mx-auto text-center" style="width: 400px">
+          This title is currently <span id="not-available">not</span>
+          available for digital loan.
         </p>
-        <p class="mx-auto" style="width: 400px; text-align: center">
+        <p class="mx-auto text-center" style="width: 400px">
           Loan duration: {{item.duration}} hours
         </p>
 

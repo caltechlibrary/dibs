@@ -12,20 +12,24 @@
   
   <body>
     <div class="container-fluid">
-      <h1 class="mx-auto" style="width: 600px; text-align: center">Caltech DIBS</h1>
-      <h2 class="mx-auto" style="width: 600px; text-align: center">There are {{len(items)}} items available</h2>
+      <h1 class="mx-auto text-center" style="width: 600px">
+        Caltech DIBS
+      </h1>
+      <h2 class="mx-auto text-center" style="width: 600px">
+        There are {{len(items)}} items available
+      </h2>
       <div class="d-grid gap-3">
 
         <div class="mb-3">
           <table class="table">
             <thead class="thead-light">
               <tr>
-                <th scope="col">Barcode</th>
-                <th scope="col">Title</th>
-                <th scope="col">Author</th>
-                <th scope="col" style="text-align: center">Available<br>copies</th>
-                <th scope="col" style="text-align: center">Loan<br>duration (hrs)</th>
-                <th scope="col" style="text-align: center">Copies<br>in use</th>
+                <th>Barcode</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th class="text-center">Available<br>copies</th>
+                <th class="text-center">Loan<br>duration (hrs)</th>
+                <th class="text-center">Copies<br>in use</th>
                 <th></th>
                 <th></th>
               </tr>
@@ -37,9 +41,9 @@
                 <td><a target="_blank" rel="noopener noreferrer"
                        href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.title}}</a></td>
                 <td>{{item.author}}</td>
-                <td align="center">{{item.num_copies}}</td>
-                <td align="center">{{item.duration}}</td>
-                <td align="center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
+                <td class="text-center">{{item.num_copies}}</td>
+                <td class="text-center">{{item.duration}}</td>
+                <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
                             onclick="confirmCopy(this);" data-clipboard-action="copy"
@@ -51,7 +55,7 @@
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
                   <input type="hidden" name="barcode" value="{{item.barcode}}">
                   <input type="submit" name="Remove" value="Remove"
-                             class="btn btn-danger btn-sm"/>
+                         class="btn btn-danger btn-sm"/>
                 </td>
                 </form>
               </tr>
@@ -67,9 +71,11 @@
     </div>
   </body>
 
-  <!-- This call to ClipboardJS must come after the page is defined. -->
   <script>
+   // This call to ClipboardJS must come after the page is defined.
    new ClipboardJS(".btn");
+
+   // JavaScript to temporarily flash "Copied" when button is clicked.
    function confirmCopy(elem) {
      $(elem).text("Copied");
      setTimeout(() => $(elem).text("Copy share link"), 1000);
