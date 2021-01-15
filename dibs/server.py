@@ -146,7 +146,7 @@ def loan_item():
         # something weird happens (e.g., double posting), we might.
         if __debug__: log(f'user already has a copy of {barcode} loaned out')
         if __debug__: log(f'redirecting user to viewer for {barcode}')
-        return f'Pretend this is the viewer page for {barcode}'
+        return f'/view/{barcode}'
     if len(loans) >= item.num_copies:
         # This shouldn't be possible, but catch it anyway.
         if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
