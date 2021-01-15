@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
+
   </head>
   
   <body>
@@ -33,16 +34,17 @@
             %for item in items:
               <tr scope="row">
                 <td>{{item.barcode}}</td>
-                <td><a target="_blank" rel="noopener noreferrer" href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.title}}</a></td>
+                <td><a target="_blank" rel="noopener noreferrer"
+                       href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.title}}</a></td>
                 <td>{{item.author}}</td>
                 <td align="center">{{item.num_copies}}</td>
                 <td align="center">{{item.duration}}</td>
                 <td align="center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
-                <td><button type="button" class="btn btn-secondary btn-sm"
-                            data-clipboard-action="copy"
+                <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
+                            onclick="confirmCopy(this);" data-clipboard-action="copy"
                             data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">
-                  Copy share link</button>
+                  <span id="button-text">Copy share link</span></button>
                 </td>
 
                 <td><form action="/remove" method="POST"
@@ -68,6 +70,10 @@
   <!-- This call to ClipboardJS must come after the page is defined. -->
   <script>
    new ClipboardJS(".btn");
+   function confirmCopy(elem) {
+     $(elem).text("Copied");
+     setTimeout(() => $(elem).text("Copy share link"), 1000);
+   }
   </script>
 
 </html>
