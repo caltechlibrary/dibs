@@ -11,7 +11,8 @@
   
   <body>
     <div class="container-fluid">
-      <h2 class="mx-auto" style="width: 400px; text-align: center">List of available items</h2>
+      <h1 class="mx-auto" style="width: 600px; text-align: center">Caltech DIBS</h1>
+      <h2 class="mx-auto" style="width: 600px; text-align: center">There are {{len(items)}} items available</h2>
       <div class="d-grid gap-3">
 
         <div class="mb-3">
