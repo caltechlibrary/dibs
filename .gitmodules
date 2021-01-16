@@ -1,0 +1,3 @@
+[submodule "viewer"]
+	path = viewer
+	url = https://github.com/UniversalViewer/uv-hello-world
