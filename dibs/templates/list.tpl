@@ -27,7 +27,7 @@
                 <th>Barcode</th>
                 <th>Title</th>
                 <th>Author</th>
-                <th class="text-center">Available<br>copies</th>
+                <th class="text-center">Loan<br>copies<br>available</th>
                 <th class="text-center">Loan<br>duration (hrs)</th>
                 <th class="text-center">Copies<br>in use</th>
                 <th></th>
@@ -48,7 +48,7 @@
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
                             onclick="confirmCopy(this);" data-clipboard-action="copy"
                             data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">
-                  <span id="button-text">Copy share link</span></button>
+                  Copy share link</button>
                 </td>
 
                 <td><form action="/remove" method="POST"
@@ -78,7 +78,7 @@
    // JavaScript to temporarily flash "Copied" when button is clicked.
    function confirmCopy(elem) {
      $(elem).text("Copied");
-     setTimeout(() => $(elem).text("Copy share link"), 1000);
+     setTimeout(() => $(elem).text("Copy share link"), 800);
    }
   </script>
 
