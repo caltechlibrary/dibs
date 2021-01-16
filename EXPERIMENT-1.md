@@ -50,6 +50,8 @@ To run with debug tracing, use the `-@` option with an argument telling it where
 
 It's useful to have 2 shell windows open in that case: one where you start the server, and with `tail -f /tmp/debug.log` to see the trace.
 
+To run the demo server, there needs to be one or more a manifest files put into the subdirectory `manifests`.
+
 
 General information
 -------------------
