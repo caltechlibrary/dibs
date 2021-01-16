@@ -10,7 +10,7 @@ from   datetime import datetime, timedelta
 from   decouple import config
 import bottle
 from   bottle import request, response, route, template, get, post, error
-from   bottle import redirect, HTTPResponse
+from   bottle import redirect, HTTPResponse, static_file
 import logging
 from   peewee import *
 import os
@@ -122,7 +122,7 @@ def show_item_info(barcode):
     if any(loan.user for loan in loans if user == loan.user):
         if __debug__: log(f'user already has a copy of {barcode} loaned out')
         if __debug__: log(f'redirecting user to viewer for {barcode}')
-        return f'Pretend this is the viewer page for {barcode}'
+        redirect(f'/view/{barcode}')
     available = len(loans) < item.num_copies
     return template(path.join(_TEMPLATE_DIR, 'item'),
                     item = item, available = available)
@@ -145,7 +145,7 @@ def loan_item():
         # make a loan available for this user & item combo. But if
         # something weird happens (e.g., double posting), we might.
         if __debug__: log(f'user already has a copy of {barcode} loaned out')
-        if __debug__: log(f'redirecting user to viewer for {barcode}')
+        if __debug__: log(f'redirecting user to /view for {barcode}')
         return f'/view/{barcode}'
     if len(loans) >= item.num_copies:
         # This shouldn't be possible, but catch it anyway.
@@ -157,25 +157,6 @@ def loan_item():
                 endtime = now + timedelta(hours = item.duration))
     if __debug__: log(f'new loan created for {barcode} for {user}')
     return f'/view/{barcode}'
-
-
-@get('/view/<barcode:int>')
-def send_item_to_viewer(barcode):
-    '''Redirect to the viewer.'''
-    user = 'someone@caltech.edu'
-    if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
-
-    remove_expired_loans()
-    item = item_for_barcode(barcode)
-    if not item:
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
-    loans = list(Loan.select().where(Loan.item == item))
-    if any(loan.user for loan in loans if user == loan.user):
-        if __debug__: log(f'returning loan URL for {barcode} for {user}')
-        return f'Pretend this is the viewer page for {barcode}'
-    else:
-        if __debug__: log(f'user {user} does not have {barcode} loaned out')
-        return template(path.join(_TEMPLATE_DIR, 'notallowed'))
 
 
 @get('/return/<barcode:int>')
@@ -201,6 +182,64 @@ def return_item(barcode):
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'user {user} does not have {barcode} loaned out')
+
+
+@get('/view/<barcode:int>')
+def send_item_to_viewer(barcode):
+    '''Redirect to the viewer.'''
+    user = 'someone@caltech.edu'
+    if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
+
+    remove_expired_loans()
+    item = item_for_barcode(barcode)
+    if not item:
+        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    loans = list(Loan.select().where(Loan.item == item))
+    if any(loan.user for loan in loans if user == loan.user):
+        if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
+        return template(path.join(_TEMPLATE_DIR, 'uv'), barcode = barcode)
+    else:
+        if __debug__: log(f'user {user} does not have {barcode} loaned out')
+        return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+
+
+@get('/manifests/<barcode:int>')
+def return_manifest(barcode):
+    '''Return the manifest file for a given item.'''
+    user = 'someone@caltech.edu'
+    if __debug__: log(f'get /manifests/{barcode} invoked by user {user}')
+
+    remove_expired_loans()
+    item = item_for_barcode(barcode)
+    if not item:
+        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    loans = list(Loan.select().where(Loan.item == item))
+    if any(loan.user for loan in loans if user == loan.user):
+        if __debug__: log(f'returning manifest file for {barcode} for {user}')
+        return static_file(f'{barcode}-manifest.json', root = 'manifests')
+    else:
+        if __debug__: log(f'user {user} does not have {barcode} loaned out')
+        return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+
+
+# Universal viewer interface.
+# .............................................................................
+# The uv subdirectory contains generic html and css.  We serve them as static
+# files to anyone; they don't need to be controlled.  The multiple routes
+# are because the UV files themselves reference different paths.
+
+@route('/view/uv/<filepath:path>')
+@route('/viewer/uv/<filepath:path>')
+def serve_uv_files(filepath):
+    if __debug__: log(f'serving static uv file /viewer/uv/{filepath}')
+    return static_file(filepath, root = 'viewer/uv')
+
+
+# The uv subdirectory contains generic html and css. Serve as static files.
+@route('/viewer/<filepath:path>')
+def serve_uv_files(filepath):
+    if __debug__: log(f'serving static uv file /viewer/{filepath}')
+    return static_file(filepath, root = 'viewer')
 
 
 # Error pages.
