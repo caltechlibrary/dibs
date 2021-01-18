@@ -28,6 +28,23 @@ from .database import Item, Loan
 _TEMPLATE_DIR = config('TEMPLATE_DIR')
 
 
+# Decorators used throughout this file.
+# .............................................................................
+
+# Checking the loans at every function call is not efficient.  This approach
+# needs to be replaced with some more efficient.
+
+def expired_loans_removed(func):
+    '''Clean up expired loans before the function is called.'''
+    def wrapper(*args, **kwargs):
+        for loan in list(Loan.select()):
+            if datetime.now() >= loan.endtime:
+                if __debug__: log(f'deleting expired loan for {loan.user}')
+                loan.delete_instance()
+        return func(*args, **kwargs)
+    return wrapper
+
+
 # Administrative interface endpoints.
 # .............................................................................
 # These endpoints need to be protected against access by non-Library staff.
@@ -47,19 +64,18 @@ _TEMPLATE_DIR = config('TEMPLATE_DIR')
 # Thus, when selecting items, the following returns a ModelSelector, and not
 # a single result or a list of results:
 #
-#   Item.select().where(Item.barcode == barcode)
+#   Loan.select().where(Loan.item == item)
 #
 # and you can't do next(...) on this because it's an iterator and not a
-# generator.  You have to either use a for loop, or create a list from the
-# above before you can do much with it.  Creating lists in these cases would
-# be inefficient, but we have so few items to deal with that it's not a
-# concern currently.
+# generator.  You have to either use a for loop, or create a list before you
+# can do much with the result.  Constantly creating lists is not efficient,
+# but we have so few items to deal with that it's not a concern currently.
 
 @get('/list')
+@expired_loans_removed
 def list_items():
     '''Display the list of available items.'''
     if __debug__: log('get /list invoked')
-    remove_expired_loans()
     return template(path.join(_TEMPLATE_DIR, 'list'),
                     items = Item.select(), loans = Loan.select())
 
@@ -89,12 +105,12 @@ def add_item():
 
 
 @post('/remove')
+@expired_loans_removed
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
-    remove_expired_loans()
     item = item_for_barcode(barcode)
     if not item:
         redirect('/list')
@@ -109,12 +125,12 @@ def remove_item():
 # .............................................................................
 
 @get('/item/<barcode:int>')
+@expired_loans_removed
 def show_item_info(barcode):
     '''Display information about the given item.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /item invoked on barcode {barcode} by user {user}')
 
-    remove_expired_loans()
     item = item_for_barcode(barcode)
     if not item:
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
@@ -129,13 +145,13 @@ def show_item_info(barcode):
 
 
 @post('/loan')
+@expired_loans_removed
 def loan_item():
     '''Handle http post request to loan out an item, from the item info page.'''
     user = 'someone@caltech.edu'
     barcode = request.POST.inputBarcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
-    remove_expired_loans()
     item = item_for_barcode(barcode)
     if not item:
         return f'/nonexistent/{barcode}'
@@ -160,12 +176,12 @@ def loan_item():
 
 
 @get('/return/<barcode:int>')
+@expired_loans_removed
 def return_item(barcode):
     '''Handle http get request to return the given item early.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /return invoked on barcode {barcode} by user {user}')
 
-    remove_expired_loans()
     item = item_for_barcode(barcode)
     if not item:
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
@@ -182,15 +198,16 @@ def return_item(barcode):
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'user {user} does not have {barcode} loaned out')
+    redirect(f'/item/{barcode}')
 
 
 @get('/view/<barcode:int>')
+@expired_loans_removed
 def send_item_to_viewer(barcode):
     '''Redirect to the viewer.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
 
-    remove_expired_loans()
     item = item_for_barcode(barcode)
     if not item:
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
@@ -204,12 +221,12 @@ def send_item_to_viewer(barcode):
 
 
 @get('/manifests/<barcode:int>')
+@expired_loans_removed
 def return_manifest(barcode):
     '''Return the manifest file for a given item.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /manifests/{barcode} invoked by user {user}')
 
-    remove_expired_loans()
     item = item_for_barcode(barcode)
     if not item:
         return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
@@ -295,13 +312,6 @@ class Server():
 
 # Utilitye functions.
 # .............................................................................
-
-def remove_expired_loans():
-    for loan in list(Loan.select()):
-        if datetime.now() >= loan.endtime:
-            print(f'deleting expired loan for {loan.user}')
-            loan.delete_instance()
-
 
 def item_for_barcode(barcode):
     try:
