@@ -44,6 +44,23 @@ def expired_loans_removed(func):
         return func(*args, **kwargs)
     return wrapper
 
+
+def barcode_verified(func):
+    def wrapper(*args, **kwargs):
+        if 'barcode' in kwargs:
+            barcode = kwargs['barcode']
+            try:
+                Item.get(Item.barcode == barcode)
+            except DoesNotExist as ex:
+                if __debug__: log(f'there is no item with barcode {barcode}')
+                if request.method == 'POST':
+                    return f'/nonexistent/{barcode}'
+                else:
+                    return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
+                                    barcode = barcode)
+        return func(*args, **kwargs)
+    return wrapper
+
 
 # Administrative interface endpoints.
 # .............................................................................
@@ -106,14 +123,13 @@ def add_item():
 
 @post('/remove')
 @expired_loans_removed
+@barcode_verified
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
-    item = item_for_barcode(barcode)
-    if not item:
-        redirect('/list')
+    item = Item.get(Item.barcode == barcode)
     # Don't forget to delete any loans involving this item.
     if list(Loan.select(Loan.item == item)):
         Loan.delete().where(Loan.item == item).execute()
@@ -126,14 +142,13 @@ def remove_item():
 
 @get('/item/<barcode:int>')
 @expired_loans_removed
+@barcode_verified
 def show_item_info(barcode):
     '''Display information about the given item.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /item invoked on barcode {barcode} by user {user}')
 
-    item = item_for_barcode(barcode)
-    if not item:
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    item = Item.get(Item.barcode == barcode)
     loans = list(Loan.select().where(Loan.item == item))
     if any(loan.user for loan in loans if user == loan.user):
         if __debug__: log(f'user already has a copy of {barcode} loaned out')
@@ -146,15 +161,14 @@ def show_item_info(barcode):
 
 @post('/loan')
 @expired_loans_removed
+@barcode_verified
 def loan_item():
     '''Handle http post request to loan out an item, from the item info page.'''
     user = 'someone@caltech.edu'
     barcode = request.POST.inputBarcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
-    item = item_for_barcode(barcode)
-    if not item:
-        return f'/nonexistent/{barcode}'
+    item = Item.get(Item.barcode == barcode)
     loans = list(Loan.select().where(Loan.item == item))
     if any(loan.user for loan in loans if user == loan.user):
         # Shouldn't be able to reach this point b/c the item page shouldn't
@@ -177,15 +191,13 @@ def loan_item():
 
 @get('/return/<barcode:int>')
 @expired_loans_removed
+@barcode_verified
 def return_item(barcode):
     '''Handle http get request to return the given item early.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /return invoked on barcode {barcode} by user {user}')
 
-    item = item_for_barcode(barcode)
-    if not item:
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
-    loans = list(Loan.select().where(Loan.item == item))
+    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     user_loans = [loan for loan in loans if user == loan.user]
     if len(user_loans) > 1:
         # Internal error -- users should not have more than one loan of an
@@ -203,15 +215,13 @@ def return_item(barcode):
 
 @get('/view/<barcode:int>')
 @expired_loans_removed
+@barcode_verified
 def send_item_to_viewer(barcode):
     '''Redirect to the viewer.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
 
-    item = item_for_barcode(barcode)
-    if not item:
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
-    loans = list(Loan.select().where(Loan.item == item))
+    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     if any(loan.user for loan in loans if user == loan.user):
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
         return template(path.join(_TEMPLATE_DIR, 'uv'), barcode = barcode)
@@ -222,15 +232,13 @@ def send_item_to_viewer(barcode):
 
 @get('/manifests/<barcode:int>')
 @expired_loans_removed
+@barcode_verified
 def return_manifest(barcode):
     '''Return the manifest file for a given item.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /manifests/{barcode} invoked by user {user}')
 
-    item = item_for_barcode(barcode)
-    if not item:
-        return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
-    loans = list(Loan.select().where(Loan.item == item))
+    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     if any(loan.user for loan in loans if user == loan.user):
         if __debug__: log(f'returning manifest file for {barcode} for {user}')
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
@@ -308,14 +316,3 @@ class Server():
                 bottle.run(host = self.host, port = self.port, reloader = self.reload)
         else:
             bottle.run(host = self.host, port = self.port, reloader = self.reload)
-
-
-# Utilitye functions.
-# .............................................................................
-
-def item_for_barcode(barcode):
-    try:
-        return Item.get(Item.barcode == barcode)
-    except DoesNotExist as ex:
-        if __debug__: log(f'there is no item with barcode {barcode}')
-        return None
