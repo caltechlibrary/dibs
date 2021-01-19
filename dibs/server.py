@@ -146,6 +146,11 @@ def toggle_ready():
     item.ready = not ready
     item.save()
     if __debug__: log(f'readiness of {barcode} is now {item.ready}')
+    # If the readiness state is changed after the item is let out for loans,
+    # then there may be outstanding loans right now. Delete them.
+    if list(Loan.select(Loan.item == item)):
+        if __debug__: log(f'loans for {barcode} have been deleted')
+        Loan.delete().where(Loan.item == item).execute()
     redirect('/list')
 
 
@@ -158,6 +163,7 @@ def remove_item():
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
     item = Item.get(Item.barcode == barcode)
+    item.ready = False
     # Don't forget to delete any loans involving this item.
     if list(Loan.select(Loan.item == item)):
         Loan.delete().where(Loan.item == item).execute()
