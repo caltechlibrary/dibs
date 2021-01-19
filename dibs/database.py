@@ -9,7 +9,7 @@ having to know much about SQL.
 from decouple import config
 from peewee import SqliteDatabase, Model
 from peewee import CharField, TextField, IntegerField, SmallIntegerField
-from peewee import ForeignKeyField, AutoField, DateTimeField
+from peewee import ForeignKeyField, AutoField, DateTimeField, BooleanField
 
 
 # Database object schemas
@@ -41,6 +41,7 @@ class Item(BaseModel):
     tind_id    = IntegerField()
     num_copies = SmallIntegerField()
     duration   = SmallIntegerField()    # Assumed to be hours.
+    available  = BooleanField(default = False)
 
 
 # Loans are currently stored in terms of a combination of item + user identity.
