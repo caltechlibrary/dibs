@@ -42,8 +42,7 @@
       #btnLoan:disabled {
         cursor: not-allowed;
       }
-      #not-available {
-        display: none;
+      p .shown-if-not-available {
         font-weight: bold;
       }
     </style>
@@ -52,42 +51,46 @@
   
   <body>
     <div class="container-fluid">
-      <h2 class="mx-auto text-center" style="width: 100%">
+      <h2 class="mx-auto my-2 w-100 text-center">
         {{item.title}}
       </h2>
-      <h3 class="mx-auto text-center" style="width: 400px">
-        <em>by {{item.author}}</em>
+      <h3 class="mx-auto w-100 text-center">
+        <em>Author: {{item.author}}</em>
       </h3>
       <hr>
 
       <div class="py-4">
         <p class="mx-auto text-center" style="width: 400px">
-          This title is currently <span id="not-available">not</span>
+          This title is currently <span class="shown-if-not-available">not</span>
           available for digital loan.
-        </p>
-        <p class="mx-auto text-center" style="width: 400px">
-          Loan duration: {{item.duration}} hours
         </p>
 
         <form class="form-loan">
           <input type="hidden" name="inputBarcode" value="{{item.barcode}}"/>
-          <div class="btn-toolbar mx-auto" style="width: 100px;">
-            <button class="btn btn-primary mx-2" style="width: 100px"
-                    id="btnLoan" type="button">
-              Get loan
+          <div class="btn-toolbar mx-auto" style="width: 150px;">
+            <button class="btn btn-primary mx-auto" id="btnLoan" type="button">
+              <span class="shown-if-available">Get loan</span>
+              <span class="shown-if-not-available">Not available</span>
             </button>
           </div>
         </form>
 
+        <p class="mx-auto text-center py-3" style="width: 400px">
+          Loan duration: {{item.duration}} hours
+        </p>
       </div>
 
       <script>
-       // Set the visibility of the loan button depending on availability.
-       // This needs to be done after the loan button is defined above.
-       const loanButton = document.getElementById('btnLoan');
+       // Toggle the visibility of the loan button depending on availability.
+       // This needs to be done after the loan button is defined above,
+       // which is why the code is down here.
        if ("{{available}}" != "True") {
-         loanButton.disabled = "disabled";
-         $("#not-available").css("display", "inline");
+         document.getElementById('btnLoan').disabled = "disabled";
+         $(".shown-if-available").css("display", "none");
+         $(".shown-if-not-available").css("display", "inline");
+       } else {
+         $(".shown-if-available").css("display", "inline");
+         $(".shown-if-not-available").css("display", "none");
        }
       </script>
 
