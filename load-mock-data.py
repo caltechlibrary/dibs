@@ -50,5 +50,5 @@ Item.create(barcode    = '350470000611207',
 Loan.create(item = Item.select().where(Item.barcode == '350470000611207'),
             user = 'mhucka@library.caltech.edu',
             started = datetime.now(),
-            endtime = datetime.now() + timedelta(hours = 2)
+            endtime = datetime.now() + timedelta(hours = 1)
 )
