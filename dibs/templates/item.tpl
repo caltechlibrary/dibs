@@ -68,7 +68,7 @@
         <form class="form-loan">
           <input type="hidden" name="inputBarcode" value="{{item.barcode}}"/>
           <div class="btn-toolbar mx-auto" style="width: 150px;">
-            <button class="btn btn-primary mx-auto" id="btnLoan" type="button">
+            <button class="btn mx-auto" id="btnLoan" type="button">
               <span class="shown-if-available">Get loan</span>
               <span class="shown-if-not-available">Not available</span>
             </button>
@@ -85,10 +85,13 @@
        // This needs to be done after the loan button is defined above,
        // which is why the code is down here.
        if ("{{available}}" != "True") {
-         document.getElementById('btnLoan').disabled = "disabled";
+         $('#btnLoan').prop('disabled', true);
+         $('#btnLoan').addClass('btn-secondary');
          $(".shown-if-available").css("display", "none");
          $(".shown-if-not-available").css("display", "inline");
        } else {
+         $('#btnLoan').prop('disabled', false);
+         $('#btnLoan').addClass('btn-primary');
          $(".shown-if-available").css("display", "inline");
          $(".shown-if-not-available").css("display", "none");
        }
