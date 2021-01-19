@@ -15,6 +15,7 @@ import logging
 from   peewee import *
 import os
 from   os import path
+import threading
 
 if __debug__:
     from sidetrack import log
@@ -26,6 +27,8 @@ from .database import Item, Loan
 # .............................................................................
 
 _TEMPLATE_DIR = config('TEMPLATE_DIR')
+
+_THREAD_LOCK = threading.Lock()
 
 
 # Decorators used throughout this file.
@@ -46,6 +49,7 @@ def expired_loans_removed(func):
 
 
 def barcode_verified(func):
+    '''Check if the given barcode (passed as keyword argument) exists.'''
     def wrapper(*args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
@@ -168,24 +172,32 @@ def loan_item():
     barcode = request.POST.inputBarcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
-    item = Item.get(Item.barcode == barcode)
-    loans = list(Loan.select().where(Loan.item == item))
-    if any(loan.user for loan in loans if user == loan.user):
-        # Shouldn't be able to reach this point b/c the item page shouldn't
-        # make a loan available for this user & item combo. But if
-        # something weird happens (e.g., double posting), we might.
-        if __debug__: log(f'user already has a copy of {barcode} loaned out')
-        if __debug__: log(f'redirecting user to /view for {barcode}')
-        return f'/view/{barcode}'
-    if len(loans) >= item.num_copies:
-        # This shouldn't be possible, but catch it anyway.
-        if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-        return f'/item/{barcode}'
-    # OK, the user is allowed to loan out this item.
-    now = datetime.now()
-    Loan.create(item = item.itemid, user = user, started = now,
-                endtime = now + timedelta(hours = item.duration))
-    if __debug__: log(f'new loan created for {barcode} for {user}')
+    # The default Bottle dev web server is single-thread, so we won't run into
+    # the problem of 2 users simultaneously clicking on the loan button.  Other
+    # servers are multithreaded, and there's a risk that the time it takes us
+    # to look through the loans introduces a window of time when another user
+    # might click on the same loan button and cause another loan request to be
+    # initiated before the 1st finishes.  So, lock this block of code.
+
+    with _THREAD_LOCK:
+        item = Item.get(Item.barcode == barcode)
+        loans = list(Loan.select().where(Loan.item == item))
+        if any(loan.user for loan in loans if user == loan.user):
+            # Shouldn't be able to reach this point b/c the item page shouldn't
+            # make a loan available for this user & item combo. But if
+            # something weird happens (e.g., double posting), we might.
+            if __debug__: log(f'user already has a copy of {barcode} loaned out')
+            if __debug__: log(f'redirecting user to /view for {barcode}')
+            return f'/view/{barcode}'
+        if len(loans) >= item.num_copies:
+            # This shouldn't be possible, but catch it anyway.
+            if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
+            return f'/item/{barcode}'
+        # OK, the user is allowed to loan out this item.
+        now = datetime.now()
+        Loan.create(item = item.itemid, user = user, started = now,
+                    endtime = now + timedelta(hours = item.duration))
+        if __debug__: log(f'new loan created for {barcode} for {user}')
     return f'/view/{barcode}'
 
 
