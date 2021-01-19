@@ -63,6 +63,9 @@
         <p class="mx-auto text-center" style="width: 400px">
           This title is currently <span class="shown-if-not-available">not</span>
           available for digital loan.
+          <span class="shown-if-not-available">The next time it will become
+            available again is
+            {{endtime.strftime("%Y-%m-%d %H:%M") if endtime else 'unknown'}}.</span>
         </p>
 
         <form class="form-loan">

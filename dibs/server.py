@@ -189,8 +189,14 @@ def show_item_info(barcode):
         if __debug__: log(f'redirecting user to viewer for {barcode}')
         redirect(f'/view/{barcode}')
     available = item.ready and (len(loans) < item.num_copies)
+    if item.ready and loans:
+        endtime = min(loan.endtime for loan in loans)
+    elif item.ready:
+        endtime = datetime.now()
+    else:
+        endtime = None
     return template(path.join(_TEMPLATE_DIR, 'item'),
-                    item = item, available = available)
+                    item = item, available = available, endtime = endtime)
 
 
 @post('/loan')
