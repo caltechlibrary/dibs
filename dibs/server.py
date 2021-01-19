@@ -211,7 +211,7 @@ def loan_item():
 @get('/return/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-def return_item(barcode):
+def end_loan(barcode):
     '''Handle http get request to return the given item early.'''
     user = 'someone@caltech.edu'
     if __debug__: log(f'get /return invoked on barcode {barcode} by user {user}')
@@ -229,7 +229,7 @@ def return_item(barcode):
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'user {user} does not have {barcode} loaned out')
-    redirect(f'/item/{barcode}')
+    redirect('/thankyou')
 
 
 @get('/view/<barcode:int>')
@@ -264,6 +264,11 @@ def return_manifest(barcode):
     else:
         if __debug__: log(f'user {user} does not have {barcode} loaned out')
         return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+
+
+@get('/thankyou')
+def say_thank_you():
+    return template(path.join(_TEMPLATE_DIR, 'thankyou'))
 
 
 # Universal viewer interface.
