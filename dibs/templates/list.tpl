@@ -27,8 +27,9 @@
                 <th>Barcode</th>
                 <th>Title</th>
                 <th>Author</th>
-                <th class="text-center">Loan<br>copies<br>available</th>
-                <th class="text-center">Loan<br>duration (hrs)</th>
+                <th class="text-center">Ready<br>to<br>loan?</th>
+                <th class="text-center">Loan<br>duration<br>(hrs)</th>
+                <th class="text-center">Copies<br>avail.</th>
                 <th class="text-center">Copies<br>in use</th>
                 <th></th>
                 <th></th>
@@ -41,8 +42,17 @@
                 <td><a target="_blank" rel="noopener noreferrer"
                        href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.title}}</a></td>
                 <td>{{item.author}}</td>
-                <td class="text-center">{{item.num_copies}}</td>
+                <td class="text-center">
+                  <form action="/available" method="POST">
+                    <input type="hidden" name="barcode" value="{{item.barcode}}">
+                    <input type="hidden" name="available" value="{{item.available}}">
+                    <input type="checkbox" class="checkbox"
+                           onChange="this.form.submit()"
+                           {{'checked="checked"' if item.available else ''}}/>
+                  </form>
+                </td>
                 <td class="text-center">{{item.duration}}</td>
+                <td class="text-center">{{item.num_copies}}</td>
                 <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"

@@ -132,6 +132,23 @@ def add_item():
     return '/list'
 
 
+@post('/available')
+@expired_loans_removed
+@barcode_verified
+def toggle_available():
+    '''Set the availablility field.'''
+    barcode = request.POST.barcode.strip()
+    available = (request.POST.available.strip() == 'True')
+    if __debug__: log(f'post /available invoked on barcode {barcode}')
+    item = Item.get(Item.barcode == barcode)
+    # The status we get is the availability status as it currently shown,
+    # meaning the user's action is to change the status.
+    item.available = not available
+    item.save()
+    if __debug__: log(f'availability of {barcode} is now {item.available}')
+    redirect('/list')
+
+
 @post('/remove')
 @expired_loans_removed
 @barcode_verified
@@ -165,7 +182,7 @@ def show_item_info(barcode):
         if __debug__: log(f'user already has a copy of {barcode} loaned out')
         if __debug__: log(f'redirecting user to viewer for {barcode}')
         redirect(f'/view/{barcode}')
-    available = len(loans) < item.num_copies
+    available = item.available and (len(loans) < item.num_copies)
     return template(path.join(_TEMPLATE_DIR, 'item'),
                     item = item, available = available)
 
@@ -179,15 +196,21 @@ def loan_item():
     barcode = request.POST.inputBarcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
+    item = Item.get(Item.barcode == barcode)
+    if not item.available:
+        # Normally we shouldn't see a loan request through our form in this
+        # case, so either staff has changed the status after item was made
+        # available or someone got here accidentally (or deliberately).
+        if __debug__: log(f'{barcode} is not available for loans')
+        return f'/view/{barcode}'
+
     # The default Bottle dev web server is single-thread, so we won't run into
     # the problem of 2 users simultaneously clicking on the loan button.  Other
     # servers are multithreaded, and there's a risk that the time it takes us
     # to look through the loans introduces a window of time when another user
     # might click on the same loan button and cause another loan request to be
     # initiated before the 1st finishes.  So, lock this block of code.
-
     with _THREAD_LOCK:
-        item = Item.get(Item.barcode == barcode)
         loans = list(Loan.select().where(Loan.item == item))
         if any(loan.user for loan in loans if user == loan.user):
             # Shouldn't be able to reach this point b/c the item page shouldn't
