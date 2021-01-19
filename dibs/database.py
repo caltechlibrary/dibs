@@ -41,7 +41,7 @@ class Item(BaseModel):
     tind_id    = IntegerField()
     num_copies = SmallIntegerField()
     duration   = SmallIntegerField()    # Assumed to be hours.
-    available  = BooleanField(default = False)
+    ready      = BooleanField(default = False)
 
 
 # Loans are currently stored in terms of a combination of item + user identity.

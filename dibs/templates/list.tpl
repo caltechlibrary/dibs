@@ -2,7 +2,7 @@
 <html lang="en">
 
   <head>
-    <title>List of items currently available in the Caltech Digital Loan system</title>
+    <title>List of items currently in the Caltech Digital Loan system</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -16,7 +16,7 @@
         Caltech DIBS
       </h1>
       <h2 class="mx-auto text-center" style="width: 600px">
-        There are {{len(items)}} items available
+        There are {{len(items)}} items in the system
       </h2>
       <div class="d-grid gap-3">
 
@@ -29,7 +29,7 @@
                 <th>Author</th>
                 <th class="text-center">Ready<br>to<br>loan?</th>
                 <th class="text-center">Loan<br>duration<br>(hrs)</th>
-                <th class="text-center">Copies<br>avail.</th>
+                <th class="text-center">Copies<br>for<br>loans</th>
                 <th class="text-center">Copies<br>in use</th>
                 <th></th>
                 <th></th>
@@ -43,12 +43,12 @@
                        href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.title}}</a></td>
                 <td>{{item.author}}</td>
                 <td class="text-center">
-                  <form action="/available" method="POST">
+                  <form action="/ready" method="POST">
                     <input type="hidden" name="barcode" value="{{item.barcode}}">
-                    <input type="hidden" name="available" value="{{item.available}}">
+                    <input type="hidden" name="ready" value="{{item.ready}}">
                     <input type="checkbox" class="checkbox"
                            onChange="this.form.submit()"
-                           {{'checked="checked"' if item.available else ''}}/>
+                           {{'checked="checked"' if item.ready else ''}}/>
                   </form>
                 </td>
                 <td class="text-center">{{item.duration}}</td>

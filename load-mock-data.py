@@ -17,7 +17,7 @@ Item.create(barcode    = '35047019492099',
             tind_id    = 735973,
             num_copies = 1,
             duration   = 2,
-            available  = True
+            ready      = True
 )
 
 Item.create(barcode    = '35047019626837',
@@ -26,7 +26,7 @@ Item.create(barcode    = '35047019626837',
             tind_id    = 990468,
             num_copies = 2,
             duration   = 6,
-            available  = True
+            ready      = True
 )
 
 Item.create(barcode    = '35047019626829',
@@ -35,7 +35,7 @@ Item.create(barcode    = '35047019626829',
             tind_id    = 990456,
             num_copies = 1,
             duration   = 24,
-            available  = False
+            ready      = False
 )
 
 Item.create(barcode    = '350470000611207',
@@ -44,7 +44,7 @@ Item.create(barcode    = '350470000611207',
             tind_id    = 466498,
             num_copies = 3,
             duration   = 1,
-            available  = False
+            ready      = False
 )
 
 Loan.create(item = Item.select().where(Item.barcode == '350470000611207'),

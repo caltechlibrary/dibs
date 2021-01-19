@@ -102,7 +102,7 @@ def list_items():
 @get('/list')
 @expired_loans_removed
 def list_items():
-    '''Display the list of available items.'''
+    '''Display the list of known items.'''
     if __debug__: log('get /list invoked')
     return template(path.join(_TEMPLATE_DIR, 'list'),
                     items = Item.select(), loans = Loan.select())
@@ -132,20 +132,20 @@ def add_item():
     return '/list'
 
 
-@post('/available')
+@post('/ready')
 @expired_loans_removed
 @barcode_verified
-def toggle_available():
-    '''Set the availablility field.'''
+def toggle_ready():
+    '''Set the ready-to-loan field.'''
     barcode = request.POST.barcode.strip()
-    available = (request.POST.available.strip() == 'True')
-    if __debug__: log(f'post /available invoked on barcode {barcode}')
+    ready = (request.POST.ready.strip() == 'True')
+    if __debug__: log(f'post /ready invoked on barcode {barcode}')
     item = Item.get(Item.barcode == barcode)
     # The status we get is the availability status as it currently shown,
     # meaning the user's action is to change the status.
-    item.available = not available
+    item.ready = not ready
     item.save()
-    if __debug__: log(f'availability of {barcode} is now {item.available}')
+    if __debug__: log(f'readiness of {barcode} is now {item.ready}')
     redirect('/list')
 
 
@@ -182,7 +182,7 @@ def show_item_info(barcode):
         if __debug__: log(f'user already has a copy of {barcode} loaned out')
         if __debug__: log(f'redirecting user to viewer for {barcode}')
         redirect(f'/view/{barcode}')
-    available = item.available and (len(loans) < item.num_copies)
+    available = item.ready and (len(loans) < item.num_copies)
     return template(path.join(_TEMPLATE_DIR, 'item'),
                     item = item, available = available)
 
@@ -197,11 +197,11 @@ def loan_item():
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
     item = Item.get(Item.barcode == barcode)
-    if not item.available:
+    if not item.ready:
         # Normally we shouldn't see a loan request through our form in this
         # case, so either staff has changed the status after item was made
         # available or someone got here accidentally (or deliberately).
-        if __debug__: log(f'{barcode} is not available for loans')
+        if __debug__: log(f'{barcode} is not ready for loans')
         return f'/view/{barcode}'
 
     # The default Bottle dev web server is single-thread, so we won't run into
