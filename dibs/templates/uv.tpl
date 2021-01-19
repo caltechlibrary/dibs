@@ -4,40 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link  href="/viewer/uv/uv.css" rel="stylesheet" type="text/css">
+    <link href="/viewer/uv/uv.css" rel="stylesheet" type="text/css">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
     <script src="/viewer/uv/lib/offline.js"></script>
     <script src="/viewer/uv/helpers.js"></script>
-    <title>UV Hello World</title>
+    <title>Caltech DIBS</title>
     <style>
+     html, body { height: 97% }
      #uv {
-       width: 800px;
-       height: 600px;
+       min-width: 600px;
+       min-height: 600px;
      }
     </style>
 </head>
 <body>
     
-    <div id="uv" class="uv"></div>
+  <div class="container-fluid h-100 w-100 text-center">
 
-    <script>
-     var myUV;
+    <div class="row bg-light" style="margin: auto 0px">
+      <div class="col-6">
+        <div class="float-left my-1"><p>Time left on loan:</p></div>
+      </div>
+      <div class="col-6">
+        <button type="button" class="btn btn-danger float-right my-1"
+                onclick="if(confirm('Please confirm: end your loan now?')){window.location='/return/{{barcode}}';}else{return false;}">
+          End loan now</button>
+      </div>
+    </div>
 
-     window.addEventListener('uvLoaded', function (e) {
+    <div class="row h-100">
+      <div id="uv" class="col-12 mb-2"></div>
+    </div>
 
-       myUV = createUV('#uv', {
-         iiifResourceUri: '/manifests/{{barcode}}',
-         configUri: '/viewer/uv-config.json'
-       }, new UV.URLDataProvider());
+  </div>
 
-       myUV.on("created", function(obj) {
-         console.log('parsed metadata', myUV.extension.helper.manifest.getMetadata());
-         console.log('raw jsonld', myUV.extension.helper.manifest.__jsonld);
-       });
+  <script>
+   var myUV;
 
-     }, false);
+   window.addEventListener('uvLoaded', function (e) {
+     myUV = createUV('#uv', {
+       iiifResourceUri: '/manifests/{{barcode}}',
+       configUri: '/viewer/uv-config.json'
+     }, new UV.URLDataProvider());
 
-    </script>
+     myUV.on("created", function(obj) {
+       console.log('parsed metadata', myUV.extension.helper.manifest.getMetadata());
+       console.log('raw jsonld', myUV.extension.helper.manifest.__jsonld);
+     });
+   }, false);
 
-    <script src="uv/uv.js"></script>
+  </script>
+  <script src="uv/uv.js"></script>
+
 </body>
 </html>
