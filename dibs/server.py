@@ -92,6 +92,13 @@ def barcode_verified(func):
 # can do much with the result.  Constantly creating lists is not efficient,
 # but we have so few items to deal with that it's not a concern currently.
 
+@get('/')
+def list_items():
+    '''Display the welcome page.'''
+    if __debug__: log('get / invoked')
+    return template(path.join(_TEMPLATE_DIR, 'welcome'))
+
+
 @get('/list')
 @expired_loans_removed
 def list_items():
