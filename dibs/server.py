@@ -173,20 +173,30 @@ def show_item_info(barcode):
     if __debug__: log(f'get /item invoked on barcode {barcode} by user {user}')
 
     item = Item.get(Item.barcode == barcode)
-    loans = list(Loan.select().where(Loan.item == item))
-    if any(loan.user for loan in loans if user == loan.user):
-        if __debug__: log(f'user already has a copy of {barcode} loaned out')
-        if __debug__: log(f'redirecting user to viewer for {barcode}')
-        redirect(f'/view/{barcode}')
-    available = item.ready and (len(loans) < item.num_copies)
-    if item.ready and loans:
-        endtime = min(loan.endtime for loan in loans)
-    elif item.ready:
-        endtime = datetime.now()
+    user_loans = list(Loan.select().where(Loan.user == user))
+    if any(user_loans):
+        if user_loans[0].item == item:
+            if __debug__: log(f'user already has a copy of {barcode} loaned out')
+            if __debug__: log(f'redirecting user to viewer for {barcode}')
+            redirect(f'/view/{barcode}')
+            return
+        else:
+            if __debug__: log(f'user already has a loan on something else')
+            available = False
+            endtime = user_loans[0].endtime
     else:
-        endtime = None
+        loans = list(Loan.select().where(Loan.item == item))
+        available = item.ready and (len(loans) < item.num_copies)
+        if item.ready and loans:
+            endtime = min(loan.endtime for loan in loans)
+        elif item.ready:
+            endtime = datetime.now()
+        else:
+            endtime = None
     return template(path.join(_TEMPLATE_DIR, 'item'),
                     item = item, available = available, endtime = endtime)
+
+#    if any(loan.user for loan in loans if user == loan.user):
 
 
 @post('/loan')
@@ -213,6 +223,9 @@ def loan_item():
     # might click on the same loan button and cause another loan request to be
     # initiated before the 1st finishes.  So, lock this block of code.
     with _THREAD_LOCK:
+        if any(Loan.select().where(Loan.user == user)):
+            if __debug__: log(f'user already has a loan on something else')
+            redirect(f'/onlyone')
         loans = list(Loan.select().where(Loan.item == item))
         if any(loan.user for loan in loans if user == loan.user):
             # Shouldn't be able to reach this point b/c the item page shouldn't
