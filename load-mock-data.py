@@ -24,7 +24,7 @@ Item.create(barcode    = '35047019626837',
             title      = 'Fundamentals of geophysics',
             author     = 'Lowrie',
             tind_id    = 990468,
-            num_copies = 2,
+            num_copies = 1,
             duration   = 6,
             ready      = True
 )
@@ -33,7 +33,7 @@ Item.create(barcode    = '35047019626829',
             title      = 'GIS for science',
             author     = 'Wright',
             tind_id    = 990456,
-            num_copies = 1,
+            num_copies = 2,
             duration   = 24,
             ready      = False
 )
@@ -42,9 +42,9 @@ Item.create(barcode    = '350470000611207',
             title      = 'Pack my bag',
             author     = 'Green',
             tind_id    = 466498,
-            num_copies = 3,
+            num_copies = 1,
             duration   = 1,
-            ready      = False
+            ready      = True
 )
 
 Loan.create(item = Item.select().where(Item.barcode == '350470000611207'),
