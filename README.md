@@ -24,16 +24,10 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 Installation
 ------------
 
-This is currently in a branch on GitHub.  To install it locally, you will need to clone not just the main repo contents but the branch as well.  There are multiple ways of doing this; I use a script I wrote called [`git-clone-complete`](https://github.com/mhucka/small-scripts/blob/main/git-scripts/git-clone-complete) for doing deep clones of github repositories:
+To install this locally, you will need to clone not just the main repo contents but the branch and submodules as well.  There are multiple ways of doing this; I use a script I wrote called [`git-clone-complete`](https://github.com/mhucka/small-scripts/blob/main/git-scripts/git-clone-complete) for doing deep clones of github repositories:
 
 ```sh
 git-clone-complete https://github.com/caltechlibrary/dibs
-```
-
-Then, switch to the branch `experiment1`:
-
-```sh
-git checkout experiment`
 ```
 
 
