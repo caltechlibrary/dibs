@@ -16,34 +16,12 @@
          window.location.reload();
        }
      });
-
-     // Implement simple AJAX data posting for the loan button and redirect
-     // the browser to the location received as the response.
-     $(function() {
-       $('#btnLoan').click(function() {
-         $.ajax({
-           url: '/loan',
-           data: $('form').serialize(),
-           type: 'POST',
-           success: function(response) {
-             console.log(response);
-             location.href = response;
-           },
-           error: function(error) {
-             console.log(error);
-           }
-         });
-       });
-     });
     </script>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <style type="text/css">
       #btnLoan:disabled {
         cursor: not-allowed;
-      }
-      p .shown-if-not-available {
-        font-weight: bold;
       }
     </style>
 
@@ -60,25 +38,22 @@
       <hr>
 
       <div class="py-4">
-        <p class="mx-auto text-center" style="width: 400px">
-          This title is currently <span class="shown-if-not-available">not</span>
+        <p class="mx-auto text-center" style="width: 500px">
+          This item is <span class="shown-if-not-available">not</span> currently
           available for digital loan.
-          <span class="shown-if-not-available">The next time it will become
-            available again is
-            {{endtime.strftime("%Y-%m-%d %H:%M") if endtime else 'unknown'}}.</span>
+          <span id="when" class="shown-if-not-available">It will become available again at
+            {{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else 'unknown'}}.</span>
         </p>
 
-        <form class="form-loan">
-          <input type="hidden" name="inputBarcode" value="{{item.barcode}}"/>
-          <div class="btn-toolbar mx-auto" style="width: 150px;">
-            <button class="btn mx-auto" id="btnLoan" type="button">
-              <span class="shown-if-available">Get loan</span>
-              <span class="shown-if-not-available">Not available</span>
-            </button>
-          </div>
-        </form>
+        <div class="col-md-3 mx-auto text-center">
+          <form action="/loan" method="POST"
+                onSubmit="return confirm('This will start your loan immediately. Proceed?');">
+            <input type="hidden" name="barcode" value="{{item.barcode}}"/>
+            <input id="btnLoan" class="btn btn-block mx-auto" style="width: 120px" type="submit"/>
+          </form>
+        </div>
 
-        <p class="mx-auto text-center py-3" style="width: 400px">
+        <p class="mx-auto text-center w-50 py-3">
           Loan duration: {{item.duration}} hours
         </p>
       </div>
@@ -87,16 +62,22 @@
        // Toggle the visibility of the loan button depending on availability.
        // This needs to be done after the loan button is defined above,
        // which is why the code is down here.
-       if ("{{available}}" != "True") {
-         $('#btnLoan').prop('disabled', true);
-         $('#btnLoan').addClass('btn-secondary');
-         $(".shown-if-available").css("display", "none");
-         $(".shown-if-not-available").css("display", "inline");
-       } else {
+       if ("{{available}}" == "True") {
          $('#btnLoan').prop('disabled', false);
+         $('#btnLoan').prop('value', 'Get loan');
          $('#btnLoan').addClass('btn-primary');
          $(".shown-if-available").css("display", "inline");
          $(".shown-if-not-available").css("display", "none");
+       } else {
+         $('#btnLoan').prop('disabled', true);
+         $('#btnLoan').prop('value', 'Not available');
+         $('#btnLoan').addClass('btn-secondary');
+         $(".shown-if-available").css("display", "none");
+         $(".shown-if-not-available").css("display", "inline");
+       }
+
+       if ("{{endtime}}" == "None") {
+         $('#when').css("display", "none");
        }
       </script>
 
