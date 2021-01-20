@@ -22,25 +22,39 @@ if __debug__:
 
 from .database import Item, Loan
 
+# A note about using Peewee: Peewee queries are lazy-executed: they return
+# iterators that must be accessed before the query is actually executed.
+# Thus, when selecting items, constructs like the following return a
+# ModelSelector, and not a single result or a list of results:
+#
+#   Loan.select().where(Loan.item == item)
+#
+# and you can't do next(...) on this because it's an iterator and not a
+# generator.  You have to either use a for loop, or create a list before you
+# can do much with the result.  This is the reason for explicit list() calls
+# in much of the code below.  Constantly creating lists is inefficient, but
+# thankfully we have few enough items that it's not a concern currently.
+
 
 # Constants used throughout this file.
 # .............................................................................
 
+# Where our Bottle templates are stored.
 _TEMPLATE_DIR = config('TEMPLATE_DIR')
 
+# Lock object used around some code to prevent concurrent modification.
 _THREAD_LOCK = threading.Lock()
 
 
 # Decorators used throughout this file.
 # .............................................................................
 
-# Checking the loans at every function call is not efficient.  This approach
-# needs to be replaced with some more efficient.
-
 def expired_loans_removed(func):
     '''Clean up expired loans before the function is called.'''
+    # FIXME: Checking the loans at every function call is not efficient.  This
+    # approach needs to be replaced with some more efficient.
     def wrapper(*args, **kwargs):
-        for loan in list(Loan.select()):
+        for loan in Loan.select():
             if datetime.now() >= loan.endtime:
                 if __debug__: log(f'deleting expired loan for {loan.user}')
                 loan.delete_instance()
@@ -57,11 +71,8 @@ def barcode_verified(func):
                 Item.get(Item.barcode == barcode)
             except DoesNotExist as ex:
                 if __debug__: log(f'there is no item with barcode {barcode}')
-                if request.method == 'POST':
-                    return f'/nonexistent/{barcode}'
-                else:
-                    return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
-                                    barcode = barcode)
+                return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
+                                barcode = barcode)
         return func(*args, **kwargs)
     return wrapper
 
@@ -70,27 +81,6 @@ def barcode_verified(func):
 # .............................................................................
 # These endpoints need to be protected against access by non-Library staff.
 # (Right now, there's no protection or distinction from other endpoints.)
-
-# A note about the way our POST actions work.  The POST actions are executed
-# using a small bit of JavaScript in the associated HTML pages (see, e.g.,
-# dibs/templates/item.tpl).  That JavaScript uses AJAX to send the POST
-# request with form data.  Our POST route handlers below do whatever action
-# is needed, and then return a string (not a page, not a template).  The AJAX
-# handler in our web page expects this and sets the value of the web page's
-# location.href to the string returned, thus moving the user to whatever page
-# we want to be shown after the action is done.
-
-# A note about using Peewee: Peewee queries are lazy-executed: they return
-# iterators that must be accessed before the query is actually executed.
-# Thus, when selecting items, the following returns a ModelSelector, and not
-# a single result or a list of results:
-#
-#   Loan.select().where(Loan.item == item)
-#
-# and you can't do next(...) on this because it's an iterator and not a
-# generator.  You have to either use a for loop, or create a list before you
-# can do much with the result.  Constantly creating lists is not efficient,
-# but we have so few items to deal with that it's not a concern currently.
 
 @get('/')
 def list_items():
@@ -129,7 +119,7 @@ def add_item():
     if __debug__: log(f'creating new item for barcode {barcode}, title {title}')
     Item.create(barcode = barcode, title = title, author = author,
                 tind_id = tind_id, num_copies = copies, duration = duration)
-    return '/list'
+    redirect('/list')
 
 
 @post('/ready')
@@ -205,7 +195,7 @@ def show_item_info(barcode):
 def loan_item():
     '''Handle http post request to loan out an item, from the item info page.'''
     user = 'someone@caltech.edu'
-    barcode = request.POST.inputBarcode.strip()
+    barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
     item = Item.get(Item.barcode == barcode)
@@ -214,7 +204,7 @@ def loan_item():
         # case, so either staff has changed the status after item was made
         # available or someone got here accidentally (or deliberately).
         if __debug__: log(f'{barcode} is not ready for loans')
-        return f'/view/{barcode}'
+        redirect(f'/view/{barcode}')
 
     # The default Bottle dev web server is single-thread, so we won't run into
     # the problem of 2 users simultaneously clicking on the loan button.  Other
@@ -230,17 +220,17 @@ def loan_item():
             # something weird happens (e.g., double posting), we might.
             if __debug__: log(f'user already has a copy of {barcode} loaned out')
             if __debug__: log(f'redirecting user to /view for {barcode}')
-            return f'/view/{barcode}'
+            redirect(f'/view/{barcode}')
         if len(loans) >= item.num_copies:
             # This shouldn't be possible, but catch it anyway.
             if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-            return f'/item/{barcode}'
+            redirect(f'/item/{barcode}')
         # OK, the user is allowed to loan out this item.
         now = datetime.now()
         Loan.create(item = item.itemid, user = user, started = now,
                     endtime = now + timedelta(hours = item.duration))
         if __debug__: log(f'new loan created for {barcode} for {user}')
-    return f'/view/{barcode}'
+    redirect(f'/view/{barcode}')
 
 
 @get('/return/<barcode:int>')
