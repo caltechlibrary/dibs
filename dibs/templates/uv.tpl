@@ -23,7 +23,7 @@
 
     <div class="row bg-light" style="margin: auto 0px">
       <div class="col-6">
-        <div class="float-left my-1"><p>Time left on loan:</p></div>
+        <div class="float-left my-1"><p>Loan expires at {{endtime.strftime("%I:%M %p %Z on %A, %B %d")}}.</p></div>
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
