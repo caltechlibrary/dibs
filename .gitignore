@@ -86,4 +86,4 @@ __pycache__
 # Project-specific things to ignore:
 # .............................................................................
 
-cdl.db
+dibs.db
