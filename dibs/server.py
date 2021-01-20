@@ -20,7 +20,7 @@ import threading
 if __debug__:
     from sidetrack import log
 
-from .database import Item, Loan
+from .database import Item, Loan, Recent
 
 # A note about using Peewee: Peewee queries are lazy-executed: they return
 # iterators that must be accessed before the query is actually executed.
@@ -56,8 +56,17 @@ def expired_loans_removed(func):
     def wrapper(*args, **kwargs):
         for loan in Loan.select():
             if datetime.now() >= loan.endtime:
-                if __debug__: log(f'deleting expired loan for {loan.user}')
+                barcode = loan.item.barcode
+                if __debug__: log(f'creating recent record for {barcode} by {loan.user}')
+                Recent.create(item = loan.item, user = loan.user,
+                              nexttime = loan.endtime + timedelta(hours = 1))
+                if __debug__: log(f'expiring loan of {barcode} by {loan.user}')
                 loan.delete_instance()
+        for recent in Recent.select():
+            if datetime.now() >= recent.nexttime:
+                barcode = recent.item.barcode
+                if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
+                recent.delete_instance()
         return func(*args, **kwargs)
     return wrapper
 
@@ -174,10 +183,18 @@ def show_item_info(barcode):
 
     item = Item.get(Item.barcode == barcode)
     user_loans = list(Loan.select().where(Loan.user == user))
-    if any(user_loans):
+    recent_history = list(Recent.select().where(Recent.item == item))
+    # First check if the user has recently loaned out this same item.
+    if any(loan for loan in recent_history if loan.user == user):
+        if __debug__: log(f'user recently borrowed {barcode}')
+        recent = next(loan for loan in recent_history if loan.user == user)
+        endtime = recent.nexttime
+        available = False
+    elif any(user_loans):
+        # The user has a current loan. If it's for this title, redirect them
+        # to the viewer; if it's for another title, block the loan button.
         if user_loans[0].item == item:
-            if __debug__: log(f'user already has a copy of {barcode} loaned out')
-            if __debug__: log(f'redirecting user to viewer for {barcode}')
+            if __debug__: log(f'user already has {barcode}; redirecting to uv')
             redirect(f'/view/{barcode}')
             return
         else:
@@ -185,6 +202,7 @@ def show_item_info(barcode):
             available = False
             endtime = user_loans[0].endtime
     else:
+        if __debug__: log(f'user is allowed to borrow {barcode}')
         loans = list(Loan.select().where(Loan.item == item))
         available = item.ready and (len(loans) < item.num_copies)
         if item.ready and loans:
@@ -195,8 +213,6 @@ def show_item_info(barcode):
             endtime = None
     return template(path.join(_TEMPLATE_DIR, 'item'),
                     item = item, available = available, endtime = endtime)
-
-#    if any(loan.user for loan in loans if user == loan.user):
 
 
 @post('/loan')
@@ -215,6 +231,7 @@ def loan_item():
         # available or someone got here accidentally (or deliberately).
         if __debug__: log(f'{barcode} is not ready for loans')
         redirect(f'/view/{barcode}')
+        return
 
     # The default Bottle dev web server is single-thread, so we won't run into
     # the problem of 2 users simultaneously clicking on the loan button.  Other
@@ -226,6 +243,7 @@ def loan_item():
         if any(Loan.select().where(Loan.user == user)):
             if __debug__: log(f'user already has a loan on something else')
             redirect(f'/onlyone')
+            return
         loans = list(Loan.select().where(Loan.item == item))
         if any(loan.user for loan in loans if user == loan.user):
             # Shouldn't be able to reach this point b/c the item page shouldn't
@@ -234,10 +252,18 @@ def loan_item():
             if __debug__: log(f'user already has a copy of {barcode} loaned out')
             if __debug__: log(f'redirecting user to /view for {barcode}')
             redirect(f'/view/{barcode}')
+            return
         if len(loans) >= item.num_copies:
             # This shouldn't be possible, but catch it anyway.
             if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
             redirect(f'/item/{barcode}')
+            return
+        recent_history = list(Recent.select().where(Recent.item == item))
+        if any(loan for loan in recent_history if loan.user == user):
+            if __debug__: log(f'user recently borrowed {barcode}')
+            recent = next(loan for loan in recent_history if loan.user == user)
+            return template(path.join(_TEMPLATE_DIR, 'toosoon'),
+                            nexttime = recent.nexttime)
         # OK, the user is allowed to loan out this item.
         now = datetime.now()
         Loan.create(item = item.itemid, user = user, started = now,
@@ -261,9 +287,13 @@ def end_loan(barcode):
         # item. Right now, we simply log it and move on.
         if __debug__: log(f'error: more than one loan for {barcode} by {user}')
     elif user_loans:
-        # Normal case: user has loaned a copy of item. Delete the record.
+        # Normal case: user has loaned a copy of item. Delete the record and
+        # add a new Recent loan record.
         if __debug__: log(f'deleting loan record for {barcode} by {user}')
         user_loans[0].delete_instance()
+        Recent.create(item = Item.get(Item.barcode == barcode),
+                      user = user,
+                      nexttime = datetime.now() + timedelta(hours = 1))
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'user {user} does not have {barcode} loaned out')
@@ -279,9 +309,11 @@ def send_item_to_viewer(barcode):
     if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
-    if any(loan.user for loan in loans if user == loan.user):
+    user_loans = [loan for loan in loans if user == loan.user]
+    if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
-        return template(path.join(_TEMPLATE_DIR, 'uv'), barcode = barcode)
+        return template(path.join(_TEMPLATE_DIR, 'uv'), barcode = barcode,
+                        endtime = user_loans[0].endtime)
     else:
         if __debug__: log(f'user {user} does not have {barcode} loaned out')
         return template(path.join(_TEMPLATE_DIR, 'notallowed'))

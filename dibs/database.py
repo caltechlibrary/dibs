@@ -59,3 +59,14 @@ class Loan(BaseModel):
     user    = TextField()               # Login, probably someone@caltech.edu
     started = DateTimeField()           # When did the patron start the loan?
     endtime = DateTimeField()           # When does the loan end?
+
+
+# Our policy is that users can't immediately check out the same item; they
+# must instead wait a certain amount of time.  This next object is used to
+# help remember recent loans.
+
+class Recent(BaseModel):
+    recentid = AutoField()
+    item     = ForeignKeyField(Item, column_name = 'itemid', backref = 'loanref')
+    user     = TextField()               # Login, probably someone@caltech.edu
+    nexttime = DateTimeField()           # When can they loan it again?
