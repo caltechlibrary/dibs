@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-  <meta http-equiv="Pragma" content="no-cache">
   <head>
+    <meta http-equiv="Pragma" content="no-cache">
+
     <title>Description page for {{item.title}}</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -79,6 +80,32 @@
        if ("{{endtime}}" == "None") {
          $('#when').css("display", "none");
        }
+
+       // Refresh the page automatically, so that if the user has it open
+       // and someone else takes out a loan, the user has a better chance of
+       // finding out as soon as possible.  This is not as good as using a
+       // framework like React, but it's simpler.  This approach doesn't
+       // flash the page like a meta refresh tag does.
+
+       var refresher;
+       $(document).ready(function(e) {
+         refresher = setInterval("update_content();", 10000);
+       })
+
+       function update_content() {
+         $.ajax({
+           type: "GET",
+           url: "/item/{{item.barcode}}",
+           cache: false,
+         })
+          .done(function(page_html) {
+            window.clearInterval(refresher);
+            var newDoc = document.open("text/html");
+            newDoc.write(page_html);
+            newDoc.close();
+          });   
+       }
+
       </script>
 
   </body>
