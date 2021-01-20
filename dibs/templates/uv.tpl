@@ -27,7 +27,7 @@
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
-                onclick="if(confirm('Please confirm: end your loan now?')){window.location='/return/{{barcode}}';}else{return false;}">
+                onclick="if(confirm('This will end your loan immediately. The loan policy is that you will have to wait one hour before making another loan.')){window.location='/return/{{barcode}}';}else{return false;}">
           End loan now</button>
       </div>
     </div>
