@@ -63,7 +63,7 @@
 
                 <td><form action="/remove" method="POST"
                       onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
-                  <input type="hidden" name="barcode" value="{{item.barcode}}">
+                  <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                   <input type="submit" name="Remove" value="Remove"
                          class="btn btn-danger btn-sm"/>
                 </td>
