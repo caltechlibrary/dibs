@@ -56,7 +56,7 @@
                 <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="confirmCopy(this);" data-clipboard-action="copy"
+                            onclick="sayCopied(this);" data-clipboard-action="copy"
                             data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">
                   Copy share link</button>
                 </td>
@@ -86,7 +86,7 @@
    new ClipboardJS(".btn");
 
    // JavaScript to temporarily flash "Copied" when button is clicked.
-   function confirmCopy(elem) {
+   function sayCopied(elem) {
      $(elem).text("Copied");
      setTimeout(() => $(elem).text("Copy share link"), 800);
    }
