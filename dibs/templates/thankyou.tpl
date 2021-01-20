@@ -13,9 +13,8 @@
           Thank you for using Caltech DIBS!
         </h1>
         <p class="mx-auto col-6 my-5 text-center text-info font-italic">
-          If you have any feedback &ndash; especially suggestions for how to
-          improve this system &ndash; please don't hesitate to let us know by
-          using our <a href="">anonymous feedback form</a>.
+          If you have any comments or suggestions, please don't hesitate
+          to let us know by using our <a href="">anonymous feedback form</a>.
         </p>
       </div>
     </div>
