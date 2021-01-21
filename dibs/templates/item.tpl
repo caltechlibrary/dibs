@@ -48,7 +48,7 @@
 
         <div class="col-md-3 mx-auto text-center">
           <form action="/loan" method="POST"
-                onSubmit="return confirm('This will start your loan immediately. Proceed?');">
+                onSubmit="return confirm('This will start your {{item.duration}} hour loan period immediately. Proceed?');">
             <input type="hidden" name="barcode" value="{{item.barcode}}"/>
             <input id="btnLoan" class="btn btn-block mx-auto" style="width: 120px" type="submit"/>
           </form>
