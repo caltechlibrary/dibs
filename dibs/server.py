@@ -15,6 +15,7 @@ import logging
 from   peewee import *
 import os
 from   os import path
+import smtplib
 import threading
 
 if __debug__:
@@ -44,6 +45,26 @@ _TEMPLATE_DIR = config('TEMPLATE_DIR')
 
 # Lock object used around some code to prevent concurrent modification.
 _THREAD_LOCK = threading.Lock()
+
+# Body of email message sent to users
+_EMAIL = '''From: {sender}
+To: {user}
+Subject: {subject}
+
+You started a digital loan through Caltech DIBS at {start}.
+
+  Title: {item.title}
+  Author: {item.author}
+
+  The loan period ends at {end}
+  Web viewer: {viewer}
+
+Information about loan policies can be found at {info_page}
+
+Thank you for using Caltech DIBS. We hope the experience is a pleasant one.
+Please don't hesitate to send us feedback using our anonymous feedback form
+at {feedback}
+'''
 
 
 # Decorators used throughout this file.
@@ -178,7 +199,7 @@ def remove_item():
 @barcode_verified
 def show_item_info(barcode):
     '''Display information about the given item.'''
-    user = 'someone@caltech.edu'
+    user = 'mhucka@library.caltech.edu'
     if __debug__: log(f'get /item invoked on barcode {barcode} by user {user}')
 
     item = Item.get(Item.barcode == barcode)
@@ -220,7 +241,7 @@ def show_item_info(barcode):
 @barcode_verified
 def loan_item():
     '''Handle http post request to loan out an item, from the item info page.'''
-    user = 'someone@caltech.edu'
+    user = 'mhucka@library.caltech.edu'
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
@@ -265,10 +286,11 @@ def loan_item():
             return template(path.join(_TEMPLATE_DIR, 'toosoon'),
                             nexttime = recent.nexttime)
         # OK, the user is allowed to loan out this item.
-        now = datetime.now()
-        Loan.create(item = item.itemid, user = user, started = now,
-                    endtime = now + timedelta(hours = item.duration))
-        if __debug__: log(f'new loan created for {barcode} for {user}')
+        start = datetime.now()
+        end   = start + timedelta(hours = item.duration)
+        if __debug__: log(f'creating new loan for {barcode} for {user}')
+        Loan.create(item = item, user = user, started = start, endtime = end)
+        send_email(user, item, start, end)
     redirect(f'/view/{barcode}')
 
 
@@ -277,7 +299,7 @@ def loan_item():
 @barcode_verified
 def end_loan(barcode):
     '''Handle http get request to return the given item early.'''
-    user = 'someone@caltech.edu'
+    user = 'mhucka@library.caltech.edu'
     if __debug__: log(f'get /return invoked on barcode {barcode} by user {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -305,7 +327,7 @@ def end_loan(barcode):
 @barcode_verified
 def send_item_to_viewer(barcode):
     '''Redirect to the viewer.'''
-    user = 'someone@caltech.edu'
+    user = 'mhucka@library.caltech.edu'
     if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -324,7 +346,7 @@ def send_item_to_viewer(barcode):
 @barcode_verified
 def return_manifest(barcode):
     '''Return the manifest file for a given item.'''
-    user = 'someone@caltech.edu'
+    user = 'mhucka@library.caltech.edu'
     if __debug__: log(f'get /manifests/{barcode} invoked by user {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -338,7 +360,13 @@ def return_manifest(barcode):
 
 @get('/thankyou')
 def say_thank_you():
-    return template(path.join(_TEMPLATE_DIR, 'thankyou'))
+    return template(path.join(_TEMPLATE_DIR, 'thankyou'),
+                    feedback_url = config('FEEDBACK_URL'))
+
+
+@get('/info')
+def say_thank_you():
+    return template(path.join(_TEMPLATE_DIR, 'info'))
 
 
 # Universal viewer interface.
@@ -394,7 +422,7 @@ class Server():
         if __debug__ and not ('BOTTLE_CHILD' in os.environ):
             log(f'initializing Server object')
         self.host = host
-        self.port = port
+        self.port = int(port)
         self.debug = debug
         self.reload = reload
 
@@ -410,3 +438,31 @@ class Server():
                 bottle.run(host = self.host, port = self.port, reloader = self.reload)
         else:
             bottle.run(host = self.host, port = self.port, reloader = self.reload)
+
+
+# Miscellaneous utilities.
+# .............................................................................
+
+def send_email(user, item, start, end):
+   try:
+       subject = f'Caltech DIBS loan for "{item.title}"'
+       dibs_host = config('DIBS_HOST')
+       dibs_port = config('DIBS_PORT')
+       viewer = f'https://{dibs_host}:{dibs_port}/view/{item.barcode}'
+       info_page = f'https://{dibs_host}:{dibs_port}/info'
+       body = _EMAIL.format(item      = item,
+                            start     = start.strftime("%I:%M %p %Z on %A, %B %d"),
+                            end       = end.strftime("%I:%M %p %Z on %A, %B %d"),
+                            viewer    = viewer,
+                            info_page = info_page,
+                            user      = user,
+                            subject   = subject,
+                            sender    = config('MAIL_SENDER'),
+                            host      = dibs_host,
+                            port      = dibs_port,
+                            feedback  = config('FEEDBACK_URL'))
+       if __debug__: log(f'sending mail to {user} about loan of {item.barcode}')
+       mailer  = smtplib.SMTP(config('MAIL_HOST'))
+       mailer.sendmail(config('MAIL_SENDER'), [user], body)
+   except Exception as ex:
+       if __debug__: log(f'unable to send mail: {str(ex)}')
