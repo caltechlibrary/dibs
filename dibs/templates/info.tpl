@@ -7,7 +7,7 @@
   </head>
   
   <body>
-    <div class="d-flex align-items-center min-vh-100">
+    <div class="d-flex align-items-center min-vh-100 my-5">
       <div class="container">
         <h1 class="mx-auto text-center my-3" style="color: #FF6C0C">
           Caltech DIBS: <em>Digital Borrowing System</em>
