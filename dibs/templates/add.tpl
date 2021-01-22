@@ -28,7 +28,7 @@
 
             <label for="inputTindId" class="sr-only">TindId</label>
             <input type="tindId" name="inputTindId" class="form-control"
-                   placeholder="TIND Id" required>
+                   placeholder="TIND Id">
 
             <label for="inputCopies" class="sr-only">Copies</label>
             <input type="copies" name="inputCopies" class="form-control"
