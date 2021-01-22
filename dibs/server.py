@@ -12,6 +12,7 @@ import bottle
 from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
 from   bottle_session import SessionPlugin
+import functools
 import logging
 from   peewee import *
 import os
@@ -69,6 +70,7 @@ def expired_loans_removed(func):
     '''Clean up expired loans before the function is called.'''
     # FIXME: Checking the loans at every function call is not efficient.  This
     # approach needs to be replaced with some more efficient.
+    @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
         for loan in Loan.select():
             if datetime.now() >= loan.endtime:
@@ -89,6 +91,7 @@ def expired_loans_removed(func):
 
 def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
+    @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
@@ -103,12 +106,23 @@ def barcode_verified(func):
 
 
 def authenticated(func):
+    @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
         if 'user' not in session or session['user'] is None:
             if __debug__: log(f'user not found in session object')
             redirect('/notauthenticated')
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
+        return func(session, *args, **kwargs)
+    return wrapper
+
+
+def head_method_ignored(func):
+    @functools.wraps(func)
+    def wrapper(session, *args, **kwargs):
+        if request.method == 'HEAD':
+            if __debug__: log(f'ignoring HEAD on {request.path}')
+            return
         return func(session, *args, **kwargs)
     return wrapper
 
@@ -147,6 +161,7 @@ def login(session):
 
 @get('/logout')
 @expired_loans_removed
+@head_method_ignored
 def logout(session):
     if 'user' not in session:
         if __debug__: log(f'get /logout invoked by unauthenticated user')
@@ -160,6 +175,7 @@ def logout(session):
 
 @get('/list')
 @expired_loans_removed
+@head_method_ignored
 @authenticated
 def list_items(session):
     '''Display the list of known items.'''
@@ -171,6 +187,7 @@ def list_items(session):
 @get('/add')
 @expired_loans_removed
 @authenticated
+@head_method_ignored
 def add(session):
     '''Display the page to add new items.'''
     if __debug__: log('get /add invoked')
@@ -182,19 +199,27 @@ def add(session):
 @expired_loans_removed
 @barcode_verified
 @authenticated
+@head_method_ignored
 def edit(session, barcode):
     '''Display the page to add new items.'''
-    if __debug__: log('get /edit invoked')
+    if __debug__: log(f'get /edit invoked on {barcode}')
     return template(path.join(_TEMPLATE_DIR, 'edit'),
                     action = 'edit', item = Item.get(Item.barcode == barcode))
 
 
-@post('/update/<action:(add|edit)>')
+@post('/update/add')
+@post('/update/edit')
 @expired_loans_removed
 @authenticated
-def update_item(session, action):
+def update_item(session):
     '''Handle http post request to add a new item from the add-new-item page.'''
+    action = 'add' if request.path == '/update/add' else 'edit'
     if __debug__: log(f'post /update/{action} invoked')
+    if 'cancel' in request.POST:
+        if __debug__: log(f'user clicked Cancel button')
+        redirect('/list')
+        return
+
     barcode  = request.POST.inputBarcode.strip()
     title    = request.POST.inputTitle.strip()
     author   = request.POST.inputAuthor.strip()
@@ -259,6 +284,7 @@ def remove_item(session):
 @expired_loans_removed
 @barcode_verified
 @authenticated
+@head_method_ignored
 def show_item_info(session, barcode):
     '''Display information about the given item.'''
     user = session.get('user')
@@ -361,6 +387,7 @@ def loan_item(session):
 @expired_loans_removed
 @barcode_verified
 @authenticated
+@head_method_ignored
 def end_loan(session, barcode):
     '''Handle http get request to return the given item early.'''
     user = session.get('user')
@@ -390,6 +417,7 @@ def end_loan(session, barcode):
 @expired_loans_removed
 @barcode_verified
 @authenticated
+@head_method_ignored
 def send_item_to_viewer(session, barcode):
     '''Redirect to the viewer.'''
     user = session.get('user')
@@ -410,6 +438,7 @@ def send_item_to_viewer(session, barcode):
 @expired_loans_removed
 @barcode_verified
 @authenticated
+@head_method_ignored
 def return_manifest(session, barcode):
     '''Return the manifest file for a given item.'''
     user = session.get('user')
