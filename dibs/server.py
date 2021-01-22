@@ -133,7 +133,7 @@ def head_method_ignored(func):
 # (Right now, there's no protection or distinction from other endpoints.)
 
 @get('/')
-def list_items(session):
+def front_page(session):
     '''Display the welcome page.'''
     if __debug__: log('get / invoked')
     return template(path.join(_TEMPLATE_DIR, 'welcome'))
