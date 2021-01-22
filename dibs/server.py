@@ -220,19 +220,33 @@ def update_item(session):
         redirect('/list')
         return
 
-    barcode  = request.POST.inputBarcode.strip()
-    title    = request.POST.inputTitle.strip()
-    author   = request.POST.inputAuthor.strip()
-    copies   = request.POST.inputCopies.strip()
-    tind_id  = request.POST.inputTindId.strip()
-    duration = request.POST.inputDuration.strip()
+    barcode    = request.POST.inputBarcode.strip()
+    title      = request.POST.inputTitle.strip()
+    author     = request.POST.inputAuthor.strip()
+    num_copies = request.POST.inputNumCopies.strip()
+    tind_id    = request.POST.inputTindId.strip()
+    duration   = request.POST.inputDuration.strip()
 
     if __debug__: log(f'doing {action} on barcode {barcode}, title {title}')
     if action == 'add':
         Item.create(barcode = barcode, title = title, author = author,
-                    tind_id = tind_id, num_copies = copies, duration = duration)
+                    tind_id = tind_id, num_copies = num_copies,
+                    duration = duration)
     else:
-        pass
+        try:
+            item = Item.get(Item.barcode == barcode)
+        except DoesNotExist as ex:
+            if __debug__: log(f'there is no item with barcode {barcode}')
+            redirect('/nonexistent')
+            return
+
+        item.barcode    = barcode
+        item.title      = title
+        item.author     = author
+        item.tind_id    = tind_id
+        item.num_copies = num_copies
+        item.duration   = duration
+        item.save()
     redirect('/list')
 
 

@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
-
   </head>
   
   <body>
@@ -33,6 +32,7 @@
                 <th class="text-center">Copies<br>in use</th>
                 <th></th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -40,7 +40,7 @@
               <tr scope="row">
                 <td>{{item.barcode}}</td>
                 <td>
-                  %if item.tind_id:
+                  %if item.tind_id != '':
                   <a target="_blank" href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
                   %else:
                   {{item.title}}
@@ -65,13 +65,22 @@
                   Copy link</button>
                 </td>
 
-                <td><form action="/remove" method="POST"
-                      onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
-                  <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-                  <input type="submit" name="Remove" value="Remove"
-                         class="btn btn-danger btn-sm"/>
+                <td>
+                  <form action="/edit/{{item.barcode}}" method="GET">
+                    <input type="hidden" name="barcode" value="{{item.barcode}}"/>
+                    <input type="submit" name="edit" value="Edit"
+                            class="btn btn-info btn-sm"/>
+                  </form>
                 </td>
-                </form>
+
+                <td>
+                  <form action="/remove" method="POST"
+                        onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
+                    <input type="hidden" name="barcode" value="{{item.barcode}}"/>
+                    <input type="submit" name="remove" value="Remove"
+                           class="btn btn-danger btn-sm"/>
+                  </form>
+                </td>
               </tr>
             %end
             </tbody>
@@ -79,7 +88,7 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <a href="/add" class="btn btn-primary m-0">Add new item</a>
+          <a href="/add"}} class="btn btn-primary m-0">Add a new item</a>
         </div>
       </div>
     </div>
