@@ -9,8 +9,9 @@ from   contextlib import redirect_stderr
 from   datetime import datetime, timedelta
 from   decouple import config
 import bottle
-from   bottle import request, response, route, template, get, post, error
-from   bottle import redirect, HTTPResponse, static_file
+from   bottle import Bottle, HTTPResponse, static_file, template
+from   bottle import request, response, redirect, route, get, post, error
+from   bottle_session import SessionPlugin
 import logging
 from   peewee import *
 import os
@@ -23,18 +24,12 @@ if __debug__:
 
 from .database import Item, Loan, Recent
 
-# A note about using Peewee: Peewee queries are lazy-executed: they return
-# iterators that must be accessed before the query is actually executed.
-# Thus, when selecting items, constructs like the following return a
-# ModelSelector, and not a single result or a list of results:
-#
-#   Loan.select().where(Loan.item == item)
-#
-# and you can't do next(...) on this because it's an iterator and not a
-# generator.  You have to either use a for loop, or create a list before you
-# can do much with the result.  This is the reason for explicit list() calls
-# in much of the code below.  Constantly creating lists is inefficient, but
-# thankfully we have few enough items that it's not a concern currently.
+
+# Installation of Bottle plugins.
+# .............................................................................
+
+bottle.install(SessionPlugin(cookie_name = config('COOKIE_NAME'),
+                             cookie_lifetime = config('COOKIE_LIFETIME')))
 
 
 # Constants used throughout this file.
@@ -74,7 +69,7 @@ def expired_loans_removed(func):
     '''Clean up expired loans before the function is called.'''
     # FIXME: Checking the loans at every function call is not efficient.  This
     # approach needs to be replaced with some more efficient.
-    def wrapper(*args, **kwargs):
+    def wrapper(session, *args, **kwargs):
         for loan in Loan.select():
             if datetime.now() >= loan.endtime:
                 barcode = loan.item.barcode
@@ -88,13 +83,13 @@ def expired_loans_removed(func):
                 barcode = recent.item.barcode
                 if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
                 recent.delete_instance()
-        return func(*args, **kwargs)
+        return func(session, *args, **kwargs)
     return wrapper
 
 
 def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
-    def wrapper(*args, **kwargs):
+    def wrapper(session, *args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
             try:
@@ -103,7 +98,17 @@ def barcode_verified(func):
                 if __debug__: log(f'there is no item with barcode {barcode}')
                 return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
                                 barcode = barcode)
-        return func(*args, **kwargs)
+        return func(session, *args, **kwargs)
+    return wrapper
+
+
+def authenticated(func):
+    def wrapper(session, *args, **kwargs):
+        if 'user' not in session or session['user'] is None:
+            redirect('/notauthenticated')
+        else:
+            if __debug__: log(f'user is authenticated: {session["user"]}')
+        return func(session, *args, **kwargs)
     return wrapper
 
 
@@ -113,15 +118,48 @@ def barcode_verified(func):
 # (Right now, there's no protection or distinction from other endpoints.)
 
 @get('/')
-def list_items():
+def list_items(session):
     '''Display the welcome page.'''
     if __debug__: log('get / invoked')
     return template(path.join(_TEMPLATE_DIR, 'welcome'))
 
 
+@get('/login')
+def show_login_page(session):
+    if __debug__: log('get /login invoked')
+    return template(path.join(_TEMPLATE_DIR, 'login'))
+
+
+@post('/login')
+def login(session):
+    email = request.forms.get('email')
+    password = request.forms.get('password')
+    if __debug__: log(f'post /login invoked by {email}')
+    if password != config('DEMO_PASSWORD'):
+        if __debug__: log(f'wrong password -- rejecting {email}')
+        return template(path.join(_TEMPLATE_DIR, 'login'))
+    else:
+        if __debug__: log(f'creating session for {email}')
+        session['user'] = email
+        redirect('/')
+
+
+@get('/logout')
+def logout(session):
+    if 'user' not in session:
+        if __debug__: log(f'get /logout invoked by unauthenticated user')
+        redirect('/login')
+    else:
+        user = session['user']
+        if __debug__: log(f'get /logout invoked by {user}')
+        del session['user']
+        redirect('/login')
+
+
 @get('/list')
 @expired_loans_removed
-def list_items():
+@authenticated
+def list_items(session):
     '''Display the list of known items.'''
     if __debug__: log('get /list invoked')
     return template(path.join(_TEMPLATE_DIR, 'list'),
@@ -129,14 +167,16 @@ def list_items():
 
 
 @get('/add')
-def add():
+@authenticated
+def add(session):
     '''Display the page to add new items.'''
     if __debug__: log('get /add invoked')
     return template(path.join(_TEMPLATE_DIR, 'add'))
 
 
 @post('/add')
-def add_item():
+@authenticated
+def add_item(session):
     '''Handle http post request to add a new item from the add-new-item page.'''
     if __debug__: log('post /add invoked')
     barcode  = request.POST.inputBarcode.strip()
@@ -155,7 +195,8 @@ def add_item():
 @post('/ready')
 @expired_loans_removed
 @barcode_verified
-def toggle_ready():
+@authenticated
+def toggle_ready(session):
     '''Set the ready-to-loan field.'''
     barcode = request.POST.barcode.strip()
     ready = (request.POST.ready.strip() == 'True')
@@ -177,7 +218,8 @@ def toggle_ready():
 @post('/remove')
 @expired_loans_removed
 @barcode_verified
-def remove_item():
+@authenticated
+def remove_item(session):
     '''Handle http post request to remove an item from the list page.'''
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
@@ -197,9 +239,10 @@ def remove_item():
 @get('/item/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-def show_item_info(barcode):
+@authenticated
+def show_item_info(session, barcode):
     '''Display information about the given item.'''
-    user = 'mhucka@library.caltech.edu'
+    user = session.get('user')
     if __debug__: log(f'get /item invoked on barcode {barcode} by user {user}')
 
     item = Item.get(Item.barcode == barcode)
@@ -239,9 +282,10 @@ def show_item_info(barcode):
 @post('/loan')
 @expired_loans_removed
 @barcode_verified
-def loan_item():
+@authenticated
+def loan_item(session):
     '''Handle http post request to loan out an item, from the item info page.'''
-    user = 'mhucka@library.caltech.edu'
+    user = session.get('user')
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
 
@@ -297,9 +341,10 @@ def loan_item():
 @get('/return/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-def end_loan(barcode):
+@authenticated
+def end_loan(session, barcode):
     '''Handle http get request to return the given item early.'''
-    user = 'mhucka@library.caltech.edu'
+    user = session.get('user')
     if __debug__: log(f'get /return invoked on barcode {barcode} by user {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -325,9 +370,10 @@ def end_loan(barcode):
 @get('/view/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-def send_item_to_viewer(barcode):
+@authenticated
+def send_item_to_viewer(session, barcode):
     '''Redirect to the viewer.'''
-    user = 'mhucka@library.caltech.edu'
+    user = session.get('user')
     if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -344,9 +390,10 @@ def send_item_to_viewer(barcode):
 @get('/manifests/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-def return_manifest(barcode):
+@authenticated
+def return_manifest(session, barcode):
     '''Return the manifest file for a given item.'''
-    user = 'mhucka@library.caltech.edu'
+    user = session.get('user')
     if __debug__: log(f'get /manifests/{barcode} invoked by user {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -367,6 +414,11 @@ def say_thank_you():
 @get('/info')
 def say_thank_you():
     return template(path.join(_TEMPLATE_DIR, 'info'))
+
+
+@get('/notauthenticated')
+def say_thank_you():
+    return template(path.join(_TEMPLATE_DIR, 'notauthenticated'))
 
 
 # Universal viewer interface.
