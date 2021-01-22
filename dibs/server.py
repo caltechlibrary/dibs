@@ -105,6 +105,7 @@ def barcode_verified(func):
 def authenticated(func):
     def wrapper(session, *args, **kwargs):
         if 'user' not in session or session['user'] is None:
+            if __debug__: log(f'user not found in session object')
             redirect('/notauthenticated')
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
@@ -145,6 +146,7 @@ def login(session):
 
 
 @get('/logout')
+@expired_loans_removed
 def logout(session):
     if 'user' not in session:
         if __debug__: log(f'get /logout invoked by unauthenticated user')
@@ -167,18 +169,32 @@ def list_items(session):
 
 
 @get('/add')
+@expired_loans_removed
 @authenticated
 def add(session):
     '''Display the page to add new items.'''
     if __debug__: log('get /add invoked')
-    return template(path.join(_TEMPLATE_DIR, 'add'))
+    return template(path.join(_TEMPLATE_DIR, 'edit'),
+                    action = 'add', item = None)
 
 
-@post('/add')
+@get('/edit/<barcode:int>')
+@expired_loans_removed
+@barcode_verified
 @authenticated
-def add_item(session):
+def edit(session, barcode):
+    '''Display the page to add new items.'''
+    if __debug__: log('get /edit invoked')
+    return template(path.join(_TEMPLATE_DIR, 'edit'),
+                    action = 'edit', item = Item.get(Item.barcode == barcode))
+
+
+@post('/update/<action:(add|edit)>')
+@expired_loans_removed
+@authenticated
+def update_item(session, action):
     '''Handle http post request to add a new item from the add-new-item page.'''
-    if __debug__: log('post /add invoked')
+    if __debug__: log(f'post /update/{action} invoked')
     barcode  = request.POST.inputBarcode.strip()
     title    = request.POST.inputTitle.strip()
     author   = request.POST.inputAuthor.strip()
@@ -186,9 +202,12 @@ def add_item(session):
     tind_id  = request.POST.inputTindId.strip()
     duration = request.POST.inputDuration.strip()
 
-    if __debug__: log(f'creating new item for barcode {barcode}, title {title}')
-    Item.create(barcode = barcode, title = title, author = author,
-                tind_id = tind_id, num_copies = copies, duration = duration)
+    if __debug__: log(f'doing {action} on barcode {barcode}, title {title}')
+    if action == 'add':
+        Item.create(barcode = barcode, title = title, author = author,
+                    tind_id = tind_id, num_copies = copies, duration = duration)
+    else:
+        pass
     redirect('/list')
 
 
