@@ -39,8 +39,12 @@
             %for item in items:
               <tr scope="row">
                 <td>{{item.barcode}}</td>
-                <td><a target="_blank" rel="noopener noreferrer"
-                       href="https://caltech.tind.io/admin2/bibcirculation/get_item_details?ln=en&recid={{item.tind_id}}">{{item.title}}</a></td>
+                <td>
+                  %if item.tind_id:
+                  <a target="_blank" href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                  %else:
+                  {{item.title}}
+                  %end
                 <td>{{item.author}}</td>
                 <td class="text-center">
                   <form action="/ready" method="POST">
@@ -58,11 +62,11 @@
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
                             onclick="sayCopied(this);" data-clipboard-action="copy"
                             data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">
-                  Copy share link</button>
+                  Copy link</button>
                 </td>
 
                 <td><form action="/remove" method="POST"
-                      onSubmit="return confirm('Remove {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
+                      onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
                   <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                   <input type="submit" name="Remove" value="Remove"
                          class="btn btn-danger btn-sm"/>
@@ -88,7 +92,7 @@
    // JavaScript to temporarily flash "Copied" when button is clicked.
    function sayCopied(elem) {
      $(elem).text("Copied");
-     setTimeout(() => $(elem).text("Copy share link"), 800);
+     setTimeout(() => $(elem).text("Copy link"), 800);
    }
   </script>
 
