@@ -5,9 +5,31 @@
     <title>List of items currently in the Caltech Digital Loan system</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
   </head>
+
+  <script>
+   // This next function is based in part on the posting by user Alvaro Montoro
+   // to Stack Overflow 2015-06-18, https://stackoverflow.com/a/30905277/743730
+   function copyToClipboard(button, text) {
+     var aux = document.createElement("input");
+     aux.setAttribute("value", text);
+     document.body.appendChild(aux);
+     aux.select();
+     document.execCommand("copy");
+     document.body.removeChild(aux);
+
+     // The following code is based in part on a 2016-09-21 posting to Stack
+     // Overflow by user Nina Scholz: https://stackoverflow.com/a/39610851/743730
+     var last = button.innerHTML;
+     button.innerHTML = 'Copied!';
+     clicked = true;
+     setTimeout(function () {
+       button.innerHTML = last;
+       clicked = false;
+     }.bind(button), 800);
+   }
+  </script>
   
   <body>
     <div class="container-fluid">
@@ -60,8 +82,7 @@
                 <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="sayCopied(this);" data-clipboard-action="copy"
-                            data-clipboard-text="http://localhost:8080/item/{{item.barcode}}">
+                            onclick="copyToClipboard(this, 'http://localhost:8080/item/{{item.barcode}}');">
                   Copy link</button>
                 </td>
 
@@ -93,16 +114,5 @@
       </div>
     </div>
   </body>
-
-  <script>
-   // This call to ClipboardJS must come after the page is defined.
-   new ClipboardJS(".btn");
-
-   // JavaScript to temporarily flash "Copied" when button is clicked.
-   function sayCopied(elem) {
-     $(elem).text("Copied");
-     setTimeout(() => $(elem).text("Copy link"), 800);
-   }
-  </script>
 
 </html>
