@@ -455,7 +455,7 @@ def send_item_to_viewer(session, barcode):
                         endtime = user_loans[0].endtime)
     else:
         if __debug__: log(f'user {user} does not have {barcode} loaned out')
-        return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+        redirect(f'/item/{barcode}')
 
 
 @get('/manifests/<barcode:int>')
