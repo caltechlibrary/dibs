@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Pragma" content="no-cache">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
     <link href="/viewer/uv/uv.css" rel="stylesheet" type="text/css">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+
     <script src="/viewer/uv/lib/offline.js"></script>
     <script src="/viewer/uv/helpers.js"></script>
-    <title>Caltech DIBS</title>
+
     <style>
      html, body { height: 97% }
      #uv {
@@ -16,6 +19,8 @@
        min-height: 600px;
      }
     </style>
+
+    <title>Caltech DIBS</title>
 </head>
 <body>
     
@@ -53,6 +58,11 @@
      });
    }, false);
 
+   window.onpageshow = function (event) {
+     if (event.persisted) {
+       window.location.reload();
+     }
+   };
   </script>
   <script src="uv/uv.js"></script>
 
