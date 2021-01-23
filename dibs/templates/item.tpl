@@ -42,7 +42,9 @@
         <p class="mx-auto text-center" style="width: 500px">
           This item is <span class="shown-if-not-available">not</span> currently
           available to you for a digital loan.
-          <span id="when" class="shown-if-not-available">It will become available again at
+          <span class="shown-if-not-available">{{explanation}}</span>
+          <span id="when" class="shown-if-not-available">This item will become
+            available again at
             {{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else 'unknown'}}.</span>
         </p>
 

@@ -313,6 +313,7 @@ def show_item_info(session, barcode):
         recent = next(loan for loan in recent_history if loan.user == user)
         endtime = recent.nexttime
         available = False
+        explanation = 'It is too soon after the last time you borrowed this book.'
     elif any(user_loans):
         # The user has a current loan. If it's for this title, redirect them
         # to the viewer; if it's for another title, block the loan button.
@@ -324,18 +325,27 @@ def show_item_info(session, barcode):
             if __debug__: log(f'user already has a loan on something else')
             available = False
             endtime = user_loans[0].endtime
+            loaned_item = user_loans[0].item
+            explanation = ('You have another item on loan'
+                           + f' ("{loaned_item.title}" by {loaned_item.author})'
+                           + ' and it has not yet been returned.')
     else:
         if __debug__: log(f'user is allowed to borrow {barcode}')
         loans = list(Loan.select().where(Loan.item == item))
         available = item.ready and (len(loans) < item.num_copies)
-        if item.ready and loans:
+        if item.ready and not available:
             endtime = min(loan.endtime for loan in loans)
-        elif item.ready:
-            endtime = datetime.now()
-        else:
+            explanation = 'All available copies are currently on loan.'
+        elif not item.ready:
             endtime = None
+            explanation = 'This item is not currently available through DIBS.'
+        else:
+            # It's available and they can have it.
+            endtime = datetime.now()
+            explanation = None
     return template(path.join(_TEMPLATE_DIR, 'item'),
-                    item = item, available = available, endtime = endtime)
+                    item = item, available = available, endtime = endtime,
+                    explanation = explanation)
 
 
 @post('/loan')
