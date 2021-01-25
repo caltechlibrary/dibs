@@ -77,6 +77,36 @@ The current demo server only implements a simple login scheme for code develop p
 * To log out, visit `/logout` and that's all (responds to HTTP GET).
 
 
+The pages of DIBS
+------------------
+
+Here is a summary of the endpoints implemented by the system:
+
+| Endpoint                 | Type | Purpose              |
+|--------------------------|------|----------------------|
+| `/`                      | GET  | Welcome page         |
+| `/info`                  | GET  | General information page about the system |
+| `/login`                 | GET  | Shows the login page |
+| `/login`                 | POST | Accepts form from login page |
+| `/logout`                | GET  | Logs out current user |
+| `/list`                  | GET  | Show what's available for loan |
+| `/add`                   | GET  | Show the page to add an item |
+| `/edit/<barcode>`        | GET  | Show the page to edit an item |
+| `/update/add`            | POST | Accepts form input from add-item page |
+| `/update/edit`           | POST | Accepts form input from edit-item page | 
+| `/ready`                 | POST | Handles checkbox in `list` page to make an item ready to loan |
+| `/remove`                | POST | Handles button in `list` page to remove an item |
+| `/item/<barcode>`        | GET  | Shows item information page for a given item |
+| `/loan`                  | POST | Handles Loan button from `/item` page |
+| `/view/<barcode>`        | GET  | Show the item in the viewer page |
+| `/return/<barcode>`      | GET  | Handles Return button from viewer page |
+| `/manifests/<barcode>`   | GET  | Sends manifest to viewer |
+| `/thankyou`              | GET  | Destination after user uses Return button |
+| `/notauthenticated`      | GET  | Error page for unathenticated users |
+| `/nonexistent`           | GET  | Error page for nonexistent items |
+| `/nonexistent/<barcode>` | GET  | Error page for nonexistent items |
+
+
 General information
 -------------------
 
