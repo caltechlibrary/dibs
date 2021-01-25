@@ -9,7 +9,6 @@
 
 # Initial imports. More things are imported later below.
 
-from   decouple import config
 import pkg_resources
 import os
 from   os import path
@@ -49,6 +48,7 @@ if not path.exists(path.join(here, 'settings.ini')):
 from   boltons.debugutils import pdb_on_signal
 from   commonpy.data_utils import timestamp
 from   commonpy.string_utils import antiformat
+from   decouple import config
 import plac
 import signal
 if __debug__:
