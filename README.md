@@ -45,7 +45,7 @@ Running the server on localhost
 First, install the Python dependencies on your system or your virtual environment:
 
 ```sh
-pip3 install -r requirements.txt
+pip3 install -r requirements.txt --use-feature=2020-resolver
 ```
 
 Second, start the Redis server.  If you are using Homebrew, this can be done using the following command:
