@@ -34,7 +34,7 @@ else:
             exit(1)
 
 if not path.exists(path.join(here, 'settings.ini')):
-    print('‼️  settings.ini file not found in {here}')
+    print(f'‼️  settings.ini file not found in {here}')
     exit(1)
 
 
