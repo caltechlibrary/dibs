@@ -30,6 +30,14 @@ To install this locally, you will need to clone not just the main repo contents 
 git-clone-complete https://github.com/caltechlibrary/dibs
 ```
 
+You also need to have a Redis database running on the local host.  If you are using Homebrew on macOS, the simplest way to do that is the following:
+
+```sh
+brew install redis
+```
+
+You can leave the default Redis settings as-is for the DIBS demo.
+
 
 Running the server on localhost
 -------------------------------
@@ -40,13 +48,21 @@ First, install the Python dependencies on your system or your virtual environmen
 pip3 install -r requirements.txt
 ```
 
-Prior to running the server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py) in the current directory:
+Second, start the Redis server.  If you are using Homebrew, this can be done using the following command:
+
+```sh
+brew services start redis
+```
+
+You can test if Redis is running properly by issuing the command `redis-cli ping`.
+
+Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py) in the current directory:
 
 ```sh
 python3 load-mock-data.py
 ```
 
-To demo the viewer with actual content, a manifest needs to be added to the subdirectory named [`manifests`](manifests).  The manifest must be named using the pattern `NNNN-manifest.json`, where `NNNN` is the barcode.
+To demo the viewer with actual content, a manifest also needs to be added to the subdirectory named [`manifests`](manifests).  The manifest must be named using the pattern `NNNN-manifest.json`, where `NNNN` is the barcode.
 
 The script [`run-server`](run-server) starts the server running; it assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
