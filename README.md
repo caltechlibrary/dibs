@@ -30,6 +30,19 @@ To install this locally, you will need to clone not just the main repo contents 
 git-clone-complete https://github.com/caltechlibrary/dibs
 ```
 
+This will create a `dibs` subdirectory in your current directory.  Switch to it, and to get the most recent work on DIBS, change to the `develop` branch:
+
+```sh
+cd dibs
+git checkout develop
+```
+
+Next, install the Python dependencies on your system or your virtual environment:
+
+```sh
+pip3 install -r requirements.txt --use-feature=2020-resolver
+```
+
 You also need to have a Redis database running on the local host.  If you are using Homebrew on macOS, the simplest way to do that is the following:
 
 ```sh
@@ -42,13 +55,7 @@ You can leave the default Redis settings as-is for the DIBS demo.
 Running the server on localhost
 -------------------------------
 
-First, install the Python dependencies on your system or your virtual environment:
-
-```sh
-pip3 install -r requirements.txt --use-feature=2020-resolver
-```
-
-Second, start the Redis server.  If you are using Homebrew, this can be done using the following command:
+First, start the Redis server.  If you are using Homebrew, this can be done using the following command:
 
 ```sh
 brew services start redis
