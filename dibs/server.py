@@ -69,7 +69,7 @@ at {feedback}
 def expired_loans_removed(func):
     '''Clean up expired loans before the function is called.'''
     # FIXME: Checking the loans at every function call is not efficient.  This
-    # approach needs to be replaced with some more efficient.
+    # approach needs to be replaced with something more efficient.
     @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
         for loan in Loan.select():
@@ -302,14 +302,14 @@ def remove_item(session):
 def show_item_info(session, barcode):
     '''Display information about the given item.'''
     user = session.get('user')
-    if __debug__: log(f'get /item invoked on barcode {barcode} by user {user}')
+    if __debug__: log(f'get /item invoked on barcode {barcode} by {user}')
 
     item = Item.get(Item.barcode == barcode)
     user_loans = list(Loan.select().where(Loan.user == user))
     recent_history = list(Recent.select().where(Recent.item == item))
     # First check if the user has recently loaned out this same item.
     if any(loan for loan in recent_history if loan.user == user):
-        if __debug__: log(f'user recently borrowed {barcode}')
+        if __debug__: log(f'{user} recently borrowed {barcode}')
         recent = next(loan for loan in recent_history if loan.user == user)
         endtime = recent.nexttime
         available = False
@@ -318,11 +318,11 @@ def show_item_info(session, barcode):
         # The user has a current loan. If it's for this title, redirect them
         # to the viewer; if it's for another title, block the loan button.
         if user_loans[0].item == item:
-            if __debug__: log(f'user already has {barcode}; redirecting to uv')
+            if __debug__: log(f'{user} already has {barcode}; redirecting to uv')
             redirect(f'/view/{barcode}')
             return
         else:
-            if __debug__: log(f'user already has a loan on something else')
+            if __debug__: log(f'{user} already has a loan on something else')
             available = False
             endtime = user_loans[0].endtime
             loaned_item = user_loans[0].item
@@ -330,7 +330,7 @@ def show_item_info(session, barcode):
                            + f' ("{loaned_item.title}" by {loaned_item.author})'
                            + ' and it has not yet been returned.')
     else:
-        if __debug__: log(f'user is allowed to borrow {barcode}')
+        if __debug__: log(f'{user} is allowed to borrow {barcode}')
         loans = list(Loan.select().where(Loan.item == item))
         available = item.ready and (len(loans) < item.num_copies)
         if item.ready and not available:
@@ -356,7 +356,7 @@ def loan_item(session):
     '''Handle http post request to loan out an item, from the item info page.'''
     user = session.get('user')
     barcode = request.POST.barcode.strip()
-    if __debug__: log(f'post /loan invoked on barcode {barcode} by user {user}')
+    if __debug__: log(f'post /loan invoked on barcode {barcode} by {user}')
 
     item = Item.get(Item.barcode == barcode)
     if not item.ready:
@@ -375,7 +375,7 @@ def loan_item(session):
     # initiated before the 1st finishes.  So, lock this block of code.
     with _THREAD_LOCK:
         if any(Loan.select().where(Loan.user == user)):
-            if __debug__: log(f'user already has a loan on something else')
+            if __debug__: log(f'{user} already has a loan on something else')
             redirect(f'/onlyone')
             return
         loans = list(Loan.select().where(Loan.item == item))
@@ -383,8 +383,8 @@ def loan_item(session):
             # Shouldn't be able to reach this point b/c the item page shouldn't
             # make a loan available for this user & item combo. But if
             # something weird happens (e.g., double posting), we might.
-            if __debug__: log(f'user already has a copy of {barcode} loaned out')
-            if __debug__: log(f'redirecting user to /view for {barcode}')
+            if __debug__: log(f'{user} already has a copy of {barcode} loaned out')
+            if __debug__: log(f'redirecting {user} to /view for {barcode}')
             redirect(f'/view/{barcode}')
             return
         if len(loans) >= item.num_copies:
@@ -394,7 +394,7 @@ def loan_item(session):
             return
         recent_history = list(Recent.select().where(Recent.item == item))
         if any(loan for loan in recent_history if loan.user == user):
-            if __debug__: log(f'user recently borrowed {barcode}')
+            if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
             return template(path.join(_TEMPLATE_DIR, 'toosoon'),
                             nexttime = recent.nexttime)
@@ -415,7 +415,7 @@ def loan_item(session):
 def end_loan(session, barcode):
     '''Handle http get request to return the given item early.'''
     user = session.get('user')
-    if __debug__: log(f'get /return invoked on barcode {barcode} by user {user}')
+    if __debug__: log(f'get /return invoked on barcode {barcode} by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     user_loans = [loan for loan in loans if user == loan.user]
@@ -433,7 +433,7 @@ def end_loan(session, barcode):
                       nexttime = datetime.now() + timedelta(hours = 1))
     else:
         # User does not have this item loaned out. Ignore the request.
-        if __debug__: log(f'user {user} does not have {barcode} loaned out')
+        if __debug__: log(f'{user} does not have {barcode} loaned out')
     redirect('/thankyou')
 
 
@@ -445,7 +445,7 @@ def end_loan(session, barcode):
 def send_item_to_viewer(session, barcode):
     '''Redirect to the viewer.'''
     user = session.get('user')
-    if __debug__: log(f'get /view invoked on barcode {barcode} by user {user}')
+    if __debug__: log(f'get /view invoked on barcode {barcode} by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     user_loans = [loan for loan in loans if user == loan.user]
@@ -454,7 +454,7 @@ def send_item_to_viewer(session, barcode):
         return template(path.join(_TEMPLATE_DIR, 'uv'), barcode = barcode,
                         endtime = user_loans[0].endtime)
     else:
-        if __debug__: log(f'user {user} does not have {barcode} loaned out')
+        if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'/item/{barcode}')
 
 
@@ -466,14 +466,14 @@ def send_item_to_viewer(session, barcode):
 def return_manifest(session, barcode):
     '''Return the manifest file for a given item.'''
     user = session.get('user')
-    if __debug__: log(f'get /manifests/{barcode} invoked by user {user}')
+    if __debug__: log(f'get /manifests/{barcode} invoked by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     if any(loan.user for loan in loans if user == loan.user):
         if __debug__: log(f'returning manifest file for {barcode} for {user}')
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
-        if __debug__: log(f'user {user} does not have {barcode} loaned out')
+        if __debug__: log(f'{user} does not have {barcode} loaned out')
         return template(path.join(_TEMPLATE_DIR, 'notallowed'))
 
 
