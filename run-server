@@ -72,7 +72,7 @@ def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
     # Set up debug logging as soon as possible, if requested ------------------
 
     if debug != 'OUT':
-        if __debug__: set_debug(True, debug, extra = '%(threadName)s')
+        if __debug__: set_debug(True, debug)
         import faulthandler
         faulthandler.enable()
         if not sys.platform.startswith('win'):
