@@ -65,6 +65,18 @@ To run with debug tracing, use the `-@` option with an argument telling it where
 It's useful to have 2 shell windows open in that case: one where you start the server, and with `tail -f /tmp/debug.log` to see the trace.
 
 
+Logging in
+----------
+
+The current demo server only implements a simple login scheme for code develop purposes only.  Here is a summary of how it works:
+
+* Login status is determined by a session cookie
+* The page at `/` doesn't nothing but show a welcome message
+* The page at `/login` lets you log in. The login verification only checks for the password; it lets you use any email address. The password is set in `settings.ini`. 
+* Once logged in, that's when `/list` and other pages become accessible.
+* To log out, visit `/logout` and that's all (responds to HTTP GET).
+
+
 General information
 -------------------
 
