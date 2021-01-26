@@ -132,13 +132,6 @@ def head_method_ignored(func):
 # These endpoints need to be protected against access by non-Library staff.
 # (Right now, there's no protection or distinction from other endpoints.)
 
-@get('/')
-def front_page(session):
-    '''Display the welcome page.'''
-    if __debug__: log('get / invoked')
-    return template(path.join(_TEMPLATE_DIR, 'welcome'))
-
-
 @get('/login')
 def show_login_page(session):
     if __debug__: log('get /login invoked')
@@ -293,6 +286,15 @@ def remove_item(session):
 
 # User endpoints.
 # .............................................................................
+
+@get('/')
+@get('/info')
+@get('/welcome')
+def front_page(session):
+    '''Display the welcome page.'''
+    if __debug__: log('get / invoked')
+    return template(path.join(_TEMPLATE_DIR, 'info'))
+
 
 @get('/item/<barcode:int>')
 @expired_loans_removed
@@ -481,11 +483,6 @@ def return_manifest(session, barcode):
 def say_thank_you():
     return template(path.join(_TEMPLATE_DIR, 'thankyou'),
                     feedback_url = config('FEEDBACK_URL'))
-
-
-@get('/info')
-def say_thank_you():
-    return template(path.join(_TEMPLATE_DIR, 'info'))
 
 
 @get('/notauthenticated')
