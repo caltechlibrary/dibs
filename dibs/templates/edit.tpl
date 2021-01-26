@@ -123,7 +123,7 @@
             <div class="py-4">
               <div class="btn-toolbar mx-auto" style="width: 240px;">
                 <input class="btn btn-default mx-2" style="width: 100px"
-                       name="cancel" value="Cancel" type="submit"/>
+                       name="cancel" value="Cancel" type="submit" formnovalidate/>
                 <input id="btnAdd" class="btn btn-primary mx-2" style="width: 100px"
                        name="add"
                        %if item:

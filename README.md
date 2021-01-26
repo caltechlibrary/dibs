@@ -58,23 +58,46 @@ To install this locally, you will need to clone not just the main repo contents 
 git-clone-complete https://github.com/caltechlibrary/dibs
 ```
 
+This will create a `dibs` subdirectory in your current directory.  Switch to it, and to get the most recent work on DIBS, change to the `develop` branch:
+
+```sh
+cd dibs
+git checkout develop
+```
+
+Next, install the Python dependencies on your system or your virtual environment:
+
+```sh
+pip3 install -r requirements.txt --use-feature=2020-resolver
+```
+
+You also need to have a Redis database running on the local host.  If you are using Homebrew on macOS, the simplest way to do that is the following:
+
+```sh
+brew install redis
+```
+
+You can leave the default Redis settings as-is for the DIBS demo.
+
 
 Running the server on localhost
 -------------------------------
 
-First, install the Python dependencies on your system or your virtual environment:
+First, start the Redis server.  If you are using Homebrew, this can be done using the following command:
 
 ```sh
-pip3 install -r requirements.txt
+brew services start redis
 ```
 
-Prior to running the server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py) in the current directory:
+You can test if Redis is running properly by issuing the command `redis-cli ping`.
+
+Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py) in the current directory:
 
 ```sh
 python3 load-mock-data.py
 ```
 
-To demo the viewer with actual content, a manifest needs to be added to the subdirectory named [`manifests`](manifests).  The manifest must be named using the pattern `NNNN-manifest.json`, where `NNNN` is the barcode.
+To demo the viewer with actual content, a manifest also needs to be added to the subdirectory named [`manifests`](manifests).  The manifest must be named using the pattern `NNNN-manifest.json`, where `NNNN` is the barcode.
 
 The script [`run-server`](run-server) starts the server running; it assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
@@ -160,6 +183,11 @@ The definition of the service endpoints and the behaviors is in [`dibs/server.py
 The web server used at the moment is the development server provided by Bottle.  It has live reload built-in, meaning that changes to the `.py` files are picked up automatically and the server updates its behavior on the fly.
 
 See http://bottlepy.org/docs/dev/tutorial.html#auto-reloading for an important note about Bottle: when it's running in auto-reload mode, _"the main process will not start a server, but spawn a new child process using the same command line arguments used to start the main process. All module-level code is executed at least twice"_.  This means some care is needed in how the top-level code is written.  Useful to know is that code can distinguish whether it's in the parent or child process by looking for the presence of the environment variable `'BOTTLE_CHILD'` set by Bottle in the child process.
+
+
+### _About the documentation_
+
+The docs are at [https://caltechlibrary.github.io/dibs/](https://caltechlibrary.github.io/dibs/).  They are built using [MyST](https://myst-parser.readthedocs.io/en/latest/index.html).  The sources are kept in `/docs`.
 
 
 License
