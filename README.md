@@ -159,7 +159,7 @@ See http://bottlepy.org/docs/dev/tutorial.html#auto-reloading for an important n
 
 ### _About the documentation_
 
-The docs are at [https://caltechlibrary.github.io/dibs/](https://caltechlibrary.github.io/dibs/).  They are built using [MyST](https://myst-parser.readthedocs.io/en/latest/index.html).  The sources are kept in `/docs`.
+The docs are available online at [https://caltechlibrary.github.io/dibs/](https://caltechlibrary.github.io/dibs/).  They are built using [Sphinx](https://www.sphinx-doc.org) and [MyST](https://myst-parser.readthedocs.io/en/latest/index.html).  The sources are kept in the [`docs`](./docs) subdirectory.  The [`README.md`](./docs/README.md) file in the [`docs`](./docs) subdirectory explains how to build and preview the documentation locally.
 
 
 License
@@ -174,6 +174,8 @@ Acknowledgments
 ---------------
 
 This work was funded by the California Institute of Technology Library.
+
+The [vector artwork](https://thenounproject.com/term/book-waiting/1531542/) of a book with a clock on it, used as the icon for this project, was created by [Royyan Wijaya](https://thenounproject.com/roywj/) from the Noun Project.  It is licensed under the Creative Commons [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/) license.
 
 <div align="center">
   <br>
