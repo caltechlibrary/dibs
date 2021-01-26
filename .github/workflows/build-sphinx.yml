@@ -47,7 +47,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install "myst-parser[linkify]"
-          python3 -m pip install sphinx-book-theme
+          python3 -m pip install sphinx-material
 
       - name: Build
         run: |
