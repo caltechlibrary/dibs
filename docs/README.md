@@ -4,11 +4,11 @@ About the docs
 Building the docs locally
 -------------------------
 
-First, install [MyST](https://myst-parser.readthedocs.io/en/latest/index.html) and [Sphinx]():
+First, install [MyST](https://myst-parser.readthedocs.io/en/latest/index.html) and [Sphinx](https://www.sphinx-doc.org):
 
 ```sh
 python3 -m pip install "myst-parser[linkify]"
-python3 -m pip install sphinx-book-theme
+python3 -m pip install sphinx-material
 python3 -m pip install sphinx-autobuild
 ```
 
