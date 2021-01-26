@@ -1,3 +1,14 @@
+# =============================================================================
+# @file    build-myst.yml
+# @brief   GitHub Actions workflow to build DIBS docs using MyST 
+# @author  Michael Hucka <mhucka@caltech.edu>
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+#
+# This workflow file was originally based on work by GitHub user "peaceiris":
+# https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-static-site-generators-with-python
+# =============================================================================
+
 name: Update docs on GitHub
 
 on:
