@@ -77,7 +77,7 @@ html_theme_options = {
     # Set the colors. I found a list here:
     # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
     "theme_color": 'grey',
-    'color_primary': 'orange',
+    'color_primary': 'deep-orange',
     'color_accent': 'brown',
 
     # Set the repo location to get a badge with stats
