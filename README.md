@@ -107,8 +107,8 @@ Here is a summary of the endpoints implemented by the system:
 
 | Endpoint                 | Type | Purpose              |
 |--------------------------|------|----------------------|
-| `/`                      | GET  | Welcome page         |
-| `/info`                  | GET  | General information page about the system |
+| `/`                      | GET  | General information page about the system |
+| `/info`                  | GET  | Same as `/` |
 | `/login`                 | GET  | Shows the login page |
 | `/login`                 | POST | Accepts form from login page |
 | `/logout`                | GET  | Logs out current user |
