@@ -24,29 +24,10 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 Requirments
 -----------
 
-DIBS is written in Python 3 and depends on additoinal solftware
-to work.  
-
-DIBS uses the redis No-SQL datastore for session management. This can 
-be installed using your platforms package management systems.
-
-### macOS using MacPorts
-
-The following commands install, load (startup) and unload (shutdown) redis.
-
-```sh
-sudo port install redis
-sudo port load redis
-sudo port unload redis
-```
-
-### Debian/Ubuntu
-
-```sh
-sudo apt install redis
-sudo systemctl start redis
-sudo systemctl stop redis
-```
+DIBS is written in Python 3 and depends on additional solftware
+to work.  DIBS uses the redis No-SQL datastore for session management. 
+This can be installed using your platforms package management systems.
+In development settings it also uses SQLite3.
 
 
 Installation
@@ -77,6 +58,19 @@ You also need to have a Redis database running on the local host.  If you are us
 brew install redis
 ```
 
+If you are using MacPorts on macOS, the simplest way to do that is the following:
+
+
+```sh
+sudo port install redis
+```
+
+On Debian/Ubuntu/Raspberry Pi OS do the following:
+
+```sh
+sudo apt install redis
+```
+
 You can leave the default Redis settings as-is for the DIBS demo.
 
 
@@ -87,6 +81,20 @@ First, start the Redis server.  If you are using Homebrew, this can be done usin
 
 ```sh
 brew services start redis
+```
+
+Using MacPorts you can start/stop with the following commands:
+
+```sh
+sudo port load redis
+sudo port unload redis
+```
+
+On Debian/Ubuntu/Raspberry Pi OS you can start/stop with the following commands:
+
+```sh
+sudo systemctl start redis
+sudo systemctl stop redis
 ```
 
 You can test if Redis is running properly by issuing the command `redis-cli ping`.
