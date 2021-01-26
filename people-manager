@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+
+from decouple import config
+from dibs import people
+
+people_db = config('PEOPLE_DB', default='people.db')
+
+def usage(app_name, exit_code):
+    print(f'''
+USAGE: {app_name} VERB [KEY_VALUE_PAIRS]
+
+{app_name} lets us manage the contents of {people_db}
+supporting the dibs web service.
+
+VERBS
+
+    help       this help page.
+    version    version of software
+
+    list       list users defined in {people_db}
+    add        add a user to {people_db}
+    update     set a value for user in {people_db}
+    remove     remove user from {people_db}
+
+EXAMPLES
+
+Managing users. the uname field is always required for "add",
+
+    {app_name} add uname="janedoe" display_name="Doe, Jane" secret
+    {app_name} update uname="janedoe" display_name="Dear, Jane"
+    {app_name} remove uname="janedoe"
+
+This will create or update the record for "janedoe". If
+a fieldname doesn't supply a value (e.g. our secret field)
+then you will be prompted for that value. Add will warn you if 
+the username is already defined. Update will warn you if this 
+username is not found.
+
+List users with
+
+    {app_name} list
+
+This lists a specific user with 
+
+    {app_name} list uname="janedoe"
+
+''')
+    sys.exit(exit_code)
+
+def list_people(kv):
+    print(f'''FIXME: print {verb} of people''')
+    for k in kv:
+        print(f'''DEBUG: {k} -> {kv[k]}''')
+
+def add_people(kv):
+    print(f'''FIXME: {verb} a person to {people_db}''')
+    for k in kv:
+        print(f'''DEBUG: {k} -> {kv[k]}''')
+
+def update_people(kv):
+    print(f'''FIXME: {verb} a person in {people_db}''')
+    for k in kv:
+        print(f'''DEBUG: {k} -> {kv[k]}''')
+
+def remove_people(kv):
+    print(f'''FIXME: {verb} a person in {people_db}''')
+    for k in kv:
+        print(f'''DEBUG: {k} -> {kv[k]}''')
+
+
+if __name__ == '__main__':
+    app_name = os.path.basename(sys.argv[0])
+    if len(sys.argv) < 2:
+        usage(app_name, 1)
+    verb = sys.argv[1]    
+    kv = {}
+    for term in sys.argv[2:]:
+        if "=" in term:
+            parts = term.split("=", 2);
+            key = parts[0].strip()
+            value = parts[1].strip()
+            if key and value:
+                kv[key] = value
+    people = people.People()
+    if verb == 'list':
+        list_people(kv)
+    elif verb == 'add':
+        add_people(kv)
+    elif verb == 'update':
+        update_people(kv)
+    elif verb == 'remove':
+        remove_people(kv)
+    else:
+        print(f'''ERROR: "{verb}" not understood''')
+        sys.exit(1)
+        
+
+
+

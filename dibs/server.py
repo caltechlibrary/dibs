@@ -24,6 +24,7 @@ if __debug__:
     from sidetrack import log
 
 from .database import Item, Loan, Recent
+from .auth import User
 
 
 # Installation of Bottle plugins.
