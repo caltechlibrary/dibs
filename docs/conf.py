@@ -29,7 +29,7 @@ author = 'Caltech Library'
 # ones.
 extensions = [
     'myst_parser',
-    "sphinx.ext.autodoc",
+    'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
 ]
 
@@ -42,7 +42,13 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md']
 
 
-# -- Options for HTML output -------------------------------------------------
+# -- Sphinx options for HTML output -------------------------------------------
+
+html_title = 'Caltech DIBS'
+html_short_title = "Home"
+
+html_logo = "_static/media/dibs-icon-white-sm.png"
+html_favicon = "_static/media/favicon.ico"
 
 # The theme to use for HTML and HTML Help pages.
 html_theme = 'sphinx_material'
@@ -52,14 +58,17 @@ html_theme = 'sphinx_material'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_short_title = "Home"
+# Our additional CSS for DIBS.
+html_css_files   = ['css/custom.css']
+
+html_show_sourcelink = False
+html_sidebars = {
+    "**": ["globaltoc.html", "searchbox.html"]
+}
 
 
 # -- Options for the Material theme ---------------------------------------------
 # C.f. https://github.com/bashtage/sphinx-material/blob/master/docs/conf.py
-
-# Set link name generated in the top bar.
-html_title = 'Caltech DIBS'
 
 # Material theme options (see theme.conf for more information)
 html_theme_options = {
@@ -76,16 +85,16 @@ html_theme_options = {
 
     # Set the colors. I found a list here:
     # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
-    "theme_color": 'grey',
+    "theme_color": 'blue-grey',
     'color_primary': 'deep-orange',
-    'color_accent': 'brown',
+    'color_accent': 'teal',
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/caltechlibrary/dibs/',
     'repo_name': 'Caltech DIBS',
 
     # Visible levels of the global TOC; -1 means unlimited
-    'globaltoc_depth': 3,
+    'globaltoc_depth': 2,
     # If False, expand all TOC entries
     'globaltoc_collapse': False,
     # If True, show hidden TOC entries
@@ -94,8 +103,8 @@ html_theme_options = {
     "html_minify": False,
     "html_prettify": True,
 
-    # "version_dropdown": True,
-    # "version_json": "_static/versions.json",
+    "version_dropdown": False,
+    "version_json": "_static/versions.json",
     # "version_info": {
     #     "Release": "https://bashtage.github.io/sphinx-material/",
     #     "Development": "https://bashtage.github.io/sphinx-material/devel/",
