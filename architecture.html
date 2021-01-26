@@ -32,7 +32,7 @@
   <link href="_static/stylesheets/application-palette.css" rel="stylesheet"/>
   <link href="_static/stylesheets/application-fixes.css" rel="stylesheet"/>
   <link href="_static/fonts/material-icons.css" rel="stylesheet"/>
-  <meta content="grey" name="theme-color"/>
+  <meta content="blue-grey" name="theme-color"/>
   <script src="_static/javascripts/modernizr.js">
   </script>
   <title>
@@ -40,6 +40,7 @@
   </title>
   <link href="_static/pygments.css" rel="stylesheet" type="text/css"/>
   <link href="_static/material.css" rel="stylesheet" type="text/css"/>
+  <link href="_static/css/custom.css" rel="stylesheet" type="text/css"/>
   <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js">
   </script>
   <script src="_static/jquery.js">
@@ -48,11 +49,12 @@
   </script>
   <script src="_static/doctools.js">
   </script>
+  <link href="_static/favicon.ico" rel="shortcut icon"/>
   <link href="genindex.html" rel="index" title="Index"/>
   <link href="search.html" rel="search" title="Search"/>
   <link href="usage.html" rel="prev" title="Using DIBS"/>
  </head>
- <body data-md-color-accent="brown" data-md-color-primary="orange" dir="ltr">
+ <body data-md-color-accent="teal" data-md-color-primary="deep-orange" dir="ltr">
   <svg class="md-svg">
    <defs data-children-count="0">
     <svg height="448" id="__github" viewbox="0 0 416 448" width="416" xmlns="http://www.w3.org/2000/svg">
@@ -73,6 +75,7 @@
     <div class="md-flex navheader">
      <div class="md-flex__cell md-flex__cell--shrink">
       <a class="md-header-nav__button md-logo" href="index.html" title="Caltech DIBS">
+       <img alt="Home logo" height="26" src="_static/dibs-icon-white-sm.png"/>
       </a>
      </div>
      <div class="md-flex__cell md-flex__cell--shrink">
@@ -133,14 +136,6 @@
        </a>
       </div>
      </div>
-     <script src="_static/javascripts/version_dropdown.js">
-     </script>
-     <script>
-      var json_loc = ""versions.json"",
-        target_loc = "../",
-        text = "Versions";
-    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
-     </script>
     </div>
    </nav>
   </header>
@@ -164,7 +159,7 @@
         <nav class="md-nav md-nav--primary" data-md-level="0">
          <label class="md-nav__title md-nav__title--site" for="__drawer">
           <a class="md-nav__button md-logo" href="index.html" title="Caltech DIBS">
-           <img alt=" logo" height="48" src="_static/" width="48"/>
+           <img alt=" logo" height="48" src="_static/dibs-icon-white-sm.png" width="48"/>
           </a>
           <a href="index.html" title="Caltech DIBS">
            Caltech DIBS
@@ -183,6 +178,60 @@
            </div>
           </a>
          </div>
+         <ul class="md-nav__list">
+          <li class="md-nav__item">
+           <a class="md-nav__link" href="usage.html">
+            Using DIBS
+           </a>
+           <ul class="md-nav__list">
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="usage.html#the-patron-experience">
+              The patron experience
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="usage.html#the-library-staff-experience">
+              The Library staff experience
+             </a>
+            </li>
+           </ul>
+          </li>
+          <li class="md-nav__item">
+           <input class="md-toggle md-nav__toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+           <label class="md-nav__link md-nav__link--active" for="__toc">
+            System architecture
+           </label>
+           <a class="md-nav__link md-nav__link--active" href="#">
+            System architecture
+           </a>
+           <nav class="md-nav md-nav--secondary">
+            <ul class="md-nav__list" data-md-scrollfix="">
+            </ul>
+           </nav>
+           <ul class="md-nav__list">
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="#configuration">
+              Configuration
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="#database">
+              Database
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="#server">
+              Server
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="#endpoints">
+              Endpoints
+             </a>
+            </li>
+           </ul>
+          </li>
+         </ul>
         </nav>
        </div>
       </div>
@@ -191,36 +240,7 @@
       <div class="md-sidebar__scrollwrap">
        <div class="md-sidebar__inner">
         <nav class="md-nav md-nav--secondary">
-         <label class="md-nav__title" for="__toc">
-          Contents
-         </label>
          <ul class="md-nav__list" data-md-scrollfix="">
-          <li class="md-nav__item">
-           <a class="md-nav__link" href="#architecture--page-root">
-            System architecture
-           </a>
-           <nav class="md-nav">
-            <ul class="md-nav__list">
-             <li class="md-nav__item">
-              <a class="md-nav__link" href="#database">
-               Database
-              </a>
-             </li>
-             <li class="md-nav__item">
-              <a class="md-nav__link" href="#server">
-               Server
-              </a>
-             </li>
-            </ul>
-           </nav>
-          </li>
-          <li class="md-nav__item">
-           <a class="md-nav__extra_link" href="_sources/architecture.md.txt">
-            Show Source
-           </a>
-          </li>
-          <li class="md-nav__item" id="searchbox">
-          </li>
          </ul>
         </nav>
        </div>
@@ -237,18 +257,588 @@
        <p>
         This page describes the system archicture of DIBS.
        </p>
+       <h2 id="configuration">
+        Configuration
+        <a class="headerlink" href="#configuration" title="Permalink to this headline">
+         ¶
+        </a>
+       </h2>
+       <p>
+        Settings are stored in the file
+        <span class="xref myst">
+         <code class="docutils literal notranslate">
+          <span class="pre">
+           settings.ini
+          </span>
+         </code>
+        </span>
+        .  This file is read at run time by the server and database components.
+       </p>
        <h2 id="database">
         Database
         <a class="headerlink" href="#database" title="Permalink to this headline">
          ¶
         </a>
        </h2>
+       <p>
+        The definition of the database is in
+        <span class="xref myst">
+         <code class="docutils literal notranslate">
+          <span class="pre">
+           dibs/database.py
+          </span>
+         </code>
+        </span>
+        .  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is
+        <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">
+         Peewee
+        </a>
+        .
+       </p>
+       <p>
+        Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee
+        <code class="docutils literal notranslate">
+         <span class="pre">
+          ModelSelector
+         </span>
+        </code>
+        , and not a single result or a list of results:
+       </p>
+       <div class="highlight-python notranslate">
+        <div class="highlight">
+         <pre><span></span><span class="n">Item</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Item</span><span class="o">.</span><span class="n">barcode</span> <span class="o">==</span> <span class="n">barcode</span><span class="p">)</span>
+</pre>
+        </div>
+       </div>
+       <p>
+        and you can’t call something like Python’s
+        <code class="docutils literal notranslate">
+         <span class="pre">
+          next(...)
+         </span>
+        </code>
+        on this because it’s an iterator and not a generator.  You have to either use a
+        <code class="docutils literal notranslate">
+         <span class="pre">
+          for
+         </span>
+        </code>
+        loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it’s not a concern currently.
+       </p>
        <h2 id="server">
         Server
         <a class="headerlink" href="#server" title="Permalink to this headline">
          ¶
         </a>
        </h2>
+       <h2 id="endpoints">
+        Endpoints
+        <a class="headerlink" href="#endpoints" title="Permalink to this headline">
+         ¶
+        </a>
+       </h2>
+       <p>
+        The definition of the service endpoints and the behaviors is in
+        <span class="xref myst">
+         <code class="docutils literal notranslate">
+          <span class="pre">
+           dibs/server.py
+          </span>
+         </code>
+        </span>
+        .  The endpoints are implemented using
+        <a class="reference external" href="https://bottlepy.org">
+         Bottle
+        </a>
+        .  Here is a summary of the endpoints implemented by the system:
+       </p>
+       <table>
+        <thead>
+         <tr class="row-odd">
+          <th class="head">
+           <p>
+            Endpoint
+           </p>
+          </th>
+          <th class="head">
+           <p>
+            Type
+           </p>
+          </th>
+          <th class="head">
+           <p>
+            Purpose
+           </p>
+          </th>
+         </tr>
+        </thead>
+        <tbody>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            General information page about the system
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /info
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Same as
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /
+             </span>
+            </code>
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /login
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Shows the login page
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /login
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            POST
+           </p>
+          </td>
+          <td>
+           <p>
+            Accepts form from login page
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /logout
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Logs out current user
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /list
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Show what’s available for loan
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /add
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Show the page to add an item
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /edit/&lt;barcode&gt;
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Show the page to edit an item
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /update/add
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            POST
+           </p>
+          </td>
+          <td>
+           <p>
+            Accepts form input from add-item page
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /update/edit
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            POST
+           </p>
+          </td>
+          <td>
+           <p>
+            Accepts form input from edit-item page
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /ready
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            POST
+           </p>
+          </td>
+          <td>
+           <p>
+            Handles checkbox in
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              list
+             </span>
+            </code>
+            page to make an item ready to loan
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /remove
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            POST
+           </p>
+          </td>
+          <td>
+           <p>
+            Handles button in
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              list
+             </span>
+            </code>
+            page to remove an item
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /item/&lt;barcode&gt;
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Shows item information page for a given item
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /loan
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            POST
+           </p>
+          </td>
+          <td>
+           <p>
+            Handles Loan button from
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /item
+             </span>
+            </code>
+            page
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /view/&lt;barcode&gt;
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Show the item in the viewer page
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /return/&lt;barcode&gt;
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Handles Return button from viewer page
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /manifests/&lt;barcode&gt;
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Sends manifest to viewer
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /thankyou
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Destination after user uses Return button
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /notauthenticated
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Error page for unathenticated users
+           </p>
+          </td>
+         </tr>
+         <tr class="row-odd">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /nonexistent
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Error page for nonexistent items
+           </p>
+          </td>
+         </tr>
+         <tr class="row-even">
+          <td>
+           <p>
+            <code class="docutils literal notranslate">
+             <span class="pre">
+              /nonexistent/&lt;barcode&gt;
+             </span>
+            </code>
+           </p>
+          </td>
+          <td>
+           <p>
+            GET
+           </p>
+          </td>
+          <td>
+           <p>
+            Error page for nonexistent items
+           </p>
+          </td>
+         </tr>
+        </tbody>
+       </table>
       </article>
      </div>
     </div>

@@ -32,7 +32,7 @@
   <link href="_static/stylesheets/application-palette.css" rel="stylesheet"/>
   <link href="_static/stylesheets/application-fixes.css" rel="stylesheet"/>
   <link href="_static/fonts/material-icons.css" rel="stylesheet"/>
-  <meta content="grey" name="theme-color"/>
+  <meta content="blue-grey" name="theme-color"/>
   <script src="_static/javascripts/modernizr.js">
   </script>
   <title>
@@ -40,6 +40,7 @@
   </title>
   <link href="_static/pygments.css" rel="stylesheet" type="text/css"/>
   <link href="_static/material.css" rel="stylesheet" type="text/css"/>
+  <link href="_static/css/custom.css" rel="stylesheet" type="text/css"/>
   <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js">
   </script>
   <script src="_static/jquery.js">
@@ -48,10 +49,11 @@
   </script>
   <script src="_static/doctools.js">
   </script>
+  <link href="_static/favicon.ico" rel="shortcut icon"/>
   <link href="#" rel="index" title="Index"/>
   <link href="search.html" rel="search" title="Search"/>
  </head>
- <body data-md-color-accent="brown" data-md-color-primary="orange" dir="ltr">
+ <body data-md-color-accent="teal" data-md-color-primary="deep-orange" dir="ltr">
   <svg class="md-svg">
    <defs data-children-count="0">
     <svg height="448" id="__github" viewbox="0 0 416 448" width="416" xmlns="http://www.w3.org/2000/svg">
@@ -72,6 +74,7 @@
     <div class="md-flex navheader">
      <div class="md-flex__cell md-flex__cell--shrink">
       <a class="md-header-nav__button md-logo" href="index.html" title="Caltech DIBS">
+       <img alt="Home logo" height="26" src="_static/dibs-icon-white-sm.png"/>
       </a>
      </div>
      <div class="md-flex__cell md-flex__cell--shrink">
@@ -132,14 +135,6 @@
        </a>
       </div>
      </div>
-     <script src="_static/javascripts/version_dropdown.js">
-     </script>
-     <script>
-      var json_loc = ""versions.json"",
-        target_loc = "../",
-        text = "Versions";
-    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
-     </script>
     </div>
    </nav>
   </header>
@@ -163,7 +158,7 @@
         <nav class="md-nav md-nav--primary" data-md-level="0">
          <label class="md-nav__title md-nav__title--site" for="__drawer">
           <a class="md-nav__button md-logo" href="index.html" title="Caltech DIBS">
-           <img alt=" logo" height="48" src="_static/" width="48"/>
+           <img alt=" logo" height="48" src="_static/dibs-icon-white-sm.png" width="48"/>
           </a>
           <a href="index.html" title="Caltech DIBS">
            Caltech DIBS
@@ -182,6 +177,52 @@
            </div>
           </a>
          </div>
+         <ul class="md-nav__list">
+          <li class="md-nav__item">
+           <a class="md-nav__link" href="usage.html">
+            Using DIBS
+           </a>
+           <ul class="md-nav__list">
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="usage.html#the-patron-experience">
+              The patron experience
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="usage.html#the-library-staff-experience">
+              The Library staff experience
+             </a>
+            </li>
+           </ul>
+          </li>
+          <li class="md-nav__item">
+           <a class="md-nav__link" href="architecture.html">
+            System architecture
+           </a>
+           <ul class="md-nav__list">
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="architecture.html#configuration">
+              Configuration
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="architecture.html#database">
+              Database
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="architecture.html#server">
+              Server
+             </a>
+            </li>
+            <li class="md-nav__item">
+             <a class="md-nav__link" href="architecture.html#endpoints">
+              Endpoints
+             </a>
+            </li>
+           </ul>
+          </li>
+         </ul>
         </nav>
        </div>
       </div>
@@ -191,8 +232,6 @@
        <div class="md-sidebar__inner">
         <nav class="md-nav md-nav--secondary">
          <ul class="md-nav__list" data-md-scrollfix="">
-          <li class="md-nav__item" id="searchbox">
-          </li>
          </ul>
         </nav>
        </div>
