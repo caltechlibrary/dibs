@@ -157,6 +157,11 @@ The web server used at the moment is the development server provided by Bottle. 
 See http://bottlepy.org/docs/dev/tutorial.html#auto-reloading for an important note about Bottle: when it's running in auto-reload mode, _"the main process will not start a server, but spawn a new child process using the same command line arguments used to start the main process. All module-level code is executed at least twice"_.  This means some care is needed in how the top-level code is written.  Useful to know is that code can distinguish whether it's in the parent or child process by looking for the presence of the environment variable `'BOTTLE_CHILD'` set by Bottle in the child process.
 
 
+### _About the documentation_
+
+The docs are at [https://caltechlibrary.github.io/dibs/](https://caltechlibrary.github.io/dibs/).  They are built using [MyST](https://myst-parser.readthedocs.io/en/latest/index.html).  The sources are kept in `/docs`.
+
+
 License
 -------
 
