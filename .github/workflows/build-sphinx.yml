@@ -3,7 +3,7 @@ name: Update docs on GitHub
 on:
   push:
     branches:
-      - main
+      - develop
 
 jobs:
   deploy:
