@@ -20,11 +20,12 @@ from   os import path
 import smtplib
 import threading
 
+from .people import Person, check_password
+
 if __debug__:
     from sidetrack import log
 
 from .database import Item, Loan, Recent
-from .auth import User
 
 
 # Installation of Bottle plugins.
@@ -151,14 +152,16 @@ def login(session):
     email = request.forms.get('email')
     password = request.forms.get('password')
     if __debug__: log(f'post /login invoked by {email}')
-    if password != config('DEMO_PASSWORD'):
+    # get our person obj from people.db for demo purposes
+    user = (Person.select().where(Person.uname == email).get())
+    if check_password(password, user.secret) == False:
         if __debug__: log(f'wrong password -- rejecting {email}')
         return template(path.join(_TEMPLATE_DIR, 'login'))
     else:
         if __debug__: log(f'creating session for {email}')
         session['user'] = email
         redirect('/')
-
+    
 
 @get('/logout')
 @expired_loans_removed
