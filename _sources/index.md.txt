@@ -1,4 +1,4 @@
-Caltech Library Digital Borrowing System<img width="8%" align="right"  src="_static/media/dibs-icon.svg">
+Caltech Library Digital Borrowing System<img width="50em" align="right" style="display: block; margin: auto auto 2em 2em"  src="_static/media/dibs-icon.svg">
 ========================================
 
 Caltech DIBS ("<span style="font-weight: bold; margin-right: -0.2778em">Di</span>gital <span style="font-weight: bold; margin-right: -0.2778em">B</span>orrowing <span style="font-weight: bold; margin-right: -0.2778em">S</span>ystem") is the [Caltech Library](https://www.library.caltech.edu)'s basic implementation of a [controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) system.  It enables members of Caltech to borrow materials (e.g., older books) that are not otherwise available in e-book or other electronic formats.  The system was implemented in the year 2021 to help Caltech students and faculty continue their studies and work during the global [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019).
