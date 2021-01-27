@@ -2,7 +2,7 @@
 <html lang="en">
 
   <head>
-    <title>Thank you</title>
+    <title>Welcome to DIBS</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   </head>
   
