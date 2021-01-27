@@ -175,6 +175,7 @@ def login(session):
         if __debug__: log(f'wrong password -- rejecting {email}')
         return template(path.join(_TEMPLATE_DIR, 'login'))
 
+
 @get('/logout')
 @expired_loans_removed
 @head_method_ignored
@@ -555,6 +556,17 @@ def error404(error):
 def error405(error):
     if __debug__: log(f'error405 called with {error}')
     return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+
+
+
+# Miscellaneous static pages.
+# .............................................................................
+
+@get('/favicon.ico')
+def nonexistent_item():
+    '''Return the favicon.'''
+    if __debug__: log(f'returning favicon')
+    return static_file('favicon.ico', root = 'dibs/static')
 
 
 # Server runner.
