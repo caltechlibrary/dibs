@@ -204,8 +204,8 @@
              </a>
             </li>
             <li class="md-nav__item">
-             <a class="md-nav__link" href="#the-library-staff-experience">
-              The Library staff experience
+             <a class="md-nav__link" href="#the-staff-experience">
+              The staff experience
              </a>
             </li>
            </ul>
@@ -304,12 +304,127 @@
          ¶
         </a>
        </h2>
-       <h2 id="the-library-staff-experience">
-        The Library staff experience
-        <a class="headerlink" href="#the-library-staff-experience" title="Permalink to this headline">
+       <h2 id="the-staff-experience">
+        The staff experience
+        <a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">
          ¶
         </a>
        </h2>
+       <p>
+        The staff entry point to DIBS is located at
+        <code class="docutils literal notranslate">
+         <span class="pre">
+          /list
+         </span>
+        </code>
+        .  If the user is not logged in when first visiting the page, they will be redirected to the login page (located at
+        <code class="docutils literal notranslate">
+         <span class="pre">
+          /login
+         </span>
+        </code>
+        ):
+       </p>
+       <figure>
+        <img src="_static/media/login-page.png"/>
+       </figure>
+       <p>
+        Once logged in, they will be able to see
+        <code class="docutils literal notranslate">
+         <span class="pre">
+          /list
+         </span>
+        </code>
+        :
+       </p>
+       <figure>
+        <img src="_static/media/list-page.png"/>
+       </figure>
+       <p>
+        This page is the main interface for staff users.  It lists all of the items known to the system (whether they are ready to be available for digital loans or not), and allows staff to add, edit, or remove items.  It is also the place where staff can get the link to be distributed to patrons to request loans.  In more detail:
+       </p>
+       <ul class="simple">
+        <li>
+         <p>
+          <strong>
+           Barcode
+          </strong>
+          : the barcode identifying the item in the Caltech Library.
+         </p>
+        </li>
+        <li>
+         <p>
+          <strong>
+           Title
+          </strong>
+          : the title of the item. This is entered free-form in the DIBS entry form and does not have to match the actual title in TIND.
+         </p>
+        </li>
+        <li>
+         <p>
+          <strong>
+           Author
+          </strong>
+          : the author of the item. This is entered free-form in the DIBS entry form and does not have to match the actual author in TIND.
+         </p>
+        </li>
+        <li>
+         <p>
+          <strong>
+           Ready to loan?
+          </strong>
+          : when unchecked, the item is not made available for digital loans. This allows staff who scan the items to start making an entry in DIBS and continue scanning. When done, staff can check the item and make it available to digital patrons.
+         </p>
+        </li>
+        <li>
+         <p>
+          <strong>
+           Loan duration
+          </strong>
+          : the duration of a loan. The system automatically closes the loan after the loan period and blocks the patron’s access.
+         </p>
+        </li>
+        <li>
+         <p>
+          <strong>
+           Copies for loans
+          </strong>
+          : how many copies of the item are being made available for simultaneous borrowing?
+         </p>
+        </li>
+        <li>
+         <p>
+          <strong>
+           Copies in use
+          </strong>
+          : indicates the current number of copies of the item on loan at the moment.
+         </p>
+        </li>
+        <li>
+         <p>
+          <span class="button button-secondary">
+           Copy link
+          </span>
+          : this copies to the user’s clipboard a link to the item loan page.  This is what should be communicated to course instructors, so that they can pass on the URLs to their students.
+         </p>
+        </li>
+        <li>
+         <p>
+          <span class="button button-info">
+           Edit
+          </span>
+          : edit the entry. This will bring up the same form as was used to add the entry, allowing the user to change the values and save the results.
+         </p>
+        </li>
+        <li>
+         <p>
+          <span class="button button-danger">
+           Remove
+          </span>
+          : remove the entry for the item in the DIBS database. (This does not remove the scans or other files, only the database entry.)
+         </p>
+        </li>
+       </ul>
       </article>
      </div>
     </div>
