@@ -8,7 +8,7 @@ db = SqliteDatabase(config('DATABASE_FILE'))
 
 # Peewee autoconnects to the database if doing queries but not other ops.
 db.connect()
-db.create_tables([Item, Loan, Recent])
+db.create_tables([Item, Loan, Recent, Person])
 
 # Random books found in TIND.
 Item.create(barcode    = '35047019492099',

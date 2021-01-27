@@ -10,6 +10,7 @@ Table of contents
 -----------------
 
 * [Introduction](#introduction)
+* [Requirements](#requirements)
 * [Installation](#installation)
 * [Running the server on localhost](#running-the-server-on-localhost)
 * [General information](#general-information)
@@ -25,6 +26,14 @@ The Caltech Library's DIBS enables members of Caltech to borrow materials (e.g.,
 The concept of [controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) (CDL) is to allow libraries to loan items to digital patrons in a "lend like print" fashion.  The number of digital copies of an item allowed to be loaned at any given time is strictly controlled to match the number of physical print copies taken off the shelves, to ensure an exact "owned-to-loaned" ratio.  DIBS implements two main components of a CDL system: a patron loan tracking system, and an integrated digital content viewing interface.  DIBS makes use of the [Universal Viewer](http://universalviewer.io) to implement the viewer.
 
 Access to materials in Caltech DIBS is limited to current Caltech faculty, students and staff, but the software for DIBS itself is open-sourced under a BSD type license.
+
+Requirments
+-----------
+
+DIBS is written in Python 3 and depends on additional solftware
+to work.  DIBS uses the redis No-SQL datastore for session management. 
+This can be installed using your platforms package management systems.
+In development settings it also uses SQLite3.
 
 
 Installation
@@ -55,6 +64,19 @@ You also need to have a Redis database running on the local host.  If you are us
 brew install redis
 ```
 
+If you are using MacPorts on macOS, the simplest way to do that is the following:
+
+
+```sh
+sudo port install redis
+```
+
+On Debian/Ubuntu/Raspberry Pi OS do the following:
+
+```sh
+sudo apt install redis
+```
+
 You can leave the default Redis settings as-is for the DIBS demo.
 
 
@@ -65,6 +87,20 @@ First, start the Redis server.  If you are using Homebrew, this can be done usin
 
 ```sh
 brew services start redis
+```
+
+Using MacPorts you can start/stop with the following commands:
+
+```sh
+sudo port load redis
+sudo port unload redis
+```
+
+On Debian/Ubuntu/Raspberry Pi OS you can start/stop with the following commands:
+
+```sh
+sudo systemctl start redis
+sudo systemctl stop redis
 ```
 
 You can test if Redis is running properly by issuing the command `redis-cli ping`.

@@ -20,6 +20,8 @@ from   os import path
 import smtplib
 import threading
 
+from .people import Person, check_password
+
 if __debug__:
     from sidetrack import log
 
@@ -130,25 +132,48 @@ def head_method_ignored(func):
 # Administrative interface endpoints.
 # .............................................................................
 
+
+
+# NOTE: there are three approaches for integrating SSO. First is always
+# require SSO before showing anything (not terribly useful here).
+# Second use existing end points (e.g. /login, /logout) this supports
+# everyone as SSO or not at all, third would be to support both
+# SSO via its own end points and allow the app based authentication
+# end points to remain for users who are defined in the system only.
+# This can be helpful in the case of admin users or service accounts.
+
 @get('/login')
 def show_login_page(session):
+    # NOTE: If SSO is implemented this should redirect to the 
+    # SSO end point with a return to /login on success.
     if __debug__: log('get /login invoked')
     return template(path.join(_TEMPLATE_DIR, 'login'))
 
 
 @post('/login')
 def login(session):
+    # NOTE: If SSO is implemented this end point will handle the 
+    # successful login case applying role rules if necessary.
     email = request.forms.get('email')
     password = request.forms.get('password')
     if __debug__: log(f'post /login invoked by {email}')
-    if password != config('DEMO_PASSWORD'):
+    # get our person obj from people.db for demo purposes
+    user = (Person.get_or_none(Person.uname == email))
+    if user != None:
+        if check_password(password, user.secret) == False:
+            if __debug__: log(f'wrong password -- rejecting {email}')
+            return template(path.join(_TEMPLATE_DIR, 'login'))
+        else:
+            if __debug__: log(f'creating session for {email}')
+            session['user'] = email
+            if user.role == "library":
+                redirect('/list')
+                return
+            redirect('/')
+            return
+    else:
         if __debug__: log(f'wrong password -- rejecting {email}')
         return template(path.join(_TEMPLATE_DIR, 'login'))
-    else:
-        if __debug__: log(f'creating session for {email}')
-        session['user'] = email
-        redirect('/list')
-
 
 @get('/logout')
 @expired_loans_removed
