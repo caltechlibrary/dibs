@@ -149,7 +149,7 @@ def login(session):
     else:
         if __debug__: log(f'creating session for {email}')
         session['user'] = email
-        redirect('/')
+        redirect('/list')
 
 
 @get('/logout')
