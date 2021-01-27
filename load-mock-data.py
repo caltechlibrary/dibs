@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 from decouple import config
 from peewee import SqliteDatabase
 
-from dibs.database import Item, Loan, Recent
+from dibs import Item, Loan, Recent, Person
 
-db = SqliteDatabase(config('DATABASE_FILE'))
+db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
 # Peewee autoconnects to the database if doing queries but not other ops.
 db.connect()
@@ -52,3 +52,7 @@ Loan.create(item = Item.select().where(Item.barcode == '350470000611207'),
             started = datetime.now(),
             endtime = datetime.now() + timedelta(hours = 1)
 )
+
+print('-'*50)
+print('Now use people-manager to add users')
+print('-'*50)
