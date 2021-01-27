@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+from getpass import getpass
+from hashlib import blake2b
+
+from decouple import config
+from peewee import SqliteDatabase
+from dibs import Person, update_password
+
+people_db = config('DATABASE_FILE', default='dibs.db')
+
+def usage(app_name, exit_code):
+    print(f'''
+USAGE: {app_name} VERB [KEY_VALUE_PAIRS]
+
+{app_name} lets us manage the contents of {people_db}
+supporting the dibs web service.
+
+VERBS
+
+    help       this help page.
+    version    version of software
+
+    setup      setup {people_db} for the fist time
+    list       list users defined in {people_db}
+    add        add a user to {people_db}
+    update     set a value for user in {people_db}
+    remove     remove user from {people_db}
+
+EXAMPLES
+
+Managing users. the uname field is always required for "add",
+
+    {app_name} add uname=janedoe "display_name=Doe, Jane" secret
+    {app_name} update uname=janedoe display_name="Edoe, Jan"
+    {app_name} remove uname=janedoe
+
+This will create or update the record for "janedoe". If
+a fieldname doesn't supply a value (e.g. our secret field)
+then you will be prompted for that value. Add will warn you if 
+the username is already defined. Update will warn you if this 
+username is not found.
+
+Fields: uname (manditory execpt for list), secret, 
+        display_name, role
+
+List users:
+
+    {app_name} list
+
+This lists a specific user:
+
+    {app_name} list "uname=janedoe"
+
+''')
+    sys.exit(exit_code)
+
+def setup_people(people_db):
+    '''setup a people SQLite3 database'''
+    db = SqliteDatabase(people_db)
+    if db.connect():
+        if db.table_exists('person'):
+            print(f'''WARNING: person already exists in {people_db}''')
+        else:
+            db.create_tables([Person])
+    else:
+        print(f'''ERROR: could not connect to {people_db}''')
+    
+def list_people(kv):
+    '''list people in the SQLite3 database table called person'''
+    if 'uname' in kv:
+        row = (Person.select().where(Person.uname == kv['uname']).get())
+        print(f'''
+    Username: {row.uname}
+Display Name: {row.display_name}
+        Role: {row.role}
+     Updated: {row.updated}
+''')
+    else:
+        print(f'''Username\tDisplay Name\tRole\tUpdated''')
+        query = (Person.select().order_by(Person.display_name))
+        for row in query:
+            print(f'''{row.uname}\t{row.display_name}\t{row.role}\t{row.auth_type}\t{row.updated}''')
+
+
+def add_people(kv):
+    if not 'uname' in kv:
+        print(f'''WARNING: uname is required''')
+        sys.exit(1)
+    if 'secret' in kv:
+        kv['secret'] = update_password(kv['secret'])
+    else:
+        kv['secret'] = '' 
+    for key in [ 'role', 'display_name', 'auth_type' ]:
+        if not key in kv:
+            kv[key] = ''
+    user = Person(uname = kv['uname'], secret = kv['secret'],
+        role = kv['role'], display_name = kv['display_name'],
+        auth_type = kv['auth_type'])
+    user.save()
+
+
+def update_people(kv):
+    user = Person.select().where(Person.uname == kv['uname']).get()
+    if 'secret' in kv:
+        user.secret = update_password(kv['secret'])
+    if 'display_name' in kv:
+        user.display_name = kv['display_name']
+    if 'role' in kv:
+        user.role = kv['role']
+    if 'auth_type' in kv:
+        user.auth_type = kv['auth_type']
+    user.save()
+
+
+def remove_people(kv):
+    if not 'uname' in kv:
+        print(f'''WARNING: uname is required''')
+        sys.exit(1)
+    nrows = Person.delete().where(Person.uname == kv['uname']).execute()
+    print(f'''{nrows} row deleted from person in {people_db}''')
+
+def prompt(key):
+    if key == 'secret':
+        return update_password('')
+    else:
+        return input(f'''Enter {key}: ''')
+
+
+if __name__ == '__main__':
+    app_name = os.path.basename(sys.argv[0])
+    if len(sys.argv) < 2:
+        usage(app_name, 1)
+    verb = sys.argv[1]    
+    kv = {}
+    for term in sys.argv[2:]:
+        if "=" in term:
+            parts = term.split("=", 2);
+            key = parts[0].strip()
+            value = parts[1].strip().strip("'").strip('"')
+            if key:
+                if not value:
+                    value = prompt(key)
+                kv[key] = value
+    if verb == 'setup':
+        setup_people(people_db)
+    elif verb == 'list':
+        list_people(kv)
+    elif verb == 'add':
+        add_people(kv)
+    elif verb == 'update':
+        update_people(kv)
+    elif verb == 'remove':
+        remove_people(kv)
+    elif verb in [ 'h', 'help', '-h', '--help', '-help']:
+        usage(app_name, 0)
+    else:
+        print(f'''ERROR: "{verb}" not understood''')
+        sys.exit(1)
+            
+
