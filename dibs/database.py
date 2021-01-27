@@ -15,7 +15,7 @@ from peewee import ForeignKeyField, AutoField, DateTimeField, BooleanField
 # Database object schemas
 # .............................................................................
 
-_db = SqliteDatabase(config('DATABASE_FILE'))
+_db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
 class BaseModel(Model):
     class Meta:
