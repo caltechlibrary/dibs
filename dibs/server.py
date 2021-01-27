@@ -21,6 +21,7 @@ import smtplib
 import threading
 
 from .people import Person, check_password
+from .roles import role_to_redirect
 
 if __debug__:
     from sidetrack import log
@@ -166,10 +167,9 @@ def login(session):
         else:
             if __debug__: log(f'creating session for {email}')
             session['user'] = email
-            if user.role == "library":
-                redirect('/list')
-                return
-            redirect('/')
+            p = role_to_redirect(user.role)
+            if __debug__: log(f'redirecting to "{p}"')
+            redirect(p)
             return
     else:
         if __debug__: log(f'wrong password -- rejecting {email}')
