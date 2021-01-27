@@ -30,7 +30,7 @@
       <div class="row justify-content-center">
         <div class="col-md-4 col-md-offset-4">
           <form action="/login" method="post">
-            <input class="my-1" name="email" type="text" placeholder="User" required/>
+            <input class="my-1" name="email" type="text" placeholder="User" required autofocus/>
             <input class="my-1" name="password" type="password" placeholder="Password" required/><br>
             <input class="btn btn-primary my-2" value="Login" type="submit" />
           </form>
