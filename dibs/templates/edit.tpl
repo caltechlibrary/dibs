@@ -5,11 +5,59 @@
     <title>Add or edit a Caltech DIBS entry</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <style>
-     html .form-control::-webkit-input-placeholder { color: #ccc; }
-     html .form-control:-moz-placeholder           { color: #ccc; }
-     html .form-control::-moz-placeholder          { color: #ccc; }
-     html .form-control:-ms-input-placeholder      { color: #ccc; }
+     ::-webkit-input-placeholder                   { color: #bbb; }
+     html .form-control::placeholder               { color: #bbb; }
+     html .form-control::-webkit-input-placeholder { color: #bbb; }
+     html .form-control:-moz-placeholder           { color: #bbb; }
+     html .form-control::-moz-placeholder          { color: #bbb; }
+     html .form-control:-ms-input-placeholder      { color: #bbb; }
     </style>
+
+    <script>
+     // The following code is based on a 2019-07-17 posting by user Jeff Tian
+     // to Stack Overflow at https://stackoverflow.com/a/57069660/743730
+     'use strict';
+     (() => {
+       const modified_inputs = new Set();
+       const defaultValue = 'defaultValue';
+
+       // store default values
+       addEventListener('beforeinput', evt => {
+         const target = evt.target;
+         if (!(defaultValue in target.dataset)) {
+           target.dataset[defaultValue] = ('' + (target.value || target.textContent)).trim();
+         }
+       });
+
+       // detect input modifications
+       addEventListener('input', evt => {
+         const target = evt.target;
+         let original = target.dataset[defaultValue];
+         let current  = ('' + (target.value || target.textContent)).trim();
+
+         if (original !== current) {
+           if (!modified_inputs.has(target)) {
+             modified_inputs.add(target);
+           }
+         } else if (modified_inputs.has(target)) {
+           modified_inputs.delete(target);
+         }
+       });
+
+       addEventListener('saved', evt => { modified_inputs.clear() }, false
+       );
+
+       addEventListener('beforeunload', evt => {
+         if (modified_inputs.size) {
+           const unsaved_changes_warning = 'Changes you made may not be saved.';
+           evt.returnValue = unsaved_changes_warning;
+           return unsaved_changes_warning;
+         }
+       });
+
+     })();
+    </script>
+    
   </head>
   
   <body>
@@ -77,7 +125,7 @@
             <div class="py-4">
               <div class="btn-toolbar mx-auto" style="width: 240px;">
                 <input class="btn btn-default mx-2" style="width: 100px"
-                       name="cancel" value="Cancel" type="submit"/>
+                       name="cancel" value="Cancel" type="submit" formnovalidate/>
                 <input id="btnAdd" class="btn btn-primary mx-2" style="width: 100px"
                        name="add"
                        %if item:

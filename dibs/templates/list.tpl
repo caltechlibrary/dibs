@@ -33,7 +33,7 @@
   
   <body>
     <div class="container-fluid">
-      <h1 class="mx-auto text-center" style="width: 600px">
+      <h1 class="mx-auto text-center my-2" style="color: #FF6C0C">
         Caltech DIBS
       </h1>
       <h2 class="mx-auto text-center" style="width: 600px">

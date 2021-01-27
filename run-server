@@ -9,7 +9,6 @@
 
 # Initial imports. More things are imported later below.
 
-from   decouple import config
 import pkg_resources
 import os
 from   os import path
@@ -35,7 +34,7 @@ else:
             exit(1)
 
 if not path.exists(path.join(here, 'settings.ini')):
-    print('‼️  settings.ini file not found in {here}')
+    print(f'‼️  settings.ini file not found in {here}')
     exit(1)
 
 
@@ -49,13 +48,16 @@ if not path.exists(path.join(here, 'settings.ini')):
 from   boltons.debugutils import pdb_on_signal
 from   commonpy.data_utils import timestamp
 from   commonpy.string_utils import antiformat
+from   decouple import config
 import plac
+from   shutil import which
 import signal
+from   subprocess import check_output
+
 if __debug__:
     from sidetrack import set_debug, log, logr
 
 from   dibs.server import Server
-
 
 @plac.annotations(
     address   = ('host name or address to use for the web server',     'option', 'a'),
@@ -70,7 +72,7 @@ def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
     # Set up debug logging as soon as possible, if requested ------------------
 
     if debug != 'OUT':
-        if __debug__: set_debug(True, debug, extra = '%(threadName)s')
+        if __debug__: set_debug(True, debug)
         import faulthandler
         faulthandler.enable()
         if not sys.platform.startswith('win'):
@@ -88,6 +90,15 @@ def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
 
     if __debug__ and not ('BOTTLE_CHILD' in os.environ):
         log('='*8 + f' started {timestamp()} ' + '='*8)
+
+    if 'BOTTLE_CHILD' not in os.environ:
+        if not which('redis-cli'):
+            print("⚠️ Can't find redis-cli ⟹ can't check redis -- proceeding anyway")
+        elif 'PONG' in check_output(['redis-cli', 'ping']).decode():
+            if __debug__: log('redis appears to be running')
+        else:
+            print(f'‼️  redis does not appear to be running.')
+            exit(1)
 
     try:
         server = Server(host   = config('DIBS_HOST') if address == 'A' else address,

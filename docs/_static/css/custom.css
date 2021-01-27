@@ -1,0 +1,46 @@
+nav.md-tabs {
+  display: none
+}
+
+figure img {
+  width: 85%;
+  border:2px solid #ddd;
+  box-shadow: 10px 10px 5px #ccc;
+  -moz-box-shadow: 10px 10px 5px #ccc;
+  -webkit-box-shadow: 10px 10px 5px #ccc;
+  -khtml-box-shadow: 10px 10px 5px #ccc;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+}
+
+figure {
+  text-align: center;
+}
+
+.button {
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  display: inline-block;
+  font-size: 90%;
+  line-height: 1.2;
+  margin: 0 .1em;
+  padding: .1em .2em;
+}
+
+.button-info {
+  background-color: #20a1b6;
+  color: #fff;
+}
+
+.button-danger {
+  background-color: #db3a4a;
+  color: #fff;
+}
+
+.button-secondary {
+  background-color: #6c6c6c;
+  color: #fff;
+}
+
