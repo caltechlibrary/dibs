@@ -33,7 +33,7 @@ def check_password(src, secret):
 
 
 # Figure out how are authentication and authorization is configured.
-_people_db = SqliteDatabase(config('PEOPLE_DB', default='people.db'))
+_db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
 # Person is for development, it uses a SQLite3 DB to user
 # connection validation data.
@@ -46,6 +46,6 @@ class Person(Model):
     updated = TimestampField() # last successful login timestamp
 
     class Meta:
-        database = _people_db
+        database = _db
 
 

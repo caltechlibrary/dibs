@@ -9,7 +9,7 @@ from decouple import config
 from peewee import SqliteDatabase
 from dibs import Person, update_password
 
-people_db = config('PEOPLE_DB', default='people.db')
+people_db = config('DATABASE_FILE', default='dibs.db')
 
 def usage(app_name, exit_code):
     print(f'''
@@ -34,7 +34,7 @@ EXAMPLES
 Managing users. the uname field is always required for "add",
 
     {app_name} add uname=janedoe "display_name=Doe, Jane" secret
-    {app_name} update uname=janedoe "display_name=Edoe, Jan"
+    {app_name} update uname=janedoe display_name="Edoe, Jan"
     {app_name} remove uname=janedoe
 
 This will create or update the record for "janedoe". If
@@ -91,6 +91,8 @@ def add_people(kv):
         sys.exit(1)
     if 'secret' in kv:
         kv['secret'] = update_password(kv['secret'])
+    else:
+        kv['secret'] = '' 
     for key in [ 'role', 'display_name', 'auth_type' ]:
         if not key in kv:
             kv[key] = ''
@@ -130,7 +132,7 @@ if __name__ == '__main__':
         if "=" in term:
             parts = term.split("=", 2);
             key = parts[0].strip()
-            value = parts[1].strip()
+            value = parts[1].strip().strip("'").strip('"')
             if key:
                 kv[key] = value
     if verb == 'setup':
