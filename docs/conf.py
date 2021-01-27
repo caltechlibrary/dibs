@@ -30,6 +30,7 @@ author = 'Caltech Library'
 extensions = [
     'myst_parser',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
 ]
 
