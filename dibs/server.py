@@ -110,7 +110,7 @@ def authenticated(func):
     def wrapper(session, *args, **kwargs):
         if 'user' not in session or session['user'] is None:
             if __debug__: log(f'user not found in session object')
-            redirect('/notauthenticated')
+            redirect('/login')
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
         return func(session, *args, **kwargs)
