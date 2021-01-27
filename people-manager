@@ -122,6 +122,13 @@ def remove_people(kv):
     nrows = Person.delete().where(Person.uname == kv['uname']).execute()
     print(f'''{nrows} row deleted from person in {people_db}''')
 
+def prompt(key):
+    if key == 'secret':
+        return update_password('')
+    else:
+        return input(f'''Enter {key}: ''')
+
+
 if __name__ == '__main__':
     app_name = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
@@ -134,6 +141,8 @@ if __name__ == '__main__':
             key = parts[0].strip()
             value = parts[1].strip().strip("'").strip('"')
             if key:
+                if not value:
+                    value = prompt(key)
                 kv[key] = value
     if verb == 'setup':
         setup_people(people_db)
