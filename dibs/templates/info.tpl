@@ -24,8 +24,6 @@
             <li class="my-2">After returning an item, users cannot borrow that same item again for a period of one hour. They can, however, borrow other items immediately.</li>
           </ol>
         </p>
-        </p>
-        </p>
       </div>
     </div>
   </body>
