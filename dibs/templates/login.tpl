@@ -4,6 +4,14 @@
   <head>
     <title>Welcome to Caltech DIBS</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+     ::-webkit-input-placeholder                   { color: #bbb; }
+     html .form-control::placeholder               { color: #bbb; }
+     html .form-control::-webkit-input-placeholder { color: #bbb; }
+     html .form-control:-moz-placeholder           { color: #bbb; }
+     html .form-control::-moz-placeholder          { color: #bbb; }
+     html .form-control:-ms-input-placeholder      { color: #bbb; }
+    </style>
   </head>
   
   <body>
