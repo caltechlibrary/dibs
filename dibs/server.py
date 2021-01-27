@@ -129,8 +129,6 @@ def head_method_ignored(func):
 
 # Administrative interface endpoints.
 # .............................................................................
-# These endpoints need to be protected against access by non-Library staff.
-# (Right now, there's no protection or distinction from other endpoints.)
 
 @get('/login')
 def show_login_page(session):
