@@ -547,7 +547,7 @@ def nonexistent_item(barcode = None):
 @error(404)
 def error404(error):
     if __debug__: log(f'error404 called with {error}')
-    return template(path.join(_TEMPLATE_DIR, 'error'),
+    return template(path.join(_TEMPLATE_DIR, '404'),
                     code = error.status_code, message = error.body)
 
 
