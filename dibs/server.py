@@ -240,6 +240,19 @@ def update_item(session):
     tind_id    = request.forms.get('tindId').strip()
     duration   = request.forms.get('duration').strip()
 
+    if not barcode.isdigit():
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'{barcode} is not a valid barcode')
+    if not tind_id.isdigit():
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'{tind_id} is not a valid TIND Id')
+    if not num_copies.isdigit() or int(num_copies) <= 0:
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'Number of copies must be a positive number')
+    if not duration.isdigit() or int(duration) <= 0:
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'Duration must be a positive number')
+
     item = Item.get_or_none(Item.barcode == barcode)
     if action == 'add':
         if item:

@@ -75,7 +75,7 @@
           <form action="/update/{{action}}" method="POST">
 
             <label for="barcode" class="sr-only">Barcode</label>
-            <input name="barcode" class="form-control"
+            <input name="barcode" type="number" class="form-control"
                    placeholder="Barcode"
                    %if item:
                    value="{{item.barcode}}"
@@ -99,7 +99,7 @@
                    required>
 
             <label for="tindId" class="sr-only">TindId</label>
-            <input name="tindId" class="form-control"
+            <input name="tindId" type="number" class="form-control"
                    placeholder="TIND Id"
                    %if item:
                    value="{{item.tind_id}}"
@@ -107,7 +107,7 @@
                    >
 
             <label for="numCopies" class="sr-only">Copies</label>
-            <input name="numCopies" class="form-control"
+            <input name="numCopies" type="number" class="form-control"
                    placeholder="# copies to be made available"
                    %if item:
                    value="{{item.num_copies}}"
@@ -115,7 +115,7 @@
                    required>
 
             <label for="duration" class="sr-only">Loan duration (in hours)</label>
-            <input name="duration" class="form-control"
+            <input name="duration" type="number" class="form-control"
                    placeholder="hours per loan"
                    %if item:
                    value="{{item.duration}}"
