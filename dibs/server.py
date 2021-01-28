@@ -150,7 +150,7 @@ def show_login_page(session):
 def login(session):
     # NOTE: If SSO is implemented this end point will handle the 
     # successful login case applying role rules if necessary.
-    email = request.forms.get('email')
+    email = request.forms.get('email').strip()
     password = request.forms.get('password')
     if __debug__: log(f'post /login invoked by {email}')
     # get our person obj from people.db for demo purposes
@@ -233,12 +233,12 @@ def update_item(session):
         redirect('/list')
         return
 
-    barcode    = request.POST.inputBarcode.strip()
-    title      = request.POST.inputTitle.strip()
-    author     = request.POST.inputAuthor.strip()
-    num_copies = request.POST.inputNumCopies.strip()
-    tind_id    = request.POST.inputTindId.strip()
-    duration   = request.POST.inputDuration.strip()
+    barcode    = request.forms.get('barcode').strip()
+    title      = request.forms.get('title').strip()
+    author     = request.forms.get('author').strip()
+    num_copies = request.forms.get('numCopies').strip()
+    tind_id    = request.forms.get('tindId').strip()
+    duration   = request.forms.get('duration').strip()
 
     if __debug__: log(f'doing {action} on barcode {barcode}, title {title}')
     if action == 'add':

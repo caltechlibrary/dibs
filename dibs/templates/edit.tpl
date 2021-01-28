@@ -74,48 +74,48 @@
         <div class="jumbotron">
           <form action="/update/{{action}}" method="POST">
 
-            <label for="inputBarcode" class="sr-only">Barcode</label>
-            <input type="barcode" name="inputBarcode" class="form-control"
+            <label for="barcode" class="sr-only">Barcode</label>
+            <input name="barcode" class="form-control"
                    placeholder="Barcode"
                    %if item:
                    value="{{item.barcode}}"
                    %end
                    required autofocus>
 
-            <label for="inputTitle" class="sr-only">Title</label>
-            <input type="title" name="inputTitle" class="form-control"
+            <label for="title" class="sr-only">Title</label>
+            <input name="title" class="form-control"
                    placeholder="Title"
                    %if item:
                    value="{{item.title}}"
                    %end
                    required>
 
-            <label for="inputAuthor" class="sr-only">Author</label>
-            <input type="author" name="inputAuthor" class="form-control"
+            <label for="author" class="sr-only">Author</label>
+            <input name="author" class="form-control"
                    placeholder="Author"
                    %if item:
                    value="{{item.author}}"
                    %end
                    required>
 
-            <label for="inputTindId" class="sr-only">TindId</label>
-            <input type="tindId" name="inputTindId" class="form-control"
+            <label for="tindId" class="sr-only">TindId</label>
+            <input name="tindId" class="form-control"
                    placeholder="TIND Id"
                    %if item:
                    value="{{item.tind_id}}"
                    %end
                    >
 
-            <label for="inputNumCopies" class="sr-only">Copies</label>
-            <input type="copies" name="inputNumCopies" class="form-control"
+            <label for="numCopies" class="sr-only">Copies</label>
+            <input name="numCopies" class="form-control"
                    placeholder="# copies to be made available"
                    %if item:
                    value="{{item.num_copies}}"
                    %end
                    required>
 
-            <label for="inputDuration" class="sr-only">Loan duration (in hours)</label>
-            <input type="duration" name="inputDuration" class="form-control"
+            <label for="duration" class="sr-only">Loan duration (in hours)</label>
+            <input name="duration" class="form-control"
                    placeholder="hours per loan"
                    %if item:
                    value="{{item.duration}}"
