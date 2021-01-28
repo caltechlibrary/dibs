@@ -97,7 +97,7 @@ def barcode_verified(func):
     def wrapper(session, *args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
-            if Item.get_or_none(Item.barcode == barcode):
+            if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
                 return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
                                 barcode = barcode)
