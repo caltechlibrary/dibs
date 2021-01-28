@@ -97,9 +97,7 @@ def barcode_verified(func):
     def wrapper(session, *args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
-            try:
-                Item.get(Item.barcode == barcode)
-            except DoesNotExist as ex:
+            if Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
                 return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
                                 barcode = barcode)
@@ -131,8 +129,6 @@ def head_method_ignored(func):
 
 # Administrative interface endpoints.
 # .............................................................................
-
-
 
 # NOTE: there are three approaches for integrating SSO. First is always
 # require SSO before showing anything (not terribly useful here).
@@ -250,20 +246,19 @@ def update_item(session):
                     tind_id = tind_id, num_copies = num_copies,
                     duration = duration)
     else:
-        try:
-            item = Item.get(Item.barcode == barcode)
-        except DoesNotExist as ex:
+        item = Item.get_or_none(Item.barcode == barcode)
+        if item:
+            item.barcode    = barcode
+            item.title      = title
+            item.author     = author
+            item.tind_id    = tind_id
+            item.num_copies = num_copies
+            item.duration   = duration
+            item.save()
+        else:
             if __debug__: log(f'there is no item with barcode {barcode}')
             redirect('/nonexistent')
             return
-
-        item.barcode    = barcode
-        item.title      = title
-        item.author     = author
-        item.tind_id    = tind_id
-        item.num_copies = num_copies
-        item.duration   = duration
-        item.save()
     redirect('/list')
 
 
