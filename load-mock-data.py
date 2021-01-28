@@ -3,6 +3,7 @@ from decouple import config
 from peewee import SqliteDatabase
 
 from dibs.database import Item, Loan, Recent
+from dibs.people import Person
 
 db = SqliteDatabase(config('DATABASE_FILE'))
 
