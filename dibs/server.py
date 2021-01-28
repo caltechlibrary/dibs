@@ -580,6 +580,12 @@ def nonexistent_item():
     if __debug__: log(f'returning favicon')
     return static_file('favicon.ico', root = 'dibs/static')
 
+@get('/missing.jpg')
+def nonexistent_item():
+    '''Return the favicon.'''
+    if __debug__: log(f'returning favicon')
+    return static_file('missing.jpg', root = 'dibs/static')
+
 
 # Server runner.
 # .............................................................................
