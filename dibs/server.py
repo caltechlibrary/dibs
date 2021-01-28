@@ -240,25 +240,29 @@ def update_item(session):
     tind_id    = request.forms.get('tindId').strip()
     duration   = request.forms.get('duration').strip()
 
-    if __debug__: log(f'doing {action} on barcode {barcode}, title {title}')
+    item = Item.get_or_none(Item.barcode == barcode)
     if action == 'add':
+        if item:
+            if __debug__: log(f'{barcode} already exists in the database')
+            return template(path.join(_TEMPLATE_DIR, 'duplicate'),
+                            barcode = barcode)
+        if __debug__: log(f'adding {barcode}, title {title}')
         Item.create(barcode = barcode, title = title, author = author,
                     tind_id = tind_id, num_copies = num_copies,
                     duration = duration)
     else:
-        item = Item.get_or_none(Item.barcode == barcode)
-        if item:
-            item.barcode    = barcode
-            item.title      = title
-            item.author     = author
-            item.tind_id    = tind_id
-            item.num_copies = num_copies
-            item.duration   = duration
-            item.save()
-        else:
+        if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
             redirect('/nonexistent')
             return
+        if __debug__: log(f'updating {barcode}, title {title}')
+        item.barcode    = barcode
+        item.title      = title
+        item.author     = author
+        item.tind_id    = tind_id
+        item.num_copies = num_copies
+        item.duration   = duration
+        item.save()
     redirect('/list')
 
 
