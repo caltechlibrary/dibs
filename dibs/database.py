@@ -29,9 +29,11 @@ class BaseModel(Model):
 # very well allow some items to be loaned out for longer periods than others.
 # Duration is in terms of hours right now.
 #
-# The TIND Id is not strictly necessary for our purposes, but it's here to
-# make it easier for administrators to jump from the list page to the record
-# in TIND.
+# The fields for author, title, year, edition, and thumbnail are not strictly
+# necessary for loan purposes. They are here to cache the values so that they
+# don't have to be looked up when generating the /item page.  FIXME: keeping
+# this data introduces an opportunity for inconsistencies, if the source data
+# (currently in TIND) gets changed.
 
 class Item(BaseModel):
     itemid     = AutoField()            # Auto-increment primary key.
