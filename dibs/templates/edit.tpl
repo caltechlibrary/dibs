@@ -16,7 +16,7 @@
   
   <body>
     <div class="container-fluid">
-      <h2 class="mx-auto text-center w-100">
+      <h2 class="mx-auto text-center w-100 my-3">
         %if action == "add":
         Add a new item to DIBS
         %else:
@@ -24,8 +24,13 @@
         %end
       </h2>
       <div class="d-grid">
+        <p class="w-75 text-center mx-auto">
+          This will add a new item to the DIBS database. Note that it will
+          not be made available to patrons for digital loans until the
+          "ready" checkbox is checked in the list page.
+        </p>
 
-        <div class="jumbotron">
+        <div class="w-75 text-center mx-auto">
           <form action="/update/{{action}}" method="POST">
 
             <label for="barcode" class="sr-only">Barcode</label>
@@ -38,7 +43,8 @@
 
             <label for="numCopies" class="sr-only">Copies</label>
             <input name="num_copies" type="number" class="form-control"
-                   placeholder="# copies to be made available"
+                   placeholder="Number of copies to be made available for simultaneous loans"
+                   step="any" min="1"
                    %if item:
                    value="{{item.num_copies}}"
                    %end
@@ -46,7 +52,8 @@
 
             <label for="duration" class="sr-only">Loan duration (in hours)</label>
             <input name="duration" type="number" class="form-control"
-                   placeholder="hours per loan"
+                   placeholder="Maximum duration of a loan (in hours)"
+                   step="any" min="1" oninput="check_nonzero(this)"
                    %if item:
                    value="{{item.duration}}"
                    %end
@@ -68,8 +75,6 @@
             </div>
           </form>
         </div>
-
-
       </div>
     </div>
   </body>
