@@ -82,24 +82,8 @@
                    %end
                    required autofocus>
 
-            <label for="title" class="sr-only">Title</label>
-            <input name="title" class="form-control"
-                   placeholder="Title"
-                   %if item:
-                   value="{{item.title}}"
-                   %end
-                   >
-
-            <label for="author" class="sr-only">Author</label>
-            <input name="author" class="form-control"
-                   placeholder="Author"
-                   %if item:
-                   value="{{item.author}}"
-                   %end
-                   >
-
             <label for="numCopies" class="sr-only">Copies</label>
-            <input name="numCopies" type="number" class="form-control"
+            <input name="num_copies" type="number" class="form-control"
                    placeholder="# copies to be made available"
                    %if item:
                    value="{{item.num_copies}}"

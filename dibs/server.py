@@ -227,14 +227,14 @@ def edit(session, barcode):
 @authenticated
 def update_item(session):
     '''Handle http post request to add a new item from the add-new-item page.'''
-    action = 'add' if request.path == '/update/add' else 'edit'
-    if __debug__: log(f'post /update/{action} invoked')
+    if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
         redirect('/list')
         return
 
-    # Certain values we always and only get from the form.
+    # The HTML form validates the data types, but the POST might come from
+    # elsewhere, so we always need to sanity-check the values.
     barcode = request.forms.get('barcode').strip()
     if not barcode.isdigit():
         return template(path.join(_TEMPLATE_DIR, 'error'),
@@ -248,42 +248,36 @@ def update_item(session):
         return template(path.join(_TEMPLATE_DIR, 'error'),
                         message = f'Number of copies must be a positive number')
 
-    # Try to look up the barcode in TIND. If we find it there, we use those
-    # values. If not, we use whatever was typed into the form.
-    rec       = TindRecord(barcode = barcode)
-    tind_id   = rec.tind_id   if rec else ''
-    title     = rec.title     if rec else request.forms.get('title').strip()
-    author    = rec.author    if rec else request.forms.get('author').strip()
-    year      = rec.year      if rec else ''
-    edition   = rec.edition   if rec else ''
-    thumbnail = rec.thumbnail if rec else ''
+    # Our current approach only uses items with barcodes that exist in TIND.
+    # If that ever changes, the following needs to change too.
+    rec = TindRecord(barcode = barcode)
+    if not rec or not all([rec.title, rec.author, rec.year]):
+        if __debug__: log(f'could not find {barcode} in TIND')
+        redirect(f'/nonexistent/{barcode}')
+        return
 
     item = Item.get_or_none(Item.barcode == barcode)
-    if action == 'add':
+    if request.path == '/update/add':
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
             return template(path.join(_TEMPLATE_DIR, 'duplicate'),
                             barcode = barcode)
         if __debug__: log(f'adding {barcode}, title {title}')
-        Item.create(barcode = barcode, title = title, author = author,
-                    tind_id = tind_id, year = year, edition = edition,
-                    thumbnail = thumbnail, num_copies = num_copies,
-                    duration = duration)
+        Item.create(barcode = barcode, title = rec.title, author = rec.author,
+                    tind_id = rec.tind_id, year = rec.year,
+                    edition = rec.edition, thumbnail = rec.thumbnail,
+                    num_copies = num_copies, duration = duration)
     else:
         if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
-            redirect('/nonexistent')
+            redirect(f'/nonexistent/{barcode}')
             return
-        if __debug__: log(f'updating {barcode}, title {title}')
+        if __debug__: log(f'updating {barcode} from {rec}')
         item.barcode    = barcode
-        item.title      = title
-        item.author     = author
-        item.year       = year
-        item.thumbnail  = thumbnail
-        item.tind_id    = tind_id
-        item.edition    = edition
         item.num_copies = num_copies
         item.duration   = duration
+        for field in ['title', 'author', 'year', 'edition', 'tind_id', 'thumbnail']:
+            setattr(item, field, getattr(rec, field, ''))
         item.save()
     redirect('/list')
 
