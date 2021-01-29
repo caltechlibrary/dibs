@@ -36,9 +36,12 @@ class BaseModel(Model):
 class Item(BaseModel):
     itemid     = AutoField()            # Auto-increment primary key.
     barcode    = CharField(unique = True)
+    tind_id    = CharField()
     title      = TextField()
     author     = TextField()
-    tind_id    = IntegerField()
+    year       = CharField()
+    edition    = CharField()
+    thumbnail  = TextField()            # URL to an image.
     num_copies = SmallIntegerField()
     duration   = SmallIntegerField()    # Assumed to be hours.
     ready      = BooleanField(default = False)
