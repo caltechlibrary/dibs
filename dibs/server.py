@@ -26,6 +26,7 @@ if __debug__:
     from sidetrack import log
 
 from .database import Item, Loan, Recent
+from .tind import TindRecord
 
 
 # Installation of Bottle plugins.
@@ -233,25 +234,29 @@ def update_item(session):
         redirect('/list')
         return
 
-    barcode    = request.forms.get('barcode').strip()
-    title      = request.forms.get('title').strip()
-    author     = request.forms.get('author').strip()
-    num_copies = request.forms.get('numCopies').strip()
-    tind_id    = request.forms.get('tindId').strip()
-    duration   = request.forms.get('duration').strip()
-
+    # Certain values we always and only get from the form.
+    barcode = request.forms.get('barcode').strip()
     if not barcode.isdigit():
         return template(path.join(_TEMPLATE_DIR, 'error'),
                         message = f'{barcode} is not a valid barcode')
-    if not tind_id.isdigit():
-        return template(path.join(_TEMPLATE_DIR, 'error'),
-                        message = f'{tind_id} is not a valid TIND Id')
-    if not num_copies.isdigit() or int(num_copies) <= 0:
-        return template(path.join(_TEMPLATE_DIR, 'error'),
-                        message = f'Number of copies must be a positive number')
+    duration = request.forms.get('duration').strip()
     if not duration.isdigit() or int(duration) <= 0:
         return template(path.join(_TEMPLATE_DIR, 'error'),
                         message = f'Duration must be a positive number')
+    num_copies = request.forms.get('num_copies').strip()
+    if not num_copies.isdigit() or int(num_copies) <= 0:
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'Number of copies must be a positive number')
+
+    # Try to look up the barcode in TIND. If we find it there, we use those
+    # values. If not, we use whatever was typed into the form.
+    rec       = TindRecord(barcode = barcode)
+    tind_id   = rec.tind_id   if rec else ''
+    title     = rec.title     if rec else request.forms.get('title').strip()
+    author    = rec.author    if rec else request.forms.get('author').strip()
+    year      = rec.year      if rec else ''
+    edition   = rec.edition   if rec else ''
+    thumbnail = rec.thumbnail if rec else ''
 
     item = Item.get_or_none(Item.barcode == barcode)
     if action == 'add':
@@ -261,7 +266,8 @@ def update_item(session):
                             barcode = barcode)
         if __debug__: log(f'adding {barcode}, title {title}')
         Item.create(barcode = barcode, title = title, author = author,
-                    tind_id = tind_id, num_copies = num_copies,
+                    tind_id = tind_id, year = year, edition = edition,
+                    thumbnail = thumbnail, num_copies = num_copies,
                     duration = duration)
     else:
         if not item:
@@ -272,7 +278,10 @@ def update_item(session):
         item.barcode    = barcode
         item.title      = title
         item.author     = author
+        item.year       = year
+        item.thumbnail  = thumbnail
         item.tind_id    = tind_id
+        item.edition    = edition
         item.num_copies = num_copies
         item.duration   = duration
         item.save()
