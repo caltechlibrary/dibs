@@ -11,9 +11,9 @@
       <div class="alert alert-danger my-3" role="alert">
         <h4 class="alert-heading">No such item</h4>
         %if barcode == 'None':
-          <p id="without-barcode">This item does not exist in DIBS.</p>
+          <p id="without-barcode">This item does not exist.</p>
         %else:
-          <p id="with-barcode">An item with barcode {{barcode}} does not exist in DIBS.</p>
+          <p id="with-barcode">An item with barcode {{barcode}} does not exist.</p>
         %end
       </div>
     </div
