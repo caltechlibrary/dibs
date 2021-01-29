@@ -88,21 +88,13 @@
                    %if item:
                    value="{{item.title}}"
                    %end
-                   required>
+                   >
 
             <label for="author" class="sr-only">Author</label>
             <input name="author" class="form-control"
                    placeholder="Author"
                    %if item:
                    value="{{item.author}}"
-                   %end
-                   required>
-
-            <label for="tindId" class="sr-only">TindId</label>
-            <input name="tindId" type="number" class="form-control"
-                   placeholder="TIND Id"
-                   %if item:
-                   value="{{item.tind_id}}"
                    %end
                    >
 
