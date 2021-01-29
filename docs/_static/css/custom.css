@@ -26,20 +26,25 @@ figure {
   font-size: 90%;
   line-height: 1.2;
   margin: 0 .1em;
-  padding: .1em .2em;
+  padding: .1em .3em;
 }
 
-.button-info {
+.color-info {
   background-color: #20a1b6;
   color: #fff;
 }
 
-.button-danger {
+.color-danger {
   background-color: #db3a4a;
   color: #fff;
 }
 
-.button-secondary {
+.color-primary {
+  background-color: #357bf6;
+  color: #fff;
+}
+
+.color-secondary {
   background-color: #6c6c6c;
   color: #fff;
 }
