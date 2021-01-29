@@ -59,11 +59,9 @@ class TindRecord():
         args = locals().copy()
         del args['self']
         given_keywords = list(keyword for keyword in args if args[keyword])
-        if len(given_keywords) == 0:
-            # If not given any keyword arguments, return an empty record.
+        if len(given_keywords) == 0:    # No keyword given => return empty rec.
             return
-        elif len(given_keywords) == 1:
-            # Normal case. Switch on the argument given and fill out the fields.
+        elif len(given_keywords) == 1:  # Fill out rec based on argument given.
             given = given_keywords[0]
             self._init_from_argument[given](self, args[given])
         else:
@@ -80,6 +78,8 @@ class TindRecord():
             tree = etree.fromstring(xml, parser = etree.XMLParser(recover = True))
         except Exception as ex:
             raise ValueError(f'Bad XML')
+        if len(tree) == 0:             # Blank record.
+            return
         record = tree.find('{http://www.loc.gov/MARC21/slim}record')
         elem_controlfield = '{http://www.loc.gov/MARC21/slim}controlfield'
         elem_datafield = '{http://www.loc.gov/MARC21/slim}datafield'
@@ -90,6 +90,8 @@ class TindRecord():
                 self.tind_id = element.text.strip()
             elif element.attrib['tag'] == '008':
                 self.year = element.text[7:11].strip()
+                if not self.year.isdigit():
+                    self.year = ''
         for element in record.findall(elem_datafield):
             if element.attrib['tag'] == '250':
                 self.edition = element.find(elem_subfield).text.strip()
@@ -119,6 +121,13 @@ class TindRecord():
                     value = subfield.text.split()[0]
                     if value.isdigit():
                         self.isbn_list.append(value)
+
+        # Caltech's TIND database contains some things that are not reading
+        # materials per se. The following is an attempt to weed those out.
+        if sum([not self.author, not self.year, not self.call_no]) > 1:
+            for field in ['title', 'author', 'year', 'call_no', 'edition']:
+                setattr(self, field, None)
+            return
 
         # Some cleanup work is better left until after we obtain all values.
         if self.author:
