@@ -262,7 +262,7 @@ def update_item(session):
             if __debug__: log(f'{barcode} already exists in the database')
             return template(path.join(_TEMPLATE_DIR, 'duplicate'),
                             barcode = barcode)
-        if __debug__: log(f'adding {barcode}, title {title}')
+        if __debug__: log(f'adding {barcode}, title {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
                     edition = rec.edition, thumbnail = rec.thumbnail,
