@@ -13,7 +13,7 @@
         %if barcode == 'None':
           <p id="without-barcode">This item does not exist in DIBS.</p>
         %else:
-          <p id="with-barcode">An item with barcode "{{barcode}}" does not exist in DIBS.</p>
+          <p id="with-barcode">An item with barcode {{barcode}} does not exist in DIBS.</p>
         %end
       </div>
     </div
