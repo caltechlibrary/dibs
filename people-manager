@@ -90,7 +90,12 @@ def add_people(kv):
         print(f'''WARNING: uname is required''')
         sys.exit(1)
     if 'secret' in kv:
-        kv['secret'] = update_password(kv['secret'])
+        secret = update_password(kv['secret'])
+        if secret != None:
+            kv['secret'] = secret
+        else:
+            print(f'''WARNING: unable to set secret''')
+            sys.exit(1)
     else:
         kv['secret'] = '' 
     for key in [ 'role', 'display_name', 'auth_type' ]:
@@ -105,7 +110,12 @@ def add_people(kv):
 def update_people(kv):
     user = Person.select().where(Person.uname == kv['uname']).get()
     if 'secret' in kv:
-        user.secret = update_password(kv['secret'])
+        secret = update_password(kv['secret'])
+        if secret != None:
+            user.secret = secret
+        else:
+            print(f'''WARNING: unable to set secret''')
+            sys.exit(1)
     if 'display_name' in kv:
         user.display_name = kv['display_name']
     if 'role' in kv:
@@ -122,13 +132,6 @@ def remove_people(kv):
     nrows = Person.delete().where(Person.uname == kv['uname']).execute()
     print(f'''{nrows} row deleted from person in {people_db}''')
 
-def prompt(key):
-    if key == 'secret':
-        return update_password('')
-    else:
-        return input(f'''Enter {key}: ''')
-
-
 if __name__ == '__main__':
     app_name = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
@@ -141,8 +144,8 @@ if __name__ == '__main__':
             key = parts[0].strip()
             value = parts[1].strip().strip("'").strip('"')
             if key:
-                if not value:
-                    value = prompt(key)
+                if (not value) and not (key == 'secret'):
+                    value = input(f'''Enter {key}: ''')
                 kv[key] = value
     if verb == 'setup':
         setup_people(people_db)
