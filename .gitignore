@@ -88,3 +88,4 @@ __pycache__
 
 dibs.db
 docs/_build
+load-staff-members.bash

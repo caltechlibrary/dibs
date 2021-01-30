@@ -23,14 +23,16 @@ def hashify(s):
 def update_password(secret):
     if not secret:
         secret = getpass(prompt='Password: ', stream = None)
-    return hashify(secret)
+    if not secret:
+        return None
+    else:
+        return hashify(secret)
 
 def check_password(src, secret):
     src = hashify(src)
     if src == secret:
         return True
     return False
-
 
 # Figure out how are authentication and authorization is configured.
 _db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
