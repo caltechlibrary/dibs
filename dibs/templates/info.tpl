@@ -10,7 +10,7 @@
     <div class="d-flex align-items-center min-vh-100 my-5">
       <div class="container">
         <h1 class="mx-auto text-center my-2" style="color: #FF6C0C">
-            Welcome to Caltech DIBS
+            Welcome to Caltech DIBS <img src="dibs-icon.svg" height="40rem" style="padding-left: 1rem; vertical-align: top">
         </h1>
           <h2 class="mx-auto my-3 text-center text-info font-italic">
             The Caltech <strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem
