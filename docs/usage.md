@@ -7,10 +7,10 @@ This page describes how DIBS works from the users' standpoint.  A separate secti
 
 The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:
 
-1. We expect patrons to be mainly students enrolled in educational courses at Caltech.  We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a catalog of "all things available for digital loan via DIBS"; in part, this is because such a list was not judged to be useful for DIBS's use-cases, and in part to avoid potential decreased availability of titles due to non-students browsing and borrowing items.
+1. We expect patrons to be mainly students enrolled in educational courses at Caltech.  We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a catalog of "all things available for digital loan via DIBS"; in part, this is because such a list was not considered to be useful for DIBS's use-cases, and in part to avoid potential decreased availability of titles due to non-students browsing and borrowing items.
 2. We expect that library staff need to interact with the system in a quite different way: to add new items to the database of digitized works and control loan parameters.  Thus, staff _do_ see a list of all items available through the system, but access to this list is limited to Library staff.
 
-These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of titles available in the system:
+These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of titles available in the system.  The front page acts mainly as an information page that describes the purpose of the system and the policies:
 
 <figure>
     <img src="_static/media/welcome-page.png">
@@ -25,6 +25,13 @@ As mentioned above, patrons are presumed to be provided information about specif
     <img src="_static/media/item-page.png">
 </figure>
 
+The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech's TIND server based on the barcode used by Library staff when they add the item to DIBS. (The thumbnail image is obtained from either Amazon or Google using the item's ISBN, if it has one; otherwise, a blank is shown instead.)
+
+The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-secondary">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:
+
+<figure>
+    <img src="_static/media/item-not-available.png">
+</figure>
 
 
 
