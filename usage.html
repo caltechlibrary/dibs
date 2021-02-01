@@ -1,23 +1,28 @@
+
 <!DOCTYPE html>
+
 <html>
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <meta content="width=device-width,initial-scale=1" name="viewport"/>
-  <meta content="ie=edge" http-equiv="x-ua-compatible"/>
-  <meta content="Copy to clipboard" name="lang:clipboard.copy"/>
-  <meta content="Copied to clipboard" name="lang:clipboard.copied"/>
-  <meta content="en" name="lang:search.language"/>
-  <meta content="True" name="lang:search.pipeline.stopwords"/>
-  <meta content="True" name="lang:search.pipeline.trimmer"/>
-  <meta content="No matching documents" name="lang:search.result.none"/>
-  <meta content="1 matching document" name="lang:search.result.one"/>
-  <meta content="# matching documents" name="lang:search.result.other"/>
-  <meta content="[\s\-]+" name="lang:search.tokenizer"/>
-  <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&amp;display=fallback" rel="stylesheet"/>
-  <style>
-   body,
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="lang:clipboard.copy" content="Copy to clipboard">
+  <meta name="lang:clipboard.copied" content="Copied to clipboard">
+  <meta name="lang:search.language" content="en">
+  <meta name="lang:search.pipeline.stopwords" content="True">
+  <meta name="lang:search.pipeline.trimmer" content="True">
+  <meta name="lang:search.result.none" content="No matching documents">
+  <meta name="lang:search.result.one" content="1 matching document">
+  <meta name="lang:search.result.other" content="# matching documents">
+  <meta name="lang:search.tokenizer" content="[\s\-]+">
+
+  
+    <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&display=fallback" rel="stylesheet">
+
+    <style>
+      body,
       input {
         font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif
       }
@@ -27,466 +32,380 @@
       pre {
         font-family: "Roboto Mono", "Courier New", Courier, monospace
       }
-  </style>
-  <link href="_static/stylesheets/application.css" rel="stylesheet"/>
-  <link href="_static/stylesheets/application-palette.css" rel="stylesheet"/>
-  <link href="_static/stylesheets/application-fixes.css" rel="stylesheet"/>
-  <link href="_static/fonts/material-icons.css" rel="stylesheet"/>
-  <meta content="blue-grey" name="theme-color"/>
-  <script src="_static/javascripts/modernizr.js">
-  </script>
-  <title>
-   Using DIBS — Caltech DIBS
-  </title>
-  <link href="_static/pygments.css" rel="stylesheet" type="text/css"/>
-  <link href="_static/material.css" rel="stylesheet" type="text/css"/>
-  <link href="_static/css/custom.css" rel="stylesheet" type="text/css"/>
-  <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js">
-  </script>
-  <script src="_static/jquery.js">
-  </script>
-  <script src="_static/underscore.js">
-  </script>
-  <script src="_static/doctools.js">
-  </script>
-  <link href="_static/favicon.ico" rel="shortcut icon"/>
-  <link href="genindex.html" rel="index" title="Index"/>
-  <link href="search.html" rel="search" title="Search"/>
-  <link href="architecture.html" rel="next" title="System architecture"/>
-  <link href="index.html" rel="prev" title="Caltech Library Digital Borrowing System"/>
- </head>
- <body data-md-color-accent="teal" data-md-color-primary="deep-orange" dir="ltr">
+    </style>
+  
+
+  <link rel="stylesheet" href="_static/stylesheets/application.css"/>
+  <link rel="stylesheet" href="_static/stylesheets/application-palette.css"/>
+  <link rel="stylesheet" href="_static/stylesheets/application-fixes.css"/>
+  
+  <link rel="stylesheet" href="_static/fonts/material-icons.css"/>
+  
+  <meta name="theme-color" content="blue-grey">
+  <script src="_static/javascripts/modernizr.js"></script>
+  
+  
+  
+    <title>Using DIBS &#8212; Caltech DIBS</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/material.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="System architecture" href="architecture.html" />
+    <link rel="prev" title="Caltech Library Digital Borrowing System" href="index.html" />
+  
+   
+
+  </head>
+  <body dir=ltr
+        data-md-color-primary=deep-orange data-md-color-accent=teal>
+  
   <svg class="md-svg">
-   <defs data-children-count="0">
-    <svg height="448" id="__github" viewbox="0 0 416 448" width="416" xmlns="http://www.w3.org/2000/svg">
-     <path d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z" fill="currentColor">
-     </path>
-    </svg>
-   </defs>
+    <defs data-children-count="0">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+      
+    </defs>
   </svg>
-  <input class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
-  <input class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
-  <label class="md-overlay" data-md-component="overlay" for="__drawer">
-  </label>
-  <a class="md-skip" href="#usage" tabindex="1">
-   Skip to content
-  </a>
+  
+  <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
+  <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
+  <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+  <a href="#usage" tabindex="1" class="md-skip"> Skip to content </a>
   <header class="md-header" data-md-component="header">
-   <nav class="md-header-nav md-grid">
+  <nav class="md-header-nav md-grid">
     <div class="md-flex navheader">
-     <div class="md-flex__cell md-flex__cell--shrink">
-      <a class="md-header-nav__button md-logo" href="index.html" title="Caltech DIBS">
-       <img alt="Home logo" height="26" src="_static/dibs-icon-white-sm.png"/>
-      </a>
-     </div>
-     <div class="md-flex__cell md-flex__cell--shrink">
-      <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer">
-      </label>
-     </div>
-     <div class="md-flex__cell md-flex__cell--stretch">
-      <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-       <span class="md-header-nav__topic">
-        Caltech DIBS
-       </span>
-       <span class="md-header-nav__topic">
-        Using DIBS
-       </span>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="index.html" title="Caltech DIBS"
+           class="md-header-nav__button md-logo">
+          
+              <img src="_static/dibs-icon-white-sm.png" height="26"
+                   alt="Home logo">
+          
+        </a>
       </div>
-     </div>
-     <div class="md-flex__cell md-flex__cell--shrink">
-      <label class="md-icon md-icon--search md-header-nav__button" for="__search">
-      </label>
-      <div class="md-search" data-md-component="search" role="dialog">
-       <label class="md-search__overlay" for="__search">
-       </label>
-       <div class="md-search__inner" role="search">
-        <form action="search.html" class="md-search__form" method="GET" name="search">
-         <input autocapitalize="off" autocomplete="off" class="md-search__input" data-md-component="query" data-md-state="active" name="q" placeholder="Search" spellcheck="false" type="text"/>
-         <label class="md-icon md-search__icon" for="__search">
-         </label>
-         <button class="md-icon md-search__icon" data-md-component="reset" tabindex="-1" type="reset">
-          
-         </button>
-        </form>
-        <div class="md-search__output">
-         <div class="md-search__scrollwrap" data-md-scrollfix="">
-          <div class="md-search-result" data-md-component="result">
-           <div class="md-search-result__meta">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          <span class="md-header-nav__topic">Caltech DIBS</span>
+          <span class="md-header-nav__topic"> Using DIBS </span>
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" action="search.html" method="GET" name="search">
+      <input type="text" class="md-search__input" name="q" placeholder="Search"
+             autocapitalize="off" autocomplete="off" spellcheck="false"
+             data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
             Type to start searching
-           </div>
-           <ol class="md-search-result__list">
-           </ol>
           </div>
-         </div>
+          <ol class="md-search-result__list"></ol>
         </div>
-       </div>
       </div>
-     </div>
-     <div class="md-flex__cell md-flex__cell--shrink">
-      <div class="md-header-nav__source">
-       <a class="md-source" data-md-source="github" href="https://github.com/caltechlibrary/dibs/" title="Go to repository">
-        <div class="md-source__icon">
-         <svg height="28" viewbox="0 0 24 24" width="28" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-          <use height="24" width="24" xlink:href="#__github">
-          </use>
-         </svg>
-        </div>
-        <div class="md-source__repository">
-         Caltech DIBS
-        </div>
-       </a>
-      </div>
-     </div>
     </div>
-   </nav>
-  </header>
+  </div>
+</div>
+
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            <a href="https://github.com/caltechlibrary/dibs/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    Caltech DIBS
+  </div>
+</a>
+          </div>
+        </div>
+      
+      
+    </div>
+  </nav>
+</header>
+
+  
   <div class="md-container">
-   <nav class="md-tabs" data-md-component="tabs">
+    
+    
+    
+  <nav class="md-tabs" data-md-component="tabs">
     <div class="md-tabs__inner md-grid">
-     <ul class="md-tabs__list">
-      <li class="md-tabs__item">
-       <a class="md-tabs__link" href="index.html">
-        Home
-       </a>
-      </li>
-     </ul>
+      <ul class="md-tabs__list">
+          <li class="md-tabs__item"><a href="index.html" class="md-tabs__link">Home</a></li>
+      </ul>
     </div>
-   </nav>
-   <main class="md-main">
-    <div class="md-main__inner md-grid" data-md-component="container">
-     <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
-      <div class="md-sidebar__scrollwrap">
-       <div class="md-sidebar__inner">
-        <nav class="md-nav md-nav--primary" data-md-level="0">
-         <label class="md-nav__title md-nav__title--site" for="__drawer">
-          <a class="md-nav__button md-logo" href="index.html" title="Caltech DIBS">
-           <img alt=" logo" height="48" src="_static/dibs-icon-white-sm.png" width="48"/>
-          </a>
-          <a href="index.html" title="Caltech DIBS">
-           Caltech DIBS
-          </a>
-         </label>
-         <div class="md-nav__source">
-          <a class="md-source" data-md-source="github" href="https://github.com/caltechlibrary/dibs/" title="Go to repository">
-           <div class="md-source__icon">
-            <svg height="28" viewbox="0 0 24 24" width="28" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-             <use height="24" width="24" xlink:href="#__github">
-             </use>
-            </svg>
-           </div>
-           <div class="md-source__repository">
-            Caltech DIBS
-           </div>
-          </a>
-         </div>
-         <ul class="md-nav__list">
-          <li class="md-nav__item">
-           <input class="md-toggle md-nav__toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-           <label class="md-nav__link md-nav__link--active" for="__toc">
-            Using DIBS
-           </label>
-           <a class="md-nav__link md-nav__link--active" href="#">
-            Using DIBS
-           </a>
-           <nav class="md-nav md-nav--secondary">
-            <ul class="md-nav__list" data-md-scrollfix="">
-            </ul>
-           </nav>
-           <ul class="md-nav__list">
-            <li class="md-nav__item">
-             <a class="md-nav__link" href="#guiding-assumptions">
-              Guiding assumptions
-             </a>
-            </li>
-            <li class="md-nav__item">
-             <a class="md-nav__link" href="#the-patron-experience">
-              The patron experience
-             </a>
-            </li>
-            <li class="md-nav__item">
-             <a class="md-nav__link" href="#the-staff-experience">
-              The staff experience
-             </a>
-            </li>
-           </ul>
-          </li>
-          <li class="md-nav__item">
-           <a class="md-nav__link" href="architecture.html">
-            System architecture
-           </a>
-           <ul class="md-nav__list">
-            <li class="md-nav__item">
-             <a class="md-nav__link" href="architecture.html#configuration">
-              Configuration
-             </a>
-            </li>
-            <li class="md-nav__item">
-             <a class="md-nav__link" href="architecture.html#database">
-              Database
-             </a>
-            </li>
-            <li class="md-nav__item">
-             <a class="md-nav__link" href="architecture.html#server">
-              Server
-             </a>
-            </li>
-            <li class="md-nav__item">
-             <a class="md-nav__link" href="architecture.html#endpoints">
-              Endpoints
-             </a>
-            </li>
-           </ul>
-          </li>
-         </ul>
-        </nav>
-       </div>
-      </div>
-     </div>
-     <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
-      <div class="md-sidebar__scrollwrap">
-       <div class="md-sidebar__inner">
-        <nav class="md-nav md-nav--secondary">
-         <ul class="md-nav__list" data-md-scrollfix="">
-         </ul>
-        </nav>
-       </div>
-      </div>
-     </div>
-     <div class="md-content">
-      <article class="md-content__inner md-typeset" role="main">
-       <h1 id="usage--page-root">
-        Using DIBS
-        <a class="headerlink" href="#usage--page-root" title="Permalink to this headline">
-         ¶
-        </a>
-       </h1>
-       <p>
-        This page describes how DIBS works from the users’ standpoint.  A separate section in this document describes the
-        <a class="reference external" href="architecture.html#architecture--page-root">
-         system architecture
-        </a>
-        that implements the functionality described here.
-       </p>
-       <h2 id="guiding-assumptions">
-        Guiding assumptions
-        <a class="headerlink" href="#guiding-assumptions" title="Permalink to this headline">
-         ¶
-        </a>
-       </h2>
-       <p>
-        The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:
-       </p>
-       <ol class="simple">
-        <li>
-         <p>
-          We expect patrons to be mainly students enrolled in educational courses at Caltech.  We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a catalog of “all things available for digital loan via DIBS”; in part, this is because such a list was not judged to be useful for DIBS’s use-cases, and in part to avoid potential decreased availability of titles due to non-students browsing and borrowing items.
-         </p>
-        </li>
-        <li>
-         <p>
-          We expect that library staff need to interact with the system in a quite different way: to add new items to the database of digitized works and control loan parameters.  Thus, staff
-          <em>
-           do
-          </em>
-          see a list of all items available through the system, but access to this list is limited to Library staff.
-         </p>
-        </li>
-       </ol>
-       <p>
-        These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of titles available in the system:
-       </p>
-       <figure>
-        <img src="_static/media/welcome-page.png"/>
-       </figure>
-       <h2 id="the-patron-experience">
-        The patron experience
-        <a class="headerlink" href="#the-patron-experience" title="Permalink to this headline">
-         ¶
-        </a>
-       </h2>
-       <h2 id="the-staff-experience">
-        The staff experience
-        <a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">
-         ¶
-        </a>
-       </h2>
-       <p>
-        The staff entry point to DIBS is located at
-        <code class="docutils literal notranslate">
-         <span class="pre">
-          /list
-         </span>
-        </code>
-        .  If the user is not logged in when first visiting the page, they will be redirected to the login page (located at
-        <code class="docutils literal notranslate">
-         <span class="pre">
-          /login
-         </span>
-        </code>
-        ):
-       </p>
-       <figure>
-        <img src="_static/media/login-page.png"/>
-       </figure>
-       <p>
-        Once logged in, they will be able to see
-        <code class="docutils literal notranslate">
-         <span class="pre">
-          /list
-         </span>
-        </code>
-        :
-       </p>
-       <figure>
-        <img src="_static/media/list-page.png"/>
-       </figure>
-       <p>
-        This page is the main interface for staff users.  It lists all of the items known to the system (whether they are ready to be available for digital loans or not), and allows staff to add, edit, or remove items.  It is also the place where staff can get the link to be distributed to patrons to request loans.  In more detail:
-       </p>
-       <ul class="simple">
-        <li>
-         <p>
-          <strong>
-           Barcode
-          </strong>
-          : the barcode identifying the item in the Caltech Library.
-         </p>
-        </li>
-        <li>
-         <p>
-          <strong>
-           Title
-          </strong>
-          : the title of the item. This is entered free-form in the DIBS entry form and does not have to match the actual title in TIND.
-         </p>
-        </li>
-        <li>
-         <p>
-          <strong>
-           Author
-          </strong>
-          : the author of the item. This is entered free-form in the DIBS entry form and does not have to match the actual author in TIND.
-         </p>
-        </li>
-        <li>
-         <p>
-          <strong>
-           Ready to loan?
-          </strong>
-          : when unchecked, the item is not made available for digital loans. This allows staff who scan the items to start making an entry in DIBS and continue scanning. When done, staff can check the item and make it available to digital patrons.
-         </p>
-        </li>
-        <li>
-         <p>
-          <strong>
-           Loan duration
-          </strong>
-          : the duration of a loan. The system automatically closes the loan after the loan period and blocks the patron’s access.
-         </p>
-        </li>
-        <li>
-         <p>
-          <strong>
-           Copies for loans
-          </strong>
-          : how many copies of the item are being made available for simultaneous borrowing?
-         </p>
-        </li>
-        <li>
-         <p>
-          <strong>
-           Copies in use
-          </strong>
-          : indicates the current number of copies of the item on loan at the moment.
-         </p>
-        </li>
-        <li>
-         <p>
-          <span class="button button-secondary">
-           Copy link
-          </span>
-          : this copies to the user’s clipboard a link to the item loan page.  This is what should be communicated to course instructors, so that they can pass on the URLs to their students.
-         </p>
-        </li>
-        <li>
-         <p>
-          <span class="button button-info">
-           Edit
-          </span>
-          : edit the entry. This will bring up the same form as was used to add the entry, allowing the user to change the values and save the results.
-         </p>
-        </li>
-        <li>
-         <p>
-          <span class="button button-danger">
-           Remove
-          </span>
-          : remove the entry for the item in the DIBS database. (This does not remove the scans or other files, only the database entry.)
-         </p>
-        </li>
-       </ul>
-      </article>
-     </div>
+  </nav>
+    <main class="md-main">
+      <div class="md-main__inner md-grid" data-md-component="container">
+        
+          <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="index.html" title="Caltech DIBS" class="md-nav__button md-logo">
+      
+        <img src="_static/dibs-icon-white-sm.png" alt=" logo" width="48" height="48">
+      
+    </a>
+    <a href="index.html"
+       title="Caltech DIBS">Caltech DIBS</a>
+  </label>
+    <div class="md-nav__source">
+      <a href="https://github.com/caltechlibrary/dibs/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
     </div>
-   </main>
+  
+  <div class="md-source__repository">
+    Caltech DIBS
+  </div>
+</a>
+    </div>
+  
+  
+
+  
+  <ul class="md-nav__list">
+    <li class="md-nav__item">
+    
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <label class="md-nav__link md-nav__link--active" for="__toc"> Using DIBS </label>
+    
+      <a href="#" class="md-nav__link md-nav__link--active">Using DIBS</a>
+      
+        
+<nav class="md-nav md-nav--secondary">
+  <ul class="md-nav__list" data-md-scrollfix="">
+  </ul>
+</nav>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="#guiding-assumptions" class="md-nav__link">Guiding assumptions</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="#the-patron-experience" class="md-nav__link">The patron experience</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="#the-staff-experience" class="md-nav__link">The staff experience</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="architecture.html" class="md-nav__link">System architecture</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="architecture.html#configuration" class="md-nav__link">Configuration</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="architecture.html#database" class="md-nav__link">Database</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="architecture.html#server" class="md-nav__link">Server</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="architecture.html#endpoints" class="md-nav__link">Endpoints</a>
+      
+    
+    </li></ul>
+    
+    </li>
+  </ul>
+  
+
+</nav>
+              </div>
+            </div>
+          </div>
+          <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                
+<nav class="md-nav md-nav--secondary">
+  <ul class="md-nav__list" data-md-scrollfix="">
+  </ul>
+</nav>
+              </div>
+            </div>
+          </div>
+        
+        <div class="md-content">
+          <article class="md-content__inner md-typeset" role="main">
+            
+  
+<h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this headline">¶</a></h1>
+<p>This page describes how DIBS works from the users’ standpoint.  A separate section in this document describes the <a class="reference external" href="architecture.html#architecture--page-root">system architecture</a> that implements the functionality described here.</p>
+
+<h2 id="guiding-assumptions">Guiding assumptions<a class="headerlink" href="#guiding-assumptions" title="Permalink to this headline">¶</a></h2>
+<p>The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:</p>
+<ol class="simple">
+<li><p>We expect patrons to be mainly students enrolled in educational courses at Caltech.  We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a catalog of “all things available for digital loan via DIBS”; in part, this is because such a list was not considered to be useful for DIBS’s use-cases, and in part to avoid potential decreased availability of titles due to non-students browsing and borrowing items.</p></li>
+<li><p>We expect that library staff need to interact with the system in a quite different way: to add new items to the database of digitized works and control loan parameters.  Thus, staff <em>do</em> see a list of all items available through the system, but access to this list is limited to Library staff.</p></li>
+</ol>
+<p>These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of titles available in the system.  The front page acts mainly as an information page that describes the purpose of the system and the policies:</p>
+<figure>
+<img src="_static/media/welcome-page.png"/>
+</figure>
+
+
+<h2 id="the-patron-experience">The patron experience<a class="headerlink" href="#the-patron-experience" title="Permalink to this headline">¶</a></h2>
+<p>As mentioned above, patrons are presumed to be provided information about specific items available for loan.  The working assumption is that they will be given URLs that take them directly to item description pages in DIBS.  An example of an item description page is shown below:</p>
+<figure>
+<img src="_static/media/item-page.png"/>
+</figure>
+<p>The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech’s TIND server based on the barcode used by Library staff when they add the item to DIBS. (The thumbnail image is obtained from either Amazon or Google using the item’s ISBN, if it has one; otherwise, a blank is shown instead.)</p>
+<p>The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-secondary">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:</p>
+<figure>
+<img src="_static/media/item-not-available.png"/>
+</figure>
+
+
+<h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">¶</a></h2>
+<p>The staff entry point to DIBS is located at <code class="docutils literal notranslate"><span class="pre">/list</span></code>.  If the user is not logged in when first visiting the page, they will be redirected to the login page (located at <code class="docutils literal notranslate"><span class="pre">/login</span></code>):</p>
+<figure>
+<img src="_static/media/login-page.png"/>
+</figure>
+<p>Once logged in, they will be able to see <code class="docutils literal notranslate"><span class="pre">/list</span></code>:</p>
+<figure>
+<img src="_static/media/list-page.png"/>
+</figure>
+<p>This page is the main interface for staff users.  It lists all of the items known to the system (whether they are ready to be available for digital loans or not), and allows staff to add, edit, or remove items.  It is also the place where staff can get the link to be distributed to patrons to request loans.  In more detail:</p>
+<ul class="simple">
+<li><p><strong>Barcode</strong>: the barcode identifying the item in the Caltech Library.</p></li>
+<li><p><strong>Title</strong>: the title of the item. This is entered free-form in the DIBS entry form and does not have to match the actual title in Caltech’s TIND database.</p></li>
+<li><p><strong>Author</strong>: the author of the item. This is entered free-form in the DIBS entry form and does not have to match the actual author in Caltech’s TIND database.</p></li>
+<li><p><strong>Ready to loan?</strong>: when unchecked, the item is not made available for digital loans. This allows staff who scan the items to start making an entry in DIBS and continue scanning. When done, staff can check the “Ready to loan?” checkbox and make it available to digital patrons.</p></li>
+<li><p><strong>Loan duration</strong>: the duration of a loan. The system automatically closes the loan after the loan period and blocks the patron’s access. (Patrons can also close loans early if they wish.)</p></li>
+<li><p><strong>Copies for loans</strong>: how many copies of the item are being made available for simultaneous borrowing?</p></li>
+<li><p><strong>Copies in use</strong>: indicates the number of copies of the item on loan at the moment.</p></li>
+<li><p><span class="button color-secondary">Copy link</span>: this copies to the user’s clipboard a link to the item loan page.  This is what should be communicated to course instructors, so that they can pass on the URLs to their students.</p></li>
+<li><p><span class="button color-info">Edit</span>: edit the entry. This brings up the same form as is used to add new entries, but with the values filled in, allowing the user to change the values and save the results.</p></li>
+<li><p><span class="button color-danger">Remove</span>: remove the entry for the item in the DIBS database. This does not remove the scans or other files, only the database entry.</p></li>
+</ul>
+<p>If the user clicks the <span class="button color-primary">Add a new item</span> button, they are presented with the following screen:</p>
+<figure>
+<img src="_static/media/add-item-page.png"/>
+</figure>
+<p>Here, information can be entered to describe a new item being made available for digital loans.  Many of the fields are the same as those in the list above, with the exception of the addition of the TIND id.  The TIND id is optional (in case an item is special and not in Caltech’s TIND database); when it <em>is</em> provided, it is used to link the title of the item in the main list of items in DIBS.</p>
+
+
+
+
+          </article>
+        </div>
+      </div>
+    </main>
   </div>
   <footer class="md-footer">
-   <div class="md-footer-nav">
-    <nav class="md-footer-nav__inner md-grid">
-     <a class="md-flex md-footer-nav__link md-footer-nav__link--prev" href="index.html" rel="prev" title="Caltech Library Digital Borrowing System">
-      <div class="md-flex__cell md-flex__cell--shrink">
-       <i class="md-icon md-icon--arrow-back md-footer-nav__button">
-       </i>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-       <span class="md-flex__ellipsis">
-        <span class="md-footer-nav__direction">
-         Previous
-        </span>
-        Caltech Library Digital Borrowing System
-       </span>
-      </div>
-     </a>
-     <a class="md-flex md-footer-nav__link md-footer-nav__link--next" href="architecture.html" rel="next" title="System architecture">
-      <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-       <span class="md-flex__ellipsis">
-        <span class="md-footer-nav__direction">
-         Next
-        </span>
-        System architecture
-       </span>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-       <i class="md-icon md-icon--arrow-forward md-footer-nav__button">
-       </i>
-      </div>
-     </a>
-    </nav>
-   </div>
-   <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-     <div class="md-footer-copyright">
-      <div class="md-footer-copyright__highlight">
-       © Copyright 2021, Caltech Library.
-      </div>
-      Created using
-      <a href="http://www.sphinx-doc.org/">
-       Sphinx
-      </a>
-      3.4.3.
-             and
-      <a href="https://github.com/bashtage/sphinx-material/">
-       Material for
-              Sphinx
-      </a>
-     </div>
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+          
+            <a href="index.html" title="Caltech Library Digital Borrowing System"
+               class="md-flex md-footer-nav__link md-footer-nav__link--prev"
+               rel="prev">
+              <div class="md-flex__cell md-flex__cell--shrink">
+                <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+              </div>
+              <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+                <span class="md-flex__ellipsis">
+                  <span
+                      class="md-footer-nav__direction"> Previous </span> Caltech Library Digital Borrowing System </span>
+              </div>
+            </a>
+          
+          
+            <a href="architecture.html" title="System architecture"
+               class="md-flex md-footer-nav__link md-footer-nav__link--next"
+               rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
+                class="md-flex__ellipsis"> <span
+                class="md-footer-nav__direction"> Next </span> System architecture </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink"><i
+                class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          
+        </a>
+        
+      </nav>
     </div>
-   </div>
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-footer-copyright">
+          <div class="md-footer-copyright__highlight">
+              &#169; Copyright 2021, Caltech Library.
+              
+          </div>
+            Created using
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+             and
+            <a href="https://github.com/bashtage/sphinx-material/">Material for
+              Sphinx</a>
+        </div>
+      </div>
+    </div>
   </footer>
-  <script src="_static/javascripts/application.js">
-  </script>
-  <script>
-   app.initialize({version: "1.0.4", url: {base: ".."}})
-  </script>
- </body>
+  <script src="_static/javascripts/application.js"></script>
+  <script>app.initialize({version: "1.0.4", url: {base: ".."}})</script>
+  </body>
 </html>
