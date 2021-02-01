@@ -5,16 +5,17 @@ nav.md-tabs {
 figure img {
   width: 85%;
   border:2px solid #ddd;
-  box-shadow: 10px 10px 5px #ccc;
-  -moz-box-shadow: 10px 10px 5px #ccc;
-  -webkit-box-shadow: 10px 10px 5px #ccc;
-  -khtml-box-shadow: 10px 10px 5px #ccc;
+  box-shadow: 6px 10px 15px #ccc;
+  -moz-box-shadow: 6px 10px 15px #ccc;
+  -webkit-box-shadow: 6px 10px 15px #ccc;
+  -khtml-box-shadow: 6px 10px 15px #ccc;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
   border-radius: 3px;
 }
 
 figure {
+  margin-top: 1.5em;
   text-align: center;
 }
 
@@ -26,7 +27,7 @@ figure {
   font-size: 90%;
   line-height: 1.2;
   margin: 0 .1em;
-  padding: .1em .3em;
+  padding: .15em .3em;
 }
 
 .color-info {
@@ -49,3 +50,7 @@ figure {
   color: #fff;
 }
 
+.color-not-available {
+  background-color: #a6a6a6;
+  color: #fff;
+}

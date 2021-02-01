@@ -27,13 +27,19 @@ As mentioned above, patrons are presumed to be provided information about specif
 
 The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech's TIND server based on the barcode used by Library staff when they add the item to DIBS. (The thumbnail image is obtained from either Amazon or Google using the item's ISBN, if it has one; otherwise, a blank is shown instead.)
 
-The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-secondary">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:
+The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-not-available">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:
 
 <figure>
     <img src="_static/media/item-not-available.png">
 </figure>
 
+If the item is available to the user, and they click the <span class="button color-primary">Get loan</span> button, then they will be presented with a brief confirmation dialog.  If they elect to proceed, a loan will be started immediately and they will be transferred to the viewer.
 
+<figure>
+    <img src="_static/media/loan-in-viewer.png">
+</figure>
+
+DIBS uses [Universal Viewer](https://universalviewer.io) for this purpose; UV is an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.
 
 
 ## The staff experience
@@ -69,4 +75,4 @@ If the user clicks the <span class="button color-primary">Add a new item</span> 
     <img src="_static/media/add-item-page.png">
 </figure>
 
-Here, information can be entered to describe a new item being made available for digital loans.  Many of the fields are the same as those in the list above, with the exception of the addition of the TIND id.  The TIND id is optional (in case an item is special and not in Caltech's TIND database); when it _is_ provided, it is used to link the title of the item in the main list of items in DIBS.
+Here, information can be entered to describe a new item being made available for digital loans.  All of the information about a given item is based on the barcode; this barcode is used to look up the item in Caltech's TIND server, and the information extracted from TIND is used to populate the item view page discussed in the previous section.
