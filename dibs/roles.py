@@ -10,10 +10,10 @@ _role_table = {
 }
 
 
-def role_to_redirect(role):
+def role_to_redirect(role, base_url = 'http://localhost:8080'):
     '''given a user role (including an empty string) return the target path for a redirect'''
     if role in _role_table:
-        return _role_table[role]
+        return ''.join([base_url, _role_table[role]])
     else:
-        return '/'
+        return ''.join([base_url, '/'])
 

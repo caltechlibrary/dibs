@@ -66,6 +66,24 @@ at {feedback}
 '''
 
 
+# ServerConfig holds those values that are installation dependent and
+# needed by parts of the system such as the template to render correctly.
+# .............................................................................
+class ServerConfig():
+    def __init__(self):
+        self.base_url = 'http://localhost:8080'
+
+    def set_base_url(self, base_url):
+        self.base_url = base_url
+        return self.base_url
+
+    def get_base_url(self):
+        return self.base_url
+
+# We need to instantiate our class so it if available
+server_config = ServerConfig()
+
+
 # Decorators used throughout this file.
 # .............................................................................
 
@@ -103,7 +121,8 @@ def barcode_verified(func):
             except DoesNotExist as ex:
                 if __debug__: log(f'there is no item with barcode {barcode}')
                 return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
-                                barcode = barcode)
+                                barcode = barcode,
+                                base_url = server_config.get_base_url())
         return func(session, *args, **kwargs)
     return wrapper
 
@@ -148,7 +167,8 @@ def show_login_page(session):
     # NOTE: If SSO is implemented this should redirect to the 
     # SSO end point with a return to /login on success.
     if __debug__: log('get /login invoked')
-    return template(path.join(_TEMPLATE_DIR, 'login'))
+    return template(path.join(_TEMPLATE_DIR, 'login'),
+            base_url = server_config.get_base_url())
 
 
 @post('/login')
@@ -163,7 +183,8 @@ def login(session):
     if user != None:
         if check_password(password, user.secret) == False:
             if __debug__: log(f'wrong password -- rejecting {email}')
-            return template(path.join(_TEMPLATE_DIR, 'login'))
+            return template(path.join(_TEMPLATE_DIR, 'login'),
+                    base_url = server_config.get_base_url())
         else:
             if __debug__: log(f'creating session for {email}')
             session['user'] = email
@@ -173,7 +194,8 @@ def login(session):
             return
     else:
         if __debug__: log(f'wrong password -- rejecting {email}')
-        return template(path.join(_TEMPLATE_DIR, 'login'))
+        return template(path.join(_TEMPLATE_DIR, 'login'),
+                base_url = server_config.get_base_url())
 
 @get('/logout')
 @expired_loans_removed
@@ -197,7 +219,8 @@ def list_items(session):
     '''Display the list of known items.'''
     if __debug__: log('get /list invoked')
     return template(path.join(_TEMPLATE_DIR, 'list'),
-                    items = Item.select(), loans = Loan.select())
+                    items = Item.select(), loans = Loan.select(),
+                    base_url = server_config.get_base_url())
 
 
 @get('/add')
@@ -208,7 +231,8 @@ def add(session):
     '''Display the page to add new items.'''
     if __debug__: log('get /add invoked')
     return template(path.join(_TEMPLATE_DIR, 'edit'),
-                    action = 'add', item = None)
+                    action = 'add', item = None,
+                    base_url = server_config.get_base_url())
 
 
 @get('/edit/<barcode:int>')
@@ -220,7 +244,8 @@ def edit(session, barcode):
     '''Display the page to add new items.'''
     if __debug__: log(f'get /edit invoked on {barcode}')
     return template(path.join(_TEMPLATE_DIR, 'edit'),
-                    action = 'edit', item = Item.get(Item.barcode == barcode))
+                    action = 'edit', item = Item.get(Item.barcode == barcode),
+                    base_url = server_config.get_base_url())
 
 
 @post('/update/add')
@@ -316,7 +341,8 @@ def remove_item(session):
 def front_page(session):
     '''Display the welcome page.'''
     if __debug__: log('get / invoked')
-    return template(path.join(_TEMPLATE_DIR, 'info'))
+    return template(path.join(_TEMPLATE_DIR, 'info'),
+            base_url = server_config.get_base_url())
 
 
 @get('/item/<barcode:int>')
@@ -370,7 +396,8 @@ def show_item_info(session, barcode):
             explanation = None
     return template(path.join(_TEMPLATE_DIR, 'item'),
                     item = item, available = available, endtime = endtime,
-                    explanation = explanation)
+                    explanation = explanation,
+                    base_url = server_config.get_base_url())
 
 
 @post('/loan')
@@ -422,7 +449,8 @@ def loan_item(session):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
             return template(path.join(_TEMPLATE_DIR, 'toosoon'),
-                            nexttime = recent.nexttime)
+                            nexttime = recent.nexttime,
+                            base_url = server_config.get_base_url())
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
@@ -477,7 +505,8 @@ def send_item_to_viewer(session, barcode):
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
         return template(path.join(_TEMPLATE_DIR, 'uv'), barcode = barcode,
-                        endtime = user_loans[0].endtime)
+                        endtime = user_loans[0].endtime,
+                        base_url = server_config.get_base_url())
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'/item/{barcode}')
@@ -499,18 +528,21 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+        return template(path.join(_TEMPLATE_DIR, 'notallowed'),
+                base_url = server_config.get_base_url())
 
 
 @get('/thankyou')
 def say_thank_you():
     return template(path.join(_TEMPLATE_DIR, 'thankyou'),
-                    feedback_url = config('FEEDBACK_URL'))
+                    feedback_url = config('FEEDBACK_URL'),
+                    base_url = server_config.get_base_url())
 
 
 @get('/notauthenticated')
 def say_thank_you():
-    return template(path.join(_TEMPLATE_DIR, 'notauthenticated'))
+    return template(path.join(_TEMPLATE_DIR, 'notauthenticated'),
+            base_url = server_config.get_base_url())
 
 
 # Universal viewer interface.
@@ -541,20 +573,23 @@ def serve_uv_files(filepath):
 def nonexistent_item(barcode = None):
     '''Serve as an endpoint for telling users about nonexistent items.'''
     if __debug__: log(f'nonexistent_item called with {barcode}')
-    return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode,
+            base_url = server_config.get_base_url())
 
 
 @error(404)
 def error404(error):
     if __debug__: log(f'error404 called with {error}')
     return template(path.join(_TEMPLATE_DIR, 'error'),
-                    code = error.status_code, message = error.body)
+                    code = error.status_code, message = error.body,
+                    base_url = server_config.get_base_url())
 
 
 @error(405)
 def error405(error):
     if __debug__: log(f'error405 called with {error}')
-    return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+    return template(path.join(_TEMPLATE_DIR, 'notallowed'),
+            base_url = server_config.get_base_url())
 
 
 # Server runner.

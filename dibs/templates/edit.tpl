@@ -72,7 +72,7 @@
       <div class="d-grid">
 
         <div class="jumbotron">
-          <form action="/update/{{action}}" method="POST">
+          <form action="{{base_url}}/update/{{action}}" method="POST">
 
             <label for="inputBarcode" class="sr-only">Barcode</label>
             <input type="barcode" name="inputBarcode" class="form-control"
