@@ -105,6 +105,10 @@ class TindRecord():
                 self.call_no = ''
                 for subfield in element.findall(elem_subfield):
                     self.call_no += subfield.text.strip() + ' '
+            elif element.attrib['tag'] == '100':
+                for subfield in element.findall(elem_subfield):
+                    if subfield.attrib['code'] == 'a':
+                        self.main_author = subfield.text.strip()
             elif element.attrib['tag'] == '245':
                 for subfield in element.findall(elem_subfield):
                     if subfield.attrib['code'] == 'a':
@@ -122,6 +126,17 @@ class TindRecord():
                     if value.isdigit():
                         self.isbn_list.append(value)
 
+        # We get author from 245 because in our entries, it's frequently part
+        # of the title statement. If it's not, but we got an author from 100
+        # use that.  100 only lists first author, but it's better than nothing.
+        if self.author:
+            if self.author.startswith('by'):
+                self.author = self.author[2:].strip()
+            elif self.author.startswith('edited by'):
+                self.author = self.author[10:].strip()
+        elif self.main_author:
+            self.author = self.main_author
+
         # Caltech's TIND database contains some things that are not reading
         # materials per se. The following is an attempt to weed those out.
         if sum([not self.author, not self.year, not self.call_no]) > 1:
@@ -130,11 +145,6 @@ class TindRecord():
             return
 
         # Some cleanup work is better left until after we obtain all values.
-        if self.author:
-            if self.author.startswith('by'):
-                self.author = self.author[2:].strip()
-            elif self.author.startswith('edited by'):
-                self.author = self.author[10:].strip()
         self.author = cleaned(self.author)
         self.title = cleaned(self.title)
         self.edition = cleaned(self.edition)
