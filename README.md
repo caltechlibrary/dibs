@@ -55,7 +55,7 @@ git checkout develop
 Next, install the Python dependencies on your system or your virtual environment:
 
 ```sh
-pip3 install -r requirements.txt --use-feature=2020-resolver
+pip3 install -r requirements.txt
 ```
 
 You also need to have a Redis database running on the local host.  If you are using Homebrew on macOS, the simplest way to do that is the following:
