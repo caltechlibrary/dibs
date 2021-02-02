@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from decouple import config
 from peewee import SqliteDatabase
 
-from dibs import Item, Loan, Recent, Person
+from dibs.database import Item, Loan, Recent
+from dibs.people import Person
 
 db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
