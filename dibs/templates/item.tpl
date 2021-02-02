@@ -97,7 +97,7 @@
        function update_content() {
          $.ajax({
            type: "GET",
-           url: "/item/{{item.barcode}}",
+           url: "{{base_url}}/item/{{item.barcode}}",
            cache: false,
          })
           .done(function(page_html) {

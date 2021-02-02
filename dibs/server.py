@@ -188,7 +188,7 @@ def login(session):
         else:
             if __debug__: log(f'creating session for {email}')
             session['user'] = email
-            p = role_to_redirect(user.role)
+            p = role_to_redirect(user.role, server_config.get_base_url())
             if __debug__: log(f'redirecting to "{p}"')
             redirect(p)
             return
