@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
   %include('static/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">

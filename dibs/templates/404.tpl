@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
   %include('static/banner.html')
   <head>
     <title>Error</title>
@@ -7,9 +7,9 @@
   </head>
   
   <body>
-    <div class="d-flex align-items-center min-vh-100 my-5">
+    <div style="position: relative; padding-bottom: 4em; min-height: 100%">
       <div class="container text-center">
-        <img src="static/missing.jpg" class="rounded img-fluid" style="max-width: 500px" width="80%"
+        <img src="/static/missing.jpg" class="rounded img-fluid pt-3" style="max-width: 500px" width="80%"
              title="Photo taken in the Sherman Fairchild Library in January, 2021. Copyright 2021 Rebecca Minarez. Distributed under a CC BY-NC-SA 4.0 license."
              alt="Photo of missing books by Rebecca Minjarez, Caltech.">
         <h4 class="my-4">Very sorry, but that seems to be missing &#8230;</h4>
@@ -21,6 +21,7 @@
 
         <p class="text-muted"><small>(Code {{code}}: {{message}})</small></p>
       </div>
-    </div
+      %include('static/footer.html')
+    </div>
   </body>
 </html>

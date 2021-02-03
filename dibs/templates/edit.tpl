@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
   %include('static/banner.html')
   <head>
     <title>Add or edit a Caltech DIBS entry</title>
