@@ -27,6 +27,7 @@ if __debug__:
     from sidetrack import log
 
 from .database import Item, Loan, Recent
+from .tind import TindRecord
 
 
 # Installation of Bottle plugins.
@@ -116,9 +117,7 @@ def barcode_verified(func):
     def wrapper(session, *args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
-            try:
-                Item.get(Item.barcode == barcode)
-            except DoesNotExist as ex:
+            if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
                 return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
                                 barcode = barcode,
@@ -152,8 +151,6 @@ def head_method_ignored(func):
 # Administrative interface endpoints.
 # .............................................................................
 
-
-
 # NOTE: there are three approaches for integrating SSO. First is always
 # require SSO before showing anything (not terribly useful here).
 # Second use existing end points (e.g. /login, /logout) this supports
@@ -175,7 +172,7 @@ def show_login_page(session):
 def login(session):
     # NOTE: If SSO is implemented this end point will handle the 
     # successful login case applying role rules if necessary.
-    email = request.forms.get('email')
+    email = request.forms.get('email').strip()
     password = request.forms.get('password')
     if __debug__: log(f'post /login invoked by {email}')
     # get our person obj from people.db for demo purposes
@@ -196,6 +193,7 @@ def login(session):
         if __debug__: log(f'wrong password -- rejecting {email}')
         return template(path.join(_TEMPLATE_DIR, 'login'),
                 base_url = server_config.get_base_url())
+
 
 @get('/logout')
 @expired_loans_removed
@@ -254,39 +252,57 @@ def edit(session, barcode):
 @authenticated
 def update_item(session):
     '''Handle http post request to add a new item from the add-new-item page.'''
-    action = 'add' if request.path == '/update/add' else 'edit'
-    if __debug__: log(f'post /update/{action} invoked')
+    if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
         redirect('/list')
         return
 
-    barcode    = request.POST.inputBarcode.strip()
-    title      = request.POST.inputTitle.strip()
-    author     = request.POST.inputAuthor.strip()
-    num_copies = request.POST.inputNumCopies.strip()
-    tind_id    = request.POST.inputTindId.strip()
-    duration   = request.POST.inputDuration.strip()
+    # The HTML form validates the data types, but the POST might come from
+    # elsewhere, so we always need to sanity-check the values.
+    barcode = request.forms.get('barcode').strip()
+    if not barcode.isdigit():
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'{barcode} is not a valid barcode')
+    duration = request.forms.get('duration').strip()
+    if not duration.isdigit() or int(duration) <= 0:
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'Duration must be a positive number')
+    num_copies = request.forms.get('num_copies').strip()
+    if not num_copies.isdigit() or int(num_copies) <= 0:
+        return template(path.join(_TEMPLATE_DIR, 'error'),
+                        message = f'Number of copies must be a positive number')
 
-    if __debug__: log(f'doing {action} on barcode {barcode}, title {title}')
-    if action == 'add':
-        Item.create(barcode = barcode, title = title, author = author,
-                    tind_id = tind_id, num_copies = num_copies,
-                    duration = duration)
+    # Our current approach only uses items with barcodes that exist in TIND.
+    # If that ever changes, the following needs to change too.
+    rec = TindRecord(barcode = barcode)
+    if not rec or not all([rec.title, rec.author, rec.year]):
+        if __debug__: log(f'could not find {barcode} in TIND')
+        redirect(f'/nonexistent/{barcode}')
+        return
+
+    item = Item.get_or_none(Item.barcode == barcode)
+    if request.path == '/update/add':
+        if item:
+            if __debug__: log(f'{barcode} already exists in the database')
+            return template(path.join(_TEMPLATE_DIR, 'duplicate'),
+                            barcode = barcode)
+        if __debug__: log(f'adding {barcode}, title {rec.title}')
+        Item.create(barcode = barcode, title = rec.title, author = rec.author,
+                    tind_id = rec.tind_id, year = rec.year,
+                    edition = rec.edition, thumbnail = rec.thumbnail,
+                    num_copies = num_copies, duration = duration)
     else:
-        try:
-            item = Item.get(Item.barcode == barcode)
-        except DoesNotExist as ex:
+        if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
-            redirect('/nonexistent')
+            redirect(f'/nonexistent/{barcode}')
             return
-
+        if __debug__: log(f'updating {barcode} from {rec}')
         item.barcode    = barcode
-        item.title      = title
-        item.author     = author
-        item.tind_id    = tind_id
         item.num_copies = num_copies
         item.duration   = duration
+        for field in ['title', 'author', 'year', 'edition', 'tind_id', 'thumbnail']:
+            setattr(item, field, getattr(rec, field, ''))
         item.save()
     redirect('/list')
 
@@ -580,7 +596,7 @@ def nonexistent_item(barcode = None):
 @error(404)
 def error404(error):
     if __debug__: log(f'error404 called with {error}')
-    return template(path.join(_TEMPLATE_DIR, 'error'),
+    return template(path.join(_TEMPLATE_DIR, '404'),
                     code = error.status_code, message = error.body,
                     base_url = server_config.get_base_url())
 
@@ -590,6 +606,29 @@ def error405(error):
     if __debug__: log(f'error405 called with {error}')
     return template(path.join(_TEMPLATE_DIR, 'notallowed'),
             base_url = server_config.get_base_url())
+
+
+
+# Miscellaneous static pages.
+# .............................................................................
+
+@get('/favicon.ico')
+def nonexistent_item():
+    '''Return the favicon.'''
+    if __debug__: log(f'returning favicon')
+    return static_file('favicon.ico', root = 'dibs/static')
+
+@get('/missing.jpg')
+def nonexistent_item():
+    '''Return the favicon.'''
+    if __debug__: log(f'returning favicon')
+    return static_file('missing.jpg', root = 'dibs/static')
+
+@get('/dibs-icon.svg')
+def nonexistent_item():
+    '''Return the favicon.'''
+    if __debug__: log(f'returning favicon')
+    return static_file('dibs-icon.svg', root = 'dibs/static')
 
 
 # Server runner.

@@ -102,7 +102,7 @@ html_theme_options = {
     'globaltoc_includehidden': False,
 
     "html_minify": False,
-    "html_prettify": True,
+    "html_prettify": False,
 
     "version_dropdown": False,
     "version_json": "_static/versions.json",

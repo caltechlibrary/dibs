@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-
+  <!--
+  Thank you for using
+     ______          __  __                 __         ____    ____  ____   _____
+    / ____/ ____ _  / / / /_  ___   _____  / /_       / __ \  /  _/ / __ ) / ___/
+   / /     / __ `/ / / / __/ / _ \ / ___/ / __ \     / / / /  / /  / __  | \__ \ 
+  / /___  / /_/ / / / / /_  /  __// /__  / / / /    / /_/ / _/ /  / /_/ /  __/ / 
+  \____/  \__,_/ /_/  \__/  \___/ \___/ /_/ /_/    /_____/ /___/ /_____/ /____/  
+  
+  Please help us to improve this system by reporting problems using the
+  GitHub issue system at https://github.com/caltechlibrary/dibs/issues
+  or over email at helpdesk@library.caltech.edu
+  -->                           
   <head>
     <title>Add or edit a Caltech DIBS entry</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
@@ -12,57 +23,11 @@
      html .form-control::-moz-placeholder          { color: #bbb; }
      html .form-control:-ms-input-placeholder      { color: #bbb; }
     </style>
-
-    <script>
-     // The following code is based on a 2019-07-17 posting by user Jeff Tian
-     // to Stack Overflow at https://stackoverflow.com/a/57069660/743730
-     'use strict';
-     (() => {
-       const modified_inputs = new Set();
-       const defaultValue = 'defaultValue';
-
-       // store default values
-       addEventListener('beforeinput', evt => {
-         const target = evt.target;
-         if (!(defaultValue in target.dataset)) {
-           target.dataset[defaultValue] = ('' + (target.value || target.textContent)).trim();
-         }
-       });
-
-       // detect input modifications
-       addEventListener('input', evt => {
-         const target = evt.target;
-         let original = target.dataset[defaultValue];
-         let current  = ('' + (target.value || target.textContent)).trim();
-
-         if (original !== current) {
-           if (!modified_inputs.has(target)) {
-             modified_inputs.add(target);
-           }
-         } else if (modified_inputs.has(target)) {
-           modified_inputs.delete(target);
-         }
-       });
-
-       addEventListener('saved', evt => { modified_inputs.clear() }, false
-       );
-
-       addEventListener('beforeunload', evt => {
-         if (modified_inputs.size) {
-           const unsaved_changes_warning = 'Changes you made may not be saved.';
-           evt.returnValue = unsaved_changes_warning;
-           return unsaved_changes_warning;
-         }
-       });
-
-     })();
-    </script>
-    
   </head>
   
   <body>
     <div class="container-fluid">
-      <h2 class="mx-auto text-center w-100">
+      <h2 class="mx-auto text-center w-100 my-3">
         %if action == "add":
         Add a new item to DIBS
         %else:
@@ -70,53 +35,36 @@
         %end
       </h2>
       <div class="d-grid">
+        <p class="w-75 text-center mx-auto">
+          This will add a new item to the DIBS database. Note that it will
+          not be made available to patrons for digital loans until the
+          "ready" checkbox is checked in the list page.
+        </p>
 
-        <div class="jumbotron">
+        <div class="w-75 text-center mx-auto">
           <form action="{{base_url}}/update/{{action}}" method="POST">
 
-            <label for="inputBarcode" class="sr-only">Barcode</label>
-            <input type="barcode" name="inputBarcode" class="form-control"
+            <label for="barcode" class="sr-only">Barcode</label>
+            <input name="barcode" type="number" class="form-control"
                    placeholder="Barcode"
                    %if item:
                    value="{{item.barcode}}"
                    %end
                    required autofocus>
 
-            <label for="inputTitle" class="sr-only">Title</label>
-            <input type="title" name="inputTitle" class="form-control"
-                   placeholder="Title"
-                   %if item:
-                   value="{{item.title}}"
-                   %end
-                   required>
-
-            <label for="inputAuthor" class="sr-only">Author</label>
-            <input type="author" name="inputAuthor" class="form-control"
-                   placeholder="Author"
-                   %if item:
-                   value="{{item.author}}"
-                   %end
-                   required>
-
-            <label for="inputTindId" class="sr-only">TindId</label>
-            <input type="tindId" name="inputTindId" class="form-control"
-                   placeholder="TIND Id"
-                   %if item:
-                   value="{{item.tind_id}}"
-                   %end
-                   >
-
-            <label for="inputNumCopies" class="sr-only">Copies</label>
-            <input type="copies" name="inputNumCopies" class="form-control"
-                   placeholder="# copies to be made available"
+            <label for="numCopies" class="sr-only">Copies</label>
+            <input name="num_copies" type="number" class="form-control"
+                   placeholder="Number of copies to be made available for simultaneous loans"
+                   step="any" min="1"
                    %if item:
                    value="{{item.num_copies}}"
                    %end
                    required>
 
-            <label for="inputDuration" class="sr-only">Loan duration (in hours)</label>
-            <input type="duration" name="inputDuration" class="form-control"
-                   placeholder="hours per loan"
+            <label for="duration" class="sr-only">Loan duration (in hours)</label>
+            <input name="duration" type="number" class="form-control"
+                   placeholder="Maximum duration of a loan (in hours)"
+                   step="any" min="1" oninput="check_nonzero(this)"
                    %if item:
                    value="{{item.duration}}"
                    %end
@@ -138,8 +86,6 @@
             </div>
           </form>
         </div>
-
-
       </div>
     </div>
   </body>

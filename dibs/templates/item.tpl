@@ -1,5 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+  <!--
+  Thank you for using
+     ______          __  __                 __         ____    ____  ____   _____
+    / ____/ ____ _  / / / /_  ___   _____  / /_       / __ \  /  _/ / __ ) / ___/
+   / /     / __ `/ / / / __/ / _ \ / ___/ / __ \     / / / /  / /  / __  | \__ \ 
+  / /___  / /_/ / / / / /_  /  __// /__  / / / /    / /_/ / _/ /  / /_/ /  __/ / 
+  \____/  \__,_/ /_/  \__/  \___/ \___/ /_/ /_/    /_____/ /___/ /_____/ /____/  
+  
+  Please help us to improve this system by reporting problems using the
+  GitHub issue system at https://github.com/caltechlibrary/dibs/issues
+  or over email at helpdesk@library.caltech.edu
+  -->                           
   <head>
     <meta http-equiv="Pragma" content="no-cache">
 
@@ -30,15 +42,53 @@
   
   <body>
     <div class="container-fluid">
-      <h2 class="mx-auto my-2 w-100 text-center">
-        {{item.title}}
-      </h2>
-      <h3 class="mx-auto w-100 text-center">
-        <em>Author: {{item.author}}</em>
-      </h3>
-      <hr>
+      <table class="table table-borderless my-3">
+        <tbody>
+          <tr>
+            <td width="200px" style="border-top: none">
+              <img class="img-thumbnail" src="{{item.thumbnail}}" style="width: 180px">
+            </td>
+            <td style="border-top: none">
+              <table class="table table-sm">
+                <tbody>
+                  <tr>
+                    <th width="120em">Title</th>
+                    <td>
+                      <strong>
+                        %if item.tind_id != '':
+                        <a target="_blank"
+                           href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                        %else:
+                        {{item.title}}
+                        %end
+                      </strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Author(s)</th>
+                    <td>{{item.author}}</td>
+                  </tr>
+                  <tr>
+                    <th>Year</th>
+                    <td>{{item.year}}</td>
+                  </tr>
+                  <tr>
+                    <th>Edition</th>
+                    %if item.edition != '':
+                    <td>{{item.edition}}</td>
+                    %else:
+                    <i>Unknown</i>
+                    %end
+                  </tr>
+                  <tr><td></td><td></td></tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-      <div class="py-4">
+      <div>
         <p class="mx-auto text-center" style="width: 500px">
           This item is <span class="shown-if-not-available">not</span> currently
           available to you for a digital loan.
@@ -107,7 +157,7 @@
             newDoc.close();
           });   
        }
-
+       
       </script>
 
   </body>
