@@ -575,11 +575,11 @@ def favicon():
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@get('/static/<path:re:[-a-zA-Z0-9]+.(html|jpg|svg)>')
-def included_file(path):
-    '''Return a static file used with %include in a templates.'''
-    if __debug__: log(f'returning included file {path}')
-    return static_file(path, root = 'dibs/static')
+@get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css)>')
+def included_file(filename):
+    '''Return a static file used with %include in a template.'''
+    if __debug__: log(f'returning included file {filename}')
+    return static_file(filename, root = 'dibs/templates/static')
 
 
 # Server runner.
