@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" style="height: 100%">
-  %include('static/banner.html')
+  %include('common/banner.html')
   <head>
-    %include('static/standard-inclusions.html')
+    %include('common/standard-inclusions.tpl')
     <title>Error</title>
   </head>
   
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 4em; min-height: 100%">
-      %include('static/navbar.html')
+      %include('common/navbar.tpl')
 
       <div class="container text-center">
         <img src="{{base_url}}/static/missing.jpg" class="rounded img-fluid pt-3" style="max-width: 500px" width="80%"
@@ -23,7 +23,7 @@
         <p class="text-muted"><small>(Code {{code}}: {{message}})</small></p>
       </div>
 
-      %include('static/footer.html')
+      %include('common/footer.html')
     </div>
   </body>
 </html>

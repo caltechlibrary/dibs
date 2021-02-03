@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" style="height: 100%">
-  %include('static/banner.html')
+  %include('common/banner.html')
   <head>
-    %include('static/standard-inclusions.html')
+    %include('common/standard-inclusions.tpl')
     <title>Add or edit a Caltech DIBS entry</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{base_url}}/static/dibs.css">
@@ -10,7 +10,7 @@
   
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 3em; height: 100%">
-      %include('static/navbar.html')
+      %include('common/navbar.tpl')
 
         <div class="w-75 text-center mx-auto">
           <form action="{{base_url}}/update/{{action}}" method="POST">
@@ -63,7 +63,7 @@
         </div>
       </div>
 
-      %include('static/footer.html')
+      %include('common/footer.html')
     </div>
   </body>
 </html>

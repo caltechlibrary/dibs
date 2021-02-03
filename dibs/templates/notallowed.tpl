@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" style="height: 100%">
-  %include('static/banner.html')
+  %include('common/banner.html')
   <head>
-    %include('static/standard-inclusions.html')
+    %include('common/standard-inclusions.tpl')
     <title>Access error</title>
   </head>
   
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 3em; height: 100%">
-      %include('static/navbar.html')
+      %include('common/navbar.tpl')
 
       <div class="container pt-3">
         <div class="alert alert-danger" role="alert">
@@ -18,7 +18,7 @@
         </div>
       </div>
 
-      %include('static/footer.html')
+      %include('common/footer.html')
     </div>
   </body>
 </html>

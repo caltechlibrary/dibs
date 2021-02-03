@@ -372,8 +372,9 @@ def front_page(session):
 @get('/about')
 def about_page(session):
     '''Display the welcome page.'''
+    base_url = server_config.get_base_url()
     if __debug__: log('get /about invoked')
-    return template('about')
+    return template('about', base_url = base_url)
 
 
 @get('/item/<barcode:int>')
@@ -638,7 +639,7 @@ def favicon():
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     if __debug__: log(f'returning included file {filename}')
-    return static_file(filename, root = 'dibs/templates/static')
+    return static_file(filename, root = 'dibs/static')
 
 
 # Server runner.

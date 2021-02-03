@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" style="height: 100%">
-  %include('static/banner.html')
+  %include('common/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
-    %include('static/standard-inclusions.html')
+    %include('common/standard-inclusions.tpl')
 
     <title>Description page for {{item.title}}</title>
 
@@ -30,7 +30,7 @@
   
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 3em; height: 100%">
-      %include('static/navbar.html')
+      %include('common/navbar.tpl')
 
       <div class="container">
 
@@ -41,7 +41,7 @@
                 %if item.thumbnail != '':
                 <img class="img-thumbnail" src="{{item.thumbnail}}" style="width: 180px">
                 %else:
-                <img class="img-thumbnail" src="/static/missing-thumbnail.svg" style="width: 180px">
+                <img class="img-thumbnail" src="{{base_url}}/static/missing-thumbnail.svg" style="width: 180px">
                 %end
               </td>
               <td style="border-top: none">
@@ -156,7 +156,7 @@
         </script>
       </div>
 
-      %include('static/footer.html')
+      %include('common/footer.html')
     </div>
   </body>
 </html>

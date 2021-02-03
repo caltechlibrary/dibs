@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" style="height: 100%">
-  %include('static/banner.html')
+  %include('common/banner.html')
   <head>
-    %include('static/standard-inclusions.html')
+    %include('common/standard-inclusions.tpl')
     <title>Caltech DIBS</title>
   </head>
 
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 3em; height: 100%">
-      %include('static/navbar.html')
+      %include('common/navbar.tpl')
 
       <div class="container">
         <h1 class="mx-auto text-center pt-3" style="color: #FF6C0C">
@@ -19,7 +19,7 @@
         <p>DIBS is <a href="https://en.wikipedia.org/wiki/Open-source_software">open-source software</a>. The source code is freely available <a href="https://github.com/caltechlibrary/dibs">from GitHub</a> under the terms of a <a href="https://github.com/caltechlibrary/dibs/blob/main/LICENSE">BSD 3-clause license</a>.  It was implemented by <a href="https://github.com/mhucka">Michael Hucka</a>, <a href="https://github.com/rsdoiel">Robert Doiel</a>, <a href="https://github.com/t4k">Tommy Keswick</a> and <a href="https://github.com/nosivads">Stephen Davison</a> from the Caltech Library's <a href="https://www.library.caltech.edu/staff?&field_directory_department%5B0%5D=754">Digital Library Development team</a>. DIBS is written primarily in Python and uses the <a href="http://universalviewer.io">Universal Viewer</a> for displaying scanned books and other items.  The icons used on DIBS pages were created by <a href="https://thenounproject.com/roywj/">Royyan Wijaya</a> and <a href="https://thenounproject.com/thezyna/">Scott Desmond</a> for the <a href="https://thenounproject.com">Noun Project</a>.</p>
       </div>
 
-      %include('static/footer.html')
+      %include('common/footer.html')
     </div>
   </body>
 </html>
