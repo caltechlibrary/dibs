@@ -52,7 +52,7 @@
                 <th class="text-center">Ready<br>to<br>loan?</th>
                 <th class="text-center">Loan<br>duration<br>(hrs)</th>
                 <th class="text-center">Copies<br>for<br>loans</th>
-                <th class="text-center">Copies<br>in use</th>
+                <th class="text-center">Copies<br>in<br>use</th>
                 <th></th>
                 <th></th>
                 <th></th>
