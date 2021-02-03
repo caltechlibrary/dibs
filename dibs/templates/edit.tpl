@@ -4,26 +4,16 @@
   <head>
     %include('static/standard-inclusions.html')
     <title>Add or edit a Caltech DIBS entry</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{base_url}}/static/dibs.css">
   </head>
   
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 3em; height: 100%">
       %include('static/navbar.html')
 
-      <div class="container-fluid">
-        <h2 class="mx-auto text-center w-100 my-3">
-          %if action == "add":
-          Add a new item to DIBS
-          %else:
-          Edit {{item.barcode}}
-          %end
-        </h2>
-        <div class="d-grid">
-          <p class="w-75 text-center mx-auto">
-            This will add a new item to the DIBS database. Note that it will
-            not be made available to patrons for digital loans until the
-            "ready" checkbox is checked in the list page.
-          </p>
+        <div class="w-75 text-center mx-auto">
+          <form action="{{base_url}}/update/{{action}}" method="POST">
 
           <div class="w-75 text-center mx-auto">
             <form action="/update/{{action}}" method="POST">

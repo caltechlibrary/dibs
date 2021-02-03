@@ -7,11 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <link href="/viewer/uv/uv.css" rel="stylesheet" type="text/css">
+    <link href="{{base_url}}/viewer/uv/uv.css" rel="stylesheet" type="text/css">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
 
-    <script src="/viewer/uv/lib/offline.js"></script>
-    <script src="/viewer/uv/helpers.js"></script>
+    <script src="{{base_url}}/viewer/uv/lib/offline.js"></script>
+    <script src="{{base_url}}/viewer/uv/helpers.js"></script>
 
     <style>
      html, body { height: 97% }
@@ -33,7 +33,7 @@
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
-                onclick="if(confirm('This will end your loan immediately. The loan policy is that you will have to wait one hour before borrowing this item again.')){window.location='/return/{{barcode}}';}else{return false;}">
+                onclick="if(confirm('This will end your loan immediately. The loan policy is that you will have to wait one hour before borrowing this item again.')){window.location='{{base_url}}/return/{{barcode}}';}else{return false;}">
           End loan now</button>
       </div>
     </div>
@@ -49,8 +49,8 @@
 
    window.addEventListener('uvLoaded', function (e) {
      myUV = createUV('#uv', {
-       iiifResourceUri: '/manifests/{{barcode}}',
-       configUri: '/viewer/uv-config.json'
+       iiifResourceUri: '{{base_url}}/manifests/{{barcode}}',
+       configUri: '{{base_url}}/viewer/uv-config.json'
      }, new UV.URLDataProvider());
 
      myUV.on("created", function(obj) {

@@ -70,7 +70,7 @@
                   %end
                 <td>{{item.author}}</td>
                 <td class="text-center">
-                  <form action="/ready" method="POST">
+                  <form action="{{base_url}}/ready" method="POST">
                     <input type="hidden" name="barcode" value="{{item.barcode}}">
                     <input type="hidden" name="ready" value="{{item.ready}}">
                     <input type="checkbox" class="checkbox"
@@ -83,12 +83,12 @@
                 <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="copyToClipboard(this, 'http://localhost:8080/item/{{item.barcode}}');">
-                  Copy&nbsp;link</button>
+                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
+                  Copy link</button>
                 </td>
 
                 <td>
-                  <form action="/edit/{{item.barcode}}" method="GET">
+                  <form action="{{base_url}}/edit/{{item.barcode}}" method="GET">
                     <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                     <input type="submit" name="edit" value="Edit"
                             class="btn btn-info btn-sm"/>
@@ -96,7 +96,7 @@
                 </td>
 
                 <td>
-                  <form action="/remove" method="POST"
+                  <form action="{{base_url}}/remove" method="POST"
                         onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
                     <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                     <input type="submit" name="remove" value="Remove"
@@ -110,9 +110,7 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <form action="/add">
-            <input type="submit" class="btn btn-primary m-0" value="Add a new item" />
-          </form>
+          <a href="{{base_url}}/add"}} class="btn btn-primary m-0">Add a new item</a>
         </div>
 
       </div>
@@ -135,7 +133,7 @@
        function update_content() {
          $.ajax({
            type: "GET",
-           url: "/list",
+           url: "{{base_url}}/list",
            cache: false,
          })
           .done(function(page_html) {

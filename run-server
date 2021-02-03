@@ -15,6 +15,8 @@ from   os import path
 import sys
 from   sys import exit
 
+from urllib.parse import urlparse
+
 
 # Sanity-check the run-time environment before attempting anything else.
 # .............................................................................
@@ -101,8 +103,10 @@ def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
             exit(1)
 
     try:
-        server = Server(host   = config('DIBS_HOST') if address == 'A' else address,
-                        port   = config('DIBS_PORT') if port == 'P' else port,
+        base_url = config('BASE_URL')
+        u = urlparse(base_url)
+        server = Server(host   = u.hostname if address == 'A' else address,
+                        port   = u.port if port == 'P' else port,
                         debug  = False if debug == 'OUT' else debug,
                         reload = not no_reload)
         server.run()

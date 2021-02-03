@@ -72,6 +72,25 @@ bottle.install(SessionPlugin(cookie_name = config('COOKIE_NAME'),
                              cookie_lifetime = config('COOKIE_LIFETIME')))
 
 
+# ServerConfig class is used to allow the WSGI adapter to map a base url
+# appropriately and exposing that in the templates as well as to the 
+# redirect calls.
+# .............................................................................
+class ServerConfig():
+    def __init__(self):
+        self.base_url = 'http://localhost:8080'
+
+    def set_base_url(self, base_url):
+        self.base_url = base_url
+        return self.base_url
+
+    def get_base_url(self):
+        return self.base_url
+
+# We need to instantiate our class so it if available
+server_config = ServerConfig()
+
+
 # Decorators used throughout this file.
 # .............................................................................
 
@@ -102,11 +121,13 @@ def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
     @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
+        base_url = server_config.get_base_url()
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
             if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
-                return template('nonexistent', barcode = barcode)
+                return template('nonexistent', barcode = barcode,
+                    base_url = base_url)
         return func(session, *args, **kwargs)
     return wrapper
 
@@ -114,9 +135,10 @@ def barcode_verified(func):
 def authenticated(func):
     @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
+        base_url = server_config.get_base_url()
         if 'user' not in session or session['user'] is None:
             if __debug__: log(f'user not found in session object')
-            redirect('/login')
+            redirect(f'{base_url}/login')
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
         return func(session, *args, **kwargs)
@@ -148,14 +170,16 @@ def head_method_ignored(func):
 def show_login_page(session):
     # NOTE: If SSO is implemented this should redirect to the
     # SSO end point with a return to /login on success.
+    base_url = server_config.get_base_url()
     if __debug__: log('get /login invoked')
-    return template('login')
+    return template('login', base_url = base_url)
 
 
 @post('/login')
 def login(session):
     # NOTE: If SSO is implemented this end point will handle the
     # successful login case applying role rules if necessary.
+    base_url = server_config.get_base_url()
     email = request.forms.get('email').strip()
     password = request.forms.get('password')
     if __debug__: log(f'post /login invoked by {email}')
@@ -164,31 +188,32 @@ def login(session):
     if user != None:
         if check_password(password, user.secret) == False:
             if __debug__: log(f'wrong password -- rejecting {email}')
-            return template('login')
+            return template('login', base_url = base_url)
         else:
             if __debug__: log(f'creating session for {email}')
             session['user'] = email
             p = role_to_redirect(user.role)
             if __debug__: log(f'redirecting to "{p}"')
-            redirect(p)
+            redirect(f'{base_url}/{p}')
             return
     else:
         if __debug__: log(f'wrong password -- rejecting {email}')
-        return template('login')
+        return template('login', base_url = base_url)
 
 
 @get('/logout')
 @expired_loans_removed
 @head_method_ignored
 def logout(session):
+    base_url = server_config.get_base_url()
     if 'user' not in session:
         if __debug__: log(f'get /logout invoked by unauthenticated user')
-        redirect('/login')
+        redirect(f'{base_url}/login')
     else:
         user = session['user']
         if __debug__: log(f'get /logout invoked by {user}')
         del session['user']
-        redirect('/login')
+        redirect(f'{base_url}/login')
 
 
 @get('/list')
@@ -197,8 +222,10 @@ def logout(session):
 @authenticated
 def list_items(session):
     '''Display the list of known items.'''
+    base_url = server_config.get_base_url()
     if __debug__: log('get /list invoked')
-    return template('list', items = Item.select(), loans = Loan.select())
+    return template('list', items = Item.select(), loans = Loan.select(),
+        base_url = base_url)
 
 
 @get('/add')
@@ -207,8 +234,10 @@ def list_items(session):
 @head_method_ignored
 def add(session):
     '''Display the page to add new items.'''
+    base_url = server_config.get_base_url()
     if __debug__: log('get /add invoked')
-    return template('edit', action = 'add', item = None)
+    return template('edit', action = 'add', item = None,
+        base_url = base_url)
 
 
 @get('/edit/<barcode:int>')
@@ -218,8 +247,10 @@ def add(session):
 @head_method_ignored
 def edit(session, barcode):
     '''Display the page to add new items.'''
+    base_url = server_config.get_base_url()
     if __debug__: log(f'get /edit invoked on {barcode}')
-    return template('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
+    return template('edit', action = 'edit', item = Item.get(Item.barcode == barcode),
+        base_url = base_url)
 
 
 @post('/update/add')
@@ -228,10 +259,11 @@ def edit(session, barcode):
 @authenticated
 def update_item(session):
     '''Handle http post request to add a new item from the add-new-item page.'''
+    base_url = server_config.get_base_url()
     if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
-        redirect('/list')
+        redirect(f'{base_url}/list')
         return
 
     # The HTML form validates the data types, but the POST might come from
@@ -244,21 +276,23 @@ def update_item(session):
         return template('error', message = f'Duration must be a positive number')
     num_copies = request.forms.get('num_copies').strip()
     if not num_copies.isdigit() or int(num_copies) <= 0:
-        return template('error', message = f'# of copies must be a positive number')
+        return template('error', message = f'# of copies must be a positive number',
+            base_url = base_url)
 
     # Our current approach only uses items with barcodes that exist in TIND.
     # If that ever changes, the following needs to change too.
     rec = TindRecord(barcode = barcode)
     if not rec or not all([rec.title, rec.author, rec.year]):
         if __debug__: log(f'could not find {barcode} in TIND')
-        redirect(f'/nonexistent/{barcode}')
+        redirect(f'{base_url}/nonexistent/{barcode}')
         return
 
     item = Item.get_or_none(Item.barcode == barcode)
-    if request.path == '/update/add':
+    if request.path == f'{base_url}/update/add':
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
-            return template('duplicate', barcode = barcode)
+            return template('duplicate', barcode = barcode,
+                base_url = base_url)
         if __debug__: log(f'adding {barcode}, title {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
@@ -267,7 +301,7 @@ def update_item(session):
     else:
         if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
-            redirect(f'/nonexistent/{barcode}')
+            redirect(f'{base_url}/nonexistent/{barcode}')
             return
         if __debug__: log(f'updating {barcode} from {rec}')
         item.barcode    = barcode
@@ -276,7 +310,7 @@ def update_item(session):
         for field in ['title', 'author', 'year', 'edition', 'tind_id', 'thumbnail']:
             setattr(item, field, getattr(rec, field, ''))
         item.save()
-    redirect('/list')
+    redirect(f'{base_url}/list')
 
 
 @post('/ready')
@@ -285,6 +319,7 @@ def update_item(session):
 @authenticated
 def toggle_ready(session):
     '''Set the ready-to-loan field.'''
+    base_url = server_config.get_base_url()
     barcode = request.POST.barcode.strip()
     ready = (request.POST.ready.strip() == 'True')
     if __debug__: log(f'post /ready invoked on barcode {barcode}')
@@ -299,7 +334,7 @@ def toggle_ready(session):
     if list(Loan.select(Loan.item == item)):
         if __debug__: log(f'loans for {barcode} have been deleted')
         Loan.delete().where(Loan.item == item).execute()
-    redirect('/list')
+    redirect(f'{base_url}/list')
 
 
 @post('/remove')
@@ -308,6 +343,7 @@ def toggle_ready(session):
 @authenticated
 def remove_item(session):
     '''Handle http post request to remove an item from the list page.'''
+    base_url = server_config.get_base_url()
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
@@ -317,7 +353,7 @@ def remove_item(session):
     if list(Loan.select(Loan.item == item)):
         Loan.delete().where(Loan.item == item).execute()
     Item.delete().where(Item.barcode == barcode).execute()
-    redirect('/list')
+    redirect(f'{base_url}/list')
 
 
 # User endpoints.
@@ -328,8 +364,9 @@ def remove_item(session):
 @get('/welcome')
 def front_page(session):
     '''Display the welcome page.'''
+    base_url = server_config.get_base_url()
     if __debug__: log('get / invoked')
-    return template('info')
+    return template('info', base_url = base_url)
 
 
 @get('/about')
@@ -346,6 +383,7 @@ def about_page(session):
 @head_method_ignored
 def show_item_info(session, barcode):
     '''Display information about the given item.'''
+    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /item invoked on barcode {barcode} by {user}')
 
@@ -364,7 +402,7 @@ def show_item_info(session, barcode):
         # to the viewer; if it's for another title, block the loan button.
         if user_loans[0].item == item:
             if __debug__: log(f'{user} already has {barcode}; redirecting to uv')
-            redirect(f'/view/{barcode}')
+            redirect(f'{base_url}/view/{barcode}')
             return
         else:
             if __debug__: log(f'{user} already has a loan on something else')
@@ -389,7 +427,8 @@ def show_item_info(session, barcode):
             endtime = datetime.now()
             explanation = None
     return template('item', item = item, available = available,
-                    endtime = endtime, explanation = explanation)
+                    endtime = endtime, explanation = explanation,
+                    base_url = base_url)
 
 
 @post('/loan')
@@ -398,6 +437,7 @@ def show_item_info(session, barcode):
 @authenticated
 def loan_item(session):
     '''Handle http post request to loan out an item, from the item info page.'''
+    base_url = server_config.get_base_url()
     user = session.get('user')
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by {user}')
@@ -408,7 +448,7 @@ def loan_item(session):
         # case, so either staff has changed the status after item was made
         # available or someone got here accidentally (or deliberately).
         if __debug__: log(f'{barcode} is not ready for loans')
-        redirect(f'/view/{barcode}')
+        redirect(f'{base_url}/view/{barcode}')
         return
 
     # The default Bottle dev web server is single-thread, so we won't run into
@@ -420,7 +460,7 @@ def loan_item(session):
     with _THREAD_LOCK:
         if any(Loan.select().where(Loan.user == user)):
             if __debug__: log(f'{user} already has a loan on something else')
-            redirect(f'/onlyone')
+            redirect(f'{base_url}/onlyone')
             return
         loans = list(Loan.select().where(Loan.item == item))
         if any(loan.user for loan in loans if user == loan.user):
@@ -429,25 +469,26 @@ def loan_item(session):
             # something weird happens (e.g., double posting), we might.
             if __debug__: log(f'{user} already has a copy of {barcode} loaned out')
             if __debug__: log(f'redirecting {user} to /view for {barcode}')
-            redirect(f'/view/{barcode}')
+            redirect(f'{base_url}/view/{barcode}')
             return
         if len(loans) >= item.num_copies:
             # This shouldn't be possible, but catch it anyway.
             if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-            redirect(f'/item/{barcode}')
+            redirect(f'{base_url}/item/{barcode}')
             return
         recent_history = list(Recent.select().where(Recent.item == item))
         if any(loan for loan in recent_history if loan.user == user):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
-            return template('toosoon', nexttime = recent.nexttime)
+            return template('toosoon', nexttime = recent.nexttime,
+                base_url = base_url)
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
         send_email(user, item, start, end)
-    redirect(f'/view/{barcode}')
+    redirect(f'{base_url}/view/{barcode}')
 
 
 @get('/return/<barcode:int>')
@@ -457,6 +498,7 @@ def loan_item(session):
 @head_method_ignored
 def end_loan(session, barcode):
     '''Handle http get request to return the given item early.'''
+    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /return invoked on barcode {barcode} by {user}')
 
@@ -477,7 +519,7 @@ def end_loan(session, barcode):
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-    redirect('/thankyou')
+    redirect(f'{base_url}/thankyou')
 
 
 @get('/view/<barcode:int>')
@@ -487,6 +529,7 @@ def end_loan(session, barcode):
 @head_method_ignored
 def send_item_to_viewer(session, barcode):
     '''Redirect to the viewer.'''
+    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /view invoked on barcode {barcode} by {user}')
 
@@ -494,10 +537,11 @@ def send_item_to_viewer(session, barcode):
     user_loans = [loan for loan in loans if user == loan.user]
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
-        return template('uv', barcode = barcode, endtime = user_loans[0].endtime)
+        return template('uv', barcode = barcode, endtime = user_loans[0].endtime,
+            base_url = base_url)
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        redirect(f'/item/{barcode}')
+        redirect(f'{base_url}/item/{barcode}')
 
 
 @get('/manifests/<barcode:int>')
@@ -507,6 +551,7 @@ def send_item_to_viewer(session, barcode):
 @head_method_ignored
 def return_manifest(session, barcode):
     '''Return the manifest file for a given item.'''
+    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /manifests/{barcode} invoked by {user}')
 
@@ -516,17 +561,20 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        return template('notallowed')
+        return template('notallowed', base_url = base_url)
 
 
 @get('/thankyou')
 def say_thank_you():
-    return template('thankyou', feedback_url = config('FEEDBACK_URL'))
+    base_url = server_config.get_base_url()
+    return template('thankyou', feedback_url = config('FEEDBACK_URL'),
+        base_url = base_url)
 
 
 @get('/notauthenticated')
 def say_thank_you():
-    return template('notauthenticated')
+    base_url = server_config.get_base_url()
+    return template('notauthenticated', base_url = base_url)
 
 
 # Universal viewer interface.
@@ -556,20 +604,24 @@ def serve_uv_files(filepath):
 @get('/nonexistent/<barcode:int>')
 def nonexistent_item(barcode = None):
     '''Serve as an endpoint for telling users about nonexistent items.'''
+    base_url = server_config.get_base_url()
     if __debug__: log(f'nonexistent_item called with {barcode}')
-    return template('nonexistent', barcode = barcode)
+    return template('nonexistent', barcode = barcode, base_url = base_url)
 
 
 @error(404)
 def error404(error):
+    base_url = server_config.get_base_url()
     if __debug__: log(f'error404 called with {error}')
-    return template('404', code = error.status_code, message = error.body)
+    return template('404', code = error.status_code, message = error.body,
+        base_url = base_url)
 
 
 @error(405)
 def error405(error):
+    base_url = server_config.get_base_url()
     if __debug__: log(f'error405 called with {error}')
-    return template('notallowed')
+    return template('notallowed', base_url = base_url)
 
 
 # Miscellaneous static pages.
@@ -620,12 +672,11 @@ class Server():
 # .............................................................................
 
 def send_email(user, item, start, end):
+   base_url = server_config.get_base_url()
    try:
        subject = f'Caltech DIBS loan for "{item.title}"'
-       dibs_host = config('DIBS_HOST')
-       dibs_port = config('DIBS_PORT')
-       viewer = f'https://{dibs_host}:{dibs_port}/view/{item.barcode}'
-       info_page = f'https://{dibs_host}:{dibs_port}/info'
+       viewer = f'{base_url}/view/{item.barcode}'
+       info_page = f'{base_url}/info'
        body = _EMAIL.format(item      = item,
                             start     = start.strftime("%I:%M %p %Z on %A, %B %d"),
                             end       = end.strftime("%I:%M %p %Z on %A, %B %d"),
@@ -634,8 +685,6 @@ def send_email(user, item, start, end):
                             user      = user,
                             subject   = subject,
                             sender    = config('MAIL_SENDER'),
-                            host      = dibs_host,
-                            port      = dibs_port,
                             feedback  = config('FEEDBACK_URL'))
        if __debug__: log(f'sending mail to {user} about loan of {item.barcode}')
        mailer  = smtplib.SMTP(config('MAIL_HOST'))
