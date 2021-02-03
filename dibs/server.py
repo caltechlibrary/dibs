@@ -30,13 +30,6 @@ from .database import Item, Loan, Recent
 from .tind import TindRecord
 
 
-# Installation of Bottle plugins.
-# .............................................................................
-
-bottle.install(SessionPlugin(cookie_name = config('COOKIE_NAME'),
-                             cookie_lifetime = config('COOKIE_LIFETIME')))
-
-
 # Constants used throughout this file.
 # .............................................................................
 
@@ -65,6 +58,18 @@ Thank you for using Caltech DIBS. We hope the experience is a pleasant one.
 Please don't hesitate to send us feedback using our anonymous feedback form
 at {feedback}
 '''
+
+
+# Global Bottle configuration.
+# .............................................................................
+
+# Tell Bottle where to find templates.  This is also important to get %include
+# to work inside our .tpl template files.
+bottle.TEMPLATE_PATH.append(_TEMPLATE_DIR)
+
+# Session handling via a Redis-backed database.
+bottle.install(SessionPlugin(cookie_name = config('COOKIE_NAME'),
+                             cookie_lifetime = config('COOKIE_LIFETIME')))
 
 
 # Decorators used throughout this file.
@@ -101,8 +106,7 @@ def barcode_verified(func):
             barcode = kwargs['barcode']
             if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
-                return template(path.join(_TEMPLATE_DIR, 'nonexistent'),
-                                barcode = barcode)
+                return template('nonexistent', barcode = barcode)
         return func(session, *args, **kwargs)
     return wrapper
 
@@ -142,15 +146,15 @@ def head_method_ignored(func):
 
 @get('/login')
 def show_login_page(session):
-    # NOTE: If SSO is implemented this should redirect to the 
+    # NOTE: If SSO is implemented this should redirect to the
     # SSO end point with a return to /login on success.
     if __debug__: log('get /login invoked')
-    return template(path.join(_TEMPLATE_DIR, 'login'))
+    return template('login')
 
 
 @post('/login')
 def login(session):
-    # NOTE: If SSO is implemented this end point will handle the 
+    # NOTE: If SSO is implemented this end point will handle the
     # successful login case applying role rules if necessary.
     email = request.forms.get('email').strip()
     password = request.forms.get('password')
@@ -160,7 +164,7 @@ def login(session):
     if user != None:
         if check_password(password, user.secret) == False:
             if __debug__: log(f'wrong password -- rejecting {email}')
-            return template(path.join(_TEMPLATE_DIR, 'login'))
+            return template('login')
         else:
             if __debug__: log(f'creating session for {email}')
             session['user'] = email
@@ -170,7 +174,7 @@ def login(session):
             return
     else:
         if __debug__: log(f'wrong password -- rejecting {email}')
-        return template(path.join(_TEMPLATE_DIR, 'login'))
+        return template('login')
 
 
 @get('/logout')
@@ -194,8 +198,7 @@ def logout(session):
 def list_items(session):
     '''Display the list of known items.'''
     if __debug__: log('get /list invoked')
-    return template(path.join(_TEMPLATE_DIR, 'list'),
-                    items = Item.select(), loans = Loan.select())
+    return template('list', items = Item.select(), loans = Loan.select())
 
 
 @get('/add')
@@ -205,8 +208,7 @@ def list_items(session):
 def add(session):
     '''Display the page to add new items.'''
     if __debug__: log('get /add invoked')
-    return template(path.join(_TEMPLATE_DIR, 'edit'),
-                    action = 'add', item = None)
+    return template('edit', action = 'add', item = None)
 
 
 @get('/edit/<barcode:int>')
@@ -217,8 +219,7 @@ def add(session):
 def edit(session, barcode):
     '''Display the page to add new items.'''
     if __debug__: log(f'get /edit invoked on {barcode}')
-    return template(path.join(_TEMPLATE_DIR, 'edit'),
-                    action = 'edit', item = Item.get(Item.barcode == barcode))
+    return template('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
 
 
 @post('/update/add')
@@ -237,16 +238,13 @@ def update_item(session):
     # elsewhere, so we always need to sanity-check the values.
     barcode = request.forms.get('barcode').strip()
     if not barcode.isdigit():
-        return template(path.join(_TEMPLATE_DIR, 'error'),
-                        message = f'{barcode} is not a valid barcode')
+        return template('error', message = f'{barcode} is not a valid barcode')
     duration = request.forms.get('duration').strip()
     if not duration.isdigit() or int(duration) <= 0:
-        return template(path.join(_TEMPLATE_DIR, 'error'),
-                        message = f'Duration must be a positive number')
+        return template('error', message = f'Duration must be a positive number')
     num_copies = request.forms.get('num_copies').strip()
     if not num_copies.isdigit() or int(num_copies) <= 0:
-        return template(path.join(_TEMPLATE_DIR, 'error'),
-                        message = f'Number of copies must be a positive number')
+        return template('error', message = f'# of copies must be a positive number')
 
     # Our current approach only uses items with barcodes that exist in TIND.
     # If that ever changes, the following needs to change too.
@@ -260,8 +258,7 @@ def update_item(session):
     if request.path == '/update/add':
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
-            return template(path.join(_TEMPLATE_DIR, 'duplicate'),
-                            barcode = barcode)
+            return template('duplicate', barcode = barcode)
         if __debug__: log(f'adding {barcode}, title {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
@@ -332,7 +329,7 @@ def remove_item(session):
 def front_page(session):
     '''Display the welcome page.'''
     if __debug__: log('get / invoked')
-    return template(path.join(_TEMPLATE_DIR, 'info'))
+    return template('info')
 
 
 @get('/item/<barcode:int>')
@@ -384,9 +381,8 @@ def show_item_info(session, barcode):
             # It's available and they can have it.
             endtime = datetime.now()
             explanation = None
-    return template(path.join(_TEMPLATE_DIR, 'item'),
-                    item = item, available = available, endtime = endtime,
-                    explanation = explanation)
+    return template('item', item = item, available = available,
+                    endtime = endtime, explanation = explanation)
 
 
 @post('/loan')
@@ -437,8 +433,7 @@ def loan_item(session):
         if any(loan for loan in recent_history if loan.user == user):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
-            return template(path.join(_TEMPLATE_DIR, 'toosoon'),
-                            nexttime = recent.nexttime)
+            return template('toosoon', nexttime = recent.nexttime)
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
@@ -492,8 +487,7 @@ def send_item_to_viewer(session, barcode):
     user_loans = [loan for loan in loans if user == loan.user]
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
-        return template(path.join(_TEMPLATE_DIR, 'uv'), barcode = barcode,
-                        endtime = user_loans[0].endtime)
+        return template('uv', barcode = barcode, endtime = user_loans[0].endtime)
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'/item/{barcode}')
@@ -515,18 +509,17 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        return template(path.join(_TEMPLATE_DIR, 'notallowed'))
+        return template('notallowed')
 
 
 @get('/thankyou')
 def say_thank_you():
-    return template(path.join(_TEMPLATE_DIR, 'thankyou'),
-                    feedback_url = config('FEEDBACK_URL'))
+    return template('thankyou', feedback_url = config('FEEDBACK_URL'))
 
 
 @get('/notauthenticated')
 def say_thank_you():
-    return template(path.join(_TEMPLATE_DIR, 'notauthenticated'))
+    return template('notauthenticated')
 
 
 # Universal viewer interface.
@@ -557,43 +550,36 @@ def serve_uv_files(filepath):
 def nonexistent_item(barcode = None):
     '''Serve as an endpoint for telling users about nonexistent items.'''
     if __debug__: log(f'nonexistent_item called with {barcode}')
-    return template(path.join(_TEMPLATE_DIR, 'nonexistent'), barcode = barcode)
+    return template('nonexistent', barcode = barcode)
 
 
 @error(404)
 def error404(error):
     if __debug__: log(f'error404 called with {error}')
-    return template(path.join(_TEMPLATE_DIR, '404'),
-                    code = error.status_code, message = error.body)
+    return template('404', code = error.status_code, message = error.body)
 
 
 @error(405)
 def error405(error):
     if __debug__: log(f'error405 called with {error}')
-    return template(path.join(_TEMPLATE_DIR, 'notallowed'))
-
+    return template('notallowed')
 
 
 # Miscellaneous static pages.
 # .............................................................................
 
 @get('/favicon.ico')
-def nonexistent_item():
+def favicon():
     '''Return the favicon.'''
     if __debug__: log(f'returning favicon')
     return static_file('favicon.ico', root = 'dibs/static')
 
-@get('/missing.jpg')
-def nonexistent_item():
-    '''Return the favicon.'''
-    if __debug__: log(f'returning favicon')
-    return static_file('missing.jpg', root = 'dibs/static')
 
-@get('/dibs-icon.svg')
-def nonexistent_item():
-    '''Return the favicon.'''
-    if __debug__: log(f'returning favicon')
-    return static_file('dibs-icon.svg', root = 'dibs/static')
+@get('/static/<path:re:[-a-zA-Z0-9]+.(html|jpg|svg)>')
+def included_file(path):
+    '''Return a static file used with %include in a templates.'''
+    if __debug__: log(f'returning included file {path}')
+    return static_file(path, root = 'dibs/static')
 
 
 # Server runner.
