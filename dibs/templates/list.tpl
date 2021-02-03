@@ -3,11 +3,10 @@
   %include('static/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
+    %include('static/standard-inclusions.html')
 
     <title>List of items currently in Caltech DIBS</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
   </head>
 
@@ -34,13 +33,11 @@
    }
   </script>
   
-  <body>
-    <div class="container-fluid">
-      <h1 class="mx-auto text-center my-2" style="color: #FF6C0C">
-        Welcome to Caltech DIBS
-        %include('static/icon.html')
-      </h1>
-      <h2 class="mx-auto text-center w-75 pb-2">
+  <body style="height: 100%">
+    <div style="position: relative; padding-bottom: 3em; height: 100%">
+      %include('static/navbar.html')
+
+      <h2 class="mx-auto text-center w-75 pb-2 mt-4">
         There are {{len(items)}} items in the system
       </h2>
       <div class="d-grid gap-3">
@@ -55,7 +52,7 @@
                 <th class="text-center">Ready<br>to<br>loan?</th>
                 <th class="text-center">Loan<br>duration<br>(hrs)</th>
                 <th class="text-center">Copies<br>for<br>loans</th>
-                <th class="text-center">Copies<br>in use</th>
+                <th class="text-center">Copies<br>in<br>use</th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -115,7 +112,10 @@
         <div class="py-3 mx-auto" style="width: 150px">
           <a href="{{base_url}}/add"}} class="btn btn-primary m-0">Add a new item</a>
         </div>
+
       </div>
+
+      %include('static/footer.html')
     </div>
 
     <script>
@@ -144,6 +144,6 @@
           });   
        }
       </script>
-  </body>
 
+  </body>
 </html>

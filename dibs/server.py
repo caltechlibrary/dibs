@@ -369,6 +369,13 @@ def front_page(session):
     return template('info', base_url = base_url)
 
 
+@get('/about')
+def about_page(session):
+    '''Display the welcome page.'''
+    if __debug__: log('get /about invoked')
+    return template('about')
+
+
 @get('/item/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
