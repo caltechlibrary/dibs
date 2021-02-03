@@ -37,7 +37,8 @@
   <body>
     <div class="container-fluid">
       <h1 class="mx-auto text-center my-2" style="color: #FF6C0C">
-        Caltech DIBS <img src="/static/dibs-icon.svg" height="40rem" style="padding-left: 1rem; vertical-align: top">
+        Welcome to Caltech DIBS
+        %include('static/icon.html')
       </h1>
       <h2 class="mx-auto text-center w-75 pb-2">
         There are {{len(items)}} items in the system
