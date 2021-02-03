@@ -110,8 +110,11 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <a href="/add"}} class="btn btn-primary m-0">Add a new item</a>
+          <form action="/add">
+            <input type="submit" class="btn btn-primary m-0" value="Add a new item" />
+          </form>
         </div>
+
       </div>
 
       %include('static/footer.html')
