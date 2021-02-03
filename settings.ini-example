@@ -10,10 +10,6 @@ DATABASE_FILE = dibs.db
 # Path to Bottle templates, relative to here.
 TEMPLATE_DIR  = dibs/templates
 
-# Server details.
-DIBS_HOST = localhost
-DIBS_PORT = 8080
-
 # Email details. The user has to be an account authenticated to the server.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25

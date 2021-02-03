@@ -1,17 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
-  <!--
-  Thank you for using
-     ______          __  __                 __         ____    ____  ____   _____
-    / ____/ ____ _  / / / /_  ___   _____  / /_       / __ \  /  _/ / __ ) / ___/
-   / /     / __ `/ / / / __/ / _ \ / ___/ / __ \     / / / /  / /  / __  | \__ \ 
-  / /___  / /_/ / / / / /_  /  __// /__  / / / /    / /_/ / _/ /  / /_/ /  __/ / 
-  \____/  \__,_/ /_/  \__/  \___/ \___/ /_/ /_/    /_____/ /___/ /_____/ /____/  
-  
-  Please help us to improve this system by reporting problems using the
-  GitHub issue system at https://github.com/caltechlibrary/dibs/issues
-  or over email at helpdesk@library.caltech.edu
-  -->                           
+<html lang="en" style="height: 100%">
+  %include('static/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
 
@@ -48,7 +37,8 @@
   <body>
     <div class="container-fluid">
       <h1 class="mx-auto text-center my-2" style="color: #FF6C0C">
-        Caltech DIBS <img src="dibs-icon.svg" height="40rem" style="padding-left: 1rem; vertical-align: top">
+        Welcome to Caltech DIBS
+        %include('static/icon.html')
       </h1>
       <h2 class="mx-auto text-center w-75 pb-2">
         There are {{len(items)}} items in the system
@@ -123,7 +113,7 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <a href="/add"}} class="btn btn-primary m-0">Add a new item</a>
+          <a href="{{base_url}}/add"}} class="btn btn-primary m-0">Add a new item</a>
         </div>
       </div>
     </div>
@@ -143,7 +133,7 @@
        function update_content() {
          $.ajax({
            type: "GET",
-           url: "/list",
+           url: "{{base_url}}/list",
            cache: false,
          })
           .done(function(page_html) {

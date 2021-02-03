@@ -1,28 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
-  <!--
-  Thank you for using
-     ______          __  __                 __         ____    ____  ____   _____
-    / ____/ ____ _  / / / /_  ___   _____  / /_       / __ \  /  _/ / __ ) / ___/
-   / /     / __ `/ / / / __/ / _ \ / ___/ / __ \     / / / /  / /  / __  | \__ \ 
-  / /___  / /_/ / / / / /_  /  __// /__  / / / /    / /_/ / _/ /  / /_/ /  __/ / 
-  \____/  \__,_/ /_/  \__/  \___/ \___/ /_/ /_/    /_____/ /___/ /_____/ /____/  
-  
-  Please help us to improve this system by reporting problems using the
-  GitHub issue system at https://github.com/caltechlibrary/dibs/issues
-  or over email at helpdesk@library.caltech.edu
-  -->                           
+<html lang="en" style="height: 100%">
+  %include('static/banner.html')
   <head>
     <title>Error</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   </head>
-  
-  <body>
-    <div class="container-fluid">
-      <div class="alert alert-danger my-3" role="alert">
-        <h4 class="alert-heading">Error</h4>
-        <p id="with-barcode">{{message}}</p>
+  <body style="height: 100%">  
+    <div style="position: relative; padding-bottom: 3em; height: 100%">
+      <div class="container">
+        <div class="alert alert-danger my-3" role="alert">
+          <h4 class="alert-heading">Error</h4>
+          <p id="with-barcode">{{message}}</p>
+        </div>
       </div>
-    </div
+      %include('static/footer.html')
+    </div>
   </body>
 </html>
