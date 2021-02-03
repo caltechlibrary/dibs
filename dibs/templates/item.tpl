@@ -3,10 +3,10 @@
   %include('static/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
+    %include('static/standard-inclusions.html')
 
     <title>Description page for {{item.title}}</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
      // Reload the page if the user got here by clicking the back button.
      // Solution from https://stackoverflow.com/a/43043658/743730
@@ -20,7 +20,6 @@
      });
     </script>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <style type="text/css">
       #btnLoan:disabled {
         cursor: not-allowed;
@@ -31,9 +30,11 @@
   
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 3em; height: 100%">
+      %include('static/navbar.html')
+
       <div class="container">
 
-        <table class="table table-borderless pt-3">
+        <table class="table table-borderless mt-4">
           <tbody>
             <tr>
               <td width="200px" style="border-top: none">
@@ -154,6 +155,7 @@
          
         </script>
       </div>
+
       %include('static/footer.html')
     </div>
   </body>

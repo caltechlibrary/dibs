@@ -2,26 +2,19 @@
 <html lang="en" style="height: 100%">
   %include('static/banner.html')
   <head>
+    %include('static/standard-inclusions.html')
     <title>Welcome to Caltech DIBS</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <style>
-     ::-webkit-input-placeholder                   { color: #bbb; }
-     html .form-control::placeholder               { color: #bbb; }
-     html .form-control::-webkit-input-placeholder { color: #bbb; }
-     html .form-control:-moz-placeholder           { color: #bbb; }
-     html .form-control::-moz-placeholder          { color: #bbb; }
-     html .form-control:-ms-input-placeholder      { color: #bbb; }
-    </style>
   </head>
   
   <body style="height: 100%">
     <div style="position: relative; padding-bottom: 3em; height: 100%">
+      %include('static/navbar.html')
+
       <div class="container text-center">
         <div class="row pt-3">
           <div class="col">
             <h1 class="mx-auto text-center" style="color: #FF6C0C">
               Welcome to Caltech DIBS
-              %include('static/icon.html')
             </h1>
             <h2 class="mx-auto my-3 text-center text-info font-italic">
               The Caltech <strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem
@@ -39,6 +32,7 @@
           </div>
         </div>
       </div>
+
       %include('static/footer.html')
     </div>
   </body>

@@ -3,11 +3,10 @@
   %include('static/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
+    %include('static/standard-inclusions.html')
 
     <title>List of items currently in Caltech DIBS</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
   </head>
 
@@ -34,13 +33,11 @@
    }
   </script>
   
-  <body>
-    <div class="container-fluid">
-      <h1 class="mx-auto text-center my-2" style="color: #FF6C0C">
-        Welcome to Caltech DIBS
-        %include('static/icon.html')
-      </h1>
-      <h2 class="mx-auto text-center w-75 pb-2">
+  <body style="height: 100%">
+    <div style="position: relative; padding-bottom: 3em; height: 100%">
+      %include('static/navbar.html')
+
+      <h2 class="mx-auto text-center w-75 pb-2 mt-4">
         There are {{len(items)}} items in the system
       </h2>
       <div class="d-grid gap-3">
@@ -87,7 +84,7 @@
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
                             onclick="copyToClipboard(this, 'http://localhost:8080/item/{{item.barcode}}');">
-                  Copy link</button>
+                  Copy&nbsp;link</button>
                 </td>
 
                 <td>
@@ -116,6 +113,8 @@
           <a href="/add"}} class="btn btn-primary m-0">Add a new item</a>
         </div>
       </div>
+
+      %include('static/footer.html')
     </div>
 
     <script>
@@ -144,6 +143,6 @@
           });   
        }
       </script>
-  </body>
 
+  </body>
 </html>
