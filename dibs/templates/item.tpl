@@ -37,7 +37,11 @@
           <tbody>
             <tr>
               <td width="200px" style="border-top: none">
+                %if item.thumbnail != '':
                 <img class="img-thumbnail" src="{{item.thumbnail}}" style="width: 180px">
+                %else:
+                <img class="img-thumbnail" src="/static/missing-thumbnail.svg" style="width: 180px">
+                %end
               </td>
               <td style="border-top: none">
                 <table class="table table-sm">
