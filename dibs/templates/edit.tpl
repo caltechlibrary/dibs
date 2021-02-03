@@ -1,28 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
-  <!--
-  Thank you for using
-     ______          __  __                 __         ____    ____  ____   _____
-    / ____/ ____ _  / / / /_  ___   _____  / /_       / __ \  /  _/ / __ ) / ___/
-   / /     / __ `/ / / / __/ / _ \ / ___/ / __ \     / / / /  / /  / __  | \__ \ 
-  / /___  / /_/ / / / / /_  /  __// /__  / / / /    / /_/ / _/ /  / /_/ /  __/ / 
-  \____/  \__,_/ /_/  \__/  \___/ \___/ /_/ /_/    /_____/ /___/ /_____/ /____/  
-  
-  Please help us to improve this system by reporting problems using the
-  GitHub issue system at https://github.com/caltechlibrary/dibs/issues
-  or over email at helpdesk@library.caltech.edu
-  -->                           
+<html lang="en" style="height: 100%">
+  %include('static/banner.html')
   <head>
     <title>Add or edit a Caltech DIBS entry</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <style>
-     ::-webkit-input-placeholder                   { color: #bbb; }
-     html .form-control::placeholder               { color: #bbb; }
-     html .form-control::-webkit-input-placeholder { color: #bbb; }
-     html .form-control:-moz-placeholder           { color: #bbb; }
-     html .form-control::-moz-placeholder          { color: #bbb; }
-     html .form-control:-ms-input-placeholder      { color: #bbb; }
-    </style>
+    <link rel="stylesheet" href="{{base_url}}/static/dibs.css">
   </head>
   
   <body>
@@ -42,7 +24,7 @@
         </p>
 
         <div class="w-75 text-center mx-auto">
-          <form action="/update/{{action}}" method="POST">
+          <form action="{{base_url}}/update/{{action}}" method="POST">
 
             <label for="barcode" class="sr-only">Barcode</label>
             <input name="barcode" type="number" class="form-control"

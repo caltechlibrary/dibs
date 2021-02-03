@@ -1,17 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
-  <!--
-  Thank you for using
-     ______          __  __                 __         ____    ____  ____   _____
-    / ____/ ____ _  / / / /_  ___   _____  / /_       / __ \  /  _/ / __ ) / ___/
-   / /     / __ `/ / / / __/ / _ \ / ___/ / __ \     / / / /  / /  / __  | \__ \ 
-  / /___  / /_/ / / / / /_  /  __// /__  / / / /    / /_/ / _/ /  / /_/ /  __/ / 
-  \____/  \__,_/ /_/  \__/  \___/ \___/ /_/ /_/    /_____/ /___/ /_____/ /____/  
-  
-  Please help us to improve this system by reporting problems using the
-  GitHub issue system at https://github.com/caltechlibrary/dibs/issues
-  or over email at helpdesk@library.caltech.edu
-  -->                           
+<html lang="en" style="height: 100%">
+  %include('static/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
 
@@ -48,7 +37,8 @@
   <body>
     <div class="container-fluid">
       <h1 class="mx-auto text-center my-2" style="color: #FF6C0C">
-        Caltech DIBS <img src="dibs-icon.svg" height="40rem" style="padding-left: 1rem; vertical-align: top">
+        Welcome to Caltech DIBS
+        %include('static/icon.html')
       </h1>
       <h2 class="mx-auto text-center w-75 pb-2">
         There are {{len(items)}} items in the system
@@ -83,7 +73,7 @@
                   %end
                 <td>{{item.author}}</td>
                 <td class="text-center">
-                  <form action="/ready" method="POST">
+                  <form action="{{base_url}}/ready" method="POST">
                     <input type="hidden" name="barcode" value="{{item.barcode}}">
                     <input type="hidden" name="ready" value="{{item.ready}}">
                     <input type="checkbox" class="checkbox"
@@ -96,12 +86,12 @@
                 <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="copyToClipboard(this, 'http://localhost:8080/item/{{item.barcode}}');">
+                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
                   Copy link</button>
                 </td>
 
                 <td>
-                  <form action="/edit/{{item.barcode}}" method="GET">
+                  <form action="{{base_url}}/edit/{{item.barcode}}" method="GET">
                     <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                     <input type="submit" name="edit" value="Edit"
                             class="btn btn-info btn-sm"/>
@@ -109,7 +99,7 @@
                 </td>
 
                 <td>
-                  <form action="/remove" method="POST"
+                  <form action="{{base_url}}/remove" method="POST"
                         onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
                     <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                     <input type="submit" name="remove" value="Remove"
@@ -123,7 +113,7 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <a href="/add"}} class="btn btn-primary m-0">Add a new item</a>
+          <a href="{{base_url}}/add"}} class="btn btn-primary m-0">Add a new item</a>
         </div>
       </div>
     </div>
@@ -143,7 +133,7 @@
        function update_content() {
          $.ajax({
            type: "GET",
-           url: "/list",
+           url: "{{base_url}}/list",
            cache: false,
          })
           .done(function(page_html) {
