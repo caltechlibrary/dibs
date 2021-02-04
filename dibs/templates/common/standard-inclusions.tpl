@@ -5,4 +5,4 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script> 
 
 <!-- Our local style modifications. -->
-<link rel="stylesheet" href="/static/dibs.css">
+<link rel="stylesheet" href="{{base_url}}/static/dibs.css">
