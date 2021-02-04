@@ -9,11 +9,15 @@ _role_table = {
     "library": "/list",
 }
 
+def has_required_role(person, required_role):
+    if (person == None):
+        return False
+    return person.has_role(required_role)
 
 def role_to_redirect(role):
     '''given a user role (including an empty string) return the target path for a redirect'''
     if role in _role_table:
         return _role_table[role]
     else:
-        return '/'
+        return ''
 

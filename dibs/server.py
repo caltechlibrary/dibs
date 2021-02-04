@@ -20,8 +20,8 @@ from   os import path
 import smtplib
 import threading
 
-from .people import Person, check_password
-from .roles import role_to_redirect
+from .people import Person, check_password, person_from_session
+from .roles import role_to_redirect, has_required_role
 
 if __debug__:
     from sidetrack import log
@@ -223,10 +223,12 @@ def logout(session):
 def list_items(session):
     '''Display the list of known items.'''
     base_url = server_config.get_base_url()
+    person = person_from_session(session)
+    if has_required_role(person, 'library') == False:
+        return template('notallowed', base_url = base_url)
     if __debug__: log('get /list invoked')
     return template('list', items = Item.select(), loans = Loan.select(),
-        base_url = base_url)
-
+            base_url = base_url)
 
 @get('/add')
 @expired_loans_removed
@@ -235,9 +237,12 @@ def list_items(session):
 def add(session):
     '''Display the page to add new items.'''
     base_url = server_config.get_base_url()
+    person = person_from_session(session)
+    if has_required_role(person, 'library') == False:
+        return template('notallowed', base_url = base_url)
     if __debug__: log('get /add invoked')
     return template('edit', action = 'add', item = None,
-        base_url = base_url)
+            base_url = base_url)
 
 
 @get('/edit/<barcode:int>')
@@ -248,9 +253,12 @@ def add(session):
 def edit(session, barcode):
     '''Display the page to add new items.'''
     base_url = server_config.get_base_url()
+    person = person_from_session(session)
+    if has_required_role(person, 'library') == False:
+        return template('notallowed', base_url = base_url)
     if __debug__: log(f'get /edit invoked on {barcode}')
     return template('edit', action = 'edit', item = Item.get(Item.barcode == barcode),
-        base_url = base_url)
+            base_url = base_url)
 
 
 @post('/update/add')
@@ -260,6 +268,9 @@ def edit(session, barcode):
 def update_item(session):
     '''Handle http post request to add a new item from the add-new-item page.'''
     base_url = server_config.get_base_url()
+    person = person_from_session(session)
+    if has_required_role(person, 'library') == False:
+        return template('notallowed', base_url = base_url)
     if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
@@ -288,7 +299,7 @@ def update_item(session):
         return
 
     item = Item.get_or_none(Item.barcode == barcode)
-    if request.path == f'{base_url}/update/add':
+    if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
             return template('duplicate', barcode = barcode,
@@ -344,6 +355,9 @@ def toggle_ready(session):
 def remove_item(session):
     '''Handle http post request to remove an item from the list page.'''
     base_url = server_config.get_base_url()
+    person = person_from_session(session)
+    if has_required_role(person, 'library') == False:
+        return template('notallowed', base_url = base_url)
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 

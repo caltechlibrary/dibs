@@ -37,6 +37,7 @@ def check_password(src, secret):
 # Figure out how are authentication and authorization is configured.
 _db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
+
 # Person is for development, it uses a SQLite3 DB to user
 # connection validation data.
 class Person(Model):
@@ -47,7 +48,14 @@ class Person(Model):
     auth_type = CharField() # local, OAuth2
     updated = TimestampField() # last successful login timestamp
 
+    def has_role(self, required_role):
+        return self.role == required_role
+
     class Meta:
         database = _db
 
 
+def person_from_session(session):
+    if 'user' in session:
+        return (Person.get_or_none(Person.uname == session['user']))
+    return None
