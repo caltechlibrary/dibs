@@ -84,7 +84,7 @@
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
                             onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
-                  Copy link</button>
+                  Copy&nbsp;link</button>
                 </td>
 
                 <td>
