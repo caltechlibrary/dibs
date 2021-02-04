@@ -12,7 +12,7 @@
     <div style="position: relative; padding-bottom: 3em; height: 100%">
       %include('common/navbar.tpl')
 
-        <div class="w-75 text-center mx-auto">
+        <div class="w-75 text-center mx-auto mt-4">
           <form action="{{base_url}}/update/{{action}}" method="POST">
 
           <div class="w-75 text-center mx-auto">
