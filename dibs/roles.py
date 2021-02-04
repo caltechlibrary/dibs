@@ -6,7 +6,7 @@ as the role application will likely evolve over time.
 
 
 _role_table = {
-    "library": "/list",
+    "library": "list",
 }
 
 def has_required_role(person, required_role):
