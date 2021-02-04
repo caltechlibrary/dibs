@@ -12,7 +12,7 @@ Table of contents
 * [Introduction](#introduction)
 * [Requirements](#requirements)
 * [Installation](#installation)
-* [Running the server on localhost](#running-the-server-on-localhost)
+* [Usage: running the server on localhost](#running-the-server-on-localhost)
 * [General information](#general-information)
 * [License](#license)
 * [Acknowledgments](#authors-and-acknowledgments)
@@ -27,36 +27,53 @@ The concept of [controlled digital lending](https://en.wikipedia.org/wiki/Contro
 
 Access to materials in Caltech DIBS is limited to current Caltech faculty, students and staff, but the software for DIBS itself is open-sourced under a BSD type license.
 
-Requirments
+
+Requirements
 -----------
 
-DIBS is written in Python 3 and depends on additional solftware
-to work.  DIBS uses the redis No-SQL datastore for session management. 
-This can be installed using your platforms package management systems.
-In development settings it also uses SQLite3.
+DIBS is written in Python 3 and depends on additional solftware to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universdal Viewer; [Redis](https://redis.io), a NoSQL datastore used by DIBS for session management; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.
 
 
 Installation
 ------------
 
-To install this locally, you will need to clone not just the main repo contents but the branch and submodules as well.  There are multiple ways of doing this; I use a script I wrote called [`git-clone-complete`](https://github.com/mhucka/small-scripts/blob/main/git-scripts/git-clone-complete) for doing deep clones of github repositories:
+### ⓵ _Get the DIBS source code_
+
+To install and run DIBS locally, you will need to clone not just the main repo contents but also submodules.  The minimum command for this involves using the `--recursive` option to `git clone`:
+
+```sh
+git clone --recursive https://github.com/caltechlibrary/dibs
+```
+
+If you want to get the `develop` branch as well, the easiest approach may be instead to use the script [`git-clone-complete`](https://github.com/mhucka/small-scripts/blob/main/git-scripts/git-clone-complete) for doing deep clones of github repositories:
 
 ```sh
 git-clone-complete https://github.com/caltechlibrary/dibs
 ```
 
-This will create a `dibs` subdirectory in your current directory.  Switch to it, and to get the most recent work on DIBS, change to the `develop` branch:
+This will create a `dibs` subdirectory in your current directory.
 
-```sh
-cd dibs
-git checkout develop
-```
+
+### ⓶ _Install Python dependencies_
 
 Next, install the Python dependencies on your system or your virtual environment:
 
 ```sh
-pip3 install -r requirements.txt
+cd dibs
+python3 -m pip install -r requirements.txt
 ```
+
+### ⓷ _Install Node dependencies_
+
+Change into to the [`viewer`](viewer) subdirectory, and run the following command:
+
+```sh
+cd viewer
+npm install
+```
+
+
+### ⓸ _Install Redis_
 
 You also need to have a Redis database running on the local host.  If you are using Homebrew on macOS, the simplest way to do that is the following:
 
@@ -65,7 +82,6 @@ brew install redis
 ```
 
 If you are using MacPorts on macOS, the simplest way to do that is the following:
-
 
 ```sh
 sudo port install redis
@@ -80,8 +96,10 @@ sudo apt install redis
 You can leave the default Redis settings as-is for the DIBS demo.
 
 
-Running the server on localhost
--------------------------------
+Usage: running the server on localhost
+--------------------------------------
+
+### ⓵ _Start the Redis server_
 
 First, start the Redis server.  If you are using Homebrew, this can be done using the following command:
 
@@ -103,15 +121,39 @@ sudo systemctl start redis
 sudo systemctl stop redis
 ```
 
-You can test if Redis is running properly by issuing the command `redis-cli ping`.
+You can test if Redis is running properly by issuing the command `redis-cli ping`.  It should return the answer `PONG`.
 
-Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py) in the current directory:
+
+### ⓶ _Copy the sample `settings.ini` configuration file_
+
+The file `settings.ini-example` is a sample configuration file for DIBS.  Copy the file to `settings.ini`,
+
+```sh
+cp settings.ini-example settings.ini
+```
+
+and edit the contents in a text editor to suit your local installation.
+
+
+### ⓷ _Load a sample book into DIBS_
+
+Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py):
 
 ```sh
 python3 load-mock-data.py
 ```
 
-To demo the viewer with actual content, a manifest also needs to be added to the subdirectory named [`manifests`](manifests).  The manifest must be named using the pattern `NNNN-manifest.json`, where `NNNN` is the barcode.
+
+### ⓸ _Load a sample user into DIBS_
+
+The program [`people-manager`](people-manager) is an interface to adding and manipulating user data.  To log in to the demo DIBS configuration, create at least one user with a role of "library":
+
+```sh
+./people-manager add uname= display_name= role="library" secret=
+```
+
+
+### ⓹ _Start the DIBS server_
 
 The script [`run-server`](run-server) starts the server running; it assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
@@ -128,18 +170,6 @@ To run with debug tracing, use the `-@` option with an argument telling it where
 ```
 
 It's useful to have 2 shell windows open in that case: one where you start the server, and with `tail -f /tmp/debug.log` to see the trace.
-
-
-Logging in
-----------
-
-The current demo server only implements a simple login scheme for code develop purposes only.  Here is a summary of how it works:
-
-* Login status is determined by a session cookie
-* The page at `/` doesn't nothing but show a welcome message
-* The page at `/login` lets you log in. The login verification only checks for the password; it lets you use any email address. The password is set in `settings.ini`. 
-* Once logged in, that's when `/list` and other pages become accessible.
-* To log out, visit `/logout` and that's all (responds to HTTP GET).
 
 
 The pages of DIBS
