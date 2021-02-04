@@ -36,7 +36,12 @@ else:
             exit(1)
 
 if not path.exists(path.join(here, 'settings.ini')):
-    print(f'‼️  settings.ini file not found in {here}')
+    where = 'the current directory' if here == '.' else here
+    print(f'‼️  File "settings.ini" not found in {where}.')
+    exit(1)
+
+if not path.exists(path.join(here, 'viewer', 'node_modules')):
+    print(f'‼️  Node modules appear to be missing from "viewer" subdirectory.')
     exit(1)
 
 

@@ -84,7 +84,7 @@
 
                 <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
                             onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
-                  Copy link</button>
+                  Copy&nbsp;link</button>
                 </td>
 
                 <td>
@@ -110,7 +110,7 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <a href="{{base_url}}/add"}} class="btn btn-primary m-0">Add a new item</a>
+          <a href="{{base_url}}/add" class="btn btn-primary m-0 no-underline">Add a new item</a>
         </div>
 
       </div>
