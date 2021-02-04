@@ -110,7 +110,7 @@
         </div>
 
         <div class="py-3 mx-auto" style="width: 150px">
-          <a href="{{base_url}}/add"}} class="btn btn-primary m-0">Add a new item</a>
+          <a href="{{base_url}}/add" class="btn btn-primary m-0 no-underline">Add a new item</a>
         </div>
 
       </div>
