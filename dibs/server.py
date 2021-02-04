@@ -299,7 +299,7 @@ def update_item(session):
         return
 
     item = Item.get_or_none(Item.barcode == barcode)
-    if request.path == f'{base_url}/update/add':
+    if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
             return template('duplicate', barcode = barcode,
