@@ -126,11 +126,14 @@
        // flash the page like a meta refresh tag does.
 
        var refresher;
+//FIXME: drop this ready, we're using vanilla JavaScript and don't need to wait, the setInterval should happen at
+// the end of this script element.
        $(document).ready(function(e) {
          refresher = setInterval("update_content();", 5000);
        })
 
        function update_content() {
+//FIXME: Replace jQuery Ajax call with vanilla JS XHR request per example at MDN Mozilla JavaScript site
          $.ajax({
            type: "GET",
            url: "{{base_url}}/list",

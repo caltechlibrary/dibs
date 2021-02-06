@@ -107,25 +107,51 @@
           </p>
         </div>
         <script>
+         var refresher,
+             btnLoan = document.getElementById('btnLoan'),
+             when = document.getElementById('when');
+             
          // Toggle the visibility of the loan button depending on availability.
          // This needs to be done after the loan button is defined above,
          // which is why the code is down here.
          if ("{{available}}" == "True") {
+//FIXME: Replace with document.querySelector() or getElementByID(), removeAttribute()
+// to removed the disabled state and use setAttribute() to set the value. Add classes
+// with  classList.add() and classList.remove()
+            btnLoan.removeAttribute('disabled'); 
+            btnLoan.setAttribute('value', 'Get loan');
+            btnLoan.classList.add('btn-primary', 'show-if-available');
+            btnLoan.classList.remove('btn-secondary', 'shown-if-not-available');
+            
+/*            
            $('#btnLoan').prop('disabled', false);
            $('#btnLoan').prop('value', 'Get loan');
            $('#btnLoan').addClass('btn-primary');
            $(".shown-if-available").css("display", "inline");
            $(".shown-if-not-available").css("display", "none");
+*/
          } else {
+            btnLoan.setAttribute('disabled', true);
+            btnLoan.setAttribute('value', 'Not available');
+            btnLoan.classList.remove('btn-primary', 'shown-if-available');
+            btnLoan.classList.add('btn-secondary', 'shown-if-not-available');
+/*
            $('#btnLoan').prop('disabled', true);
            $('#btnLoan').prop('value', 'Not available');
            $('#btnLoan').addClass('btn-secondary');
            $(".shown-if-available").css("display", "none");
            $(".shown-if-not-available").css("display", "inline");
+*/           
          }
 
+//FIXME: This should be done in the CSS file as a class, we add/remove classes to cause this to happen
          if ("{{endtime}}" == "None") {
+             when.setAttribute('style', 'display:none');
+/*
            $('#when').css("display", "none");
+*/
+         } else {
+             when.removeAttribute('style');
          }
 
          // Refresh the page automatically, so that if the user has it open
@@ -134,12 +160,60 @@
          // framework like React, but it's simpler.  This approach doesn't
          // flash the page like a meta refresh tag does.
 
-         var refresher;
+//FIXME: We don't need the wrapping ready because we're not relying on anything outside of vanilla JS
+/*
          $(document).ready(function(e) {
-           refresher = setInterval("update_content();", 10000);
+             refresher = setInterval('update_content();', 10000);
          })
+*/
+
+        //FIXME: We should have an end point for the item's status. We can fetch this status
+        // might and use that to update the page without causing the page to reload.
+
+        httpGet = function (url, contentType, callbackFn) {
+            let self = this,
+            xhr = new XMLHttpRequest(),
+            page_url = new URL(window.location.href);
+            xhr.onreadystatechange = function () {
+                // process response
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status == 200) {
+                        let data = xhr.responseText;
+                        if (contentType === "application/json" && data !== "") {
+                            data = JSON.parse(xhr.responseText);
+                        }
+                        callbackFn(data, "");
+                    } else {
+                        callbackFn("", xhr.status);
+                    }
+                }
+            };
+
+            /* we always want JSON data */
+            xhr.open('GET', url, true);
+            if (contentType !== "" ) {
+                xhr.setRequestHeader('Content-Type', contentType);
+            }
+            xhr.send();
+         };
 
          function update_content() {
+//FIXME: Replace with XHR request per MDN JavaScript examples
+            httpGet('{{base_url}}/item-status/{{item.barcode}}', 'text/plain',
+                function(data, err) {
+                    window.clearInterval(refresher);
+                    if (! err) {
+                        //FIXME: document write was depreciated in 2016.
+                        // We want to use the handle to the specific
+                        // elements we want to update and update the page in place.
+                        console.log("DEBUG update page here...");
+                        console.log(data);
+                    } else {
+                    	console.log("ERROR: " + err);
+                    }
+                });
+            
+/*
            $.ajax({
              type: "GET",
              url: "{{base_url}}/item/{{item.barcode}}",
@@ -150,9 +224,11 @@
               var newDoc = document.open("text/html");
               newDoc.write(page_html);
               newDoc.close();
-            });   
+            });
+*/
          }
-         
+         refresher = setInterval(update_content, 10000);
+
         </script>
       </div>
 

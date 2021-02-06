@@ -5,6 +5,7 @@ This uses Bottle (https://bottlepy.org/docs/stable/), a simple micro framework
 for web services similar to Flask.
 '''
 
+import json
 from   contextlib import redirect_stderr
 from   datetime import datetime, timedelta
 from   decouple import config
@@ -389,6 +390,31 @@ def about_page(session):
     base_url = server_config.get_base_url()
     if __debug__: log('get /about invoked')
     return template('about', base_url = base_url)
+
+#FIXME: We need an item status which returns a JSON object
+# so the item page can update itself without reloading the whole page.
+@get('/item-status/<barcode:int>')
+@authenticated
+@head_method_ignored
+def item_status(session, barcode):
+    '''Return the item record as a JSON string'''
+    if __debug__: log(f'get /item-status invoked on barcode {barcode}')
+    obj = {'barcode': barcode}
+    item = Item.get_or_none(Item.barcode == barcode)
+    if item != None:
+        obj = {
+            'itemid': item.itemid,
+            'barcode': item.barcode,
+            'tendid': item.tind_id,
+            'author': item.author,
+            'year': item.year,
+            'editiion': item.edition,
+            'thumbnail': item.thumbnail,
+            'num_copies': item.num_copies,
+            'duration': item.duration,
+            'ready': item.ready
+        }
+    return json.dumps(obj)
 
 
 @get('/item/<barcode:int>')

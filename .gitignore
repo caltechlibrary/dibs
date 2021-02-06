@@ -90,3 +90,4 @@ dibs.db
 docs/_build
 load-staff-members.bash
 settings.ini
+*.swp
