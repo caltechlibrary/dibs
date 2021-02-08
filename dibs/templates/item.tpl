@@ -182,7 +182,7 @@ rendered start conditions and to limit calls to server */
 	refresher = setInterval(function() {
 	httpGet('{{base_url}}/item-status/{{item.barcode}}', 'text/plain',
 		function(data, err) {
-			if (poll_count > 12) {
+			if (poll_count >= 12) {
 		    	window.clearInterval(refresher);
 		    } else {
 		    	poll_count++;
