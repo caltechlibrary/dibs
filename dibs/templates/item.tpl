@@ -81,7 +81,7 @@
           <p class="mx-auto text-center" style="width: 500px">
             This item is <span id="not-available">{{'' if available else 'not'}}</span> currently
             available to you for a digital loan.
-            <span id="explanation">{{explanation}}</span></div>
+            <span id="explanation">{{explanation}}</span>
             <span id="when">This item will become
               available again at
               {{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else 'unknown'}}.</span>
@@ -103,102 +103,106 @@
 /* NOTE: these JavaScript functions are inlined to allow for template
 rendered start conditions and to limit calls to server */
 (function (document, window) {
-	const max_poll_count = 10, /* maximum number to times to poll /item-status */
-		  wait_period = 10000; /* wait period between polling /item-status */
+    const max_poll_count = 10, /* maximum number to times to poll /item-status */
+          wait_period = 10000; /* wait period between polling /item-status */
 
     /* Get handles to the elements we need to change on pages */
-	let loanButton = document.getElementById('loan-button'),
-	    notAvailableElement = document.getElementById('not-available'),
-		explanationElemement = document.getElementById('explanation'),
-		whenElemement = document.getElementById('when');
+    let loanButton = document.getElementById('loan-button'),
+        notAvailableElement = document.getElementById('not-available'),
+        explanationElement = document.getElementById('explanation'),
+        whenElement = document.getElementById('when');
      
-	// Toggle the visibility of the loan button, expire times and explanation
-	// depending on availability.
-	function set_book_status(available, explanation, endtime) {
-		if (available == true) {
-			console.log("DEBUG book is available");
-			loanButton.removeAttribute('disabled');
-			loanButton.setAttribute('value', 'Get loan');
-			loanButton.classList.add('btn-primary');
-			loanButton.classList.remove('btn-secondary');
-			notAvailableElement.innerHTML = '';
-			explanationElemement.innerHTML = '';
-			whenElemement.innerHTML = '';
-		} else {
-			console.log("DEBUG book is NOT available");
-			loanButton.setAttribute('disabled', true);
-			loanButton.setAttribute('value', 'Not available');
-			loanButton.classList.remove('btn-primary');
-			loanButton.classList.add('btn-secondary');
-			notAvailableElement.innerHTML = 'not';
-			explanationElemement.innerHTML = explanation;
-			whenElement.innerHTML = endtime;
-		}
-	}
-	
-	if ("{{available}}" == "True") {
-		set_book_status(true, '', '');
-	} else {
-		set_status(false, '{{explanation}}', '{{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else "unknown"}}');
-	}
+    // Toggle the visibility of the loan button, expire times and explanation
+    // depending on availability.
+    function set_book_status(available, explanation, endtime) {
+        if (available == true) {
+            console.log("DEBUG book is available");
+            loanButton.removeAttribute('disabled');
+            loanButton.setAttribute('value', 'Get loan');
+            loanButton.classList.add('btn-primary');
+            loanButton.classList.remove('btn-secondary');
+            notAvailableElement.innerHTML = '';
+            explanationElement.innerHTML = '';
+            whenElement.innerHTML = '';
+        } else {
+            console.log("DEBUG book is NOT available");
+            loanButton.setAttribute('disabled', true);
+            loanButton.setAttribute('value', 'Not available');
+            loanButton.classList.remove('btn-primary');
+            loanButton.classList.add('btn-secondary');
+            notAvailableElement.innerHTML = 'not';
+            explanationElement.innerHTML = explanation;
+            whenElement.innerHTML = 
+              'This item will become available again at '  +
+              endtime;
+        }
+    }
+    
+    if ("{{available}}" == "True") {
+        set_book_status(true, '', '');
+    } else {
+        set_book_status(false, '{{explanation}}', '{{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else "unknown"}}');
+    }
 
 
-	/* This is a simple http GET function. It is based on examples
-	at MDN Developer site and the satirical Vanilla JS framework site */
-	httpGet = function (url, contentType, callbackFn) {
-		let self = this,
-		xhr = new XMLHttpRequest(),
-		page_url = new URL(window.location.href);
-		xhr.onreadystatechange = function () {
-		    /* process response */
-		    if (xhr.readyState === XMLHttpRequest.DONE) {
-		        if (xhr.status == 200) {
-		            let data = xhr.responseText;
-		            if (contentType === "application/json" && data !== "") {
-		                data = JSON.parse(xhr.responseText);
-		            }
-		            callbackFn(data, "");
-		        } else {
-		            callbackFn("", xhr.status);
-		        }
-		    }
-		};
+    /* This is a simple http GET function. It is based on examples
+    at MDN Developer site and the satirical Vanilla JS framework site */
+    httpGet = function (url, contentType, callbackFn) {
+        let self = this,
+        xhr = new XMLHttpRequest(),
+        page_url = new URL(window.location.href);
+        xhr.onreadystatechange = function () {
+            /* process response */
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status == 200) {
+                    let data = xhr.responseText;
+                    if (contentType === "application/json" && data !== "") {
+                        data = JSON.parse(xhr.responseText);
+                    }
+                    callbackFn(data, "");
+                } else {
+                    callbackFn("", xhr.status);
+                }
+            }
+        };
 
-		/* we always want JSON data */
-		xhr.open('GET', url, true);
-		if (contentType !== "" ) {
-		    xhr.setRequestHeader('Content-Type', contentType);
-		}
-		xhr.send();
-	 };
+        /* we always want JSON data */
+        xhr.open('GET', url, true);
+        if (contentType !== "" ) {
+            xhr.setRequestHeader('Content-Type', contentType);
+        }
+        xhr.send();
+     };
 
-	/* NOTE: This is our refresher service (for book status updates). 
-		     The service is created with setIneterval and will run
-		     max_poll_count times at an interval set by wait_period.
-	*/
-	let refresher,
-		poll_count = 0;
+    /* NOTE: This is our refresher service (for book status updates). 
+             The service is created with setIneterval and will run
+             max_poll_count times at an interval set by wait_period.
+    */
+    let refresher,
+        poll_count = 0;
 
-	refresher = setInterval(function() {
-	httpGet('{{base_url}}/item-status/{{item.barcode}}', 'text/plain',
-		function(data, err) {
-			if (poll_count >= 12) {
-		    	window.clearInterval(refresher);
-		    } else {
-		    	poll_count++;
-		    }
-		    if (! err) {
-		        /*FIXME: document write was depreciated in 2016.
-		         We want to use the handle to the specific
-		         elements we want to update and update the page in place.
-		        */
-		        console.log("DEBUG update page here...");
-		        console.log(data);
-		    } else {
-		    	console.log("ERROR: " + err);
-		    }
-		});
-	}, wait_period);
+    refresher = setInterval(function() {
+    httpGet('{{base_url}}/item-status/{{item.barcode}}', 'application/json',
+        function(data, err) {
+            if (poll_count >= 12) {
+                window.clearInterval(refresher);
+            } else {
+                poll_count++;
+            }
+            if (! err) {
+                /*FIXME: document write was depreciated in 2016.
+                 We want to use the handle to the specific
+                 elements we want to update and update the page in place.
+                */
+                console.log("DEBUG update page here...");
+		console.log('DEBUG typeof ', typeof(data));
+                console.log('DEBUG data: ', data);
+		set_book_status(data.available, data.explanation, data.endtime);
+            } else {
+                console.log("ERROR: " + err);
+            }
+        });
+    }, wait_period);
 
 }(document, window));
         </script>

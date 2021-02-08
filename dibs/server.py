@@ -452,7 +452,7 @@ def item_status(session, barcode):
                 endtime = None
                 obj['explanation'] = ''
         if endtime != None:
-            obj['endtime'] = endtime.strftime('%y-%m-%d %I:%M %p')
+            obj['endtime'] = endtime.strftime("%I:%M %p on %Y-%m-%d")
         else:
             obj['endtime'] == None
     return json.dumps(obj)
