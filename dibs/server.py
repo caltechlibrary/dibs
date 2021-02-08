@@ -397,23 +397,64 @@ def about_page(session):
 @authenticated
 @head_method_ignored
 def item_status(session, barcode):
-    '''Return the item record as a JSON string'''
-    if __debug__: log(f'get /item-status invoked on barcode {barcode}')
-    obj = {'barcode': barcode}
-    item = Item.get_or_none(Item.barcode == barcode)
-    if item != None:
-        obj = {
-            'itemid': item.itemid,
-            'barcode': item.barcode,
-            'tendid': item.tind_id,
-            'author': item.author,
-            'year': item.year,
-            'editiion': item.edition,
-            'thumbnail': item.thumbnail,
-            'num_copies': item.num_copies,
-            'duration': item.duration,
-            'ready': item.ready
+    '''Returns an item summary status as a JSON string'''
+    base_url = server_config.get_base_url()
+    user = session.get('user')
+    if __debug__: log(f'get /item-status invoked on barcode {barcode} and {user}')
+
+    obj = {
+        'barcode': barcode,
+        'ready': False,
+        'available': False,
+        'explanation': '',
+        'endtime' : None,
+        'base_url': base_url
         }
+    item = Item.get_or_none(Item.barcode == barcode)
+    if (item != None) and (user != None):
+        obj['ready'] = item.ready
+        user_loans = list(Loan.select().where(Loan.user == user))
+        recent_history = list(Recent.select().where(Recent.item == item))
+        endtime = None
+        # First check if the user has recently loaned out this same item.
+        if any(loan for loan in recent_history if loan.user == user):
+            if __debug__: log(f'{user} recently borrowed {barcode}')
+            recent = next(loan for loan in recent_history if loan.user == user)
+            endtime = recent.nexttime
+            obj['available'] = False
+            obj['explanation'] = 'It is too soon after the last time you borrowed this book.'
+        elif any(user_loans):
+            # The user has a current loan. If it's for this title, redirect them
+            # to the viewer; if it's for another title, block the loan button.
+            if user_loans[0].item == item:
+                if __debug__: log(f'{user} already has {barcode}; redirecting to uv')
+                obj['explanation'] = 'You currently have borrowed this book.'
+            else:
+                if __debug__: log(f'{user} already has a loan on something else')
+                obj['available'] = False
+                endtime = user_loans[0].endtime
+                loaned_item = user_loans[0].item
+                obj['explanation'] = ('You have another item on loan'
+                               + f' ("{loaned_item.title}" by {loaned_item.author})'
+                               + ' and it has not yet been returned.')
+        else:
+            if __debug__: log(f'{user} is allowed to borrow {barcode}')
+            loans = list(Loan.select().where(Loan.item == item))
+            obj['available'] = item.ready and (len(loans) < item.num_copies)
+            if item.ready and not obj['available']:
+                endtime = min(loan.endtime for loan in loans)
+                obj['explanation'] = 'All available copies are currently on loan.'
+            elif not item.ready:
+                endtime = None
+                obj['explanation'] = 'This item is not currently available through DIBS.'
+            else:
+                # It's available and they can have it.
+                endtime = None
+                obj['explanation'] = ''
+        if endtime != None:
+            obj['endtime'] = endtime.strftime('%y-%m-%d %I:%M %p')
+        else:
+            obj['endtime'] == None
     return json.dumps(obj)
 
 

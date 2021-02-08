@@ -16,3 +16,25 @@ a {
 .no-underline {
   text-decoration: none;
 }
+
+.show-inline {
+	display: inline;
+}
+
+.hide {
+	display: none;
+}
+
+.available-button {
+	cursor: pointer;
+	color: #fff;
+	background-color: #0062cc;
+	border : 1px solid black;
+}
+
+.unavailable-button {
+	cursor: None;
+	color: #fff;
+	background-color: grey;
+	border : 1px solid black;
+}
