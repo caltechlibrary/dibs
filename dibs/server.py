@@ -122,13 +122,11 @@ def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
     @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
-        base_url = server_config.get_base_url()
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
             if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
-                return template('nonexistent', barcode = barcode,
-                    base_url = base_url)
+                return page('nonexistent', session, barcode = barcode)
         return func(session, *args, **kwargs)
     return wrapper
 
@@ -180,9 +178,8 @@ def head_method_ignored(func):
 def show_login_page(session):
     # NOTE: If SSO is implemented this should redirect to the
     # SSO end point with a return to /login on success.
-    base_url = server_config.get_base_url()
     if __debug__: log('get /login invoked')
-    return template('login', base_url = base_url)
+    return page('login', session)
 
 
 @post('/login')
@@ -198,7 +195,7 @@ def login(session):
     if user != None:
         if check_password(password, user.secret) == False:
             if __debug__: log(f'wrong password -- rejecting {email}')
-            return template('login', base_url = base_url)
+            return page('login', session)
         else:
             if __debug__: log(f'creating session for {email}')
             session['user'] = email
@@ -208,7 +205,7 @@ def login(session):
             return
     else:
         if __debug__: log(f'wrong password -- rejecting {email}')
-        return template('login', base_url = base_url)
+        return page('login', session)
 
 
 @get('/logout')
@@ -232,13 +229,12 @@ def logout(session):
 @authenticated
 def list_items(session):
     '''Display the list of known items.'''
-    base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return template('notallowed', base_url = base_url)
+        return page('notallowed', session)
     if __debug__: log('get /list invoked')
-    return template('list', items = Item.select(), loans = Loan.select(),
-            base_url = base_url)
+    return page('list', session, items = Item.select(), loans = Loan.select())
+
 
 @get('/add')
 @expired_loans_removed
@@ -246,13 +242,11 @@ def list_items(session):
 @head_method_ignored
 def add(session):
     '''Display the page to add new items.'''
-    base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return template('notallowed', base_url = base_url)
+        return page('notallowed', session)
     if __debug__: log('get /add invoked')
-    return template('edit', action = 'add', item = None,
-            base_url = base_url)
+    return page('edit', session, action = 'add', item = None)
 
 
 @get('/edit/<barcode:int>')
@@ -262,13 +256,12 @@ def add(session):
 @head_method_ignored
 def edit(session, barcode):
     '''Display the page to add new items.'''
-    base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return template('notallowed', base_url = base_url)
+        return page('notallowed', session)
     if __debug__: log(f'get /edit invoked on {barcode}')
-    return template('edit', action = 'edit', item = Item.get(Item.barcode == barcode),
-            base_url = base_url)
+    return page('edit', session, action = 'edit',
+                item = Item.get(Item.barcode == barcode))
 
 
 @post('/update/add')
@@ -280,7 +273,7 @@ def update_item(session):
     base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return template('notallowed', base_url = base_url)
+        return page('notallowed', session)
     if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
@@ -291,14 +284,13 @@ def update_item(session):
     # elsewhere, so we always need to sanity-check the values.
     barcode = request.forms.get('barcode').strip()
     if not barcode.isdigit():
-        return template('error', message = f'{barcode} is not a valid barcode')
+        return page('error', session, message = f'{barcode} is not a valid barcode')
     duration = request.forms.get('duration').strip()
     if not duration.isdigit() or int(duration) <= 0:
-        return template('error', message = f'Duration must be a positive number')
+        return page('error', session, message = f'Duration must be a positive number')
     num_copies = request.forms.get('num_copies').strip()
     if not num_copies.isdigit() or int(num_copies) <= 0:
-        return template('error', message = f'# of copies must be a positive number',
-            base_url = base_url)
+        return page('error', session, message = f'# of copies must be a positive number')
 
     # Our current approach only uses items with barcodes that exist in TIND.
     # If that ever changes, the following needs to change too.
@@ -312,8 +304,7 @@ def update_item(session):
     if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
-            return template('duplicate', barcode = barcode,
-                base_url = base_url)
+            return page('duplicate', session, barcode = barcode)
         if __debug__: log(f'adding {barcode}, title {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
@@ -372,7 +363,7 @@ def remove_item(session):
     base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return template('notallowed', base_url = base_url)
+        return page('notallowed', session)
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
@@ -393,17 +384,15 @@ def remove_item(session):
 @get('/welcome')
 def front_page(session):
     '''Display the welcome page.'''
-    base_url = server_config.get_base_url()
     if __debug__: log('get / invoked')
-    return template('info', base_url = base_url)
+    return page('info', session)
 
 
 @get('/about')
 def about_page(session):
     '''Display the welcome page.'''
-    base_url = server_config.get_base_url()
     if __debug__: log('get /about invoked')
-    return template('about', base_url = base_url)
+    return page('about', session)
 
 #FIXME: We need an item status which returns a JSON object
 # so the item page can update itself without reloading the whole page.
@@ -412,7 +401,6 @@ def about_page(session):
 @head_method_ignored
 def item_status(session, barcode):
     '''Returns an item summary status as a JSON string'''
-    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /item-status invoked on barcode {barcode} and {user}')
 
@@ -479,7 +467,6 @@ def item_status(session, barcode):
 @head_method_ignored
 def show_item_info(session, barcode):
     '''Display information about the given item.'''
-    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /item invoked on barcode {barcode} by {user}')
 
@@ -498,6 +485,7 @@ def show_item_info(session, barcode):
         # to the viewer; if it's for another title, block the loan button.
         if user_loans[0].item == item:
             if __debug__: log(f'{user} already has {barcode}; redirecting to uv')
+            base_url = server_config.get_base_url()
             redirect(f'{base_url}/view/{barcode}')
             return
         else:
@@ -522,9 +510,8 @@ def show_item_info(session, barcode):
             # It's available and they can have it.
             endtime = datetime.now()
             explanation = None
-    return template('item', item = item, available = available,
-                    endtime = endtime, explanation = explanation,
-                    base_url = base_url)
+    return page('item', session, item = item, available = available,
+                endtime = endtime, explanation = explanation)
 
 
 @post('/loan')
@@ -576,8 +563,7 @@ def loan_item(session):
         if any(loan for loan in recent_history if loan.user == user):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
-            return template('toosoon', nexttime = recent.nexttime,
-                base_url = base_url)
+            return page('toosoon', session, nexttime = recent.nexttime)
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
@@ -633,8 +619,7 @@ def send_item_to_viewer(session, barcode):
     user_loans = [loan for loan in loans if user == loan.user]
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
-        return template('uv', barcode = barcode, endtime = user_loans[0].endtime,
-            base_url = base_url)
+        return page('uv', session, barcode = barcode, endtime = user_loans[0].endtime)
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'{base_url}/item/{barcode}')
@@ -647,7 +632,6 @@ def send_item_to_viewer(session, barcode):
 @head_method_ignored
 def return_manifest(session, barcode):
     '''Return the manifest file for a given item.'''
-    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /manifests/{barcode} invoked by {user}')
 
@@ -657,20 +641,12 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        return template('notallowed', base_url = base_url)
+        return page('notallowed', session)
 
 
 @get('/thankyou')
-def say_thank_you():
-    base_url = server_config.get_base_url()
-    return template('thankyou', feedback_url = config('FEEDBACK_URL'),
-        base_url = base_url)
-
-
-@get('/notauthenticated')
-def say_thank_you():
-    base_url = server_config.get_base_url()
-    return template('notauthenticated', base_url = base_url)
+def say_thank_you(session):
+    return page('thankyou', session)
 
 
 # Universal viewer interface.
@@ -695,29 +671,31 @@ def serve_uv_files(filepath):
 
 # Error pages.
 # .............................................................................
+# Note: the Bottle session plugin does not seem to supply session arg to @error.
+
+@get('/notauthenticated')
+def say_notauthenticated(session):
+    return page('notauthenticated', session)
+
 
 @get('/nonexistent')
 @get('/nonexistent/<barcode:int>')
-def nonexistent_item(barcode = None):
+def nonexistent_item(session, barcode = None):
     '''Serve as an endpoint for telling users about nonexistent items.'''
-    base_url = server_config.get_base_url()
     if __debug__: log(f'nonexistent_item called with {barcode}')
-    return template('nonexistent', barcode = barcode, base_url = base_url)
+    return page('nonexistent', session, barcode = barcode)
 
 
 @error(404)
 def error404(error):
-    base_url = server_config.get_base_url()
     if __debug__: log(f'error404 called with {error}')
-    return template('404', code = error.status_code, message = error.body,
-        base_url = base_url)
+    return page('404', None, code = error.status_code, message = error.body)
 
 
 @error(405)
 def error405(error):
-    base_url = server_config.get_base_url()
     if __debug__: log(f'error405 called with {error}')
-    return template('notallowed', base_url = base_url)
+    return page('notallowed', None)
 
 
 # Miscellaneous static pages.
@@ -766,6 +744,18 @@ class Server():
 
 # Miscellaneous utilities.
 # .............................................................................
+
+def page(name, session, **kargs):
+    base_url = server_config.get_base_url()
+    logged_in = (session and 'user' in session and session['user'] is not None)
+    if session:
+        staff_user = has_required_role(person_from_session(session), 'library')
+    else:
+        staff_user = False
+    feedback_url = config('FEEDBACK_URL')
+    return template(name, base_url = base_url, logged_in = logged_in,
+                    staff_user = staff_user, feedback_url = feedback_url, **kargs)
+
 
 def send_email(user, item, start, end):
    base_url = server_config.get_base_url()
