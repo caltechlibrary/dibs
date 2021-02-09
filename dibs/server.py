@@ -646,7 +646,7 @@ def return_manifest(session, barcode):
 
 @get('/thankyou')
 def say_thank_you(session):
-    return page('thankyou', session, feedback_url = config('FEEDBACK_URL'))
+    return page('thankyou', session)
 
 
 # Universal viewer interface.
@@ -671,6 +671,7 @@ def serve_uv_files(filepath):
 
 # Error pages.
 # .............................................................................
+# Note: the Bottle session plugin does not seem to supply session arg to @error.
 
 @get('/notauthenticated')
 def say_notauthenticated(session):
@@ -684,8 +685,6 @@ def nonexistent_item(session, barcode = None):
     if __debug__: log(f'nonexistent_item called with {barcode}')
     return page('nonexistent', session, barcode = barcode)
 
-
-# Note: Bottle session plugin does not seem to supply session arg to @error.
 
 @error(404)
 def error404(error):
@@ -749,9 +748,13 @@ class Server():
 def page(name, session, **kargs):
     base_url = server_config.get_base_url()
     logged_in = (session and 'user' in session and session['user'] is not None)
-    staff_user = has_required_role(person_from_session(session), 'library')
+    if session:
+        staff_user = has_required_role(person_from_session(session), 'library')
+    else:
+        staff_user = False
+    feedback_url = config('FEEDBACK_URL')
     return template(name, base_url = base_url, logged_in = logged_in,
-                    staff_user = staff_user, **kargs)
+                    staff_user = staff_user, feedback_url = feedback_url, **kargs)
 
 
 def send_email(user, item, start, end):
