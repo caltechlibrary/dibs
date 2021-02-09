@@ -134,6 +134,7 @@ def barcode_verified(func):
 
 
 def authenticated(func):
+    '''Check if the user is authenticated and redirect to /login if not.'''
     @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
         base_url = server_config.get_base_url()
@@ -146,7 +147,15 @@ def authenticated(func):
     return wrapper
 
 
+# This next one is needed because some browser plugins seem to cause HTTP HEAD
+# calls on web pages you visit.  Bottle routes them to the same defined
+# endpoints as GET, which ends up causing our functions to be called twice
+# (once for HEAD, once for GET).  It *shouldn't* matter, apart from the extra
+# work, but just in case we make a mistake and end up having a GET handler
+# also cause side-effects, let's just drop those HEAD calls.
+
 def head_method_ignored(func):
+    '''Ignore HTTP HEAD calls on the route.'''
     @functools.wraps(func)
     def wrapper(session, *args, **kwargs):
         if request.method == 'HEAD':

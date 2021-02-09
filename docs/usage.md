@@ -7,7 +7,7 @@ This page describes how DIBS works from the users' standpoint.  A separate secti
 
 The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:
 
-1. We expect patrons to be mainly students enrolled in educational courses at Caltech.  We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a catalog of "all things available for digital loan via DIBS"; in part, this is because such a list was not considered to be useful for DIBS's use-cases, and in part to avoid potential decreased availability of titles due to non-students browsing and borrowing items.
+1. We expect patrons to be mainly students enrolled in educational courses at Caltech.  We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a catalog of "all things available for digital loan via DIBS"; in part, this is because such a list was not considered to be useful for DIBS's use-cases, and in part because in the future we expect to add links directly to Caltech's TIND database.
 2. We expect that library staff need to interact with the system in a quite different way: to add new items to the database of digitized works and control loan parameters.  Thus, staff _do_ see a list of all items available through the system, but access to this list is limited to Library staff.
 
 These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of titles available in the system.  The front page acts mainly as an information page that describes the purpose of the system and the policies:
@@ -39,24 +39,36 @@ If the item is available to the user, and they click the <span class="button col
     <img src="_static/media/loan-in-viewer.png">
 </figure>
 
-DIBS uses [Universal Viewer](https://universalviewer.io) for this purpose; UV is an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.
+DIBS uses [Universal Viewer](https://universalviewer.io) for this purpose; UV is an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.  The loan has a limited time duration; the end time is shown in the upper left portion of the viewer screen.  
+
+The patron can elect to end the loan early.  If they do, the viewer will close and they will be presented with a thank-you page that also includes a link to a feedback page:
+
+<figure>
+    <img src="_static/media/loan-ended.png">
+</figure>
 
 
 ## The staff experience
 
-The staff entry point to DIBS is located at `/list`.  If the user is not logged in when first visiting the page, they will be redirected to the login page (located at `/login`):
+The current development version of DIBS does not yet integrate with Caltech's SSO for authentication, and consequently, DIBS has its own login mechanism for demonstration purposes.  The login page is accessible from the drop-down menu in the upper right-hand corner of every page in DIBS:
+
+<figure>
+    <img src="_static/media/dropdown-menu-login.png">
+</figure>
+
+Selecting the **Staff login** option from the menu redirects the user to the login page:
 
 <figure>
     <img src="_static/media/login-page.png">
 </figure>
 
-Once logged in, they will be able to see `/list`:
+Staff users can log in with their email address.  Once logged in, staff are redirected to the main entry point for staff, which is the list page located at `/list`:
 
 <figure>
     <img src="_static/media/list-page.png">
 </figure>
 
-This page is the main interface for staff users.  It lists all of the items known to the system (whether they are ready to be available for digital loans or not), and allows staff to add, edit, or remove items.  It is also the place where staff can get the link to be distributed to patrons to request loans.  In more detail:
+As its name implies, the list page provides a list all of the items known to DIBS (whether they are ready to be available for digital loans or not), and allows staff to add, edit, or remove items.  It is also the place where staff can get the link to be distributed to patrons to request loans.  In more detail:
 
 * **Barcode**: the barcode identifying the item in the Caltech Library.
 * **Title**: the title of the item. This is entered free-form in the DIBS entry form and does not have to match the actual title in Caltech's TIND database.
