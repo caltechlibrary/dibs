@@ -18,7 +18,9 @@
       %else:
         <li><a href="{{base_url}}/login">Staff login</a></li>
       %end
-      <li><a href="{{base_url}}/list">List Items</a></li>
+      %if staff_user:
+        <li><a href="{{base_url}}/list">List Items</a></li>
+      %end
       <li><a href="https://caltechlibrary.github.io/dibs/usage.html">Help</a></li>
       <li><a href="{{base_url}}/about">About</a></li>
     </ul>
