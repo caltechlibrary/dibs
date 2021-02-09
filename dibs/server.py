@@ -749,7 +749,9 @@ class Server():
 def page(name, session, **kargs):
     base_url = server_config.get_base_url()
     logged_in = (session and 'user' in session and session['user'] is not None)
-    return template(name, base_url = base_url, logged_in = logged_in, **kargs)
+    staff_user = has_required_role(person_from_session(session), 'library')
+    return template(name, base_url = base_url, logged_in = logged_in,
+                    staff_user = staff_user, **kargs)
 
 
 def send_email(user, item, start, end):
