@@ -66,7 +66,7 @@
                       %if item.edition != '':
                       <td>{{item.edition}}</td>
                       %else:
-                      <i>Unknown</i>
+                      <td><i>Unknown</i></td>
                       %end
                     </tr>
                     <tr><td></td><td></td></tr>
