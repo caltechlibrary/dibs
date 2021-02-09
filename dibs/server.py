@@ -316,12 +316,16 @@ def update_item(session):
             redirect(f'{base_url}/nonexistent/{barcode}')
             return
         if __debug__: log(f'updating {barcode} from {rec}')
+	#FIXME: Need to validate these values.
         item.barcode    = barcode
         item.num_copies = num_copies
         item.duration   = duration
-        for field in ['title', 'author', 'year', 'edition', 'tind_id', 'thumbnail']:
-            setattr(item, field, getattr(rec, field, ''))
-        item.save()
+	# NOTE: Since we don't have these fields in the edit form we don't
+	# go anything with them.
+        #for field in ['title', 'author', 'year', 'edition', 'tind_id', 'thumbnail']:
+        #    setattr(item, field, getattr(rec, field, ''))
+	# NOTE: We only update the specific editable fields.
+        item.save(only=[Item.barcode, Item.num_copies, Item.duration])
     redirect(f'{base_url}/list')
 
 
@@ -339,7 +343,8 @@ def toggle_ready(session):
     # The status we get is the availability status as it currently shown,
     # meaning the user's action is to change the status.
     item.ready = not ready
-    item.save()
+    #NOTE: We only save the ready value we toggled.
+    item.save(only=[Item.ready])
     if __debug__: log(f'readiness of {barcode} is now {item.ready}')
     # If the readiness state is changed after the item is let out for loans,
     # then there may be outstanding loans right now. Delete them.
