@@ -12,18 +12,21 @@
     <div style="position: relative; padding-bottom: 3em; height: 100%">
       %include('common/navbar.tpl')
 
-        <div class="w-75 text-center mx-auto mt-4">
-          <form action="{{base_url}}/update/{{action}}" method="POST">
+      <div class="container text-center mx-auto mt-4">
+        <form class="form-horizontal" action="{{base_url}}/update/{{action}}" method="POST">
 
-            <label for="barcode" class="sr-only">Barcode</label>
+          <label for="barcode" class="form-group control-label" style="display: block">
+            <span class="control-label col-md-4">Barcode</span>
             <input name="barcode" type="number" class="form-control"
                    placeholder="Barcode"
                    %if item:
                    value="{{item.barcode}}"
                    %end
                    required autofocus>
+          </label>
 
-            <label for="numCopies" class="sr-only">Copies</label>
+          <label for="numCopies" class="form-group control-label" style="display: block">
+            <span class="control-label">Copies</span>
             <input name="num_copies" type="number" class="form-control"
                    placeholder="Number of copies to be made available for simultaneous loans"
                    step="any" min="1"
@@ -31,8 +34,10 @@
                    value="{{item.num_copies}}"
                    %end
                    required>
+          </label>
 
-            <label for="duration" class="sr-only">Loan duration (in hours)</label>
+          <label for="numCopies" class="form-group control-label" style="display: block">
+            <span class="control-label">Loan duration (in hours)</span>
             <input name="duration" type="number" class="form-control"
                    placeholder="Maximum duration of a loan (in hours)"
                    step="any" min="1"
@@ -40,24 +45,25 @@
                    value="{{item.duration}}"
                    %end
                    required>
-            
-            <div class="py-4">
-              <div class="btn-toolbar mx-auto" style="width: 240px;">
-                <input class="btn btn-secondary mx-2" style="width: 100px"
-                       name="cancel" value="Cancel" type="submit" formnovalidate/>
-                <input id="btnAdd" class="btn btn-primary mx-2" style="width: 100px"
-                       name="add"
-                       %if item:
-                       value="Save"
-                       %else:
-                       value="Add"
-                       %end
-                       type="submit"/>
-              </div>
+          </label>
+
+          <div class="py-4">
+            <div class="btn-toolbar mx-auto" style="width: 240px;">
+              <input class="btn btn-secondary mx-2" style="width: 100px"
+                     name="cancel" value="Cancel" type="submit" formnovalidate/>
+              <input id="btnAdd" class="btn btn-primary mx-2" style="width: 100px"
+                     name="add"
+                     %if item:
+                     value="Save"
+                     %else:
+                     value="Add"
+                     %end
+                     type="submit"/>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
+
 
       %include('common/footer.html')
     </div>
