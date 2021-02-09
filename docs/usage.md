@@ -39,7 +39,13 @@ If the item is available to the user, and they click the <span class="button col
     <img src="_static/media/loan-in-viewer.png">
 </figure>
 
-DIBS uses [Universal Viewer](https://universalviewer.io) for this purpose; UV is an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.
+DIBS uses [Universal Viewer](https://universalviewer.io) for this purpose; UV is an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.  The loan has a limited time duration; the end time is shown in the upper left portion of the viewer screen.  
+
+The patron can elect to end the loan early.  If they do, the viewer will close and they will be presented with a thank-you page that also includes a link to a feedback page:
+
+<figure>
+    <img src="_static/media/loan-ended.png">
+</figure>
 
 
 ## The staff experience
