@@ -208,7 +208,7 @@ rendered start conditions and to limit calls to server */
         </script>
       </div>
 
-      %include('common/footer.html')
+      %include('common/footer.tpl')
     </div>
   </body>
 </html>

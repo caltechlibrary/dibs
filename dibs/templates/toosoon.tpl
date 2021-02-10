@@ -17,7 +17,7 @@
           {{nexttime.strftime("%I:%M %p on %Y-%m-%d")}}.</p>
       </div>
 
-      %include('common/footer.html')
+      %include('common/footer.tpl')
     </div>
   </body>
 </html>

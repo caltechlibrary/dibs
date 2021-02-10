@@ -21,7 +21,7 @@
         </p>
       </div>
 
-      %include('common/footer.html')
+      %include('common/footer.tpl')
     </div>
   </body>
 </html>

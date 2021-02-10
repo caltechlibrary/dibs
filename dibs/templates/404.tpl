@@ -23,7 +23,7 @@
         <p class="text-muted"><small>(Code {{code}}: {{message}})</small></p>
       </div>
 
-      %include('common/footer.html')
+      %include('common/footer.tpl')
     </div>
   </body>
 </html>
