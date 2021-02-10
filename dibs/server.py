@@ -306,6 +306,8 @@ def update_item(session):
             if __debug__: log(f'{barcode} already exists in the database')
             return page('duplicate', session, barcode = barcode)
         if __debug__: log(f'adding {barcode}, title {rec.title}')
+        if rec.thumbnail == None:
+            rec.thumbnail = ''
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
                     edition = rec.edition, thumbnail = rec.thumbnail,

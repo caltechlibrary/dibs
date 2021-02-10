@@ -82,8 +82,8 @@
             This item is <span id="not-available">{{'' if available else 'not'}}</span> currently
             available to you for a digital loan.
             <span id="explanation">{{explanation}}</span>
-            <span id="when">This item will become
-              available again at
+            <span id="when">This item is scheduled to become available again
+              no later than
               {{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else 'unknown'}}.</span>
           </p>
 
