@@ -1,6 +1,19 @@
-/* I find the shade of gray of the placeholders in Chrome & Firefox to be too
-   dark; it looks too close to typed text for my tastes.  This lightens it.
+/* ============================================================================
+ * File:    dibs.css
+ * Brief:   Style file for DIBS
+ * License: Please see the file named LICENSE in the project directory
+ * Project: https://github.com/caltechlibrary/dibs
+ *
+ * DIBS uses Bootstrap 4 for most web page elements. This file contains
+ * adjustments and additional style definitions for DIBS.
+ * ============================================================================
  */
+
+/* Form customization .........................................................
+
+I find the shade of gray of the placeholders in Chrome & Firefox to be too
+dark; it looks too close to typed text for my tastes.  This lightens it. */
+
 ::-webkit-input-placeholder                   { color: #bbb; }
 html .form-control::placeholder               { color: #bbb; }
 html .form-control::-webkit-input-placeholder { color: #bbb; }
@@ -8,36 +21,15 @@ html .form-control:-moz-placeholder           { color: #bbb; }
 html .form-control::-moz-placeholder          { color: #bbb; }
 html .form-control:-ms-input-placeholder      { color: #bbb; }
 
-a {
-  color: black;
-  text-decoration: underline;
-}
 
-.no-underline {
-  text-decoration: none;
-}
+/* Footer placement ...........................................................
 
-.show-inline {
-	display: inline;
-}
-
-.hide {
-	display: none;
-}
-
-.available-button {
-	cursor: pointer;
-	color: #fff;
-	background-color: #0062cc;
-	border : 1px solid black;
-}
-
-.unavailable-button {
-	cursor: None;
-	color: #fff;
-	background-color: grey;
-	border : 1px solid black;
-}
+The following combination of classes is used to put the foooter at the bottom
+of the viewport or the page content, whichever is lower.  The method is based
+on the Stack Overflow posting of 2012-09-03 by user "zzzzBov" at
+https://stackoverflow.com/a/12253099/743730  The settings for html, body,
+.page-content, .main-container, and .footer-text all together cooperate to
+get the desired behavior. */
 
 html,
 body {
@@ -65,4 +57,17 @@ body {
 
 .footer-text {
   display: inline-block;
+}
+
+
+/* Miscellaneous DIBS look & feel customizations ..............................
+*/
+
+a {
+  color: black;
+  text-decoration: underline;
+}
+
+.no-underline {
+  text-decoration: none;
 }

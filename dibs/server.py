@@ -403,6 +403,7 @@ def about_page(session):
 @head_method_ignored
 def item_status(session, barcode):
     '''Returns an item summary status as a JSON string'''
+    base_url = server_config.get_base_url()
     user = session.get('user')
     if __debug__: log(f'get /item-status invoked on barcode {barcode} and {user}')
 

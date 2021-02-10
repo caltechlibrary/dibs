@@ -1,12 +1,13 @@
-<nav class="navbar navbar-default navbar-light bg-light">
+<nav class="navbar navbar-light bg-light">
   <a href="{{base_url}}/">
-    <img src="{{base_url}}/static/dibs-icon.svg" height="40rem"
-         style="padding-left: 1rem; vertical-align: top">
+    <img src="{{base_url}}/static/dibs-icon.svg" height="40rem">
+
   </a>
   <!-- Brand and toggle get grouped for better mobile display -->
   <div class="navbar-header ml-auto">
-    <button type="button" class="navbar-toggler collapsed" aria-expanded="false"
-            data-toggle="collapse" data-target="#navbar-menu">
+    <button type="button" class="navbar-toggler collapsed"
+            data-toggle="collapse" data-target="#navbar-menu"
+            aria-expanded="false">
       <span class="navbar-toggler-icon"></span>
     </button>
   </div>

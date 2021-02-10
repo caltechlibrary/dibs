@@ -37,7 +37,7 @@
     <div class="page-content">
       %include('common/navbar.tpl')
 
-      <div class="container main-container">
+      <div class="container-fluid main-container">
         <h2 class="mx-auto text-center w-75 pb-2 mt-4">
           There are {{len(items)}} items in the system
         </h2>
@@ -51,7 +51,7 @@
                   <th>Title</th>
                   <th>Author</th>
                   <th class="text-center">Ready<br>to<br>loan?</th>
-                  <th class="text-center">Loan<br>duration<br>(hrs)</th>
+                  <th class="text-center">Loan<br>time<br>(hrs)</th>
                   <th class="text-center">Copies<br>for<br>loans</th>
                   <th class="text-center">Copies<br>in<br>use</th>
                   <th></th>
