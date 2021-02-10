@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   %include('common/banner.html')
   <head>
     %include('common/standard-inclusions.tpl')
@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="{{base_url}}/static/dibs.css">
   </head>
   
-  <body style="height: 100%">
-    <div style="position: relative; padding-bottom: 3em; height: 100%">
+  <body>
+    <div class="page-content">
       %include('common/navbar.tpl')
 
-      <div class="container text-center mx-auto mt-4">
+      <div class="container main-container text-center mx-auto mt-4">
         <form class="form-horizontal" action="{{base_url}}/update/{{action}}" method="POST">
 
           <label for="barcode" class="form-group control-label" style="display: block">
@@ -65,7 +65,7 @@
       </div>
 
 
-      %include('common/footer.html')
+      %include('common/footer.tpl')
     </div>
   </body>
 </html>

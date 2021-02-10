@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   %include('common/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
@@ -21,11 +21,11 @@
     </script>
   </head>
   
-  <body style="height: 100%">
-    <div style="position: relative; padding-bottom: 3em; height: 100%">
+  <body>
+    <div class="page-content">
       %include('common/navbar.tpl')
 
-      <div class="container">
+      <div class="container main-container">
 
         <table class="table table-borderless mt-4">
           <tbody>
@@ -208,7 +208,7 @@ rendered start conditions and to limit calls to server */
         </script>
       </div>
 
-      %include('common/footer.html')
+      %include('common/footer.tpl')
     </div>
   </body>
 </html>
