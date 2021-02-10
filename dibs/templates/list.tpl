@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   %include('common/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
@@ -33,90 +33,92 @@
    }
   </script>
   
-  <body style="height: 100%">
-    <div style="position: relative; padding-bottom: 3em; height: 100%">
+  <body>
+    <div class="page-content">
       %include('common/navbar.tpl')
 
-      <h2 class="mx-auto text-center w-75 pb-2 mt-4">
-        There are {{len(items)}} items in the system
-      </h2>
-      <div class="d-grid gap-3">
+      <div class="container main-container">
+        <h2 class="mx-auto text-center w-75 pb-2 mt-4">
+          There are {{len(items)}} items in the system
+        </h2>
+        <div class="d-grid gap-3">
 
-        <div class="mb-3">
-          <table class="table">
-            <thead class="thead-light">
-              <tr>
-                <th>Barcode</th>
-                <th>Title</th>
-                <th>Author</th>
-                <th class="text-center">Ready<br>to<br>loan?</th>
-                <th class="text-center">Loan<br>duration<br>(hrs)</th>
-                <th class="text-center">Copies<br>for<br>loans</th>
-                <th class="text-center">Copies<br>in<br>use</th>
-                <th></th>
-                <th></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-            %for item in items:
-              <tr scope="row">
-                <td>{{item.barcode}}</td>
-                <td>
-                  %if item.tind_id != '':
-                  <a target="_blank" href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
-                  %else:
-                  {{item.title}}
-                  %end
-                <td>{{item.author}}</td>
-                <td class="text-center">
-                  <form action="{{base_url}}/ready" method="POST">
-                    <input type="hidden" name="barcode" value="{{item.barcode}}">
-                    <input type="hidden" name="ready" value="{{item.ready}}">
-                    <input type="checkbox" class="checkbox"
-                           onChange="this.form.submit()"
-                           {{'checked="checked"' if item.ready else ''}}/>
-                  </form>
-                </td>
-                <td class="text-center">{{item.duration}}</td>
-                <td class="text-center">{{item.num_copies}}</td>
-                <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
+          <div class="mb-3">
+            <table class="table">
+              <thead class="thead-light">
+                <tr>
+                  <th>Barcode</th>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th class="text-center">Ready<br>to<br>loan?</th>
+                  <th class="text-center">Loan<br>duration<br>(hrs)</th>
+                  <th class="text-center">Copies<br>for<br>loans</th>
+                  <th class="text-center">Copies<br>in<br>use</th>
+                  <th></th>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                %for item in items:
+                <tr scope="row">
+                  <td>{{item.barcode}}</td>
+                  <td>
+                    %if item.tind_id != '':
+                    <a target="_blank" href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                    %else:
+                    {{item.title}}
+                    %end
+                  </td>
+                  <td>{{item.author}}</td>
+                  <td class="text-center">
+                    <form action="{{base_url}}/ready" method="POST">
+                      <input type="hidden" name="barcode" value="{{item.barcode}}">
+                      <input type="hidden" name="ready" value="{{item.ready}}">
+                      <input type="checkbox" class="checkbox"
+                             onChange="this.form.submit()"
+                             {{'checked="checked"' if item.ready else ''}}/>
+                    </form>
+                  </td>
+                  <td class="text-center">{{item.duration}}</td>
+                  <td class="text-center">{{item.num_copies}}</td>
+                  <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
 
-                <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
-                  Copy&nbsp;link</button>
-                </td>
+                  <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
+                              onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
+                    Copy&nbsp;link</button>
+                  </td>
 
-                <td>
-                  <form action="{{base_url}}/edit/{{item.barcode}}" method="GET">
-                    <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-                    <input type="submit" name="edit" value="Edit"
-                            class="btn btn-info btn-sm"/>
-                  </form>
-                </td>
+                  <td>
+                    <form action="{{base_url}}/edit/{{item.barcode}}" method="GET">
+                      <input type="hidden" name="barcode" value="{{item.barcode}}"/>
+                      <input type="submit" name="edit" value="Edit"
+                             class="btn btn-info btn-sm"/>
+                    </form>
+                  </td>
 
-                <td>
-                  <form action="{{base_url}}/remove" method="POST"
-                        onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
-                    <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-                    <input type="submit" name="remove" value="Remove"
-                           class="btn btn-danger btn-sm"/>
-                  </form>
-                </td>
-              </tr>
-            %end
-            </tbody>
-          </table>
+                  <td>
+                    <form action="{{base_url}}/remove" method="POST"
+                          onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
+                      <input type="hidden" name="barcode" value="{{item.barcode}}"/>
+                      <input type="submit" name="remove" value="Remove"
+                             class="btn btn-danger btn-sm"/>
+                    </form>
+                  </td>
+                </tr>
+                %end
+              </tbody>
+            </table>
+          </div>
+
+          <div class="py-3 mx-auto w-25 text-center">
+            <a href="{{base_url}}/add" class="btn btn-primary m-0 no-underline">Add a new item</a>
+          </div>
+
         </div>
-
-        <div class="py-3 mx-auto" style="width: 150px">
-          <a href="{{base_url}}/add" class="btn btn-primary m-0 no-underline">Add a new item</a>
-        </div>
-
       </div>
 
       %include('common/footer.tpl')
     </div>
-
   </body>
 </html>

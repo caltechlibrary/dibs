@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   %include('common/banner.html')
   <head>
     %include('common/standard-inclusions.tpl')
     <title>Welcome to Caltech DIBS</title>
   </head>
   
-  <body style="height: 100%">
-    <div style="position: relative; padding-bottom: 3em; height: 100%">
+  <body>
+    <div class="page-content">
       %include('common/navbar.tpl')
 
-      <div class="container text-center">
+      <div class="container main-container text-center">
         <div class="row pt-3">
           <div class="col">
             <h1 class="mx-auto text-center" style="color: #FF6C0C">

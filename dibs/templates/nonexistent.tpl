@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   %include('common/banner.html')
   <head>
     %include('common/standard-inclusions.tpl')
     <title>No such item</title>
   </head>
   
-  <body style="height: 100%">
-    <div style="position: relative; padding-bottom: 3em; height: 100%">
+  <body>
+    <div class="page-content">
       %include('common/navbar.tpl')
 
-      <div class="container pt-3">
+      <div class="container main-container pt-3">
         <div class="alert alert-danger" role="alert">
           <h4 class="alert-heading">No such item</h4>
           %if barcode == 'None':

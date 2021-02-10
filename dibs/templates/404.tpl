@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   %include('common/banner.html')
   <head>
     %include('common/standard-inclusions.tpl')
     <title>Error</title>
   </head>
   
-  <body style="height: 100%">
-    <div style="position: relative; padding-bottom: 4em; min-height: 100%">
+  <body>
+    <div class="page-content">
       %include('common/navbar.tpl')
 
-      <div class="container text-center">
+      <div class="container main-container text-center">
         <img src="{{base_url}}/static/missing.jpg" class="rounded img-fluid pt-3" style="max-width: 500px" width="80%"
              title="Photo taken in the Sherman Fairchild Library in January, 2021. Copyright 2021 Rebecca Minarez. Distributed under a CC BY-NC-SA 4.0 license."
              alt="Photo of missing books by Rebecca Minjarez, Caltech.">
