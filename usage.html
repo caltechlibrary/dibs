@@ -270,6 +270,13 @@
     </li></ul>
     
     </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="history.html" class="md-nav__link">History</a>
+      
+    
+    </li>
   </ul>
   
 
@@ -327,9 +334,13 @@
 <figure>
 <img src="_static/media/loan-ended.png"/>
 </figure>
+<p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user’s institutional SSO identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
 
 
 <h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">¶</a></h2>
+<p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <a class="reference external" href="#the-patron-experience">patron experience</a> described in the previous section.)</p>
+
+<h3 id="logging-in">Logging in<a class="headerlink" href="#logging-in" title="Permalink to this headline">¶</a></h3>
 <p>The current development version of DIBS does not yet integrate with Caltech’s SSO for authentication, and consequently, DIBS has its own login mechanism for demonstration purposes.  The login page is accessible from the drop-down menu in the upper right-hand corner of every page in DIBS:</p>
 <figure>
 <img src="_static/media/dropdown-menu-login.png"/>
@@ -338,7 +349,11 @@
 <figure>
 <img src="_static/media/login-page.png"/>
 </figure>
-<p>Staff users can log in with their email address.  Once logged in, staff are redirected to the main entry point for staff, which is the list page located at <code class="docutils literal notranslate"><span class="pre">/list</span></code>:</p>
+<p>Staff users can log in with their email address.</p>
+
+
+<h3 id="the-list-page">The list page<a class="headerlink" href="#the-list-page" title="Permalink to this headline">¶</a></h3>
+<p>Once logged in, staff are redirected to the main entry point for staff, which is the list page located at <code class="docutils literal notranslate"><span class="pre">/list</span></code>:</p>
 <figure>
 <img src="_static/media/list-page.png"/>
 </figure>
@@ -355,11 +370,15 @@
 <li><p><span class="button color-info">Edit</span>: edit the entry. This brings up the same form as is used to add new entries, but with the values filled in, allowing the user to change the values and save the results.</p></li>
 <li><p><span class="button color-danger">Remove</span>: remove the entry for the item in the DIBS database. This does not remove the scans or other files, only the database entry.</p></li>
 </ul>
+
+
+<h3 id="adding-new-items">Adding new items<a class="headerlink" href="#adding-new-items" title="Permalink to this headline">¶</a></h3>
 <p>If the user clicks the <span class="button color-primary">Add a new item</span> button, they are presented with the following screen:</p>
 <figure>
 <img src="_static/media/add-item-page.png"/>
 </figure>
 <p>Here, information can be entered to describe a new item being made available for digital loans.  All of the information about a given item is based on the barcode; this barcode is used to look up the item in Caltech’s TIND server, and the information extracted from TIND is used to populate the item view page discussed in the previous section.</p>
+
 
 
 

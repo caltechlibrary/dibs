@@ -57,6 +57,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="History" href="history.html" />
     <link rel="prev" title="Using DIBS" href="usage.html" />
   
    
@@ -269,6 +270,13 @@
     </li></ul>
     
     </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="history.html" class="md-nav__link">History</a>
+      
+    
+    </li>
   </ul>
   
 
@@ -293,7 +301,8 @@
             
   
 <h1 id="architecture--page-root">System architecture<a class="headerlink" href="#architecture--page-root" title="Permalink to this headline">¶</a></h1>
-<p>This page describes the system archicture of DIBS.</p>
+<p>The architecture of DIBS consists of a server written in Python, using the <a class="reference external" href="https://bottlepy.org">Bottle</a> framework for template-driven web pages, an SQLite database for tracking items and loans, SSO authentication, and a configuration of the JavaScript-based Universal Viewer for displaying materials. For any given item made available via DIBS, the scanned pages of the original are stored on an internal shared file system and identified by a barcode. A workflow written in Python is used to create a <a class="reference external" href="https://iiif.io">IIIF</a> manifest; this manifest is added to the system, which then makes the scanned contents available via a data endpoint served by DIBS. This allows DIBS to implement the digital loan policies developed by our institution, such as that patrons can only borrow one item at a time.</p>
+<p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) title they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
 
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
 <p>Settings are stored in the file <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">settings.ini</span></code></span>.  This file is read at run time by the server and database components.</p>
@@ -433,6 +442,17 @@
               </div>
             </a>
           
+          
+            <a href="history.html" title="History"
+               class="md-flex md-footer-nav__link md-footer-nav__link--next"
+               rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
+                class="md-flex__ellipsis"> <span
+                class="md-footer-nav__direction"> Next </span> History </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink"><i
+                class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
           
         </a>
         
