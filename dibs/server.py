@@ -16,6 +16,7 @@ from   bottle_session import SessionPlugin
 import functools
 import logging
 from   peewee import *
+from   topi import Tind
 import os
 from   os import path
 import smtplib
@@ -28,7 +29,6 @@ if __debug__:
     from sidetrack import log
 
 from .database import Item, Loan, Recent
-from .tind import TindRecord
 
 
 # Constants used throughout this file.
@@ -294,8 +294,10 @@ def update_item(session):
 
     # Our current approach only uses items with barcodes that exist in TIND.
     # If that ever changes, the following needs to change too.
-    rec = TindRecord(barcode = barcode)
-    if not rec or not all([rec.title, rec.author, rec.year]):
+    tind = Tind('https://caltech.tind.io')
+    try:
+        rec = tind.item(barcode = barcode).parent
+    except:
         if __debug__: log(f'could not find {barcode} in TIND')
         redirect(f'{base_url}/nonexistent/{barcode}')
         return
@@ -306,11 +308,9 @@ def update_item(session):
             if __debug__: log(f'{barcode} already exists in the database')
             return page('duplicate', session, barcode = barcode)
         if __debug__: log(f'adding {barcode}, title {rec.title}')
-        if rec.thumbnail == None:
-            rec.thumbnail = ''
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
-                    edition = rec.edition, thumbnail = rec.thumbnail,
+                    edition = rec.edition, thumbnail = rec.thumbnail_url,
                     num_copies = num_copies, duration = duration)
     else:
         if not item:
