@@ -62,13 +62,15 @@
               <tbody>
                 %for item in items:
                 <tr scope="row">
-                  <td>{{item.barcode}}</td>
                   <td>
                     %if item.tind_id != '':
-                    <a target="_blank" href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                    <a target="_blank" href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.barcode}}</a>
                     %else:
-                    {{item.title}}
+                    {{item.barcode}}
                     %end
+                  </td>
+                  <td>
+                    <a href="{{base_url}}/item/{{item.barcode}}">{{item.title}}</a>
                   </td>
                   <td>{{item.author}}</td>
                   <td class="text-center">
