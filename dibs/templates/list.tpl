@@ -101,9 +101,9 @@
 
                   <td>
                     <form action="{{base_url}}/remove" method="POST"
-                          onSubmit="return confirm('Remove entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage, but will remove the entry from the loan database.');">
+                          onSubmit="return confirm('Remove list entry for {{item.barcode}} (&#8220;{{item.title}}&#8221; by {{item.author}})? This will not delete the files from storage; it will simply delist the entry from the DIBS database.');">
                       <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-                      <input type="submit" name="remove" value="Remove"
+                      <input type="submit" name="remove" value="Delist"
                              class="btn btn-danger btn-sm"/>
                     </form>
                   </td>
