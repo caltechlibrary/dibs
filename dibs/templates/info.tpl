@@ -11,7 +11,7 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-        <h1 class="mx-auto text-center pt-3" style="color: #FF6C0C">
+        <h1 class="mx-auto text-center pt-3 caltech-color">
           Welcome to Caltech DIBS
         </h1>
         <h2 class="mx-auto my-3 text-center text-info font-italic">

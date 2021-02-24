@@ -13,7 +13,7 @@
       <div class="container main-container text-center">
         <div class="row pt-3">
           <div class="col">
-            <h1 class="mx-auto text-center" style="color: #FF6C0C">
+            <h1 class="mx-auto text-center caltech-color">
               Welcome to Caltech DIBS
             </h1>
             <h2 class="mx-auto my-3 text-center text-info font-italic">

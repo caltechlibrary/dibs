@@ -12,7 +12,7 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-        <h1 class="mx-auto text-center pt-3" style="color: #FF6C0C">
+        <h1 class="mx-auto text-center pt-3 caltech-color">
           The Caltech Library <strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem
         </h1>
         <p class="my-3"><strong>Caltech DIBS</strong> is an implementation of <a target="_blank" href="https://controlleddigitallending.org">Controlled Digital Lending</a>, allowing members of Caltech to borrow materials that are not otherwise available in e-book or other electronic formats. The system was implemented in the year 2021 to help Caltech students and faculty during the global <a target="_blank" href="https://www.who.int/emergencies/diseases/novel-coronavirus-2019">COVID-19 pandemic</a>.</p>
