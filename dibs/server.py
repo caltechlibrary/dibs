@@ -468,7 +468,7 @@ def item_status(session, barcode):
                 endtime = None
                 obj['explanation'] = ''
         if endtime != None:
-            obj['endtime'] = endtime.strftime("%I:%M %p on %Y-%m-%d")
+            obj['endtime'] = human_datetime(endtime)
         else:
             obj['endtime'] == None
     return json.dumps(obj)
@@ -525,7 +525,7 @@ def show_item_info(session, barcode):
             endtime = datetime.now()
             explanation = None
     return page('item', session, item = item, available = available,
-                endtime = endtime, explanation = explanation)
+                endtime = human_datetime(endtime), explanation = explanation)
 
 
 @post('/loan')
@@ -582,7 +582,7 @@ def loan_item(session):
                         message = ('We request that you wait at least an hour '
                                    'before borrowing the same item again. '
                                    'Please try again after '
-                                   f'{recent.nexttime.strftime("%I:%M %p on %Y-%m-%d")}'))
+                                   f'{human_datetime(recent.nexttime)}'))
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
@@ -638,7 +638,8 @@ def send_item_to_viewer(session, barcode):
     user_loans = [loan for loan in loans if user == loan.user]
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
-        return page('uv', session, barcode = barcode, endtime = user_loans[0].endtime)
+        return page('uv', session, barcode = barcode,
+                    endtime = human_datetime(user_loans[0].endtime))
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'{base_url}/item/{barcode}')
@@ -774,6 +775,11 @@ def page(name, session, **kargs):
                     staff_user = staff_user, feedback_url = feedback_url, **kargs)
 
 
+def human_datetime(dt):
+    '''Return a more human-friendly string representing the given datetime.'''
+    return dt.strftime("%I:%M %p on %Y-%m-%d") if dt else None
+
+
 def send_email(user, item, start, end):
    base_url = server_config.get_base_url()
    try:
@@ -781,8 +787,8 @@ def send_email(user, item, start, end):
        viewer = f'{base_url}/view/{item.barcode}'
        info_page = f'{base_url}/info'
        body = _EMAIL.format(item      = item,
-                            start     = start.strftime("%I:%M %p %Z on %A, %B %d"),
-                            end       = end.strftime("%I:%M %p %Z on %A, %B %d"),
+                            start     = human_datetime(start),
+                            end       = human_datetime(end),
                             viewer    = viewer,
                             info_page = info_page,
                             user      = user,

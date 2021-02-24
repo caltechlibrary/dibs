@@ -78,13 +78,12 @@
         </table>
 
         <div>
-          <p class="mx-auto text-center" style="width: 500px">
-            This item is <span id="not-available">{{'' if available else 'not'}}</span> currently
-            available to you for a digital loan.
+          <p class="mx-auto text-center w-50">
+            This item is <span id="not-available">{{'' if available else 'not'}}</span>
+            currently available to you for a digital loan.
             <span id="explanation">{{explanation}}</span>
             <span id="when">This item is scheduled to become available again
-              no later than
-              {{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else 'unknown'}}.</span>
+              no later than {{endtime if endtime else 'unknown'}}.</span>
           </p>
 
           <div class="col-md-3 mx-auto text-center">
@@ -132,16 +131,22 @@ rendered start conditions and to limit calls to server */
             loanButton.classList.add('btn-secondary');
             notAvailableElement.innerHTML = 'not';
             explanationElement.innerHTML = explanation;
-            whenElement.innerHTML = 
-              'This item will become available again at '  +
-              endtime;
+            if (endtime != "None") {
+              console.log('endtime');
+              console.log(endtime);
+                whenElement.innerHTML = 
+                   'This item will become available to you again no later than ' +
+                   '{{endtime if endtime else "unknown"}}.';
+            } else {
+                whenElement.innerHTML = '';
+            }
         }
     }
     
     if ("{{available}}" == "True") {
         set_book_status(true, '', '');
     } else {
-        set_book_status(false, '{{explanation}}', '{{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else "unknown"}}');
+        set_book_status(false, '{{explanation}}', '{{endtime}}');
     }
 
 
