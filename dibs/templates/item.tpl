@@ -88,9 +88,17 @@
 
           <div class="col-md-3 mx-auto text-center">
             <form action="{{base_url}}/loan" method="POST"
-                  onSubmit="return confirm('This will start your {{item.duration}} hour loan period immediately. Proceed?');">
+                  onSubmit="return confirm('This will start your {{item.duration}} '
+                                           + 'hour loan period immediately. Proceed?'
+                                           + '\n\nReminder: closing the viewer window '
+                                           + 'will not end the loan  – please use the '
+                                           + 'End Loan button when you are ready. You '
+                                           + 'may also open the viewer in other '
+                                           + 'devices during the loan period.');">
               <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-              <input id="loan-button" class="btn btn-block mx-auto" style="width: 120px" type="submit" value="{{'Get Loan' if available else 'Not Available'}}" {{'' if available else 'disabled'}} />
+              <input id="loan-button" class="btn btn-block mx-auto"
+                     style="width: 120px" type="submit"
+                     value="{{'Get Loan' if available else 'Not Available'}}" {{'' if available else 'disabled'}} />
             </form>
           </div>
 
