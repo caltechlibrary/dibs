@@ -67,13 +67,14 @@
       %include('common/navbar.tpl')
 
       <div class="container-fluid main-container">
-        <h2 class="mx-auto text-center w-75 pb-2 mt-4">
+        <h2 class="mx-auto text-center pb-2 mt-4">
           There are {{len(items)}} items in the system
         </h2>
         <div class="d-grid gap-3">
 
-          <div class="mb-3 table-responsive-sm">
-            <table class="table table-borderless" data-toggle="table" data-pagination="true" data-escape="false">
+          <div class="mb-3 table-responsive">
+            <table class="table table-borderless"
+                   data-toggle="table" data-pagination="true" data-escape="false">
               <thead class="thead-light">
                 <tr>
                   <th data-sortable="true" data-sorter="linkedNumberSort"
@@ -118,7 +119,9 @@
                     <a href="{{base_url}}/item/{{item.barcode}}">{{item.title}}</a>
                   </td>
 
-                  <td>{{item.author}}</td>
+                  <td>
+                    {{item.author}}
+                  </td>
 
                   <td class="text-center">
                     <form action="{{base_url}}/ready" method="POST">
@@ -130,15 +133,22 @@
                     </form>
                   </td>
 
-                  <td class="text-center">{{item.duration}}</td>
+                  <td class="text-center">
+                    {{item.duration}}
+                  </td>
 
-                  <td class="text-center">{{item.num_copies}}</td>
+                  <td class="text-center">
+                    {{item.num_copies}}
+                  </td>
 
-                  <td class="text-center">{{len([x for x in loans if x.item.barcode == item.barcode])}}</td>
+                  <td class="text-center">
+                    {{len([x for x in loans if x.item.barcode == item.barcode])}}
+                  </td>
 
-                  <td><button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                              onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
-                    Copy&nbsp;link</button>
+                  <td>
+                    <button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
+                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
+                      Copy&nbsp;link</button>
                   </td>
 
                   <td>
