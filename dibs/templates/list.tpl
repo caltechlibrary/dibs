@@ -73,7 +73,7 @@
         <div class="d-grid gap-3">
 
           <div class="mb-3 table-responsive-sm">
-            <table class="table" data-toggle="table" data-pagination="true" data-escape="false">
+            <table class="table table-borderless" data-toggle="table" data-pagination="true" data-escape="false">
               <thead class="thead-light">
                 <tr>
                   <th data-sortable="true" data-sorter="linkedNumberSort"
