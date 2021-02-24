@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    %include('common/standard-inclusions.tpl')
     <link href="{{base_url}}/viewer/uv/uv.css" rel="stylesheet" type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
 
     <script src="{{base_url}}/viewer/uv/lib/offline.js"></script>
     <script src="{{base_url}}/viewer/uv/helpers.js"></script>
