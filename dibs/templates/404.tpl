@@ -11,7 +11,8 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container text-center">
-        <img src="{{base_url}}/static/missing.jpg" class="rounded img-fluid pt-3" style="max-width: 500px" width="80%"
+        <img src="{{base_url}}/static/missing.jpg"
+             class="rounded img-fluid pt-3" style="max-width: 500px" width="80%"
              title="Photo taken in the Sherman Fairchild Library in January, 2021. Copyright 2021 Rebecca Minarez. Distributed under a CC BY-NC-SA 4.0 license."
              alt="Photo of missing books by Rebecca Minjarez, Caltech.">
         <h4 class="my-4">Very sorry, but that seems to be missing &#8230;</h4>
