@@ -71,3 +71,7 @@ a {
 .no-underline {
   text-decoration: none;
 }
+
+.caltech-color {
+  color: #FF6C0C;
+}
