@@ -306,7 +306,8 @@ def update_item(session):
     if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
-            return page('duplicate', session, barcode = barcode)
+            return page('error', session, barcode = barcode,
+                        message = f'An item with barcode {{barcode}} already exists.')
         if __debug__: log(f'adding {barcode}, title {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
