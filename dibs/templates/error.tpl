@@ -12,7 +12,7 @@
 
       <div class="container main-container">
         <div class="alert alert-danger my-3" role="alert">
-          <h4 class="alert-heading">Error</h4>
+          <h4 class="alert-heading">Error: {{summary}}</h4>
           <p id="with-barcode">{{message}}</p>
         </div>
       </div>

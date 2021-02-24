@@ -126,7 +126,8 @@ def barcode_verified(func):
             barcode = kwargs['barcode']
             if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
-                return page('nonexistent', session, barcode = barcode)
+                return page('error', session, summary = 'no such barcode',
+                            message = f'There is no item with barcode {barcode}.')
         return func(session, *args, **kwargs)
     return wrapper
 
@@ -231,7 +232,8 @@ def list_items(session):
     '''Display the list of known items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log('get /list invoked')
     return page('list', session, items = Item.select(), loans = Loan.select())
 
@@ -244,7 +246,8 @@ def add(session):
     '''Display the page to add new items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log('get /add invoked')
     return page('edit', session, action = 'add', item = None)
 
@@ -258,7 +261,8 @@ def edit(session, barcode):
     '''Display the page to add new items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log(f'get /edit invoked on {barcode}')
     return page('edit', session, action = 'edit',
                 item = Item.get(Item.barcode == barcode))
@@ -273,7 +277,8 @@ def update_item(session):
     base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
@@ -284,13 +289,16 @@ def update_item(session):
     # elsewhere, so we always need to sanity-check the values.
     barcode = request.forms.get('barcode').strip()
     if not barcode.isdigit():
-        return page('error', session, message = f'{barcode} is not a valid barcode')
+        return page('error', session, summary = 'invalid barcode',
+                    message = f'{barcode} is not a valid barcode')
     duration = request.forms.get('duration').strip()
     if not duration.isdigit() or int(duration) <= 0:
-        return page('error', session, message = f'Duration must be a positive number')
+        return page('error', session, summary = 'invalid duration',
+                    message = f'Duration must be a positive number')
     num_copies = request.forms.get('num_copies').strip()
     if not num_copies.isdigit() or int(num_copies) <= 0:
-        return page('error', session, message = f'# of copies must be a positive number')
+        return page('error', session, summary = 'invalid copy number',
+                    message = f'# of copies must be a positive number')
 
     # Our current approach only uses items with barcodes that exist in TIND.
     # If that ever changes, the following needs to change too.
@@ -299,14 +307,15 @@ def update_item(session):
         rec = tind.item(barcode = barcode).parent
     except:
         if __debug__: log(f'could not find {barcode} in TIND')
-        redirect(f'{base_url}/nonexistent/{barcode}')
+        return page('error', session, summary = 'no such barcode',
+                    message = f'There is no item with barcode {barcode}.')
         return
 
     item = Item.get_or_none(Item.barcode == barcode)
     if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
-            return page('error', session, barcode = barcode,
+            return page('error', session, summary = 'duplicate entry',
                         message = f'An item with barcode {{barcode}} already exists.')
         if __debug__: log(f'adding {barcode}, title {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
@@ -316,8 +325,8 @@ def update_item(session):
     else:
         if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
-            redirect(f'{base_url}/nonexistent/{barcode}')
-            return
+            return page('error', session, summary = 'no such barcode',
+                        message = f'There is no item with barcode {barcode}.')
         if __debug__: log(f'updating {barcode} from {rec}')
 	#FIXME: Need to validate these values.
         item.barcode    = barcode
@@ -366,7 +375,8 @@ def remove_item(session):
     base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
@@ -547,8 +557,9 @@ def loan_item(session):
     with _THREAD_LOCK:
         if any(Loan.select().where(Loan.user == user)):
             if __debug__: log(f'{user} already has a loan on something else')
-            redirect(f'{base_url}/onlyone')
-            return
+            return page('error', session, summary = 'only one loan at a time',
+                        message = ('Our policy currently prevents users from '
+                                   'borrowing more than one item at a time.'))
         loans = list(Loan.select().where(Loan.item == item))
         if any(loan.user for loan in loans if user == loan.user):
             # Shouldn't be able to reach this point b/c the item page shouldn't
@@ -567,7 +578,11 @@ def loan_item(session):
         if any(loan for loan in recent_history if loan.user == user):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
-            return page('toosoon', session, nexttime = recent.nexttime)
+            return page('error', session, summary = 'too soon',
+                        message = ('We request that you wait at least an hour '
+                                   'before borrowing the same item again. '
+                                   'Please try again after '
+                                   f'{recent.nexttime.strftime("%I:%M %p on %Y-%m-%d")}'))
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
@@ -645,7 +660,8 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
 
 
 @get('/thankyou')
@@ -677,18 +693,13 @@ def serve_uv_files(filepath):
 # .............................................................................
 # Note: the Bottle session plugin does not seem to supply session arg to @error.
 
-@get('/notauthenticated')
-def say_notauthenticated(session):
-    return page('notauthenticated', session)
-
-
-@get('/nonexistent')
-@get('/nonexistent/<barcode:int>')
-def nonexistent_item(session, barcode = None):
-    '''Serve as an endpoint for telling users about nonexistent items.'''
-    if __debug__: log(f'nonexistent_item called with {barcode}')
-    return page('nonexistent', session, barcode = barcode)
-
+@get('/notallowed')
+@post('/notallowed')
+def not_allowed(session):
+    if __debug__: log(f'serving /notallowed')
+    return page('error', session, summary = 'access error',
+                message = ('The requested method does not exist or you do not '
+                           'not have permission to access the requested item.'))
 
 @error(404)
 def error404(error):
@@ -699,7 +710,9 @@ def error404(error):
 @error(405)
 def error405(error):
     if __debug__: log(f'error405 called with {error}')
-    return page('notallowed', None)
+    return page('error', session = None, summary = 'method not allowed',
+                message = ('The requested method does not exist or you do not '
+                           'not have permission to perform the action.'))
 
 
 # Miscellaneous static pages.
