@@ -33,10 +33,10 @@
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
-                onclick="if(confirm('This will end your loan immediately. The '
-                                    + 'loan policy is that you will have to wait '
-                                    + 'one hour before borrowing this item again.'
-                                    )){ window.location = '{{base_url}}/return/{{barcode}}';} 
+                onclick="if ( confirm('This will end your loan immediately. '
+                                    + 'You will need to wait {{reloan_wait_time}} '
+                                    + 'before being able to borrow this item again.'
+                                    )) { window.location = '{{base_url}}/return/{{barcode}}';}
                                         else { return false; }">
           End loan now</button>
       </div>
@@ -69,6 +69,7 @@
      }
    };
   </script>
+
   <script src="uv/uv.js"></script>
 
 </body>

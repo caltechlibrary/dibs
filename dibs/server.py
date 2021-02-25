@@ -14,6 +14,7 @@ from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
 from   bottle_session import SessionPlugin
 import functools
+from   humanize import naturaldelta
 import logging
 from   peewee import *
 from   topi import Tind
@@ -36,6 +37,9 @@ from .database import Item, Loan, Recent
 
 # Where our Bottle templates are stored.
 _TEMPLATE_DIR = config('TEMPLATE_DIR')
+
+# Cooling-off period after a loan ends, before user can borrow same title again.
+_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME')))
 
 # Lock object used around some code to prevent concurrent modification.
 _THREAD_LOCK = threading.Lock()
@@ -106,7 +110,7 @@ def expired_loans_removed(func):
                 barcode = loan.item.barcode
                 if __debug__: log(f'creating recent record for {barcode} by {loan.user}')
                 Recent.create(item = loan.item, user = loan.user,
-                              nexttime = loan.endtime + timedelta(hours = 1))
+                              nexttime = loan.endtime + timedelta(minutes = 1))
                 if __debug__: log(f'expiring loan of {barcode} by {loan.user}')
                 loan.delete_instance()
         for recent in Recent.select():
@@ -398,7 +402,7 @@ def remove_item(session):
 def front_page(session):
     '''Display the welcome page.'''
     if __debug__: log('get / invoked')
-    return page('info', session)
+    return page('info', session, reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
 
 
 @get('/about')
@@ -579,10 +583,10 @@ def loan_item(session):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
             return page('error', session, summary = 'too soon',
-                        message = ('We request that you wait at least an hour '
-                                   'before borrowing the same item again. '
-                                   'Please try again after '
-                                   f'{human_datetime(recent.nexttime)}'))
+                        message = ('We ask that you wait at least '
+                                   f'{naturaldelta(_RELOAN_WAIT_TIME)} before '
+                                   'requesting the same item again. Please try '
+                                   f'after {human_datetime(recent.nexttime)}'))
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
@@ -614,9 +618,8 @@ def end_loan(session, barcode):
         # add a new Recent loan record.
         if __debug__: log(f'deleting loan record for {barcode} by {user}')
         user_loans[0].delete_instance()
-        Recent.create(item = Item.get(Item.barcode == barcode),
-                      user = user,
-                      nexttime = datetime.now() + timedelta(hours = 1))
+        Recent.create(item = Item.get(Item.barcode == barcode), user = user,
+                      nexttime = datetime.now() + _RELOAN_WAIT_TIME)
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'{user} does not have {barcode} loaned out')
@@ -639,7 +642,8 @@ def send_item_to_viewer(session, barcode):
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
         return page('uv', session, barcode = barcode,
-                    endtime = human_datetime(user_loans[0].endtime))
+                    endtime = human_datetime(user_loans[0].endtime),
+                    reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'{base_url}/item/{barcode}')
