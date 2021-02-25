@@ -11,18 +11,6 @@
     <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
 
-    <style>
-     .bootstrap-table .fixed-table-container .table thead th .both,
-     .bootstrap-table .fixed-table-container .table thead th .desc,
-     .bootstrap-table .fixed-table-container .table thead th .asc {
-       -webkit-filter: brightness(0.9);
-       filter: brightness(0.9);
-       background-size: 25px;
-       background-origin: border-box;
-       background-position: 100% 85% !important;
-     }
-    </style>
-
     <script>
      // This next function was inspired in part by the posting by user "Undry"
      // to Stack Overflow 2020-07-16, https://stackoverflow.com/a/62928804/743730
