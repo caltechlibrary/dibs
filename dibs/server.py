@@ -104,7 +104,7 @@ def expired_loans_removed(func):
     # FIXME: Checking the loans at every function call is not efficient.  This
     # approach needs to be replaced with something more efficient.
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def expired_loan_removing_wrapper(session, *args, **kwargs):
         for loan in Loan.select():
             if datetime.now() >= loan.endtime:
                 barcode = loan.item.barcode
@@ -119,13 +119,13 @@ def expired_loans_removed(func):
                 if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
                 recent.delete_instance()
         return func(session, *args, **kwargs)
-    return wrapper
+    return expired_loan_removing_wrapper
 
 
 def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def barcode_verification_wrapper(session, *args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
             if not Item.get_or_none(Item.barcode == barcode):
@@ -133,13 +133,13 @@ def barcode_verified(func):
                 return page('error', session, summary = 'no such barcode',
                             message = f'There is no item with barcode {barcode}.')
         return func(session, *args, **kwargs)
-    return wrapper
+    return barcode_verification_wrapper
 
 
 def authenticated(func):
     '''Check if the user is authenticated and redirect to /login if not.'''
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def authentication_check_wrapper(session, *args, **kwargs):
         base_url = server_config.get_base_url()
         if 'user' not in session or session['user'] is None:
             if __debug__: log(f'user not found in session object')
@@ -147,7 +147,7 @@ def authenticated(func):
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
         return func(session, *args, **kwargs)
-    return wrapper
+    return authentication_check_wrapper
 
 
 # This next one is needed because some browser plugins seem to cause HTTP HEAD
@@ -160,12 +160,12 @@ def authenticated(func):
 def head_method_ignored(func):
     '''Ignore HTTP HEAD calls on the route.'''
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def ignore_head_method_wrapper(session, *args, **kwargs):
         if request.method == 'HEAD':
             if __debug__: log(f'ignoring HEAD on {request.path}')
             return
         return func(session, *args, **kwargs)
-    return wrapper
+    return ignore_head_method_wrapper
 
 
 # Administrative interface endpoints.
