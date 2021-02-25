@@ -11,6 +11,18 @@
     <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
 
+    <style>
+     .bootstrap-table .fixed-table-container .table thead th .both,
+     .bootstrap-table .fixed-table-container .table thead th .desc,
+     .bootstrap-table .fixed-table-container .table thead th .asc {
+       -webkit-filter: brightness(0.9);
+       filter: brightness(0.9);
+       background-size: 25px;
+       background-origin: border-box;
+       background-position: 100% 85% !important;
+     }
+    </style>
+
     <script>
      // This next function was inspired in part by the posting by user "Undry"
      // to Stack Overflow 2020-07-16, https://stackoverflow.com/a/62928804/743730
@@ -74,15 +86,15 @@
           <div class="mb-3 table-responsive">
             <table class="table table-borderless"
                    data-toggle="table" data-pagination="true" data-escape="false">
-              <thead class="thead-light">
+              <thead class="thead-light align-bottom align-text-bottom">
                 <tr>
                   <th data-sortable="true" data-sorter="linkedNumberSort"
-                      data-field="barcode">Barcode</th>
+                      data-field="barcode">&nbsp;<br>&nbsp;<br>Barcode</th>
 
                   <th data-sortable="true" data-sorter="linkedTextSort"
-                      data-field="title">Title</th>
+                      data-field="title">&nbsp;<br>&nbsp;<br>Title</th>
 
-                  <th data-sortable="true" data-field="author">Author</th>
+                  <th data-sortable="true" data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
 
                   <th class="text-center" data-sortable="true"
                       data-field="available">Available<br>to<br>loan?</th>
