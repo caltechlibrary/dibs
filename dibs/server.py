@@ -20,16 +20,16 @@ from   peewee import *
 from   topi import Tind
 import os
 from   os import path
-import smtplib
 import threading
 
+from .database import Item, Loan, Recent
+from .date_utils import human_datetime
+from .email import send_email
 from .people import Person, check_password, person_from_session
 from .roles import role_to_redirect, has_required_role
 
 if __debug__:
     from sidetrack import log
-
-from .database import Item, Loan, Recent
 
 
 # Constants used throughout this file.
@@ -43,26 +43,6 @@ _RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME')))
 
 # Lock object used around some code to prevent concurrent modification.
 _THREAD_LOCK = threading.Lock()
-
-# Body of email message sent to users
-_EMAIL = '''From: {sender}
-To: {user}
-Subject: {subject}
-
-You started a digital loan through Caltech DIBS at {start}.
-
-  Title: {item.title}
-  Author: {item.author}
-
-  The loan period ends at {end}
-  Web viewer: {viewer}
-
-Information about loan policies can be found at {info_page}
-
-Thank you for using Caltech DIBS. We hope the experience is a pleasant one.
-Please don't hesitate to send us feedback using our anonymous feedback form
-at {feedback}
-'''
 
 
 # Global Bottle configuration.
@@ -606,7 +586,7 @@ def loan_item(session):
         end   = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
-        send_email(user, item, start, end)
+        send_email(user, item, start, end, base_url)
     redirect(f'{base_url}/view/{barcode}')
 
 
@@ -791,30 +771,3 @@ def page(name, session, **kargs):
     feedback_url = config('FEEDBACK_URL')
     return template(name, base_url = base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = feedback_url, **kargs)
-
-
-def human_datetime(dt):
-    '''Return a more human-friendly string representing the given datetime.'''
-    return dt.strftime("%I:%M %p on %Y-%m-%d") if dt else None
-
-
-def send_email(user, item, start, end):
-   base_url = server_config.get_base_url()
-   try:
-       subject = f'Caltech DIBS loan for "{item.title}"'
-       viewer = f'{base_url}/view/{item.barcode}'
-       info_page = f'{base_url}/info'
-       body = _EMAIL.format(item      = item,
-                            start     = human_datetime(start),
-                            end       = human_datetime(end),
-                            viewer    = viewer,
-                            info_page = info_page,
-                            user      = user,
-                            subject   = subject,
-                            sender    = config('MAIL_SENDER'),
-                            feedback  = config('FEEDBACK_URL'))
-       if __debug__: log(f'sending mail to {user} about loan of {item.barcode}')
-       mailer  = smtplib.SMTP(config('MAIL_HOST'))
-       mailer.sendmail(config('MAIL_SENDER'), [user], body)
-   except Exception as ex:
-       if __debug__: log(f'unable to send mail: {str(ex)}')
