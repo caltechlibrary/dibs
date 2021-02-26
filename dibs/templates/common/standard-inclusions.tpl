@@ -7,5 +7,8 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         type="text/javascript"></script> 
 
-<!-- Our local style modifications. -->
+<!-- DIBS JavaScript. -->
+<script src="{{base_url}}/static/dibs.js" type="text/javascript"></script> 
+
+<!-- DIBS styles and modifications to Bootstrap. -->
 <link rel="stylesheet" href="{{base_url}}/static/dibs.css">

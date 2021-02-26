@@ -94,3 +94,9 @@ a {
 .caltech-color {
   color: #FF6C0C;
 }
+
+.big-checkbox {
+  width: 1.5rem;
+  height: 1.5rem;
+  top: 0.5rem
+}

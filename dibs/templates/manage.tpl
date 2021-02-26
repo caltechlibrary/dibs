@@ -33,20 +33,11 @@
                   <th data-sortable="true" data-sorter="linkedTextSort"
                       data-field="title">&nbsp;<br>&nbsp;<br>Title</th>
 
-                  <th data-sortable="true" data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
+                  <th data-sortable="true"
+                      data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
 
-                  <th class="text-center" data-sortable="true"
-                      data-field="available">Available<br>to<br>loan?</th>
-
-                  <th class="text-center" data-sortable="true" data-field="time"
-                      data-sorter="numberSort">Loan<br>time<br>(hrs)</th>
-
-                  <th class="text-center" data-sortable="true" data-field="copies"
-                       data-sorter="numberSort">Copies<br>for<br>loans</th>
-
-                  <th></th>
-
-                  <th></th>
+                  <th data-sortable="true" data-sorter="numberSort"
+                      data-field="year">&nbsp;<br>&nbsp;<br>Year</th>
 
                   <th></th>
                 </tr>
@@ -70,52 +61,27 @@
                     {{item.author}}
                   </td>
 
-                  <td class="text-center">
-                    <form action="{{base_url}}/ready" method="POST">
-                      <input type="hidden" name="barcode" value="{{item.barcode}}">
-                      <input type="hidden" name="ready" value="{{item.ready}}">
-                      <input type="checkbox" class="checkbox"
-                             onChange="this.form.submit()"
-                             {{'checked="checked"' if item.ready else ''}}/>
-                    </form>
-                  </td>
-
-                  <td class="text-center">
-                    {{item.duration}}
-                  </td>
-
-                  <td class="text-center">
-                    {{item.num_copies}}
+                  <td>
+                    {{item.year}}
                   </td>
 
                   <td>
-                    <button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
-                      Copy&nbsp;link</button>
-                  </td>
-
-                  <td>
-                    <form action="{{base_url}}/edit/{{item.barcode}}" method="GET">
+                    <form action="{{base_url}}/remove" method="POST"
+                          onSubmit="return confirm('Remove list entry for {{item.barcode}} '
+                                                   + '(&#8220;{{item.title}}&#8221; by '
+                                                   + '{{item.author}})? This will not '
+                                                   + 'delete the files from storage; '
+                                                   + 'it will simply delist the entry '
+                                                   + 'from the DIBS database.');">
                       <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-                      <input type="submit" name="edit" value="Edit&nbsp;entry"
-                             class="btn btn-info btn-sm"/>
+                      <input type="submit" name="remove" value="Delist"
+                             class="btn btn-danger btn-sm"/>
                     </form>
                   </td>
                 </tr>
                 %end
               </tbody>
             </table>
-          </div>
-
-          <div class="mx-auto w-50 text-center">
-            <a href="{{base_url}}/add"
-               class="btn btn-primary m-0 mr-2 my-2 no-underline">
-              Add new item
-            </a>
-            <a href="{{base_url}}/manage"
-               class="btn btn-danger m-0 mr-2 my-2 no-underline">
-              Manage item list
-            </a>
           </div>
 
         </div>

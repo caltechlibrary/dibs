@@ -239,7 +239,21 @@ def list_items(session):
         redirect(f'/notallowed')
         return
     if __debug__: log('get /list invoked')
-    return page('list', session, items = Item.select(), loans = Loan.select())
+    return page('list', session, items = Item.select())
+
+
+@get('/manage')
+@expired_loans_removed
+@head_method_ignored
+@authenticated
+def list_items(session):
+    '''Display the list of known items.'''
+    person = person_from_session(session)
+    if has_required_role(person, 'library') == False:
+        redirect(f'/notallowed')
+        return
+    if __debug__: log('get /manage invoked')
+    return page('manage', session, items = Item.select())
 
 
 @get('/add')
@@ -390,7 +404,7 @@ def remove_item(session):
     if list(Loan.select(Loan.item == item)):
         Loan.delete().where(Loan.item == item).execute()
     Item.delete().where(Item.barcode == barcode).execute()
-    redirect(f'{base_url}/list')
+    redirect(f'{base_url}/manage')
 
 
 # User endpoints.
@@ -730,7 +744,7 @@ def favicon():
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css)>')
+@get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js)>')
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     if __debug__: log(f'returning included file {filename}')

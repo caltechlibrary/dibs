@@ -92,8 +92,8 @@
                                            + 'hour loan period immediately. Proceed?'
                                            + '\n\nReminder: closing the viewer window '
                                            + 'will not end the loan  – please use the '
-                                           + 'End Loan button when you are ready. You '
-                                           + 'may also open the viewer in other '
+                                           + 'End Loan Now button when you are ready. '
+                                           + 'You may also open the viewer in other '
                                            + 'devices during the loan period.');">
               <input type="hidden" name="barcode" value="{{item.barcode}}"/>
               <input id="loan-button" class="btn btn-block mx-auto"
