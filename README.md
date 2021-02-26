@@ -163,10 +163,10 @@ The script [`run-server`](run-server) starts the server running; it assumes you 
 
 By default it starts the server on `localhost` port 8080.
 
-To run with debug tracing, use the `-@` option with an argument telling it where to send the output.  Using `-` will send it to stdout and using a file name will redirect it to a file.  For example,
+To run with debug tracing, use the `--debug` option with an argument telling it where to send the output.  Using `-` as the argument value will send it to stdout and using a file name will redirect it to a file.  For example,
 
 ```sh
-./run-server -@ /tmp/debug.log
+./run-server --debug /tmp/debug.log
 ```
 
 It's useful to have 2 shell windows open in that case: one where you start the server, and with `tail -f /tmp/debug.log` to see the trace.
