@@ -11,7 +11,7 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-        <h1 class="mx-auto text-center pt-3" style="color: #FF6C0C">
+        <h1 class="mx-auto text-center pt-3 caltech-color">
           Welcome to Caltech DIBS
         </h1>
         <h2 class="mx-auto my-3 text-center text-info font-italic">
@@ -23,7 +23,7 @@
           <ol>
             <li class="my-2">The number of copies of each item is determined by the number of physical copies of the corresponding printed work that the Caltech Library has pulled from the shelves. (This is typically a very small number.)</li>
             <li class="my-2">Each user may borrow only one item total from the system at any given time.</li>
-            <li class="my-2">After returning an item, users cannot borrow that same item again for a period of one hour. They can, however, borrow other items immediately.</li>
+            <li class="my-2">After returning an item, users cannot borrow that same item again for a period of {{reloan_wait_time}}. They can, however, borrow other items immediately.</li>
           </ol>
         </p>
       </div>

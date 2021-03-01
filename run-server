@@ -2,7 +2,6 @@
 # =============================================================================
 # @file    run-server
 # @brief   Simple server control program for DIBS experiment
-# @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
@@ -11,19 +10,17 @@
 
 import pkg_resources
 import os
-from   os import path
+from   os.path import exists, dirname, join
 import sys
 from   sys import exit
-
-from urllib.parse import urlparse
 
 
 # Sanity-check the run-time environment before attempting anything else.
 # .............................................................................
 
-here = path.dirname(sys.argv[0])
+here = dirname(sys.argv[0])
 
-if not path.exists(path.join(here, 'requirements.txt')):
+if not exists(join(here, 'requirements.txt')):
     print('‼️  Expected to be in same directory as requirements.txt')
     exit(1)
 else:
@@ -35,12 +32,12 @@ else:
             print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
             exit(1)
 
-if not path.exists(path.join(here, 'settings.ini')):
+if not exists(join(here, 'settings.ini')):
     where = 'the current directory' if here == '.' else here
     print(f'‼️  File "settings.ini" not found in {where}.')
     exit(1)
 
-if not path.exists(path.join(here, 'viewer', 'node_modules')):
+if not exists(join(here, 'viewer', 'node_modules')):
     print(f'‼️  Node modules appear to be missing from "viewer" subdirectory.')
     exit(1)
 
@@ -60,6 +57,7 @@ import plac
 from   shutil import which
 import signal
 from   subprocess import check_output
+from   urllib.parse import urlparse
 
 if __debug__:
     from sidetrack import set_debug, log, logr
@@ -74,12 +72,33 @@ from   dibs.server import Server
 )
 
 def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
-    '''Server control script for DIBS experimental server.'''
+    '''Server control script for DIBS experimental server.
+
+By default, this will read the file "settings.ini" for the value of the
+variable BASE_URL, and start the server on the host and port indicated.
+If given the option -a and/or -p on the command line, the given values will
+override the value of BASE_URL in settings.ini.
+
+Additional command-line arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If given the -@ argument, this program will output a detailed trace of
+what it is doing. The debug trace will be sent to the given destination,
+which can be '-' to indicate console output, or a file path to send the
+output to a file.
+
+When -@ has been given, Ottoman also installs a signal handler on signal
+SIGUSR1 that will drop Ottoman into the pdb debugger if the signal is sent
+to the running process.
+
+Command-line arguments summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+'''
 
     # Set up debug logging as soon as possible, if requested ------------------
 
     if debug != 'OUT':
-        if __debug__: set_debug(True, debug)
+        if __debug__: set_debug(True, debug, print_package = True)
         import faulthandler
         faulthandler.enable()
         if not sys.platform.startswith('win'):
@@ -95,12 +114,14 @@ def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
     # process. All module-level code is executed at least twice".  We can test
     # if we're in the child process by looking for a variable set by Bottle.
 
-    if __debug__ and not ('BOTTLE_CHILD' in os.environ):
+    in_bottle_child = ('BOTTLE_CHILD' in os.environ)
+
+    if __debug__ and not in_bottle_child:
         log('='*8 + f' started {timestamp()} ' + '='*8)
 
-    if 'BOTTLE_CHILD' not in os.environ:
+    if not in_bottle_child:
         if not which('redis-cli'):
-            print("⚠️ Can't find redis-cli ⟹ can't check redis -- proceeding anyway")
+            print("⚠️ Can't find redis-cli -- proceeding anyway")
         elif 'PONG' in check_output(['redis-cli', 'ping']).decode():
             if __debug__: log('redis appears to be running')
         else:
@@ -109,9 +130,13 @@ def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
 
     try:
         base_url = config('BASE_URL')
-        u = urlparse(base_url)
-        server = Server(host   = u.hostname if address == 'A' else address,
-                        port   = u.port if port == 'P' else port,
+        config_url = urlparse(base_url)
+        server_host = config_url.hostname if address == 'A' else address
+        server_port = config_url.port if port == 'P' else port
+        if not in_bottle_child:
+            if __debug__: log(f'starting server on {server_host}:{server_port}')
+        server = Server(host   = server_host,
+                        port   = server_port,
                         debug  = False if debug == 'OUT' else debug,
                         reload = not no_reload)
         server.run()
@@ -126,7 +151,7 @@ def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
             details = ''.join(format_exception(*exception))
             logr(f'Exception: {msg}\n{details}')
 
-    if __debug__ and not ('BOTTLE_CHILD' in os.environ):
+    if __debug__ and not in_bottle_child:
         log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
 
 

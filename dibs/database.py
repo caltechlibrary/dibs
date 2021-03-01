@@ -11,15 +11,19 @@ from peewee import SqliteDatabase, Model
 from peewee import CharField, TextField, IntegerField, SmallIntegerField
 from peewee import ForeignKeyField, AutoField, DateTimeField, BooleanField
 
-
-# Database object schemas
+
+# Local constants.
 # .............................................................................
 
-_db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+_DATABASE = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+
+
+# Database object schemas.
+# .............................................................................
 
 class BaseModel(Model):
     class Meta:
-        database = _db
+        database = _DATABASE
 
 
 # Each item available for loaning out gets a separate Item object in the

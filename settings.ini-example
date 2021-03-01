@@ -19,9 +19,14 @@ MAIL_SENDER = helpdesk@library.caltech.edu
 COOKIE_NAME = dibs
 COOKIE_LIFETIME = 86400
 
-# Feedback form URL
+# Feedback form URL.
 FEEDBACK_URL = https://forms.gle/uLGcpuTcgBeb9R6Q6
 
-# BASE_URL includes the protocol, hostname (and port if needed) and base url path.
-# E.g. http://localhost:8080 (development) or https://library.example.edu/dibs (WSGI hosting).
+# BASE_URL includes the protocol, hostname (and port if needed) and base url
+# path.  E.g. http://localhost:8080 (development) or
+# https://library.example.edu/dibs (WSGI hosting).
 BASE_URL = http://localhost:8080
+
+# Time a user must wait between when they return a title and when they can
+# loan it out again (in minutes).
+RELOAN_WAIT_TIME = 30

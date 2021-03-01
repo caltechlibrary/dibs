@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    %include('common/standard-inclusions.tpl')
     <link href="{{base_url}}/viewer/uv/uv.css" rel="stylesheet" type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
 
     <script src="{{base_url}}/viewer/uv/lib/offline.js"></script>
     <script src="{{base_url}}/viewer/uv/helpers.js"></script>
@@ -29,11 +29,15 @@
 
     <div class="row bg-light" style="margin: auto 0px">
       <div class="col-6">
-        <div class="float-left my-1"><p>Loan expires at {{endtime.strftime("%I:%M %p %Z on %A, %B %d")}}.</p></div>
+        <div class="float-left my-1"><p>Loan expires at {{endtime}}.</p></div>
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
-                onclick="if(confirm('This will end your loan immediately. The loan policy is that you will have to wait one hour before borrowing this item again.')){window.location='{{base_url}}/return/{{barcode}}';}else{return false;}">
+                onclick="if ( confirm('This will end your loan immediately. '
+                                    + 'You will need to wait {{reloan_wait_time}} '
+                                    + 'before being able to borrow this item again.'
+                                    )) { window.location = '{{base_url}}/return/{{barcode}}';}
+                                        else { return false; }">
           End loan now</button>
       </div>
     </div>
@@ -65,6 +69,7 @@
      }
    };
   </script>
+
   <script src="uv/uv.js"></script>
 
 </body>

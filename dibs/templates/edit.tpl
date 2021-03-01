@@ -4,8 +4,6 @@
   <head>
     %include('common/standard-inclusions.tpl')
     <title>Add or edit a Caltech DIBS entry</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{base_url}}/static/dibs.css">
   </head>
   
   <body>

@@ -14,21 +14,22 @@ from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
 from   bottle_session import SessionPlugin
 import functools
+from   humanize import naturaldelta
 import logging
 from   peewee import *
+from   topi import Tind
 import os
 from   os import path
-import smtplib
 import threading
 
+from .database import Item, Loan, Recent
+from .date_utils import human_datetime
+from .email import send_email
 from .people import Person, check_password, person_from_session
 from .roles import role_to_redirect, has_required_role
 
 if __debug__:
     from sidetrack import log
-
-from .database import Item, Loan, Recent
-from .tind import TindRecord
 
 
 # Constants used throughout this file.
@@ -37,28 +38,11 @@ from .tind import TindRecord
 # Where our Bottle templates are stored.
 _TEMPLATE_DIR = config('TEMPLATE_DIR')
 
+# Cooling-off period after a loan ends, before user can borrow same title again.
+_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME')))
+
 # Lock object used around some code to prevent concurrent modification.
 _THREAD_LOCK = threading.Lock()
-
-# Body of email message sent to users
-_EMAIL = '''From: {sender}
-To: {user}
-Subject: {subject}
-
-You started a digital loan through Caltech DIBS at {start}.
-
-  Title: {item.title}
-  Author: {item.author}
-
-  The loan period ends at {end}
-  Web viewer: {viewer}
-
-Information about loan policies can be found at {info_page}
-
-Thank you for using Caltech DIBS. We hope the experience is a pleasant one.
-Please don't hesitate to send us feedback using our anonymous feedback form
-at {feedback}
-'''
 
 
 # Global Bottle configuration.
@@ -100,13 +84,13 @@ def expired_loans_removed(func):
     # FIXME: Checking the loans at every function call is not efficient.  This
     # approach needs to be replaced with something more efficient.
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def expired_loan_removing_wrapper(session, *args, **kwargs):
         for loan in Loan.select():
             if datetime.now() >= loan.endtime:
                 barcode = loan.item.barcode
                 if __debug__: log(f'creating recent record for {barcode} by {loan.user}')
                 Recent.create(item = loan.item, user = loan.user,
-                              nexttime = loan.endtime + timedelta(hours = 1))
+                              nexttime = loan.endtime + timedelta(minutes = 1))
                 if __debug__: log(f'expiring loan of {barcode} by {loan.user}')
                 loan.delete_instance()
         for recent in Recent.select():
@@ -115,26 +99,27 @@ def expired_loans_removed(func):
                 if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
                 recent.delete_instance()
         return func(session, *args, **kwargs)
-    return wrapper
+    return expired_loan_removing_wrapper
 
 
 def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def barcode_verification_wrapper(session, *args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
             if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
-                return page('nonexistent', session, barcode = barcode)
+                return page('error', session, summary = 'no such barcode',
+                            message = f'There is no item with barcode {barcode}.')
         return func(session, *args, **kwargs)
-    return wrapper
+    return barcode_verification_wrapper
 
 
 def authenticated(func):
     '''Check if the user is authenticated and redirect to /login if not.'''
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def authentication_check_wrapper(session, *args, **kwargs):
         base_url = server_config.get_base_url()
         if 'user' not in session or session['user'] is None:
             if __debug__: log(f'user not found in session object')
@@ -142,7 +127,7 @@ def authenticated(func):
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
         return func(session, *args, **kwargs)
-    return wrapper
+    return authentication_check_wrapper
 
 
 # This next one is needed because some browser plugins seem to cause HTTP HEAD
@@ -155,12 +140,12 @@ def authenticated(func):
 def head_method_ignored(func):
     '''Ignore HTTP HEAD calls on the route.'''
     @functools.wraps(func)
-    def wrapper(session, *args, **kwargs):
+    def ignore_head_method_wrapper(session, *args, **kwargs):
         if request.method == 'HEAD':
             if __debug__: log(f'ignoring HEAD on {request.path}')
             return
         return func(session, *args, **kwargs)
-    return wrapper
+    return ignore_head_method_wrapper
 
 
 # Administrative interface endpoints.
@@ -231,9 +216,24 @@ def list_items(session):
     '''Display the list of known items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log('get /list invoked')
-    return page('list', session, items = Item.select(), loans = Loan.select())
+    return page('list', session, items = Item.select())
+
+
+@get('/manage')
+@expired_loans_removed
+@head_method_ignored
+@authenticated
+def list_items(session):
+    '''Display the list of known items.'''
+    person = person_from_session(session)
+    if has_required_role(person, 'library') == False:
+        redirect(f'/notallowed')
+        return
+    if __debug__: log('get /manage invoked')
+    return page('manage', session, items = Item.select())
 
 
 @get('/add')
@@ -244,7 +244,8 @@ def add(session):
     '''Display the page to add new items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log('get /add invoked')
     return page('edit', session, action = 'add', item = None)
 
@@ -258,7 +259,8 @@ def edit(session, barcode):
     '''Display the page to add new items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log(f'get /edit invoked on {barcode}')
     return page('edit', session, action = 'edit',
                 item = Item.get(Item.barcode == barcode))
@@ -273,7 +275,8 @@ def update_item(session):
     base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
@@ -284,39 +287,44 @@ def update_item(session):
     # elsewhere, so we always need to sanity-check the values.
     barcode = request.forms.get('barcode').strip()
     if not barcode.isdigit():
-        return page('error', session, message = f'{barcode} is not a valid barcode')
+        return page('error', session, summary = 'invalid barcode',
+                    message = f'{barcode} is not a valid barcode')
     duration = request.forms.get('duration').strip()
     if not duration.isdigit() or int(duration) <= 0:
-        return page('error', session, message = f'Duration must be a positive number')
+        return page('error', session, summary = 'invalid duration',
+                    message = f'Duration must be a positive number')
     num_copies = request.forms.get('num_copies').strip()
     if not num_copies.isdigit() or int(num_copies) <= 0:
-        return page('error', session, message = f'# of copies must be a positive number')
+        return page('error', session, summary = 'invalid copy number',
+                    message = f'# of copies must be a positive number')
 
     # Our current approach only uses items with barcodes that exist in TIND.
     # If that ever changes, the following needs to change too.
-    rec = TindRecord(barcode = barcode)
-    if not rec or not all([rec.title, rec.author, rec.year]):
+    tind = Tind('https://caltech.tind.io')
+    try:
+        rec = tind.item(barcode = barcode).parent
+    except:
         if __debug__: log(f'could not find {barcode} in TIND')
-        redirect(f'{base_url}/nonexistent/{barcode}')
+        return page('error', session, summary = 'no such barcode',
+                    message = f'There is no item with barcode {barcode}.')
         return
 
     item = Item.get_or_none(Item.barcode == barcode)
     if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
-            return page('duplicate', session, barcode = barcode)
+            return page('error', session, summary = 'duplicate entry',
+                        message = f'An item with barcode {{barcode}} already exists.')
         if __debug__: log(f'adding {barcode}, title {rec.title}')
-        if rec.thumbnail == None:
-            rec.thumbnail = ''
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
-                    edition = rec.edition, thumbnail = rec.thumbnail,
+                    edition = rec.edition, thumbnail = rec.thumbnail_url,
                     num_copies = num_copies, duration = duration)
     else:
         if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
-            redirect(f'{base_url}/nonexistent/{barcode}')
-            return
+            return page('error', session, summary = 'no such barcode',
+                        message = f'There is no item with barcode {barcode}.')
         if __debug__: log(f'updating {barcode} from {rec}')
 	#FIXME: Need to validate these values.
         item.barcode    = barcode
@@ -365,7 +373,8 @@ def remove_item(session):
     base_url = server_config.get_base_url()
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
@@ -375,7 +384,7 @@ def remove_item(session):
     if list(Loan.select(Loan.item == item)):
         Loan.delete().where(Loan.item == item).execute()
     Item.delete().where(Item.barcode == barcode).execute()
-    redirect(f'{base_url}/list')
+    redirect(f'{base_url}/manage')
 
 
 # User endpoints.
@@ -387,7 +396,7 @@ def remove_item(session):
 def front_page(session):
     '''Display the welcome page.'''
     if __debug__: log('get / invoked')
-    return page('info', session)
+    return page('info', session, reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
 
 
 @get('/about')
@@ -457,7 +466,7 @@ def item_status(session, barcode):
                 endtime = None
                 obj['explanation'] = ''
         if endtime != None:
-            obj['endtime'] = endtime.strftime("%I:%M %p on %Y-%m-%d")
+            obj['endtime'] = human_datetime(endtime)
         else:
             obj['endtime'] == None
     return json.dumps(obj)
@@ -514,7 +523,7 @@ def show_item_info(session, barcode):
             endtime = datetime.now()
             explanation = None
     return page('item', session, item = item, available = available,
-                endtime = endtime, explanation = explanation)
+                endtime = human_datetime(endtime), explanation = explanation)
 
 
 @post('/loan')
@@ -546,8 +555,9 @@ def loan_item(session):
     with _THREAD_LOCK:
         if any(Loan.select().where(Loan.user == user)):
             if __debug__: log(f'{user} already has a loan on something else')
-            redirect(f'{base_url}/onlyone')
-            return
+            return page('error', session, summary = 'only one loan at a time',
+                        message = ('Our policy currently prevents users from '
+                                   'borrowing more than one item at a time.'))
         loans = list(Loan.select().where(Loan.item == item))
         if any(loan.user for loan in loans if user == loan.user):
             # Shouldn't be able to reach this point b/c the item page shouldn't
@@ -566,13 +576,17 @@ def loan_item(session):
         if any(loan for loan in recent_history if loan.user == user):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
-            return page('toosoon', session, nexttime = recent.nexttime)
+            return page('error', session, summary = 'too soon',
+                        message = ('We ask that you wait at least '
+                                   f'{naturaldelta(_RELOAN_WAIT_TIME)} before '
+                                   'requesting the same item again. Please try '
+                                   f'after {human_datetime(recent.nexttime)}'))
         # OK, the user is allowed to loan out this item.
         start = datetime.now()
         end   = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
-        send_email(user, item, start, end)
+        send_email(user, item, start, end, base_url)
     redirect(f'{base_url}/view/{barcode}')
 
 
@@ -598,9 +612,8 @@ def end_loan(session, barcode):
         # add a new Recent loan record.
         if __debug__: log(f'deleting loan record for {barcode} by {user}')
         user_loans[0].delete_instance()
-        Recent.create(item = Item.get(Item.barcode == barcode),
-                      user = user,
-                      nexttime = datetime.now() + timedelta(hours = 1))
+        Recent.create(item = Item.get(Item.barcode == barcode), user = user,
+                      nexttime = datetime.now() + _RELOAN_WAIT_TIME)
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'{user} does not have {barcode} loaned out')
@@ -622,7 +635,9 @@ def send_item_to_viewer(session, barcode):
     user_loans = [loan for loan in loans if user == loan.user]
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
-        return page('uv', session, barcode = barcode, endtime = user_loans[0].endtime)
+        return page('uv', session, barcode = barcode,
+                    endtime = human_datetime(user_loans[0].endtime),
+                    reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'{base_url}/item/{barcode}')
@@ -644,7 +659,8 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        return page('notallowed', session)
+        redirect(f'/notallowed')
+        return
 
 
 @get('/thankyou')
@@ -676,18 +692,13 @@ def serve_uv_files(filepath):
 # .............................................................................
 # Note: the Bottle session plugin does not seem to supply session arg to @error.
 
-@get('/notauthenticated')
-def say_notauthenticated(session):
-    return page('notauthenticated', session)
-
-
-@get('/nonexistent')
-@get('/nonexistent/<barcode:int>')
-def nonexistent_item(session, barcode = None):
-    '''Serve as an endpoint for telling users about nonexistent items.'''
-    if __debug__: log(f'nonexistent_item called with {barcode}')
-    return page('nonexistent', session, barcode = barcode)
-
+@get('/notallowed')
+@post('/notallowed')
+def not_allowed(session):
+    if __debug__: log(f'serving /notallowed')
+    return page('error', session, summary = 'access error',
+                message = ('The requested method does not exist or you do not '
+                           'not have permission to access the requested item.'))
 
 @error(404)
 def error404(error):
@@ -698,7 +709,9 @@ def error404(error):
 @error(405)
 def error405(error):
     if __debug__: log(f'error405 called with {error}')
-    return page('notallowed', None)
+    return page('error', session = None, summary = 'method not allowed',
+                message = ('The requested method does not exist or you do not '
+                           'not have permission to perform the action.'))
 
 
 # Miscellaneous static pages.
@@ -711,7 +724,7 @@ def favicon():
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css)>')
+@get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js)>')
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     if __debug__: log(f'returning included file {filename}')
@@ -758,25 +771,3 @@ def page(name, session, **kargs):
     feedback_url = config('FEEDBACK_URL')
     return template(name, base_url = base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = feedback_url, **kargs)
-
-
-def send_email(user, item, start, end):
-   base_url = server_config.get_base_url()
-   try:
-       subject = f'Caltech DIBS loan for "{item.title}"'
-       viewer = f'{base_url}/view/{item.barcode}'
-       info_page = f'{base_url}/info'
-       body = _EMAIL.format(item      = item,
-                            start     = start.strftime("%I:%M %p %Z on %A, %B %d"),
-                            end       = end.strftime("%I:%M %p %Z on %A, %B %d"),
-                            viewer    = viewer,
-                            info_page = info_page,
-                            user      = user,
-                            subject   = subject,
-                            sender    = config('MAIL_SENDER'),
-                            feedback  = config('FEEDBACK_URL'))
-       if __debug__: log(f'sending mail to {user} about loan of {item.barcode}')
-       mailer  = smtplib.SMTP(config('MAIL_HOST'))
-       mailer.sendmail(config('MAIL_SENDER'), [user], body)
-   except Exception as ex:
-       if __debug__: log(f'unable to send mail: {str(ex)}')

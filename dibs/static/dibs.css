@@ -22,6 +22,25 @@ html .form-control::-moz-placeholder          { color: #bbb; }
 html .form-control:-ms-input-placeholder      { color: #bbb; }
 
 
+/* Bootstrap adjustments ................................................... */
+
+/* Make the sort arrows in table headings be more visible than the default.
+   Note: the text of the table headings must all have the same height or
+   number of lines. If some headings have (e.g.) one word/line and another
+   has 3 lines, then the placement of the arrows will be different next to
+   the different headings. If necessary, use blank space and explicit <br>'s
+   to construct headings that all have the same number of lines. */
+.bootstrap-table .fixed-table-container .table thead th .both,
+.bootstrap-table .fixed-table-container .table thead th .desc,
+.bootstrap-table .fixed-table-container .table thead th .asc {
+  -webkit-filter: brightness(0.9);
+  filter: brightness(0.9);
+  background-size: 25px;
+  background-origin: border-box;
+  background-position: 100% 85% !important;
+}
+
+
 /* Footer placement ...........................................................
 
 The following combination of classes is used to put the foooter at the bottom
@@ -70,4 +89,14 @@ a {
 
 .no-underline {
   text-decoration: none;
+}
+
+.caltech-color {
+  color: #FF6C0C;
+}
+
+.big-checkbox {
+  width: 1.5rem;
+  height: 1.5rem;
+  top: 0.5rem
 }

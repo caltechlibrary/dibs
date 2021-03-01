@@ -78,20 +78,27 @@
         </table>
 
         <div>
-          <p class="mx-auto text-center" style="width: 500px">
-            This item is <span id="not-available">{{'' if available else 'not'}}</span> currently
-            available to you for a digital loan.
+          <p class="mx-auto text-center w-50">
+            This item is <span id="not-available">{{'' if available else 'not'}}</span>
+            currently available to you for a digital loan.
             <span id="explanation">{{explanation}}</span>
             <span id="when">This item is scheduled to become available again
-              no later than
-              {{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else 'unknown'}}.</span>
+              no later than {{endtime if endtime else 'unknown'}}.</span>
           </p>
 
           <div class="col-md-3 mx-auto text-center">
             <form action="{{base_url}}/loan" method="POST"
-                  onSubmit="return confirm('This will start your {{item.duration}} hour loan period immediately. Proceed?');">
+                  onSubmit="return confirm('This will start your {{item.duration}} '
+                                           + 'hour loan period immediately. Proceed?'
+                                           + '\n\nReminder: closing the viewer window '
+                                           + 'will not end the loan  – please use the '
+                                           + 'End Loan Now button when you are ready. '
+                                           + 'You may also open the viewer in other '
+                                           + 'devices during the loan period.');">
               <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-              <input id="loan-button" class="btn btn-block mx-auto" style="width: 120px" type="submit" value="{{'Get Loan' if available else 'Not Available'}}" {{'' if available else 'disabled'}} />
+              <input id="loan-button" class="btn btn-block mx-auto"
+                     style="width: 120px" type="submit"
+                     value="{{'Get Loan' if available else 'Not Available'}}" {{'' if available else 'disabled'}} />
             </form>
           </div>
 
@@ -132,16 +139,22 @@ rendered start conditions and to limit calls to server */
             loanButton.classList.add('btn-secondary');
             notAvailableElement.innerHTML = 'not';
             explanationElement.innerHTML = explanation;
-            whenElement.innerHTML = 
-              'This item will become available again at '  +
-              endtime;
+            if (endtime != "None") {
+              console.log('endtime');
+              console.log(endtime);
+                whenElement.innerHTML = 
+                   'This item will become available to you again no later than ' +
+                   '{{endtime if endtime else "unknown"}}.';
+            } else {
+                whenElement.innerHTML = '';
+            }
         }
     }
     
     if ("{{available}}" == "True") {
         set_book_status(true, '', '');
     } else {
-        set_book_status(false, '{{explanation}}', '{{endtime.strftime("%I:%M %p on %Y-%m-%d") if endtime else "unknown"}}');
+        set_book_status(false, '{{explanation}}', '{{endtime}}');
     }
 
 

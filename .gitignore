@@ -91,3 +91,4 @@ docs/_build
 load-staff-members.bash
 settings.ini
 *.swp
+.tern-port

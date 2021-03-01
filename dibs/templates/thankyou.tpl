@@ -11,13 +11,13 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container pt-3">
-        <h1 class="mx-auto text-center my-3" style="color: #FF6C0C">
+        <h1 class="mx-auto text-center my-3 caltech-color">
           Thank you for using Caltech DIBS!
         </h1>
         <p class="mx-auto col-6 my-5 text-center text-info font-italic">
           If you have any comments or suggestions, please don't hesitate
           to let us know by using our <a href="{{feedback_url}}">
-          anonymous feedback form</a>.
+          anonymous&nbsp;feedback&nbsp;form</a>.
         </p>
       </div>
 

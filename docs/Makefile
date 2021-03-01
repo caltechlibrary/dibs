@@ -1,8 +1,7 @@
 # =============================================================================
 # @file    Makefile
 # @brief   Makefile for building docs using Sphinx and MyST
-# @author  Michael Hucka
-# @date    2021-01-25
+# @created 2021-01-25
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
