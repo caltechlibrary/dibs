@@ -56,6 +56,6 @@ class Person(Model):
 
 
 def person_from_session(session):
-    if 'user' in session:
+    if session and 'user' in session:
         return (Person.get_or_none(Person.uname == session['user']))
     return None
