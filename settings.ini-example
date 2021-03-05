@@ -1,14 +1,18 @@
 # =============================================================================
-# Settings file for DIBS.
-# This file must be located in the same directory as run-server
+# @file    settings.ini
+# @brief   Settings file for DIBS.
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# 
+#  ╭────────────────────── Notice ── Notice ── Notice ─────────────────────╮
+#  |    This file must be located in the same directory as adapter.wsgi.   |
+#  ╰───────────────────────────────────────────────────────────────────────╯
+#
 # =============================================================================
 
 [settings]
-# Path to the sqlite database used by Peewee, relative to here.
+# Path to the sqlite database, relative to here.
 DATABASE_FILE = dibs.db
-
-# Path to Bottle templates, relative to here.
-TEMPLATE_DIR  = dibs/templates
 
 # Email details. The user has to be an account authenticated to the server.
 MAIL_HOST   = localhost
@@ -16,17 +20,18 @@ MAIL_PORT   = 25
 MAIL_SENDER = helpdesk@library.caltech.edu
 
 # User session details.
-COOKIE_NAME = dibs
+COOKIE_NAME     = dibs
 COOKIE_LIFETIME = 86400
-
-# Feedback form URL.
-FEEDBACK_URL = https://forms.gle/uLGcpuTcgBeb9R6Q6
-
-# BASE_URL includes the protocol, hostname (and port if needed) and base url
-# path.  E.g. http://localhost:8080 (development) or
-# https://library.example.edu/dibs (WSGI hosting).
-BASE_URL = http://localhost:8080
 
 # Time a user must wait between when they return a title and when they can
 # loan it out again (in minutes).
 RELOAN_WAIT_TIME = 30
+
+# Feedback form URL.
+FEEDBACK_URL = https://forms.gle/uLGcpuTcgBeb9R6Q6
+
+# Set to True to enable detailed debug tracing and turn on Bottle debug mode
+# features, such as disabling the template cache. The output will be sent to
+# the server error log, or to stderr, depending on how the server is running.
+# Note: when using run-server, its options override this value.
+DEBUG = False
