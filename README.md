@@ -31,7 +31,7 @@ Access to materials in Caltech DIBS is limited to current Caltech faculty, stude
 Requirements
 -----------
 
-DIBS is written in Python 3 and depends on additional solftware to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universdal Viewer; [Redis](https://redis.io), a NoSQL datastore used by DIBS for session management; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.
+DIBS is written in Python 3 and depends on additional software to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universal Viewer; [Redis](https://redis.io), a NoSQL datastore used by DIBS for session management; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.
 
 
 Installation
@@ -65,7 +65,7 @@ python3 -m pip install -r requirements.txt
 
 ### ⓷ _Install Node dependencies_
 
-Change into to the [`viewer`](viewer) subdirectory, and run the following command:
+Change into to the [`viewer`](viewer) subdirectory, and run the following command to install the Node dependencies for the Universal Viewer:
 
 ```sh
 cd viewer
@@ -155,51 +155,31 @@ The program [`people-manager`](people-manager) is an interface to adding and man
 
 ### ⓹ _Start the DIBS server_
 
-The script [`run-server`](run-server) starts the server running; it assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
+The script [`run-server`](run-server) can be used to start a local copy of the server for experimentation and development.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
 ```sh
 ./run-server -h
 ```
 
-By default it starts the server on `localhost` port 8080.
-
-To run with debug tracing, use the `--debug` option with an argument telling it where to send the output.  Using `-` as the argument value will send it to stdout and using a file name will redirect it to a file.  For example,
+You can run it without any arguments to try out DIBS.  By default it starts the server on `localhost` port 8080.
 
 ```sh
-./run-server --debug /tmp/debug.log
+./run-server
 ```
 
-It's useful to have 2 shell windows open in that case: one where you start the server, and with `tail -f /tmp/debug.log` to see the trace.
+If you are doing development on DIBS, you may find the `--verbose` flag helpful, to see more information about what DIBS is doing in response to every request:
 
+```sh
+./run-server --verbose
+```
 
-The pages of DIBS
-------------------
+The server will automatically reload the source files if any of them are edited.  If you need to put breakpoints in the code, the `--debug` flag is useful; it disables template caching and turns on other debugging features:
 
-Here is a summary of the endpoints implemented by the system:
+```sh
+./run-server --debug
+```
 
-| Endpoint                 | Type | Purpose              |
-|--------------------------|------|----------------------|
-| `/`                      | GET  | General information page about the system |
-| `/info`                  | GET  | Same as `/` |
-| `/login`                 | GET  | Shows the login page |
-| `/login`                 | POST | Accepts form from login page |
-| `/logout`                | GET  | Logs out current user |
-| `/list`                  | GET  | Show what's available for loan |
-| `/add`                   | GET  | Show the page to add an item |
-| `/edit/<barcode>`        | GET  | Show the page to edit an item |
-| `/update/add`            | POST | Accepts form input from add-item page |
-| `/update/edit`           | POST | Accepts form input from edit-item page | 
-| `/ready`                 | POST | Handles checkbox in `list` page to make an item ready to loan |
-| `/remove`                | POST | Handles button in `list` page to remove an item |
-| `/item/<barcode>`        | GET  | Shows item information page for a given item |
-| `/loan`                  | POST | Handles Loan button from `/item` page |
-| `/view/<barcode>`        | GET  | Show the item in the viewer page |
-| `/return/<barcode>`      | GET  | Handles Return button from viewer page |
-| `/manifests/<barcode>`   | GET  | Sends manifest to viewer |
-| `/thankyou`              | GET  | Destination after user uses Return button |
-| `/notauthenticated`      | GET  | Error page for unathenticated users |
-| `/nonexistent`           | GET  | Error page for nonexistent items |
-| `/nonexistent/<barcode>` | GET  | Error page for nonexistent items |
+_Important_: debug mode also turns off auto-reloading of source files, so be aware you have to restart the server manually if you edit source files in debug mode.
 
 
 General information
