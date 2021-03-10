@@ -18,7 +18,8 @@ from   sys import exit
 # Sanity-check the run-time environment before attempting anything else.
 # .............................................................................
 
-here = dirname(sys.argv[0])
+here  = dirname(sys.argv[0])
+where = 'the current directory' if here == '.' else here
 
 if not exists(join(here, 'requirements.txt')):
     print('‼️  Expected to be in same directory as requirements.txt')
@@ -33,17 +34,17 @@ else:
             exit(1)
 
 if not exists(join(here, 'settings.ini')):
-    where = 'the current directory' if here == '.' else here
     print(f'‼️  File "settings.ini" not found in {where}.')
-    exit(1)
-
-if not exists(join(here, 'adapter.wsgi')):
-    where = 'the current directory' if here == '.' else here
-    print(f'‼️  File "adapter.wsgi" not found in {where}.')
+    print(f'‼️  Please create one starting with file "settings.ini-example".')
     exit(1)
 
 if not exists(join(here, 'viewer', 'node_modules')):
-    print(f'‼️  Node modules appear to be missing from "viewer" subdirectory.')
+    print(f'‼️  Node modules appear to be missing from {here}/viewer.')
+    print(f'‼️  Please cd to {here}/viewer and run "npm install".')
+    exit(1)
+
+if not exists(join(here, 'adapter.wsgi')):
+    print(f'‼️  File "adapter.wsgi" not found in {where}.')
     exit(1)
 
 
@@ -103,7 +104,8 @@ to set various configuration variables.
 The option -b can be used to set the base URL.  The value should contain
 the protocol, hostname, port (if needed) and any additional path elements
 of the root of DIBS on the server.  E.g., https://library.example.edu/dibs.
-The default base URL is http://localhost:8080.
+The default base URL is http://localhost:8080.  The mod_wsgi status page is
+located at http://localhost:8080/server-status/.
 
 The -v option will turn on debug tracing in the output stream without turning
 on other debug features.
@@ -116,11 +118,12 @@ Python source code files are changed, drop into the pdb debugger on exceptions.
 The use of this flag is necessary to allow interactive Python debugging.  (Note
 also that using this option overrides the value of DEBUG in settings.ini.)
 
-By default, the server will be started with the reload-on-changes flag to
-mod_wsgi, which makes it detect changes to source files and restart the
-server automatically.  You can use the option -R to disable this behavior.
-(This is identical to using --disable-reloading with mod_wsgi-express.)
-As noted above, this behavior is also automatically disabled when -d is used.
+By default, if not given -d, the server will be started with the
+reload-on-changes flag to mod_wsgi, which makes it detect changes to source
+files and restart the server automatically.  You can use the option -R to
+disable this behavior.  (This is identical to using --disable-reloading with
+mod_wsgi-express.)  As noted above, this behavior is also automatically
+disabled when -d is used.
 
 If given the -V option, this program will print the version and other
 information, and exit without doing anything else.
@@ -178,11 +181,10 @@ Command-line arguments summary
             args += ['--debug-mode', '--enable-debugger', '--threads', '1']
             args += ['--setenv', 'DEBUG', 'True']
         if no_reload:
-            if __debug__: log('reloading is disabled')
             args += ['--disable-reloading']
         else:
-            if __debug__: log('reload-on-changes is enabled')
             args += ['--reload-on-changes']
+        if __debug__: logr(f'starting mod_wsgi with arguments: {" ".join(args)}')
         mod_wsgi_start(args)
     except Exception as ex:
         exception = sys.exc_info()
