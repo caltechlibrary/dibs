@@ -14,16 +14,18 @@ from   os.path import exists, join, realpath, dirname
 from   sidetrack import log, set_debug
 import sys
 
-from dibs import dibs
-
 # The following sets the default directory to the current app's directory, so
-# that calls to config(...) work as expected.  It also prevents a confusing
-# error of the form "FileNotFoundError: No such file or directory:
+# that imports and calls to config(...) work as expected.  It also prevents a
+# confusing error of the form "FileNotFoundError: No such file or directory:
 # '...../adapter.wsgi'" in the Apache or mod_wsgi logs.
 
 app_directory = realpath(dirname(__file__))
 sys.path.insert(0, app_directory)
 chdir(app_directory)
+
+# Now we can import our code.
+
+from dibs import dibs
 
 # Mod_wsgi runs this .wsgi adapter with a clean environment; you cannot pass
 # arguments to this wrapper, nor set environment variables in os.environ in
