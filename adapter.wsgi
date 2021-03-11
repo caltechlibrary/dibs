@@ -85,7 +85,7 @@ def dibs_application(env, start_response):
         if 'SERVER_PORT' in env and env['SERVER_PORT'] not in ['80', '443']:
             url = f'{url}:{env["SERVER_PORT"]}'
         if 'SCRIPT_NAME' in env:
-            url = f'{url}/{env["SCRIPT_NAME"]}'
+            url = f'{url}{env["SCRIPT_NAME"]}'
         log(f'setting our base_url to {url}')
         dibs.base_url = url
 
