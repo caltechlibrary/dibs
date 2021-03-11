@@ -108,7 +108,7 @@ def authenticated(func):
     def authentication_check_wrapper(session, *args, **kwargs):
         if 'user' not in session or session['user'] is None:
             if __debug__: log(f'user not found in session object')
-            redirect(f'{base_url()}/login')
+            redirect(f'{dibs.base_url}/login')
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
         return func(session, *args, **kwargs)
@@ -170,7 +170,7 @@ def login(session):
             session['user'] = email
             p = role_to_redirect(user.role)
             if __debug__: log(f'redirecting to "{p}"')
-            redirect(f'{base_url()}/{p}')
+            redirect(f'{dibs.base_url}/{p}')
             return
     else:
         if __debug__: log(f'wrong password -- rejecting {email}')
@@ -187,7 +187,7 @@ def logout(session):
         user = session['user']
         if __debug__: log(f'get /logout invoked by {user}')
         del session['user']
-    redirect(f'{base_url()}/login')
+    redirect(f'{dibs.base_url}/login')
 
 
 @dibs.get('/list')
@@ -198,7 +198,7 @@ def list_items(session):
     '''Display the list of known items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        redirect(f'{base_url()}/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log('get /list invoked')
     return page('list', session, items = Item.select())
@@ -212,7 +212,7 @@ def list_items(session):
     '''Display the list of known items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        redirect(f'{base_url()}/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log('get /manage invoked')
     return page('manage', session, items = Item.select())
@@ -226,7 +226,7 @@ def add(session):
     '''Display the page to add new items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        redirect(f'{base_url()}/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log('get /add invoked')
     return page('edit', session, action = 'add', item = None)
@@ -241,7 +241,7 @@ def edit(session, barcode):
     '''Display the page to add new items.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        redirect(f'{base_url()}/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log(f'get /edit invoked on {barcode}')
     return page('edit', session, action = 'edit',
@@ -256,12 +256,12 @@ def update_item(session):
     '''Handle http post request to add a new item from the add-new-item page.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        redirect(f'{base_url()}/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
-        redirect(f'{base_url()}/list')
+        redirect(f'{dibs.base_url}/list')
         return
 
     # The HTML form validates the data types, but the POST might come from
@@ -317,7 +317,7 @@ def update_item(session):
         #    setattr(item, field, getattr(rec, field, ''))
 	# NOTE: We only update the specific editable fields.
         item.save(only=[Item.barcode, Item.num_copies, Item.duration])
-    redirect(f'{base_url()}/list')
+    redirect(f'{dibs.base_url}/list')
 
 
 @dibs.post('/ready')
@@ -341,7 +341,7 @@ def toggle_ready(session):
     if list(Loan.select(Loan.item == item)):
         if __debug__: log(f'loans for {barcode} have been deleted')
         Loan.delete().where(Loan.item == item).execute()
-    redirect(f'{base_url()}/list')
+    redirect(f'{dibs.base_url}/list')
 
 
 @dibs.post('/remove')
@@ -352,7 +352,7 @@ def remove_item(session):
     '''Handle http post request to remove an item from the list page.'''
     person = person_from_session(session)
     if has_required_role(person, 'library') == False:
-        redirect(f'{base_url()}/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
@@ -363,7 +363,7 @@ def remove_item(session):
     if list(Loan.select(Loan.item == item)):
         Loan.delete().where(Loan.item == item).execute()
     Item.delete().where(Item.barcode == barcode).execute()
-    redirect(f'{base_url()}/manage')
+    redirect(f'{dibs.base_url}/manage')
 
 
 # User endpoints.
@@ -400,7 +400,7 @@ def item_status(session, barcode):
         'available': False,
         'explanation': '',
         'endtime' : None,
-        'base_url': base_url()
+        'base_url': dibs.base_url
         }
     item = Item.get_or_none(Item.barcode == barcode)
     if (item != None) and (user != None):
@@ -475,7 +475,7 @@ def show_item_info(session, barcode):
         # to the viewer; if it's for another title, block the loan button.
         if user_loans[0].item == item:
             if __debug__: log(f'{user} already has {barcode}; redirecting to uv')
-            redirect(f'{base_url()}/view/{barcode}')
+            redirect(f'{dibs.base_url}/view/{barcode}')
             return
         else:
             if __debug__: log(f'{user} already has a loan on something else')
@@ -519,7 +519,7 @@ def loan_item(session):
         # case, so either staff has changed the status after item was made
         # available or someone got here accidentally (or deliberately).
         if __debug__: log(f'{barcode} is not ready for loans')
-        redirect(f'{base_url()}/view/{barcode}')
+        redirect(f'{dibs.base_url}/view/{barcode}')
         return
 
     # The default Bottle dev web server is single-thread, so we won't run into
@@ -541,12 +541,12 @@ def loan_item(session):
             # something weird happens (e.g., double posting), we might.
             if __debug__: log(f'{user} already has a copy of {barcode} loaned out')
             if __debug__: log(f'redirecting {user} to /view for {barcode}')
-            redirect(f'{base_url()}/view/{barcode}')
+            redirect(f'{dibs.base_url}/view/{barcode}')
             return
         if len(loans) >= item.num_copies:
             # This shouldn't be possible, but catch it anyway.
             if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-            redirect(f'{base_url()}/item/{barcode}')
+            redirect(f'{dibs.base_url}/item/{barcode}')
             return
         recent_history = list(Recent.select().where(Recent.item == item))
         if any(loan for loan in recent_history if loan.user == user):
@@ -562,8 +562,8 @@ def loan_item(session):
         end   = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
-        send_email(user, item, start, end, base_url())
-    redirect(f'{base_url()}/view/{barcode}')
+        send_email(user, item, start, end, dibs.base_url)
+    redirect(f'{dibs.base_url}/view/{barcode}')
 
 
 @dibs.get('/return/<barcode:int>')
@@ -592,7 +592,7 @@ def end_loan(session, barcode):
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-    redirect(f'{base_url()}/thankyou')
+    redirect(f'{dibs.base_url}/thankyou')
 
 
 @dibs.get('/view/<barcode:int>')
@@ -614,7 +614,7 @@ def send_item_to_viewer(session, barcode):
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        redirect(f'{base_url()}/item/{barcode}')
+        redirect(f'{dibs.base_url}/item/{barcode}')
 
 
 @dibs.get('/manifests/<barcode:int>')
@@ -633,7 +633,7 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        redirect(f'{base_url()}/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
 
 
@@ -708,15 +708,8 @@ def included_file(filename):
 # Miscellaneous utilities.
 # .............................................................................
 
-def base_url():
-    # Bottle is unusual in providing global objects like 'request'.
-    parts = request.urlparts
-    path  = '' if parts.path == '/' else parts.path
-    return f'{parts.scheme}://{parts.netloc}{path}'
-
-
 def page(name, session, **kargs):
     logged_in = (session and 'user' in session and session['user'] is not None)
     staff_user = has_required_role(person_from_session(session), 'library')
-    return template(name, base_url = base_url(), logged_in = logged_in,
+    return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)

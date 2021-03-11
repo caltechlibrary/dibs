@@ -48,28 +48,52 @@ from dibs import dibs
 
 dibs._config_done = False
 
-def dibs_application(req_environ, start_response):
+def dibs_application(env, start_response):
     '''DIBS wrapper around Bottle WSGI application.'''
     if not dibs._config_done:
-        if 'VERBOSE' in req_environ:
+        if 'VERBOSE' in env:
             set_debug(True, '-', show_package = True)
-            log('VERBOSE found in req_environ')
+            log('VERBOSE found in env')
 
-        # DEBUG in req_environ overrides settings.ini.
-        if 'DEBUG' in req_environ:
+        # DEBUG in env overrides settings.ini.
+        if 'DEBUG' in env:
             # Passed via setenv by run-server or Apache conf file.
             set_debug(True, '-', show_package = True)
             bottle.debug(True)
-            log('DEBUG found in req_environ')
+            log('DEBUG found in env')
             log('setting bottle.debug to True')
         elif config('DEBUG', cast = bool, default = False):
             # Value in settings.ini file is True.
             set_debug(True, '-', show_package = True)
             bottle.debug(True)
             log('DEBUG set true in settings.ini')
+
+        # Determine our base url and set it once. No sense it computing this
+        # on every call, because it won't change while running.  Set a custom
+        # property on the dibs Bottle object so our server code can read it.
+        if 'SERVER_NAME' not in env or env['SERVER_NAME'] == '':
+            raise ValueError('SERVER_NAME not set in WSGI environment')
+        host = env['SERVER_NAME']
+        if 'wsgi.url_scheme' in env:
+            url = f'{env["wsgi.url_scheme"]}://{host}'
+        elif 'REQUEST_SCHEME' in env:
+            url = f'{env["REQUEST_SCHEME"]}://{host}'
+        elif 'SERVER_PORT' in env and env['SERVER_PORT'] == '443':
+            url = f'https://{host}'
+        else:
+            url = f'http://{host}'
+        if 'SERVER_PORT' in env and env['SERVER_PORT'] not in ['80', '443']:
+            url = f'{url}:{env["SERVER_PORT"]}'
+        if 'SCRIPT_NAME' in env:
+            url = f'{url}/{env["SCRIPT_NAME"]}'
+        log(f'setting our base_url to {url}')
+        dibs.base_url = url
+
+        # Mark this done.
         dibs._config_done = True
+
     # Now call the real DIBS Bottle server to process the request.
-    return dibs(req_environ, start_response)
+    return dibs(env, start_response)
 
 
 # Hook in the default WSGI interface application.  Mod_wsgi looks for a
