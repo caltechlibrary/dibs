@@ -710,7 +710,9 @@ def included_file(filename):
 
 def base_url():
     # Bottle is unusual in providing global objects like 'request'.
-    return f'{request.urlparts.scheme}://{request.urlparts.netloc}'
+    parts = request.urlparts
+    path  = '' if parts.path == '/' else parts.path
+    return f'{parts.scheme}://{parts.netloc}{path}'
 
 
 def page(name, session, **kargs):
