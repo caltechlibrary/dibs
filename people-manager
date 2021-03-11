@@ -7,7 +7,7 @@ from hashlib import blake2b
 
 from decouple import config
 from peewee import SqliteDatabase
-from dibs import Person, update_password
+from dibs.people import Person, update_password
 
 people_db = config('DATABASE_FILE', default='dibs.db')
 
