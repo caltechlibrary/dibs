@@ -55,34 +55,29 @@ def dibs_application(env, start_response):
             set_debug(True, '-', show_package = True)
             log('VERBOSE found in env')
 
-        # DEBUG in env overrides settings.ini.
-        if 'DEBUG' in env:
-            # Passed via setenv by run-server or Apache conf file.
+        # DEBUG in env overrides settings.ini, hence test it first.
+        if 'DEBUG' in env or config('DEBUG', cast = bool, default = False):
             set_debug(True, '-', show_package = True)
             bottle.debug(True)
-            log('DEBUG found in env')
-            log('setting bottle.debug to True')
-        elif config('DEBUG', cast = bool, default = False):
-            # Value in settings.ini file is True.
-            set_debug(True, '-', show_package = True)
-            bottle.debug(True)
-            log('DEBUG set true in settings.ini')
+            dibs.catchall = False       # Make Bottle go into pdb on exceptions
+            log('DEBUG is True -- running on debug mode')
 
-        # Determine our base url and set it once. No sense it computing this
+        # Determine our base url and set it once. No sense in computing this
         # on every call, because it won't change while running.  Set a custom
         # property on the dibs Bottle object so our server code can read it.
         if 'SERVER_NAME' not in env or env['SERVER_NAME'] == '':
             raise ValueError('SERVER_NAME not set in WSGI environment')
         host = env['SERVER_NAME']
-        if 'wsgi.url_scheme' in env:
+        if 'wsgi.url_scheme' in env and env["wsgi.url_scheme"] != '':
             url = f'{env["wsgi.url_scheme"]}://{host}'
-        elif 'REQUEST_SCHEME' in env:
+        elif 'REQUEST_SCHEME' in env and env["REQUEST_SCHEME"] != '':
             url = f'{env["REQUEST_SCHEME"]}://{host}'
         elif 'SERVER_PORT' in env and env['SERVER_PORT'] == '443':
             url = f'https://{host}'
         else:
             url = f'http://{host}'
-        if 'SERVER_PORT' in env and env['SERVER_PORT'] not in ['80', '443']:
+        if ('SERVER_PORT' in env and env['SERVER_PORT'] != ''
+            and env['SERVER_PORT'] not in ['80', '443']):
             url = f'{url}:{env["SERVER_PORT"]}'
         if 'SCRIPT_NAME' in env:
             url = f'{url}{env["SCRIPT_NAME"]}'
