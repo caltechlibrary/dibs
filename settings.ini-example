@@ -21,7 +21,7 @@ MAIL_SENDER = helpdesk@library.caltech.edu
 
 # User session details.
 COOKIE_NAME     = dibs
-COOKIE_LIFETIME = 86400
+SESSION_TIMEOUT = 604800
 
 # Time a user must wait between when they return a title and when they can
 # loan it out again (in minutes).
