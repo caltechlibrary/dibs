@@ -1,0 +1,13 @@
+<svg viewBox="0 0 200 37" xmlns="http://www.w3.org/2000/svg">
+  <style>.normal { font: 6px Helvetica; }</style>
+  <rect x="1" y="1" rx="5" width="99%" height="35" style="stroke: red; stroke-width: 0.5; fill-opacity: 0; stroke-opacity: 0.8" />
+  <text x="1" y="10" class="normal"><tspan x="50%" text-anchor="middle">
+    Warning: DIBS is still <tspan style='alignment-baseline:inherit;font-weight:bold;'>in development</tspan>.</tspan>
+  </text>
+  <text x="1" y="20" class="normal"><tspan x="50%" text-anchor="middle">
+    It does not yet implement a full authentication scheme and is</tspan>
+  </text>
+  <text x="1" y="30" class="normal"><tspan x="50%" text-anchor="middle" style='alignment-baseline:inherit;font-weight:bold;'>
+    not yet suitable for production use</tspan>.
+  </text>
+</svg>
