@@ -10,7 +10,7 @@
 import bottle
 from   decouple import config
 from   os import chdir
-from   os.path import exists, join, realpath, dirname
+from   os.path import realpath, dirname
 from   sidetrack import log, set_debug
 import sys
 
@@ -27,24 +27,25 @@ chdir(app_directory)
 
 from dibs import dibs
 
-# Mod_wsgi runs this .wsgi adapter with a clean environment; you cannot pass
-# arguments to this wrapper, nor set environment variables in os.environ in
-# the calling code and then read them here.  Mod_wsgi expects tha you use a
-# separate config file or alternative .wsgi scripts for different run-time
-# configurations.  That's okay, but it makes it difficult if you want to keep
-# things simple and not use multiple adapter files.  So, the approach taken
-# here is the following:
+# Notes:
 #
-#  1. dibs_application(...) does a one-time operation to look for environment
-#     variables and/or settings.ini values.  It sets a flag and skips the
-#     operation on subsequent invocations.
+# 1) We set a variable on "dibs" (the application object), named "base_url",
+# in the function dibs_application() below.  Our application code in
+# dibs/server.py relies on it.  It's done as a one-time setting.
 #
-#  2. Our run-server control script sets environment variables if the verbose
-#     or debug options are given. That's what dibs_application(...) checks for.
-#
-# Note that THIS ENTRY POINT IS CALLED EVERY TIME a request comes in, for any
-# page.  For efficiency, the following code is a bit roundabout but it's to
-# avoid things like calling config() every time.
+# 2) Mod_wsgi runs this .wsgi adapter with a clean environment; you cannot pass
+# arguments to this wrapper. Mod_wsgi expects tha you use a separate config
+# file or alternative .wsgi scripts for different run-time configurations.
+# That's okay, but it makes it difficult if you want to keep things simple
+# and not use multiple adapter files.  So, the approach taken here is to have
+# dibs_application(...) do a one-time operation to look for environment
+# variables and/or settings.ini values that change some behaviors.  It sets a
+# flag and skips that step on subsequent invocations.  This allows us to do
+# some configurations based on environment variables and settings.ini files
+# (instead of having different .wsgi files for different configurations), yet
+# avoid the inefficiency of doing that at every invocation.  Our "run-server"
+# script takes advantage of that: it uses mod_wsgi-express's ability to set
+# environment variables, and sets DEBUG or VERBOSE if the user requests it.
 
 dibs._config_done = False
 
@@ -81,8 +82,8 @@ def dibs_application(env, start_response):
             url = f'{url}:{env["SERVER_PORT"]}'
         if 'SCRIPT_NAME' in env:
             url = f'{url}{env["SCRIPT_NAME"]}'
-        log(f'setting our base_url to {url}')
         dibs.base_url = url
+        log(f'dibs.base_url = {url}')
 
         # Mark this done.
         dibs._config_done = True
