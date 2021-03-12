@@ -27,11 +27,13 @@ The concept of [controlled digital lending](https://en.wikipedia.org/wiki/Contro
 
 Access to materials in Caltech DIBS is limited to current Caltech faculty, students and staff, but the software for DIBS itself is open-sourced under a BSD type license.
 
+<p align="center"><img width="60%" src=".graphics/status-warning.svg"></p>
+
 
 Requirements
 -----------
 
-DIBS is written in Python 3 and depends on additional software to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universal Viewer; [Redis](https://redis.io), a NoSQL datastore used by DIBS for session management; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.
+DIBS is written in Python 3 and depends on additional software to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universal Viewer; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.
 
 
 Installation
@@ -60,7 +62,7 @@ Next, install the Python dependencies on your system or your virtual environment
 
 ```sh
 cd dibs
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt --upgrade
 ```
 
 ### ⓷ _Install Node dependencies_
@@ -73,58 +75,13 @@ npm install
 ```
 
 
-### ⓸ _Install Redis_
+Usage: running the server locally
+---------------------------------
 
-You also need to have a Redis database running on the local host.  If you are using Homebrew on macOS, the simplest way to do that is the following:
-
-```sh
-brew install redis
-```
-
-If you are using MacPorts on macOS, the simplest way to do that is the following:
-
-```sh
-sudo port install redis
-```
-
-On Debian/Ubuntu/Raspberry Pi OS do the following:
-
-```sh
-sudo apt install redis
-```
-
-You can leave the default Redis settings as-is for the DIBS demo.
+For demonstration purposes as well as development, it's very convenient to run DIBS on your local machine.  The following instructions describe the process assuming that DIBS has never been configured or run on your system.
 
 
-Usage: running the server on localhost
---------------------------------------
-
-### ⓵ _Start the Redis server_
-
-First, start the Redis server.  If you are using Homebrew, this can be done using the following command:
-
-```sh
-brew services start redis
-```
-
-Using MacPorts you can start/stop with the following commands:
-
-```sh
-sudo port load redis
-sudo port unload redis
-```
-
-On Debian/Ubuntu/Raspberry Pi OS you can start/stop with the following commands:
-
-```sh
-sudo systemctl start redis
-sudo systemctl stop redis
-```
-
-You can test if Redis is running properly by issuing the command `redis-cli ping`.  It should return the answer `PONG`.
-
-
-### ⓶ _Copy the sample `settings.ini` configuration file_
+### ⓵ _Copy the sample `settings.ini` configuration file_
 
 The file `settings.ini-example` is a sample configuration file for DIBS.  Copy the file to `settings.ini`,
 
@@ -132,10 +89,10 @@ The file `settings.ini-example` is a sample configuration file for DIBS.  Copy t
 cp settings.ini-example settings.ini
 ```
 
-and edit the contents in a text editor to suit your local installation.
+and edit its contents in a text editor to suit your local installation.
 
 
-### ⓷ _Load a sample book into DIBS_
+### ⓶ _Load a sample book into DIBS_
 
 Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py):
 
@@ -144,16 +101,16 @@ python3 load-mock-data.py
 ```
 
 
-### ⓸ _Load a sample user into DIBS_
+### ⓷ _Load a sample user into DIBS_
 
-The program [`people-manager`](people-manager) is an interface to adding and manipulating user data.  To log in to the demo DIBS configuration, create at least one user with a role of "library":
+The program [`people-manager`](people-manager) is an interface to adding and manipulating user data.  To log into the demo DIBS configuration, create at least one user with a role of "library":
 
 ```sh
-./people-manager add uname= display_name= role="library" secret=
+./people-manager add role="library" uname= secret=
 ```
 
 
-### ⓹ _Start the DIBS server_
+### ⓸ _Start the DIBS server_
 
 The script [`run-server`](run-server) can be used to start a local copy of the server for experimentation and development.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
@@ -184,32 +141,6 @@ _Important_: debug mode also turns off auto-reloading of source files, so be awa
 
 General information
 -------------------
-
-Settings are stored in the file [`settings.ini`](settings.ini).  This file is read at run time by the server and database components.
-
-### _About Peewee_
-
-The definition of the database is in [`dibs/database.py`](dibs/database.py).  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is [Peewee](http://docs.peewee-orm.com/en/latest/).
-
-Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee `ModelSelector`, and not a single result or a list of results:
-
-```python
-Item.select().where(Item.barcode == barcode)
-```
-
-and you can't call something like Python's `next(...)` on this because it's an iterator and not a generator.  You have to either use a `for` loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it's not a concern currently.
-
-
-### _About Bottle_
-
-The definition of the service endpoints and the behaviors is in [`dibs/server.py`](dibs/server.py).  The endpoints are implemented using [Bottle](https://bottlepy.org).
-
-The web server used at the moment is the development server provided by Bottle.  It has live reload built-in, meaning that changes to the `.py` files are picked up automatically and the server updates its behavior on the fly.
-
-See http://bottlepy.org/docs/dev/tutorial.html#auto-reloading for an important note about Bottle: when it's running in auto-reload mode, _"the main process will not start a server, but spawn a new child process using the same command line arguments used to start the main process. All module-level code is executed at least twice"_.  This means some care is needed in how the top-level code is written.  Useful to know is that code can distinguish whether it's in the parent or child process by looking for the presence of the environment variable `'BOTTLE_CHILD'` set by Bottle in the child process.
-
-
-### _About the documentation_
 
 The docs are available online at [https://caltechlibrary.github.io/dibs/](https://caltechlibrary.github.io/dibs/).  They are built using [Sphinx](https://www.sphinx-doc.org) and [MyST](https://myst-parser.readthedocs.io/en/latest/index.html).  The sources are kept in the [`docs`](./docs) subdirectory.  The [`README.md`](./docs/README.md) file in the [`docs`](./docs) subdirectory explains how to build and preview the documentation locally.
 
