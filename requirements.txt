@@ -24,3 +24,4 @@ python-daemon   >= 2.2.4
 python-decouple >= 3.4
 rich            >= 9.2.0
 sidetrack       >= 1.4.0
+yurl            >= 1.0.0
