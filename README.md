@@ -112,7 +112,7 @@ The program [`people-manager`](people-manager) is an interface to adding and man
 
 ### ⓸ _Start the DIBS server_
 
-The script [`run-server`](run-server) can be used to start a local copy of the server for experimentation and development.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
+For local experimentation and development, the script [`run-server`](run-server) can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
 ```sh
 ./run-server -h
@@ -124,19 +124,17 @@ You can run it without any arguments to try out DIBS.  By default it starts the 
 ./run-server
 ```
 
-If you are doing development on DIBS, you may find the `--verbose` flag helpful, to see more information about what DIBS is doing in response to every request:
+To see more information about about what DIBS is doing in response to every request, you may find the option `--verbose` useful:
 
 ```sh
 ./run-server --verbose
 ```
 
-The server will automatically reload the source files if any of them are edited.  If you need to put breakpoints in the code, the `--debug` flag is useful; it disables template caching and turns on other debugging features:
+If you are doing development on DIBS, you may find the run-mode option `-m` useful.  Using the value `debug` changes the server behavior in various useful ways, such as to reload the source files automatically if any of them are edited and to run `pdb` upon any exceptions.  (It also turns on `--verbose` automatically.)
 
 ```sh
-./run-server --debug
+./run-server --mode debug
 ```
-
-_Important_: debug mode also turns off auto-reloading of source files, so be aware you have to restart the server manually if you edit source files in debug mode.
 
 
 General information
