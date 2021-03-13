@@ -4,6 +4,13 @@ database.py: object definitions for the database
 This uses Peewee (http://docs.peewee-orm.com/en/latest/), a small ORM that
 allows writing database code entirely in terms of Python objects without
 having to know much about SQL.
+
+Copyright
+---------
+
+Copyright (c) 2021 by the California Institute of Technology.  This code
+is open-source software released under a 3-clause BSD license.  Please see the
+file "LICENSE" for more information.
 '''
 
 from decouple import config

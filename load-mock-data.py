@@ -1,3 +1,11 @@
+# =============================================================================
+# @file    load-mock-data.py
+# @brief   Load some sample data for DIBS
+# @created 2021-01-07
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
 from datetime import datetime, timedelta
 from decouple import config
 from peewee import SqliteDatabase

@@ -1,6 +1,7 @@
 # =============================================================================
 # @file    adapter.wsgi
 # @brief   WSGI adapter for DIBS
+# @created 2021-02-01
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
