@@ -29,12 +29,12 @@ from dibs import dibs
 
 # Notes:
 #
-# 1) We set a variable on "dibs" (the application object), named "base_url",
-# in the function dibs_application() below.  Our application code in
-# dibs/server.py relies on it.  It's done as a one-time setting.
+# 1) In the function dibs_application() below, we set variable "base_url" on
+# "dibgs" (our application object).  Our application code in dibs/server.py
+# relies on this being set.  It's set only once.
 #
 # 2) Mod_wsgi runs this .wsgi adapter with a clean environment; you cannot pass
-# arguments to this wrapper. Mod_wsgi expects tha you use a separate config
+# arguments to this wrapper. Mod_wsgi expects that you use a separate config
 # file or alternative .wsgi scripts for different run-time configurations.
 # That's okay, but it makes it difficult if you want to keep things simple
 # and not use multiple adapter files.  So, the approach taken here is to have
@@ -45,42 +45,43 @@ from dibs import dibs
 # (instead of having different .wsgi files for different configurations), yet
 # avoid the inefficiency of doing that at every invocation.  Our "run-server"
 # script takes advantage of that: it uses mod_wsgi-express's ability to set
-# environment variables, and sets DEBUG or VERBOSE if the user requests it.
+# environment variables, and sets debug & verbose options if requested.
 
 dibs._config_done = False
 
 def dibs_application(env, start_response):
     '''DIBS wrapper around Bottle WSGI application.'''
     if not dibs._config_done:
-        if 'VERBOSE' in env:
+        if env.get('VERBOSE', False):
             set_debug(True, '-', show_package = True)
             log('VERBOSE found in env')
 
-        # DEBUG in env overrides settings.ini, hence test it first.
-        if 'DEBUG' in env or config('DEBUG', cast = bool, default = False):
+        # Note 1: even though run-server does set_debug, need do it again here.
+        # Note 2: RUN_MODE in env overrides settings.ini, hence test it first.
+        mode = env.get('RUN_MODE', '') or config('RUN_MODE', default = 'normal')
+        if mode in ['test', 'dev', 'debug']:
             set_debug(True, '-', show_package = True)
             bottle.debug(True)
-            dibs.catchall = False       # Make Bottle go into pdb on exceptions
-            log('DEBUG is True -- running on debug mode')
+            dibs.catchall = False       # Make Bottle not ignore exceptions.
+            log(f'run mode is {mode} -- debug options turned on')
 
         # Determine our base url and set it once. No sense in computing this
         # on every call, because it won't change while running.  Set a custom
         # property on the dibs Bottle object so our server code can read it.
-        if 'SERVER_NAME' not in env or env['SERVER_NAME'] == '':
+        if not env.get('SERVER_NAME', None):
             raise ValueError('SERVER_NAME not set in WSGI environment')
         host = env['SERVER_NAME']
-        if 'wsgi.url_scheme' in env and env["wsgi.url_scheme"] != '':
+        if env.get('wsgi.url_scheme', None):
             url = f'{env["wsgi.url_scheme"]}://{host}'
-        elif 'REQUEST_SCHEME' in env and env["REQUEST_SCHEME"] != '':
+        elif env.get('REQUEST_SCHEME', None):
             url = f'{env["REQUEST_SCHEME"]}://{host}'
-        elif 'SERVER_PORT' in env and env['SERVER_PORT'] == '443':
+        elif env.get('SERVER_PORT', None) and env['SERVER_PORT'] == '443':
             url = f'https://{host}'
         else:
             url = f'http://{host}'
-        if ('SERVER_PORT' in env and env['SERVER_PORT'] != ''
-            and env['SERVER_PORT'] not in ['80', '443']):
+        if env.get('SERVER_PORT', '') and env['SERVER_PORT'] not in ['80', '443']:
             url = f'{url}:{env["SERVER_PORT"]}'
-        if 'SCRIPT_NAME' in env:
+        if env.get('SCRIPT_NAME', ''):
             url = f'{url}{env["SCRIPT_NAME"]}'
         dibs.base_url = url
         log(f'dibs.base_url = {url}')
