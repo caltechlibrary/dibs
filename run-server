@@ -12,8 +12,8 @@
 # twice -- in other words, the code in this file is executed twice when
 # running in Bottle's default server.  It's not an issue for efficiency
 # because this is only used to start the process (so we really don't care too
-# much if some things are doing twice needlessly), but nevertheless, some
-# care is needed to avoid doing things that would cause problems if performed
+# much if some things are done twice needlessly), but nevertheless, some care
+# is needed to avoid doing things that would cause problems if performed
 # twice.  It's possible to determine whether the current process is the
 # parent or child process by testing for the environment variable BOTTLE_CHILD.
 # =============================================================================
@@ -222,7 +222,7 @@ def start_wsgi_server(scheme, host, port, extra_path, mode, verbose):
     # mod_wsgi-express doesn't have a direct way to set parameters; you have
     # to construct a command line parsed by mod_wsgi_start(...).  Oh well.
     args = ['adapter.wsgi', '--host', host, '--port', port,
-            '--setenv', 'START_MODE', mode, '--server-status']
+            '--setenv', 'RUN_MODE', mode, '--server-status']
     if extra_path:
         args += ['--mount-point', extra_path]
     if verbose:
@@ -233,7 +233,7 @@ def start_wsgi_server(scheme, host, port, extra_path, mode, verbose):
         args += ['--error-log-format', '[%{%H:%M:%S}t] %M']
         args += ['--access-log-format', '[%{%a %b %0e %H:%M:%S %Y}t] %h \"%r\" %>s']
     if mode == 'test':
-        args += ['--debug-mode', '--enable-debugger', '--threads', '1']
+        args += ['--enable-debugger', '--threads', '1']
 
     logr(f'starting mod_wsgi with arguments: {" ".join(args)}')
     mod_wsgi_start(args)
