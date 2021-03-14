@@ -140,6 +140,13 @@ def authenticated(func):
     '''Check if the user is authenticated and redirect to /login if not.'''
     @functools.wraps(func)
     def authentication_check_wrapper(*args, **kwargs):
+        if request.method == 'HEAD':
+            # A Beaker session is not present when we get a HEAD.  Unsure if
+            # that's expected or just a Bottle or Beaker behavior.  We can't
+            # proceed with the request, but it's not an error either.  I
+            # haven't found a better alternative than simply returning nothing.
+            if __debug__: log(f'returning empty HEAD on {request.path}')
+            return
         if 'user' not in request.session or request.session['user'] is None:
             if __debug__: log(f'user not found in session object')
             redirect(f'{dibs.base_url}/login')
@@ -147,24 +154,6 @@ def authenticated(func):
             if __debug__: log(f'user is authenticated: {request.session["user"]}')
         return func(*args, **kwargs)
     return authentication_check_wrapper
-
-
-# This next one is needed because some browser plugins seem to cause HTTP HEAD
-# calls on web pages you visit.  Bottle routes them to the same defined
-# endpoints as GET, which ends up causing our functions to be called twice
-# (once for HEAD, once for GET).  It *shouldn't* matter, apart from the extra
-# work, but just in case we make a mistake and end up having a GET handler
-# also cause side-effects, let's just drop those HEAD calls.
-
-def head_method_ignored(func):
-    '''Ignore HTTP HEAD calls on the route.'''
-    @functools.wraps(func)
-    def ignore_head_method_wrapper(*args, **kwargs):
-        if request.method == 'HEAD':
-            if __debug__: log(f'ignoring HEAD on {request.path}')
-            return
-        return func(*args, **kwargs)
-    return ignore_head_method_wrapper
 
 
 # Administrative interface endpoints.
@@ -226,7 +215,6 @@ def logout():
 
 @dibs.get('/list')
 @expired_loans_removed
-@head_method_ignored
 @authenticated
 def list_items():
     '''Display the list of known items.'''
@@ -240,7 +228,6 @@ def list_items():
 
 @dibs.get('/manage')
 @expired_loans_removed
-@head_method_ignored
 @authenticated
 def list_items():
     '''Display the list of known items.'''
@@ -255,7 +242,6 @@ def list_items():
 @dibs.get('/add')
 @expired_loans_removed
 @authenticated
-@head_method_ignored
 def add():
     '''Display the page to add new items.'''
     person = person_from_session(request.session)
@@ -270,7 +256,6 @@ def add():
 @expired_loans_removed
 @barcode_verified
 @authenticated
-@head_method_ignored
 def edit(barcode):
     '''Display the page to add new items.'''
     person = person_from_session(request.session)
@@ -419,7 +404,6 @@ def general_page(name = '/'):
 # so the item page can update itself without reloading the whole page.
 @dibs.get('/item-status/<barcode:int>')
 @authenticated
-@head_method_ignored
 def item_status(barcode):
     '''Returns an item summary status as a JSON string'''
     user = request.session.get('user')
@@ -485,7 +469,6 @@ def item_status(barcode):
 @expired_loans_removed
 @barcode_verified
 @authenticated
-@head_method_ignored
 def show_item_info(barcode):
     '''Display information about the given item.'''
     user = request.session.get('user')
@@ -633,7 +616,6 @@ def end_loan():
 @expired_loans_removed
 @barcode_verified
 @authenticated
-@head_method_ignored
 def send_item_to_viewer(barcode):
     '''Redirect to the viewer.'''
     user = request.session.get('user')
@@ -655,7 +637,6 @@ def send_item_to_viewer(barcode):
 @expired_loans_removed
 @barcode_verified
 @authenticated
-@head_method_ignored
 def return_manifest(barcode):
     '''Return the manifest file for a given item.'''
     user = request.session.get('user')
