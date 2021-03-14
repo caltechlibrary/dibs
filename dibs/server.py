@@ -188,6 +188,7 @@ def show_login_page():
 
 @dibs.post('/login')
 def login():
+    '''Handle performing the login action from the login page.'''
     # NOTE: If SSO is implemented this end point will handle the
     # successful login case applying role rules if necessary.
     email = request.forms.get('email').strip()
@@ -212,9 +213,8 @@ def login():
 
 
 @dibs.post('/logout')
-@expired_loans_removed
-@head_method_ignored
 def logout():
+    '''Handle the logout action from the navbar menu on every page.'''
     if 'user' not in request.session:
         if __debug__: log(f'post /logout invoked by unauthenticated user')
         return
@@ -600,13 +600,13 @@ def loan_item():
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
-@dibs.get('/return/<barcode:int>')
+@dibs.post('/return')
 @expired_loans_removed
 @barcode_verified
 @authenticated
-@head_method_ignored
-def end_loan(barcode):
-    '''Handle http get request to return the given item early.'''
+def end_loan():
+    '''Handle http post request to return the given item early.'''
+    barcode = request.forms.get('barcode').strip()
     user = request.session.get('user')
     if __debug__: log(f'get /return invoked on barcode {barcode} by {user}')
 
