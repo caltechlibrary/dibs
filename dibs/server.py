@@ -211,16 +211,16 @@ def login():
         return page('login')
 
 
-@dibs.get('/logout')
+@dibs.post('/logout')
 @expired_loans_removed
 @head_method_ignored
 def logout():
     if 'user' not in request.session:
-        if __debug__: log(f'get /logout invoked by unauthenticated user')
-    else:
-        user = request.session['user']
-        if __debug__: log(f'get /logout invoked by {user}')
-        del request.session['user']
+        if __debug__: log(f'post /logout invoked by unauthenticated user')
+        return
+    user = request.session['user']
+    if __debug__: log(f'post /logout invoked by {user}')
+    del request.session['user']
     redirect(f'{dibs.base_url}/login')
 
 
@@ -278,8 +278,7 @@ def edit(barcode):
         redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log(f'get /edit invoked on {barcode}')
-    return page('edit', action = 'edit',
-                item = Item.get(Item.barcode == barcode))
+    return page('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
 
 
 @dibs.post('/update/add')

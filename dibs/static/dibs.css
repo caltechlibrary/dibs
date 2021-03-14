@@ -100,3 +100,13 @@ a {
   height: 1.5rem;
   top: 0.5rem
 }
+
+/* Used to make <input> and <button> look like links instead of buttons,
+used in situations where we need to make a link perform a POST request. */
+.link-not-button {
+  background: none!important;
+  border: none;
+  padding: 0!important;
+  text-decoration: underline;
+  cursor: pointer;
+}
