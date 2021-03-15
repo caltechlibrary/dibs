@@ -4,6 +4,7 @@ Caltech DIBS<img width="70em" align="right" src="https://github.com/caltechlibra
 Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's implementation of a basic [controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) system.
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
+[![Python](https://img.shields.io/badge/Python-3.8+-brightgreen.svg?style=flat-square)](https://www.python.org/downloads/release/python-380/)
 
 
 Table of contents
