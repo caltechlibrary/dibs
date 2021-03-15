@@ -14,7 +14,11 @@ Table of contents
 * [Installation](#installation)
 * [Usage: running the server on localhost](#running-the-server-on-localhost)
 * [General information](#general-information)
+* [Known issues and limitations](#known-issues-and-limitations)
+* [Getting help](#getting-help)
+* [Contributing](#contributing)
 * [License](#license)
+* [Authors and history](#authors-and-history)
 * [Acknowledgments](#authors-and-acknowledgments)
 
 
@@ -47,7 +51,7 @@ To install and run DIBS locally, you will need to clone not just the main repo c
 git clone --recursive https://github.com/caltechlibrary/dibs
 ```
 
-If you want to get the `develop` branch as well, the easiest approach may be instead to use the script [`git-clone-complete`](https://github.com/mhucka/small-scripts/blob/main/git-scripts/git-clone-complete) for doing deep clones of github repositories:
+If you want to get the `develop` branch as well, the easiest approach may be instead to use the script [`git-clone-complete`](https://github.com/mhucka/small-scripts/blob/main/git-scripts/git-clone-complete) for doing deep clones of GitHub repositories:
 
 ```sh
 git-clone-complete https://github.com/caltechlibrary/dibs
@@ -143,6 +147,30 @@ General information
 The docs are available online at [https://caltechlibrary.github.io/dibs/](https://caltechlibrary.github.io/dibs/).  They are built using [Sphinx](https://www.sphinx-doc.org) and [MyST](https://myst-parser.readthedocs.io/en/latest/index.html).  The sources are kept in the [`docs`](./docs) subdirectory.  The [`README.md`](./docs/README.md) file in the [`docs`](./docs) subdirectory explains how to build and preview the documentation locally.
 
 
+Known issues and limitations
+----------------------------
+
+DIBS is in active development.  The current version was produced rapidly, and some of its current features are a consequence of working towards a minimal viable product as quickly as possible.  **The current version has known limitations** that we intend to address before it can be deployed for real use.  Among the known problems:
+
+* _Authentication is not yet handled_.  The login and session handling in the current version are temporary minimal implementations for demo purposes only.  We are working on integrating our institution's SSO.
+
+* _Item pages use polling for loan status checks_.  We will replace the current polling-based status checks with something more efficient in the very near future.
+
+* _No queue for loan requests_.  This is a conscious design decision.  Queuing systems tend to lead to complexity quickly, and we want to delay implementing a queue until it becomes clear that it's really essential.  (After all, in a physical library, there are no queues for borrowing books: you go to see if it's available, and if it's not, you can't borrow it.)  Perhaps we can implement interfaces and behaviors in DIBS that avoid the need for a queue at all!
+
+
+Getting help and support
+------------------------
+
+If you find an issue, please submit it in [the GitHub issue tracker](https://github.com/caltechlibrary/dibs/issues) for this repository.
+
+
+Contributing
+------------
+
+We would be happy to receive your help and participation with enhancing DIBS!  Please visit the [guidelines for contributing](CONTRIBUTING.md) for some tips on getting started.
+
+
 License
 -------
 
@@ -151,12 +179,36 @@ Software produced by the Caltech Library is Copyright (C) 2021, Caltech.  This s
 This repository includes other software as submodules.  They have their own software licenses.
 
 
+Authors and history
+---------------------------
+
+DIBS was designed and implemented by [Michael Hucka](https://github.com/mhucka), [Robert Doiel](https://github.com/rsdoiel), [Tommy Keswick](https://github.com/t4k) and [Stephen Davison](https://github.com/nosivads) of the Caltech Library's [Digital Library Development team](https://www.library.caltech.edu/staff?&field_directory_department%5B0%5D=754).
+
+
 Acknowledgments
 ---------------
 
 This work was funded by the California Institute of Technology Library.
 
 The [vector artwork](https://thenounproject.com/term/book-waiting/1531542/) of a book with a clock on it, used as the icon for this project, was created by [Royyan Wijaya](https://thenounproject.com/roywj/) from the Noun Project.  It is licensed under the Creative Commons [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/) license.
+
+DIBS makes use of numerous open-source packages, without which it would have been effectively impossible to develop DIBS with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
+
+* [Beaker](https://beaker.readthedocs.io/en/latest/) &ndash; a library for sessions and caching for web applications
+* [Boltons](https://github.com/mahmoud/boltons/) &ndash; package of miscellaneous Python utilities
+* [Bottle](https://bottlepy.org) &ndash; a lightweight WSGI micro web framework for Python
+* [CommonPy](https://github.com/caltechlibrary/commonpy) &ndash; a collection of commonly-useful Python functions
+* [humanize](https://github.com/jmoiron/humanize) &ndash; make numbers more easily readable by humans
+* [ipdb](https://github.com/gotcha/ipdb) &ndash; the IPython debugger
+* [mod_wsgi](http://www.modwsgi.org) &ndash; an Apache module for hosting Python WSGI web applications
+* [Peewee](http://docs.peewee-orm.com/en/latest/) &ndash; a simple ORM for Python
+* [Plac](https://github.com/ialbert/plac) &ndash; a command line argument parser
+* [Python Decouple](https://github.com/henriquebastos/python-decouple/) &ndash; a high-level configuration file interface
+* [Rich](https://rich.readthedocs.io/en/latest/) &ndash; library for writing styled text to the terminal
+* [Sidetrack](https://github.com/caltechlibrary/sidetrack) &ndash; simple debug logging/tracing package
+* [Topi](https://github.com/caltechlibrary/commonpy) &ndash; a simple package for getting data from a TIND.io ILS instance
+* [Yurl](https://github.com/homm/yurl/) &ndash; an alternative to urlparse for parsing URLs in Python
+
 
 <div align="center">
   <br>
