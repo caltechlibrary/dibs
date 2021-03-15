@@ -1,13 +1,29 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    run-server
+# @brief   Wrapper around mod_wsgi-express to start DIBS server for testing
+# @created 2021-01-12
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+# Note: mod_wsgi is only needed by run-server. You can comment it out if you
+# are not using run-server and you run into problems installing it on your
+# system. (Tip: on Ubuntu 20, mod_wsgi won't install without the apache2-dev
+# library on the system. If you get an error about "apxs" missing, try doing
+# `sudo apt install apache2-dev` and then try pip install mod_wsgi again.)
+
+beaker          >= 1.11.0
 boltons         >= 20.2.0
 bottle          >= 0.12.0
-bottle-session  >= 1.0
-bun             >= 0.0.5
-commonpy        >= 1.0.0
-cssselect       >= 1.1.0
-lxml            >= 4.6.2
+commonpy        >= 1.3.0
+humanize        >= 0.5.1
+mod-wsgi        >= 4.7.1
 peewee          >= 3.14.0
 plac            >= 1.2.0
 python-daemon   >= 2.2.4
 python-decouple >= 3.4
-ratelimit       >= 2.2.1
-sidetrack       >= 1.3.0
+rich            >= 9.2.0
+sidetrack       >= 1.4.0
+topi            >= 1.0.1
+yurl            >= 1.0.0

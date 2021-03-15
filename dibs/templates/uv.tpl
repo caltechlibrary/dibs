@@ -12,6 +12,30 @@
 
     <script src="{{base_url}}/viewer/uv/lib/offline.js"></script>
     <script src="{{base_url}}/viewer/uv/helpers.js"></script>
+    <script>
+     function maybeEndLoan() {
+       if (confirm('This will end your loan immediately. You will need to wait '
+                 + '{{reloan_wait_time}} before borrowing this item again.')) {
+
+         var form = document.createElement('form');
+         form.setAttribute('id', 'returnButton');
+         form.setAttribute('method', 'post');
+         form.setAttribute('action', '{{base_url}}/return');
+         form.style.display = 'hidden';
+         document.body.appendChild(form)
+
+         var input = document.createElement('input');
+         input.setAttribute('type', 'hidden');
+         input.setAttribute('name', 'barcode');
+         input.setAttribute('value', '{{barcode}}');
+         document.getElementById('returnButton').appendChild(input);
+
+         form.submit();
+       } else {
+         return false;
+       }
+     }
+    </script>
 
     <style>
      html, body { height: 97% }
@@ -33,11 +57,7 @@
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
-                onclick="if ( confirm('This will end your loan immediately. '
-                                    + 'You will need to wait {{reloan_wait_time}} '
-                                    + 'before being able to borrow this item again.'
-                                    )) { window.location = '{{base_url}}/return/{{barcode}}';}
-                                        else { return false; }">
+                onclick="maybeEndLoan();">
           End loan now</button>
       </div>
     </div>

@@ -4,6 +4,13 @@ database.py: object definitions for the database
 This uses Peewee (http://docs.peewee-orm.com/en/latest/), a small ORM that
 allows writing database code entirely in terms of Python objects without
 having to know much about SQL.
+
+Copyright
+---------
+
+Copyright (c) 2021 by the California Institute of Technology.  This code
+is open-source software released under a 3-clause BSD license.  Please see the
+file "LICENSE" for more information.
 '''
 
 from decouple import config
@@ -11,15 +18,19 @@ from peewee import SqliteDatabase, Model
 from peewee import CharField, TextField, IntegerField, SmallIntegerField
 from peewee import ForeignKeyField, AutoField, DateTimeField, BooleanField
 
-
-# Database object schemas
+
+# Local constants.
 # .............................................................................
 
-_db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+_DATABASE = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+
+
+# Database object schemas.
+# .............................................................................
 
 class BaseModel(Model):
     class Meta:
-        database = _db
+        database = _DATABASE
 
 
 # Each item available for loaning out gets a separate Item object in the

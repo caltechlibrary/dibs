@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# =============================================================================
+# @file    people-manager
+# @brief   Add users for DIBS demos
+# @created 2021-01-25
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
 
 import sys
 import os
@@ -7,7 +14,7 @@ from hashlib import blake2b
 
 from decouple import config
 from peewee import SqliteDatabase
-from dibs import Person, update_password
+from dibs.people import Person, update_password
 
 people_db = config('DATABASE_FILE', default='dibs.db')
 

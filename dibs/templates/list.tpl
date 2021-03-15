@@ -18,7 +18,7 @@
 
       <div class="container-fluid main-container">
         <h2 class="mx-auto text-center pb-2 mt-4">
-          There are {{len(items)}} items in the system
+          Items in DIBS
         </h2>
         <div class="d-grid gap-3">
 

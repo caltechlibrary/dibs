@@ -15,7 +15,9 @@
   <div class="collapse navbar-collapse" id="navbar-menu">
     <ul class="nav navbar-nav text-right">
       %if logged_in:
-        <li><a href="{{base_url}}/logout">Logout</a></li>
+        <form action="{{base_url}}/logout" method="POST">
+          <input class="link-not-button" type="submit" name="edit" value="Logout"/>
+        </form>
       %else:
         <li><a href="{{base_url}}/login">Staff login</a></li>
       %end

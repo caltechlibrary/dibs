@@ -1,171 +1,152 @@
 '''
-server.py: server definition for DIBS
+server.py: DIBS server definition.
 
-This uses Bottle (https://bottlepy.org/docs/stable/), a simple micro framework
-for web services similar to Flask.
+Copyright
+---------
+
+Copyright (c) 2021 by the California Institute of Technology.  This code
+is open-source software released under a 3-clause BSD license.  Please see the
+file "LICENSE" for more information.
 '''
 
-import json
-from   contextlib import redirect_stderr
-from   datetime import datetime, timedelta
-from   decouple import config
+from   beaker.middleware import SessionMiddleware
 import bottle
 from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
-from   bottle_session import SessionPlugin
+from   datetime import datetime, timedelta
+from   decouple import config
 import functools
 from   humanize import naturaldelta
-import logging
-from   peewee import *
-from   topi import Tind
+import json
 import os
-from   os import path
-import smtplib
+from   os.path import realpath, dirname, join
+from   peewee import *
+import sys
 import threading
+from   topi import Tind
 
+from .database import Item, Loan, Recent
+from .date_utils import human_datetime
+from .email import send_email
 from .people import Person, check_password, person_from_session
 from .roles import role_to_redirect, has_required_role
 
 if __debug__:
-    from sidetrack import log
-
-from .database import Item, Loan, Recent
+    from sidetrack import log, logr, set_debug
 
 
-# Constants used throughout this file.
+# General configuration and initialization.
 # .............................................................................
 
-# Where our Bottle templates are stored.
-_TEMPLATE_DIR = config('TEMPLATE_DIR')
+# Begin by creating a Bottle object on which we will define routes.  At the end
+# of this file, we will replace this object with the final exported application.
+dibs = Bottle()
+
+# Tell Bottle where to find templates.  This is necessary for both the Bottle
+# template() command to work and also to get %include to work inside our .tpl
+# template files.  Rather surprisingly, the only way to tell Bottle where to
+# find the templates is to set this Bottle package-level variable.
+bottle.TEMPLATE_PATH.append(join(realpath(dirname(__file__)), 'templates'))
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME')))
+_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME') or 30))
 
-# Lock object used around some code to prevent concurrent modification.
-_THREAD_LOCK = threading.Lock()
+# Where we send users to give feedback.
+_FEEDBACK_URL = config('FEEDBACK_URL') or '/'
 
-# Body of email message sent to users
-_EMAIL = '''From: {sender}
-To: {user}
-Subject: {subject}
+# The next constant is used to configure Beaker sessions. This is used at
+# the very end of this file in the call to SessionMiddleware.
+_SESSION_CONFIG = {
+    # Use simple in-memory session handling.  Ultimately we will only need
+    # sessions for the admin pages, and we won't have many users.
+    'session.type'           : 'memory',
 
-You started a digital loan through Caltech DIBS at {start}.
+    # Save session data automatically, without requiring us to call save().
+    'session.auto'           : True,
 
-  Title: {item.title}
-  Author: {item.author}
+    # Session cookies should be accessible only to the browser, not JavaScript.
+    'session.httponly'       : True,
 
-  The loan period ends at {end}
-  Web viewer: {viewer}
+    # Clear sessions when the user restarts their browser.
+    'session.cookie_expires' : True,
 
-Information about loan policies can be found at {info_page}
+    # The name of the session cookie.
+    'session.key'            : config('COOKIE_NAME') or 'dibs',
 
-Thank you for using Caltech DIBS. We hope the experience is a pleasant one.
-Please don't hesitate to send us feedback using our anonymous feedback form
-at {feedback}
-'''
-
-
-# Global Bottle configuration.
-# .............................................................................
-
-# Tell Bottle where to find templates.  This is also important to get %include
-# to work inside our .tpl template files.
-bottle.TEMPLATE_PATH.append(_TEMPLATE_DIR)
-
-# Session handling via a Redis-backed database.
-bottle.install(SessionPlugin(cookie_name = config('COOKIE_NAME'),
-                             cookie_lifetime = config('COOKIE_LIFETIME')))
+    # Seconds until the session is invalidated.
+    'session.timeout'        : config('SESSION_TIMEOUT', cast = int) or 604800,
+}
 
 
-# ServerConfig class is used to allow the WSGI adapter to map a base url
-# appropriately and exposing that in the templates as well as to the 
-# redirect calls.
+# General-purpose utilities used later.
 # .............................................................................
-class ServerConfig():
-    def __init__(self):
-        self.base_url = 'http://localhost:8080'
 
-    def set_base_url(self, base_url):
-        self.base_url = base_url
-        return self.base_url
-
-    def get_base_url(self):
-        return self.base_url
-
-# We need to instantiate our class so it if available
-server_config = ServerConfig()
+def page(name, **kargs):
+    '''Create a page using template "name" with some standard variables set.'''
+    # Bottle is unusual in providing global objects like 'request'.
+    session = request.environ['beaker.session']
+    logged_in = bool(session.get('user', None))
+    staff_user = has_required_role(person_from_session(session), 'library')
+    return template(name, base_url = dibs.base_url, logged_in = logged_in,
+                    staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)
 
 
-# Decorators used throughout this file.
+# Bootle hooks -- functions that are run every time a route is invoked.
 # .............................................................................
 
-def expired_loans_removed(func):
-    '''Clean up expired loans before the function is called.'''
-    # FIXME: Checking the loans at every function call is not efficient.  This
-    # approach needs to be replaced with something more efficient.
-    @functools.wraps(func)
-    def expired_loan_removing_wrapper(session, *args, **kwargs):
-        for loan in Loan.select():
-            if datetime.now() >= loan.endtime:
-                barcode = loan.item.barcode
-                if __debug__: log(f'creating recent record for {barcode} by {loan.user}')
-                Recent.create(item = loan.item, user = loan.user,
-                              nexttime = loan.endtime + timedelta(minutes = 1))
-                if __debug__: log(f'expiring loan of {barcode} by {loan.user}')
-                loan.delete_instance()
-        for recent in Recent.select():
-            if datetime.now() >= recent.nexttime:
-                barcode = recent.item.barcode
-                if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
-                recent.delete_instance()
-        return func(session, *args, **kwargs)
-    return expired_loan_removing_wrapper
+@dibs.hook('before_request')
+def expired_loan_removing_wrapper():
+    '''Clean up expired loans.'''
+    for loan in Loan.select():
+        if datetime.now() >= loan.endtime:
+            barcode = loan.item.barcode
+            if __debug__: log(f'loan for {barcode} by {loan.user} expired')
+            Recent.create(item = loan.item, user = loan.user,
+                          nexttime = loan.endtime + timedelta(minutes = 1))
+            loan.delete_instance()
+    for recent in Recent.select():
+        if datetime.now() >= recent.nexttime:
+            barcode = recent.item.barcode
+            if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
+            recent.delete_instance()
 
+
+# Decorators -- functions that are run selectively on certain routes.
+# .............................................................................
 
 def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
     @functools.wraps(func)
-    def barcode_verification_wrapper(session, *args, **kwargs):
+    def barcode_verification_wrapper(*args, **kwargs):
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
             if not Item.get_or_none(Item.barcode == barcode):
                 if __debug__: log(f'there is no item with barcode {barcode}')
-                return page('error', session, summary = 'no such barcode',
+                return page('error', summary = 'no such barcode',
                             message = f'There is no item with barcode {barcode}.')
-        return func(session, *args, **kwargs)
+        return func(*args, **kwargs)
     return barcode_verification_wrapper
 
 
 def authenticated(func):
     '''Check if the user is authenticated and redirect to /login if not.'''
     @functools.wraps(func)
-    def authentication_check_wrapper(session, *args, **kwargs):
-        base_url = server_config.get_base_url()
-        if 'user' not in session or session['user'] is None:
+    def authentication_check_wrapper(*args, **kwargs):
+        if request.method == 'HEAD':
+            # A Beaker session is not present when we get a HEAD.  Unsure if
+            # that's expected or just a Bottle or Beaker behavior.  We can't
+            # proceed with the request, but it's not an error either.  I
+            # haven't found a better alternative than simply returning nothing.
+            if __debug__: log(f'returning empty HEAD on {request.path}')
+            return
+        session = request.environ['beaker.session']
+        if not session.get('user', None):
             if __debug__: log(f'user not found in session object')
-            redirect(f'{base_url}/login')
+            redirect(f'{dibs.base_url}/login')
         else:
             if __debug__: log(f'user is authenticated: {session["user"]}')
-        return func(session, *args, **kwargs)
+        return func(*args, **kwargs)
     return authentication_check_wrapper
-
-
-# This next one is needed because some browser plugins seem to cause HTTP HEAD
-# calls on web pages you visit.  Bottle routes them to the same defined
-# endpoints as GET, which ends up causing our functions to be called twice
-# (once for HEAD, once for GET).  It *shouldn't* matter, apart from the extra
-# work, but just in case we make a mistake and end up having a GET handler
-# also cause side-effects, let's just drop those HEAD calls.
-
-def head_method_ignored(func):
-    '''Ignore HTTP HEAD calls on the route.'''
-    @functools.wraps(func)
-    def ignore_head_method_wrapper(session, *args, **kwargs):
-        if request.method == 'HEAD':
-            if __debug__: log(f'ignoring HEAD on {request.path}')
-            return
-        return func(session, *args, **kwargs)
-    return ignore_head_method_wrapper
 
 
 # Administrative interface endpoints.
@@ -179,19 +160,19 @@ def head_method_ignored(func):
 # end points to remain for users who are defined in the system only.
 # This can be helpful in the case of admin users or service accounts.
 
-@get('/login')
-def show_login_page(session):
+@dibs.get('/login')
+def show_login_page():
     # NOTE: If SSO is implemented this should redirect to the
     # SSO end point with a return to /login on success.
     if __debug__: log('get /login invoked')
-    return page('login', session)
+    return page('login')
 
 
-@post('/login')
-def login(session):
+@dibs.post('/login')
+def login():
+    '''Handle performing the login action from the login page.'''
     # NOTE: If SSO is implemented this end point will handle the
     # successful login case applying role rules if necessary.
-    base_url = server_config.get_base_url()
     email = request.forms.get('email').strip()
     password = request.forms.get('password')
     if __debug__: log(f'post /login invoked by {email}')
@@ -200,122 +181,110 @@ def login(session):
     if user != None:
         if check_password(password, user.secret) == False:
             if __debug__: log(f'wrong password -- rejecting {email}')
-            return page('login', session)
+            return page('login')
         else:
             if __debug__: log(f'creating session for {email}')
+            session = request.environ['beaker.session']
             session['user'] = email
             p = role_to_redirect(user.role)
             if __debug__: log(f'redirecting to "{p}"')
-            redirect(f'{base_url}/{p}')
+            redirect(f'{dibs.base_url}/{p}')
             return
     else:
         if __debug__: log(f'wrong password -- rejecting {email}')
-        return page('login', session)
+        return page('login')
 
 
-@get('/logout')
-@expired_loans_removed
-@head_method_ignored
-def logout(session):
-    base_url = server_config.get_base_url()
-    if 'user' not in session:
-        if __debug__: log(f'get /logout invoked by unauthenticated user')
-        redirect(f'{base_url}/login')
-    else:
-        user = session['user']
-        if __debug__: log(f'get /logout invoked by {user}')
-        del session['user']
-        redirect(f'{base_url}/login')
+@dibs.post('/logout')
+def logout():
+    '''Handle the logout action from the navbar menu on every page.'''
+    session = request.environ['beaker.session']
+    if not session.get('user', None):
+        if __debug__: log(f'post /logout invoked by unauthenticated user')
+        return
+    user = session['user']
+    if __debug__: log(f'post /logout invoked by {user}')
+    del session['user']
+    redirect(f'{dibs.base_url}/login')
 
 
-@get('/list')
-@expired_loans_removed
-@head_method_ignored
+@dibs.get('/list')
 @authenticated
-def list_items(session):
+def list_items():
     '''Display the list of known items.'''
-    person = person_from_session(session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
-        redirect(f'/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log('get /list invoked')
-    return page('list', session, items = Item.select())
+    return page('list', items = Item.select())
 
 
-@get('/manage')
-@expired_loans_removed
-@head_method_ignored
+@dibs.get('/manage')
 @authenticated
-def list_items(session):
+def list_items():
     '''Display the list of known items.'''
-    person = person_from_session(session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
-        redirect(f'/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log('get /manage invoked')
-    return page('manage', session, items = Item.select())
+    return page('manage', items = Item.select())
 
 
-@get('/add')
-@expired_loans_removed
+@dibs.get('/add')
 @authenticated
-@head_method_ignored
-def add(session):
+def add():
     '''Display the page to add new items.'''
-    person = person_from_session(session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
-        redirect(f'/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log('get /add invoked')
-    return page('edit', session, action = 'add', item = None)
+    return page('edit', action = 'add', item = None)
 
 
-@get('/edit/<barcode:int>')
-@expired_loans_removed
+@dibs.get('/edit/<barcode:int>')
 @barcode_verified
 @authenticated
-@head_method_ignored
-def edit(session, barcode):
+def edit(barcode):
     '''Display the page to add new items.'''
-    person = person_from_session(session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
-        redirect(f'/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log(f'get /edit invoked on {barcode}')
-    return page('edit', session, action = 'edit',
-                item = Item.get(Item.barcode == barcode))
+    return page('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
 
 
-@post('/update/add')
-@post('/update/edit')
-@expired_loans_removed
+@dibs.post('/update/add')
+@dibs.post('/update/edit')
 @authenticated
-def update_item(session):
+def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
-    base_url = server_config.get_base_url()
-    person = person_from_session(session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
-        redirect(f'/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     if __debug__: log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         if __debug__: log(f'user clicked Cancel button')
-        redirect(f'{base_url}/list')
+        redirect(f'{dibs.base_url}/list')
         return
 
     # The HTML form validates the data types, but the POST might come from
     # elsewhere, so we always need to sanity-check the values.
     barcode = request.forms.get('barcode').strip()
     if not barcode.isdigit():
-        return page('error', session, summary = 'invalid barcode',
+        return page('error', summary = 'invalid barcode',
                     message = f'{barcode} is not a valid barcode')
     duration = request.forms.get('duration').strip()
     if not duration.isdigit() or int(duration) <= 0:
-        return page('error', session, summary = 'invalid duration',
+        return page('error', summary = 'invalid duration',
                     message = f'Duration must be a positive number')
     num_copies = request.forms.get('num_copies').strip()
     if not num_copies.isdigit() or int(num_copies) <= 0:
-        return page('error', session, summary = 'invalid copy number',
+        return page('error', summary = 'invalid copy number',
                     message = f'# of copies must be a positive number')
 
     # Our current approach only uses items with barcodes that exist in TIND.
@@ -325,7 +294,7 @@ def update_item(session):
         rec = tind.item(barcode = barcode).parent
     except:
         if __debug__: log(f'could not find {barcode} in TIND')
-        return page('error', session, summary = 'no such barcode',
+        return page('error', summary = 'no such barcode',
                     message = f'There is no item with barcode {barcode}.')
         return
 
@@ -333,7 +302,7 @@ def update_item(session):
     if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
-            return page('error', session, summary = 'duplicate entry',
+            return page('error', summary = 'duplicate entry',
                         message = f'An item with barcode {{barcode}} already exists.')
         if __debug__: log(f'adding {barcode}, title {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
@@ -343,7 +312,7 @@ def update_item(session):
     else:
         if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
-            return page('error', session, summary = 'no such barcode',
+            return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
         if __debug__: log(f'updating {barcode} from {rec}')
 	#FIXME: Need to validate these values.
@@ -356,16 +325,14 @@ def update_item(session):
         #    setattr(item, field, getattr(rec, field, ''))
 	# NOTE: We only update the specific editable fields.
         item.save(only=[Item.barcode, Item.num_copies, Item.duration])
-    redirect(f'{base_url}/list')
+    redirect(f'{dibs.base_url}/list')
 
 
-@post('/ready')
-@expired_loans_removed
+@dibs.post('/ready')
 @barcode_verified
 @authenticated
-def toggle_ready(session):
+def toggle_ready():
     '''Set the ready-to-loan field.'''
-    base_url = server_config.get_base_url()
     barcode = request.POST.barcode.strip()
     ready = (request.POST.ready.strip() == 'True')
     if __debug__: log(f'post /ready invoked on barcode {barcode}')
@@ -381,19 +348,17 @@ def toggle_ready(session):
     if list(Loan.select(Loan.item == item)):
         if __debug__: log(f'loans for {barcode} have been deleted')
         Loan.delete().where(Loan.item == item).execute()
-    redirect(f'{base_url}/list')
+    redirect(f'{dibs.base_url}/list')
 
 
-@post('/remove')
-@expired_loans_removed
+@dibs.post('/remove')
 @barcode_verified
 @authenticated
-def remove_item(session):
+def remove_item():
     '''Handle http post request to remove an item from the list page.'''
-    base_url = server_config.get_base_url()
-    person = person_from_session(session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
-        redirect(f'/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
@@ -404,36 +369,32 @@ def remove_item(session):
     if list(Loan.select(Loan.item == item)):
         Loan.delete().where(Loan.item == item).execute()
     Item.delete().where(Item.barcode == barcode).execute()
-    redirect(f'{base_url}/manage')
+    redirect(f'{dibs.base_url}/manage')
 
 
 # User endpoints.
 # .............................................................................
 
-@get('/')
-@get('/info')
-@get('/welcome')
-def front_page(session):
+@dibs.get('/')
+@dibs.get('/<name:re:(info|welcome|about|thankyou)>')
+def general_page(name = '/'):
     '''Display the welcome page.'''
-    if __debug__: log('get / invoked')
-    return page('info', session, reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
+    if __debug__: log(f'get {name} invoked')
+    if name == 'about':
+        return page('about')
+    elif name == 'thankyou':
+        return page('thankyou')
+    else:
+        return page('info', reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
 
-
-@get('/about')
-def about_page(session):
-    '''Display the welcome page.'''
-    if __debug__: log('get /about invoked')
-    return page('about', session)
 
 #FIXME: We need an item status which returns a JSON object
 # so the item page can update itself without reloading the whole page.
-@get('/item-status/<barcode:int>')
+@dibs.get('/item-status/<barcode:int>')
 @authenticated
-@head_method_ignored
-def item_status(session, barcode):
+def item_status(barcode):
     '''Returns an item summary status as a JSON string'''
-    base_url = server_config.get_base_url()
-    user = session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /item-status invoked on barcode {barcode} and {user}')
 
     obj = {
@@ -442,7 +403,7 @@ def item_status(session, barcode):
         'available': False,
         'explanation': '',
         'endtime' : None,
-        'base_url': base_url
+        'base_url': dibs.base_url
         }
     item = Item.get_or_none(Item.barcode == barcode)
     if (item != None) and (user != None):
@@ -492,14 +453,12 @@ def item_status(session, barcode):
     return json.dumps(obj)
 
 
-@get('/item/<barcode:int>')
-@expired_loans_removed
+@dibs.get('/item/<barcode:int>')
 @barcode_verified
 @authenticated
-@head_method_ignored
-def show_item_info(session, barcode):
+def show_item_info(barcode):
     '''Display information about the given item.'''
-    user = session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /item invoked on barcode {barcode} by {user}')
 
     item = Item.get(Item.barcode == barcode)
@@ -517,8 +476,7 @@ def show_item_info(session, barcode):
         # to the viewer; if it's for another title, block the loan button.
         if user_loans[0].item == item:
             if __debug__: log(f'{user} already has {barcode}; redirecting to uv')
-            base_url = server_config.get_base_url()
-            redirect(f'{base_url}/view/{barcode}')
+            redirect(f'{dibs.base_url}/view/{barcode}')
             return
         else:
             if __debug__: log(f'{user} already has a loan on something else')
@@ -542,18 +500,19 @@ def show_item_info(session, barcode):
             # It's available and they can have it.
             endtime = datetime.now()
             explanation = None
-    return page('item', session, item = item, available = available,
+    return page('item', item = item, available = available,
                 endtime = human_datetime(endtime), explanation = explanation)
 
 
-@post('/loan')
-@expired_loans_removed
+# Lock object used around some code to prevent concurrent modification.
+_THREAD_LOCK = threading.Lock()
+
+@dibs.post('/loan')
 @barcode_verified
 @authenticated
-def loan_item(session):
+def loan_item():
     '''Handle http post request to loan out an item, from the item info page.'''
-    base_url = server_config.get_base_url()
-    user = session.get('user')
+    user = request.environ['beaker.session'].get('user')
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by {user}')
 
@@ -563,7 +522,7 @@ def loan_item(session):
         # case, so either staff has changed the status after item was made
         # available or someone got here accidentally (or deliberately).
         if __debug__: log(f'{barcode} is not ready for loans')
-        redirect(f'{base_url}/view/{barcode}')
+        redirect(f'{dibs.base_url}/view/{barcode}')
         return
 
     # The default Bottle dev web server is single-thread, so we won't run into
@@ -575,7 +534,7 @@ def loan_item(session):
     with _THREAD_LOCK:
         if any(Loan.select().where(Loan.user == user)):
             if __debug__: log(f'{user} already has a loan on something else')
-            return page('error', session, summary = 'only one loan at a time',
+            return page('error', summary = 'only one loan at a time',
                         message = ('Our policy currently prevents users from '
                                    'borrowing more than one item at a time.'))
         loans = list(Loan.select().where(Loan.item == item))
@@ -585,18 +544,18 @@ def loan_item(session):
             # something weird happens (e.g., double posting), we might.
             if __debug__: log(f'{user} already has a copy of {barcode} loaned out')
             if __debug__: log(f'redirecting {user} to /view for {barcode}')
-            redirect(f'{base_url}/view/{barcode}')
+            redirect(f'{dibs.base_url}/view/{barcode}')
             return
         if len(loans) >= item.num_copies:
             # This shouldn't be possible, but catch it anyway.
             if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-            redirect(f'{base_url}/item/{barcode}')
+            redirect(f'{dibs.base_url}/item/{barcode}')
             return
         recent_history = list(Recent.select().where(Recent.item == item))
         if any(loan for loan in recent_history if loan.user == user):
             if __debug__: log(f'{user} recently borrowed {barcode}')
             recent = next(loan for loan in recent_history if loan.user == user)
-            return page('error', session, summary = 'too soon',
+            return page('error', summary = 'too soon',
                         message = ('We ask that you wait at least '
                                    f'{naturaldelta(_RELOAN_WAIT_TIME)} before '
                                    'requesting the same item again. Please try '
@@ -606,19 +565,17 @@ def loan_item(session):
         end   = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
-        send_email(user, item, start, end)
-    redirect(f'{base_url}/view/{barcode}')
+        send_email(user, item, start, end, dibs.base_url)
+    redirect(f'{dibs.base_url}/view/{barcode}')
 
 
-@get('/return/<barcode:int>')
-@expired_loans_removed
+@dibs.post('/return')
 @barcode_verified
 @authenticated
-@head_method_ignored
-def end_loan(session, barcode):
-    '''Handle http get request to return the given item early.'''
-    base_url = server_config.get_base_url()
-    user = session.get('user')
+def end_loan():
+    '''Handle http post request to return the given item early.'''
+    barcode = request.forms.get('barcode').strip()
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /return invoked on barcode {barcode} by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -637,40 +594,35 @@ def end_loan(session, barcode):
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-    redirect(f'{base_url}/thankyou')
+    redirect(f'{dibs.base_url}/thankyou')
 
 
-@get('/view/<barcode:int>')
-@expired_loans_removed
+@dibs.get('/view/<barcode:int>')
 @barcode_verified
 @authenticated
-@head_method_ignored
-def send_item_to_viewer(session, barcode):
+def send_item_to_viewer(barcode):
     '''Redirect to the viewer.'''
-    base_url = server_config.get_base_url()
-    user = session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /view invoked on barcode {barcode} by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     user_loans = [loan for loan in loans if user == loan.user]
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
-        return page('uv', session, barcode = barcode,
+        return page('uv', barcode = barcode,
                     endtime = human_datetime(user_loans[0].endtime),
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        redirect(f'{base_url}/item/{barcode}')
+        redirect(f'{dibs.base_url}/item/{barcode}')
 
 
-@get('/manifests/<barcode:int>')
-@expired_loans_removed
+@dibs.get('/manifests/<barcode:int>')
 @barcode_verified
 @authenticated
-@head_method_ignored
-def return_manifest(session, barcode):
+def return_manifest(barcode):
     '''Return the manifest file for a given item.'''
-    user = session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /manifests/{barcode} invoked by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -679,13 +631,8 @@ def return_manifest(session, barcode):
         return static_file(f'{barcode}-manifest.json', root = 'manifests')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
-        redirect(f'/notallowed')
+        redirect(f'{dibs.base_url}/notallowed')
         return
-
-
-@get('/thankyou')
-def say_thank_you(session):
-    return page('thankyou', session)
 
 
 # Universal viewer interface.
@@ -694,15 +641,15 @@ def say_thank_you(session):
 # files to anyone; they don't need to be controlled.  The multiple routes
 # are because the UV files themselves reference different paths.
 
-@route('/view/uv/<filepath:path>')
-@route('/viewer/uv/<filepath:path>')
+@dibs.route('/view/uv/<filepath:path>')
+@dibs.route('/viewer/uv/<filepath:path>')
 def serve_uv_files(filepath):
     if __debug__: log(f'serving static uv file /viewer/uv/{filepath}')
     return static_file(filepath, root = 'viewer/uv')
 
 
 # The uv subdirectory contains generic html and css. Serve as static files.
-@route('/viewer/<filepath:path>')
+@dibs.route('/viewer/<filepath:path>')
 def serve_uv_files(filepath):
     if __debug__: log(f'serving static uv file /viewer/{filepath}')
     return static_file(filepath, root = 'viewer')
@@ -712,24 +659,24 @@ def serve_uv_files(filepath):
 # .............................................................................
 # Note: the Bottle session plugin does not seem to supply session arg to @error.
 
-@get('/notallowed')
-@post('/notallowed')
-def not_allowed(session):
+@dibs.get('/notallowed')
+@dibs.post('/notallowed')
+def not_allowed():
     if __debug__: log(f'serving /notallowed')
-    return page('error', session, summary = 'access error',
+    return page('error', summary = 'access error',
                 message = ('The requested method does not exist or you do not '
                            'not have permission to access the requested item.'))
 
 @error(404)
 def error404(error):
     if __debug__: log(f'error404 called with {error}')
-    return page('404', None, code = error.status_code, message = error.body)
+    return page('404', code = error.status_code, message = error.body)
 
 
 @error(405)
 def error405(error):
     if __debug__: log(f'error405 called with {error}')
-    return page('error', session = None, summary = 'method not allowed',
+    return page('error', summary = 'method not allowed',
                 message = ('The requested method does not exist or you do not '
                            'not have permission to perform the action.'))
 
@@ -737,84 +684,25 @@ def error405(error):
 # Miscellaneous static pages.
 # .............................................................................
 
-@get('/favicon.ico')
+@dibs.get('/favicon.ico')
 def favicon():
     '''Return the favicon.'''
     if __debug__: log(f'returning favicon')
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js)>')
+@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js)>')
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     if __debug__: log(f'returning included file {filename}')
     return static_file(filename, root = 'dibs/static')
 
 
-# Server runner.
+# Main exported application.
 # .............................................................................
+# In the file above, we defined a Bottle application and its routes.  Now we
+# take that application definition and hand it to a middleware layer for
+# session handling (using Beaker).  The new "dibs" constitutes the final
+# application that is invoked by the WSGI server via ../adapter.wsgi.
 
-class Server():
-    def __init__(self, host = 'localhost', port = 8080,
-                 debug = False, reload = True):
-        if __debug__ and not ('BOTTLE_CHILD' in os.environ):
-            log(f'initializing Server object')
-        self.host = host
-        self.port = int(port)
-        self.debug = debug
-        self.reload = reload
-
-
-    def run(self):
-        child = ('BOTTLE_CHILD' in os.environ)
-        if __debug__: log(f'running {"child " if child else ""}server process')
-        if self.debug:
-            sidetrack_logger = logging.getLogger('sidetrack')
-            sidetrack_stream = sidetrack_logger.handlers[0].stream
-            with redirect_stderr(sidetrack_stream):
-                bottle.debug(True)
-                bottle.run(host = self.host, port = self.port, reloader = self.reload)
-        else:
-            bottle.run(host = self.host, port = self.port, reloader = self.reload)
-
-
-# Miscellaneous utilities.
-# .............................................................................
-
-def page(name, session, **kargs):
-    base_url = server_config.get_base_url()
-    logged_in = (session and 'user' in session and session['user'] is not None)
-    if session:
-        staff_user = has_required_role(person_from_session(session), 'library')
-    else:
-        staff_user = False
-    feedback_url = config('FEEDBACK_URL')
-    return template(name, base_url = base_url, logged_in = logged_in,
-                    staff_user = staff_user, feedback_url = feedback_url, **kargs)
-
-
-def human_datetime(dt):
-    '''Return a more human-friendly string representing the given datetime.'''
-    return dt.strftime("%I:%M %p on %Y-%m-%d") if dt else None
-
-
-def send_email(user, item, start, end):
-   base_url = server_config.get_base_url()
-   try:
-       subject = f'Caltech DIBS loan for "{item.title}"'
-       viewer = f'{base_url}/view/{item.barcode}'
-       info_page = f'{base_url}/info'
-       body = _EMAIL.format(item      = item,
-                            start     = human_datetime(start),
-                            end       = human_datetime(end),
-                            viewer    = viewer,
-                            info_page = info_page,
-                            user      = user,
-                            subject   = subject,
-                            sender    = config('MAIL_SENDER'),
-                            feedback  = config('FEEDBACK_URL'))
-       if __debug__: log(f'sending mail to {user} about loan of {item.barcode}')
-       mailer  = smtplib.SMTP(config('MAIL_HOST'))
-       mailer.sendmail(config('MAIL_SENDER'), [user], body)
-   except Exception as ex:
-       if __debug__: log(f'unable to send mail: {str(ex)}')
+dibs = SessionMiddleware(dibs, _SESSION_CONFIG)
