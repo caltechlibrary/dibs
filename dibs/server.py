@@ -67,9 +67,6 @@ _SESSION_CONFIG = {
     # Session cookies should be accessible only to the browser, not JavaScript.
     'session.httponly'       : True,
 
-    # Clear sessions when the user restarts their browser.
-    'session.cookie_expires' : True,
-
     # The name of the session cookie.
     'session.key'            : config('COOKIE_NAME') or 'dibs',
 
