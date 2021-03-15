@@ -77,50 +77,42 @@ _SESSION_CONFIG = {
     'session.timeout'        : config('SESSION_TIMEOUT', cast = int) or 604800,
 }
 
-# This next definition is for convenience only, to make Beaker's session
-# available from the Bottle request object.  We use that throughout our code.
-@dibs.hook('before_request')
-def copy_session():
-    request.session = request.environ['beaker.session']
-
 
 # General-purpose utilities used later.
 # .............................................................................
 
 def page(name, **kargs):
-    '''Create a page using template "name", with some standard variables set.'''
+    '''Create a page using template "name" with some standard variables set.'''
     # Bottle is unusual in providing global objects like 'request'.
-    session = request.session
-    logged_in = (session and 'user' in session and session['user'] is not None)
-    staff_user = has_required_role(person_from_session(request.session), 'library')
+    session = request.environ['beaker.session']
+    logged_in = bool(session.get('user', None))
+    staff_user = has_required_role(person_from_session(session), 'library')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)
 
 
-# Decorators used throughout this file.
+# Bootle hooks -- functions that are run every time a route is invoked.
 # .............................................................................
 
-def expired_loans_removed(func):
-    '''Clean up expired loans before the function is called.'''
-    # FIXME: Checking the loans at every function call is not efficient.  This
-    # approach needs to be replaced with something more efficient.
-    @functools.wraps(func)
-    def expired_loan_removing_wrapper(*args, **kwargs):
-        for loan in Loan.select():
-            if datetime.now() >= loan.endtime:
-                barcode = loan.item.barcode
-                if __debug__: log(f'loan for {barcode} by {loan.user} expired')
-                Recent.create(item = loan.item, user = loan.user,
-                              nexttime = loan.endtime + timedelta(minutes = 1))
-                loan.delete_instance()
-        for recent in Recent.select():
-            if datetime.now() >= recent.nexttime:
-                barcode = recent.item.barcode
-                if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
-                recent.delete_instance()
-        return func(*args, **kwargs)
-    return expired_loan_removing_wrapper
+@dibs.hook('before_request')
+def expired_loan_removing_wrapper():
+    '''Clean up expired loans.'''
+    for loan in Loan.select():
+        if datetime.now() >= loan.endtime:
+            barcode = loan.item.barcode
+            if __debug__: log(f'loan for {barcode} by {loan.user} expired')
+            Recent.create(item = loan.item, user = loan.user,
+                          nexttime = loan.endtime + timedelta(minutes = 1))
+            loan.delete_instance()
+    for recent in Recent.select():
+        if datetime.now() >= recent.nexttime:
+            barcode = recent.item.barcode
+            if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
+            recent.delete_instance()
 
+
+# Decorators -- functions that are run selectively on certain routes.
+# .............................................................................
 
 def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
@@ -147,11 +139,12 @@ def authenticated(func):
             # haven't found a better alternative than simply returning nothing.
             if __debug__: log(f'returning empty HEAD on {request.path}')
             return
-        if 'user' not in request.session or request.session['user'] is None:
+        session = request.environ['beaker.session']
+        if not session.get('user', None):
             if __debug__: log(f'user not found in session object')
             redirect(f'{dibs.base_url}/login')
         else:
-            if __debug__: log(f'user is authenticated: {request.session["user"]}')
+            if __debug__: log(f'user is authenticated: {session["user"]}')
         return func(*args, **kwargs)
     return authentication_check_wrapper
 
@@ -191,7 +184,8 @@ def login():
             return page('login')
         else:
             if __debug__: log(f'creating session for {email}')
-            request.session['user'] = email
+            session = request.environ['beaker.session']
+            session['user'] = email
             p = role_to_redirect(user.role)
             if __debug__: log(f'redirecting to "{p}"')
             redirect(f'{dibs.base_url}/{p}')
@@ -204,21 +198,21 @@ def login():
 @dibs.post('/logout')
 def logout():
     '''Handle the logout action from the navbar menu on every page.'''
-    if 'user' not in request.session:
+    session = request.environ['beaker.session']
+    if not session.get('user', None):
         if __debug__: log(f'post /logout invoked by unauthenticated user')
         return
-    user = request.session['user']
+    user = session['user']
     if __debug__: log(f'post /logout invoked by {user}')
-    del request.session['user']
+    del session['user']
     redirect(f'{dibs.base_url}/login')
 
 
 @dibs.get('/list')
-@expired_loans_removed
 @authenticated
 def list_items():
     '''Display the list of known items.'''
-    person = person_from_session(request.session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -227,11 +221,10 @@ def list_items():
 
 
 @dibs.get('/manage')
-@expired_loans_removed
 @authenticated
 def list_items():
     '''Display the list of known items.'''
-    person = person_from_session(request.session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -240,11 +233,10 @@ def list_items():
 
 
 @dibs.get('/add')
-@expired_loans_removed
 @authenticated
 def add():
     '''Display the page to add new items.'''
-    person = person_from_session(request.session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -253,12 +245,11 @@ def add():
 
 
 @dibs.get('/edit/<barcode:int>')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def edit(barcode):
     '''Display the page to add new items.'''
-    person = person_from_session(request.session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -268,11 +259,10 @@ def edit(barcode):
 
 @dibs.post('/update/add')
 @dibs.post('/update/edit')
-@expired_loans_removed
 @authenticated
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
-    person = person_from_session(request.session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -339,7 +329,6 @@ def update_item():
 
 
 @dibs.post('/ready')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def toggle_ready():
@@ -363,12 +352,11 @@ def toggle_ready():
 
 
 @dibs.post('/remove')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
-    person = person_from_session(request.session)
+    person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -406,7 +394,7 @@ def general_page(name = '/'):
 @authenticated
 def item_status(barcode):
     '''Returns an item summary status as a JSON string'''
-    user = request.session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /item-status invoked on barcode {barcode} and {user}')
 
     obj = {
@@ -466,12 +454,11 @@ def item_status(barcode):
 
 
 @dibs.get('/item/<barcode:int>')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def show_item_info(barcode):
     '''Display information about the given item.'''
-    user = request.session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /item invoked on barcode {barcode} by {user}')
 
     item = Item.get(Item.barcode == barcode)
@@ -521,12 +508,11 @@ def show_item_info(barcode):
 _THREAD_LOCK = threading.Lock()
 
 @dibs.post('/loan')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def loan_item():
     '''Handle http post request to loan out an item, from the item info page.'''
-    user = request.session.get('user')
+    user = request.environ['beaker.session'].get('user')
     barcode = request.POST.barcode.strip()
     if __debug__: log(f'post /loan invoked on barcode {barcode} by {user}')
 
@@ -584,13 +570,12 @@ def loan_item():
 
 
 @dibs.post('/return')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def end_loan():
     '''Handle http post request to return the given item early.'''
     barcode = request.forms.get('barcode').strip()
-    user = request.session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /return invoked on barcode {barcode} by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -613,12 +598,11 @@ def end_loan():
 
 
 @dibs.get('/view/<barcode:int>')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def send_item_to_viewer(barcode):
     '''Redirect to the viewer.'''
-    user = request.session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /view invoked on barcode {barcode} by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
@@ -634,12 +618,11 @@ def send_item_to_viewer(barcode):
 
 
 @dibs.get('/manifests/<barcode:int>')
-@expired_loans_removed
 @barcode_verified
 @authenticated
 def return_manifest(barcode):
     '''Return the manifest file for a given item.'''
-    user = request.session.get('user')
+    user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /manifests/{barcode} invoked by {user}')
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
