@@ -112,8 +112,8 @@ def expired_loans_removed(func):
                               nexttime = loan.endtime + timedelta(minutes = 1))
                 loan.delete_instance()
         # Deleting outdated Recent records is a simpler procedure.
-        deleted = Recent.delete().where(now >= Recent.nexttime).execute()
-        if __debug__ and deleted: log(f'removed {deleted} outdated Recent records')
+        num = Recent.delete().where(now >= Recent.nexttime).execute()
+        if __debug__ and num: log(f'removed {num} outdated Recent records')
         return func(*args, **kwargs)
     return expired_loan_removing_wrapper
 
@@ -338,16 +338,16 @@ def toggle_ready():
     if __debug__: log(f'post /ready invoked on barcode {barcode}')
     item = Item.get(Item.barcode == barcode)
     item.ready = not item.ready
-    # If we're taking an item out of circulation, be safe & get an exclusive
-    # lock to prevent concurrent processes from getting a loan on it.
-    if __debug__: log(f'locking database to change {barcode} ready to {item.ready}')
+    if __debug__: log(f'locking db to change {barcode} ready to {item.ready}')
     with database.atomic('exclusive'):
         item.save(only = [Item.ready])
-        # If the readiness state is changed after the item is let out for
-        # loans, then there may be outstanding loans right now. Delete them.
-        if list(Loan.select(Loan.item == item)):
-            if __debug__: log(f'loans for {barcode} have been deleted')
-            Loan.delete().where(Loan.item == item).execute()
+        # If we removed readiness after the item is let out for loans, we may
+        # have to close outstanding loans and remove Recent records.
+        if not item.ready:
+            num = Loan.delete().where(Loan.item == item).execute()
+            if __debug__ and num: log(f'removed {num} loans for {barcode}')
+            num = Recent.delete().where(Recent.item == item).execute()
+            if __debug__ and num: log(f'removed {num} Recent records for {barcode}')
     redirect(f'{dibs.base_url}/list')
 
 
@@ -361,16 +361,16 @@ def remove_item():
         redirect(f'{dibs.base_url}/notallowed')
         return
     barcode = request.POST.barcode.strip()
-    if __debug__: log(f'post /remove invoked on barcode {barcode}')
-
     item = Item.get(Item.barcode == barcode)
-    if __debug__: log(f'locking database')
+    if __debug__: log(f'locking database to remove {barcode}')
     with database.atomic('exclusive'):
         item.ready = False
         item.save(only = [Item.ready])
-        # Don't forget to delete any loans involving this item.
-        if list(Loan.select(Loan.item == item)):
-            Loan.delete().where(Loan.item == item).execute()
+        # Clean up loans & recents, but do it 1st, while the item object exists.
+        num = Loan.delete().where(Loan.item == item).execute()
+        if __debug__ and num: log(f'removed {num} loans for {barcode}')
+        num = Recent.delete().where(Recent.item == item).execute()
+        if __debug__ and num: log(f'removed {num} Recent records for {barcode}')
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
 
