@@ -668,13 +668,13 @@ def not_allowed():
                 message = ('The requested method does not exist or you do not '
                            'not have permission to access the requested item.'))
 
-@error(404)
+@dibs.error(404)
 def error404(error):
     if __debug__: log(f'error404 called with {error}')
     return page('404', code = error.status_code, message = error.body)
 
 
-@error(405)
+@dibs.error(405)
 def error405(error):
     if __debug__: log(f'error405 called with {error}')
     return page('error', summary = 'method not allowed',
