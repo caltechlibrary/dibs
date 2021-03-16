@@ -1,0 +1,18 @@
+#
+# This file should be included from the Apache site configuration 
+# (e.g. dibs.conf, dibs-ssl.conf, dibs-le-ssl.conf) for allowing 
+# static file and WSGI application to run.
+#
+
+#
+# Web service
+#
+# NOTE: the application directory needs to be owned by www-data:www-data
+#
+# FIXME: Change /Sites/dibs to the appropriate directory and
+# where Apache2 expects to find your application. 
+WSGIDaemonProcess dibs user=www-data group=www-data processes=1 threads=5
+WSGIScriptAlias /dibs /Sites/dibs/adapter.wsgi
+<Directory /Sites/dibs>
+	Require all granted
+</Directory>
