@@ -94,22 +94,21 @@ def page(name, **kargs):
 @dibs.hook('before_request')
 def expired_loan_removing_wrapper():
     '''Clean up expired loans.'''
-    for loan in Loan.select():
-        if datetime.now() >= loan.endtime:
-            if __debug__: log(f'locking database')
-            with database.atomic('immediate'):
-                barcode = loan.item.barcode
-                if __debug__: log(f'loan for {barcode} by {loan.user} expired')
-                Recent.create(item = loan.item, user = loan.user,
-                              nexttime = loan.endtime + timedelta(minutes = 1))
-                loan.delete_instance()
-    for recent in Recent.select():
-        if datetime.now() >= recent.nexttime:
-            if __debug__: log(f'locking database')
-            with database.atomic('immediate'):
-                barcode = recent.item.barcode
-                if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
-                recent.delete_instance()
+    now = datetime.now()
+    for loan in [record for record in Loan.select() if now >= record.endtime]:
+        if __debug__: log(f'locking database')
+        with database.atomic('immediate'):
+            barcode = loan.item.barcode
+            if __debug__: log(f'loan for {barcode} by {loan.user} expired')
+            Recent.create(item = loan.item, user = loan.user,
+                          nexttime = loan.endtime + timedelta(minutes = 1))
+            loan.delete_instance()
+    for recent in [record for record in Recent.select() if now >= record.nexttime]:
+        if __debug__: log(f'locking database')
+        with database.atomic('immediate'):
+            barcode = recent.item.barcode
+            if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
+            recent.delete_instance()
 
 
 # Decorators -- functions that are run selectively on certain routes.
@@ -304,21 +303,23 @@ def update_item():
             if __debug__: log(f'{barcode} already exists in the database')
             return page('error', summary = 'duplicate entry',
                         message = f'An item with barcode {barcode} already exists.')
-        if __debug__: log(f'adding {barcode}, title {rec.title}')
-        # Don't need to get an exclusive database lock for this situation.
-        Item.create(barcode = barcode, title = rec.title, author = rec.author,
-                    tind_id = rec.tind_id, year = rec.year,
-                    edition = rec.edition, thumbnail = rec.thumbnail_url,
-                    num_copies = num_copies, duration = duration)
+        if __debug__: log(f'locking database to add {barcode}, title {rec.title}')
+        with database.atomic():
+            Item.create(barcode = barcode, title = rec.title, author = rec.author,
+                        tind_id = rec.tind_id, year = rec.year,
+                        edition = rec.edition, thumbnail = rec.thumbnail_url,
+                        num_copies = num_copies, duration = duration)
     else:
         if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        item.barcode    = barcode
-        item.duration   = duration
-        item.num_copies = num_copies
-        item.save(only = [Item.barcode, Item.num_copies, Item.duration])
+        if __debug__: log(f'locking database')
+        with database.atomic():
+            item.barcode    = barcode
+            item.duration   = duration
+            item.num_copies = num_copies
+            item.save(only = [Item.barcode, Item.num_copies, Item.duration])
     redirect(f'{dibs.base_url}/list')
 
 
@@ -358,7 +359,7 @@ def remove_item():
 
     item = Item.get(Item.barcode == barcode)
     if __debug__: log(f'locking database')
-    with database.atomic('immediate'):
+    with database.atomic('exclusive'):
         item.ready = False
         item.save(only = [Item.ready])
         # Don't forget to delete any loans involving this item.
