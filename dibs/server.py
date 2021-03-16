@@ -301,22 +301,21 @@ def update_item():
         return page('error', summary = 'invalid copy number',
                     message = f'# of copies must be a positive number')
 
-    # Our current approach only uses items with barcodes that exist in TIND.
-    # If that ever changes, the following needs to change too.
-    tind = Tind('https://caltech.tind.io')
-    try:
-        rec = tind.item(barcode = barcode).parent
-    except:
-        if __debug__: log(f'could not find {barcode} in TIND')
-        return page('error', summary = 'no such barcode',
-                    message = f'There is no item with barcode {barcode}.')
-
     item = Item.get_or_none(Item.barcode == barcode)
     if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
             return page('error', summary = 'duplicate entry',
                         message = f'An item with barcode {barcode} already exists.')
+        # Our current approach only uses items with barcodes that exist in
+        # TIND.  If that ever changes, the following needs to change too.
+        tind = Tind('https://caltech.tind.io')
+        try:
+            rec = tind.item(barcode = barcode).parent
+        except:
+            if __debug__: log(f'could not find {barcode} in TIND')
+            return page('error', summary = 'no such barcode',
+                        message = f'There is no item with barcode {barcode}.')
         if __debug__: log(f'locking database to add {barcode}, title {rec.title}')
         with database.atomic():
             Item.create(barcode = barcode, title = rec.title, author = rec.author,
