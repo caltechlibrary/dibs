@@ -122,12 +122,21 @@ def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
     @functools.wraps(func)
     def barcode_verification_wrapper(*args, **kwargs):
+        # We always call the barcode variable "barcode" in our forms and pages
+        # so it's possible to use this annotation on any route if needed.  This
+        # function handles both GET & POST requests.  In the case of HTTP GET,
+        # there will be an argument to the function called "barcode"; in the
+        # case of HTTP POST, there will be a form variable called "barcode".
+        barcode = None
         if 'barcode' in kwargs:
             barcode = kwargs['barcode']
-            if not Item.get_or_none(Item.barcode == barcode):
-                if __debug__: log(f'there is no item with barcode {barcode}')
-                return page('error', summary = 'no such barcode',
-                            message = f'There is no item with barcode {barcode}.')
+        elif 'barcode' in request.POST:
+            barcode = request.POST.barcode.strip()
+        if __debug__ and barcode: log(f'verifying barcode {barcode}')
+        if barcode and not Item.get_or_none(Item.barcode == barcode):
+            if __debug__: log(f'there is no item with barcode {barcode}')
+            return page('error', summary = 'no such barcode',
+                        message = f'There is no item with barcode {barcode}.')
         return func(*args, **kwargs)
     return barcode_verification_wrapper
 
