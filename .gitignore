@@ -92,3 +92,5 @@ load-staff-members.bash
 settings.ini
 *.swp
 .tern-port
+dibs.conf
+manifests/*-manifest.json
