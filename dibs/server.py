@@ -22,10 +22,9 @@ import os
 from   os.path import realpath, dirname, join
 from   peewee import *
 import sys
-import threading
 from   topi import Tind
 
-from .database import Item, Loan, Recent
+from .database import Item, Loan, Recent, database
 from .date_utils import human_datetime
 from .email import send_email
 from .people import Person, check_password, person_from_session
@@ -39,7 +38,8 @@ if __debug__:
 # .............................................................................
 
 # Begin by creating a Bottle object on which we will define routes.  At the end
-# of this file, we will replace this object with the final exported application.
+# of this file we will redefine this object by wrapping it with middleware, but
+# first we will define routes and other behaviors on the basic Bottle instance.
 dibs = Bottle()
 
 # Tell Bottle where to find templates.  This is necessary for both the Bottle
@@ -96,16 +96,20 @@ def expired_loan_removing_wrapper():
     '''Clean up expired loans.'''
     for loan in Loan.select():
         if datetime.now() >= loan.endtime:
-            barcode = loan.item.barcode
-            if __debug__: log(f'loan for {barcode} by {loan.user} expired')
-            Recent.create(item = loan.item, user = loan.user,
-                          nexttime = loan.endtime + timedelta(minutes = 1))
-            loan.delete_instance()
+            if __debug__: log(f'locking database')
+            with database.atomic('immediate'):
+                barcode = loan.item.barcode
+                if __debug__: log(f'loan for {barcode} by {loan.user} expired')
+                Recent.create(item = loan.item, user = loan.user,
+                              nexttime = loan.endtime + timedelta(minutes = 1))
+                loan.delete_instance()
     for recent in Recent.select():
         if datetime.now() >= recent.nexttime:
-            barcode = recent.item.barcode
-            if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
-            recent.delete_instance()
+            if __debug__: log(f'locking database')
+            with database.atomic('immediate'):
+                barcode = recent.item.barcode
+                if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
+                recent.delete_instance()
 
 
 # Decorators -- functions that are run selectively on certain routes.
@@ -293,15 +297,15 @@ def update_item():
         if __debug__: log(f'could not find {barcode} in TIND')
         return page('error', summary = 'no such barcode',
                     message = f'There is no item with barcode {barcode}.')
-        return
 
     item = Item.get_or_none(Item.barcode == barcode)
     if '/update/add' in request.path:
         if item:
             if __debug__: log(f'{barcode} already exists in the database')
             return page('error', summary = 'duplicate entry',
-                        message = f'An item with barcode {{barcode}} already exists.')
+                        message = f'An item with barcode {barcode} already exists.')
         if __debug__: log(f'adding {barcode}, title {rec.title}')
+        # Don't need to get an exclusive database lock for this situation.
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
                     edition = rec.edition, thumbnail = rec.thumbnail_url,
@@ -311,17 +315,10 @@ def update_item():
             if __debug__: log(f'there is no item with barcode {barcode}')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        if __debug__: log(f'updating {barcode} from {rec}')
-	#FIXME: Need to validate these values.
         item.barcode    = barcode
-        item.num_copies = num_copies
         item.duration   = duration
-	# NOTE: Since we don't have these fields in the edit form we don't
-	# go anything with them.
-        #for field in ['title', 'author', 'year', 'edition', 'tind_id', 'thumbnail']:
-        #    setattr(item, field, getattr(rec, field, ''))
-	# NOTE: We only update the specific editable fields.
-        item.save(only=[Item.barcode, Item.num_copies, Item.duration])
+        item.num_copies = num_copies
+        item.save(only = [Item.barcode, Item.num_copies, Item.duration])
     redirect(f'{dibs.base_url}/list')
 
 
@@ -334,17 +331,19 @@ def toggle_ready():
     ready = (request.POST.ready.strip() == 'True')
     if __debug__: log(f'post /ready invoked on barcode {barcode}')
     item = Item.get(Item.barcode == barcode)
-    # The status we get is the availability status as it currently shown,
-    # meaning the user's action is to change the status.
+    # The status we get from our web form is the availability status as it is
+    # currently, meaning the user's action is to flip the status.
     item.ready = not ready
-    #NOTE: We only save the ready value we toggled.
-    item.save(only=[Item.ready])
-    if __debug__: log(f'readiness of {barcode} is now {item.ready}')
-    # If the readiness state is changed after the item is let out for loans,
-    # then there may be outstanding loans right now. Delete them.
-    if list(Loan.select(Loan.item == item)):
-        if __debug__: log(f'loans for {barcode} have been deleted')
-        Loan.delete().where(Loan.item == item).execute()
+    # If we're taking an item out of circulation, be safe & get an exclusive
+    # lock to prevent concurrent processes from getting a loan on it.
+    if __debug__: log(f'locking database to change {barcode} ready to {item.ready}')
+    with database.atomic('exclusive'):
+        item.save(only = [Item.ready])
+        # If the readiness state is changed after the item is let out for
+        # loans, then there may be outstanding loans right now. Delete them.
+        if list(Loan.select(Loan.item == item)):
+            if __debug__: log(f'loans for {barcode} have been deleted')
+            Loan.delete().where(Loan.item == item).execute()
     redirect(f'{dibs.base_url}/list')
 
 
@@ -361,11 +360,14 @@ def remove_item():
     if __debug__: log(f'post /remove invoked on barcode {barcode}')
 
     item = Item.get(Item.barcode == barcode)
-    item.ready = False
-    # Don't forget to delete any loans involving this item.
-    if list(Loan.select(Loan.item == item)):
-        Loan.delete().where(Loan.item == item).execute()
-    Item.delete().where(Item.barcode == barcode).execute()
+    if __debug__: log(f'locking database')
+    with database.atomic('immediate'):
+        item.ready = False
+        item.save(only = [Item.ready])
+        # Don't forget to delete any loans involving this item.
+        if list(Loan.select(Loan.item == item)):
+            Loan.delete().where(Loan.item == item).execute()
+        Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
 
 
@@ -501,9 +503,6 @@ def show_item_info(barcode):
                 endtime = human_datetime(endtime), explanation = explanation)
 
 
-# Lock object used around some code to prevent concurrent modification.
-_THREAD_LOCK = threading.Lock()
-
 @dibs.post('/loan')
 @barcode_verified
 @authenticated
@@ -515,20 +514,17 @@ def loan_item():
 
     item = Item.get(Item.barcode == barcode)
     if not item.ready:
-        # Normally we shouldn't see a loan request through our form in this
-        # case, so either staff has changed the status after item was made
+        # Normally we shouldn't see a loan request through our form if it's not
+        # ready, so either staff has changed the status after item was made
         # available or someone got here accidentally (or deliberately).
         if __debug__: log(f'{barcode} is not ready for loans')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
 
-    # The default Bottle dev web server is single-thread, so we won't run into
-    # the problem of 2 users simultaneously clicking on the loan button.  Other
-    # servers are multithreaded, and there's a risk that the time it takes us
-    # to look through the loans introduces a window of time when another user
-    # might click on the same loan button and cause another loan request to be
-    # initiated before the 1st finishes.  So, lock this block of code.
-    with _THREAD_LOCK:
+    # Checking if the item is available requires steps, and we have to be sure
+    # that two users don't do them concurrently, or else we might make 2 loans.
+    if __debug__: log(f'locking database')
+    with database.atomic('exclusive'):
         if any(Loan.select().where(Loan.user == user)):
             if __debug__: log(f'{user} already has a loan on something else')
             return page('error', summary = 'only one loan at a time',
@@ -539,12 +535,12 @@ def loan_item():
             # Shouldn't be able to reach this point b/c the item page shouldn't
             # make a loan available for this user & item combo. But if
             # something weird happens (e.g., double posting), we might.
-            if __debug__: log(f'{user} already has a copy of {barcode} loaned out')
+            if __debug__: log(f'{user} already has {barcode} loaned out')
             if __debug__: log(f'redirecting {user} to /view for {barcode}')
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
         if len(loans) >= item.num_copies:
-            # This shouldn't be possible, but catch it anyway.
+            # This shouldn't be possible, but check it anyway.
             if __debug__: log(f'# loans {len(loans)} >= num_copies for {barcode} ')
             redirect(f'{dibs.base_url}/item/{barcode}')
             return
@@ -562,7 +558,8 @@ def loan_item():
         end   = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
-        send_email(user, item, start, end, dibs.base_url)
+
+    send_email(user, item, start, end, dibs.base_url)
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
@@ -582,12 +579,13 @@ def end_loan():
         # item. Right now, we simply log it and move on.
         if __debug__: log(f'error: more than one loan for {barcode} by {user}')
     elif user_loans:
-        # Normal case: user has loaned a copy of item. Delete the record and
-        # add a new Recent loan record.
-        if __debug__: log(f'deleting loan record for {barcode} by {user}')
-        user_loans[0].delete_instance()
-        Recent.create(item = Item.get(Item.barcode == barcode), user = user,
-                      nexttime = datetime.now() + _RELOAN_WAIT_TIME)
+        # Normal case: user has loaned a copy of item. Delete the record
+        # and add a new Recent loan record.
+        if __debug__: log(f'locking database to delete loan of {barcode} by {user}')
+        with database.atomic('immediate'):
+            user_loans[0].delete_instance()
+            Recent.create(item = Item.get(Item.barcode == barcode), user = user,
+                          nexttime = datetime.now() + _RELOAN_WAIT_TIME)
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'{user} does not have {barcode} loaned out')
