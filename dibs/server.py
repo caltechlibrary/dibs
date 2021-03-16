@@ -81,9 +81,9 @@ _SESSION_CONFIG = {
 def page(name, **kargs):
     '''Create a page using template "name" with some standard variables set.'''
     # Bottle is unusual in providing global objects like 'request'.
-    session = request.environ['beaker.session']
-    logged_in = bool(session.get('user', None))
-    staff_user = has_required_role(person_from_session(session), 'library')
+    session = request.environ.get('beaker.session', None)
+    logged_in = session and bool(session.get('user', None))
+    staff_user = logged_in and has_required_role(person_from_session(session), 'library')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)
 
