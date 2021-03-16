@@ -31,7 +31,7 @@ from dibs import dibs
 # Notes:
 #
 # 1) In the function dibs_application() below, we set variable "base_url" on
-# "dibgs" (our application object).  Our application code in dibs/server.py
+# "dibs" (our application object).  Our application code in dibs/server.py
 # relies on this being set.  It's set only once.
 #
 # 2) Mod_wsgi runs this .wsgi adapter with a clean environment; you cannot pass
@@ -47,6 +47,10 @@ from dibs import dibs
 # avoid the inefficiency of doing that at every invocation.  Our "run-server"
 # script takes advantage of that: it uses mod_wsgi-express's ability to set
 # environment variables, and sets debug & verbose options if requested.
+#
+# 3) Keep in mind that mod_wsgi will normally run multiple processes and/or
+# multiple threads (depending on the server configuration), which means this
+# module (adapter.wsgi) will be invoked multiple times.
 
 dibs._config_done = False
 
