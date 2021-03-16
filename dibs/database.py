@@ -19,10 +19,12 @@ from peewee import CharField, TextField, IntegerField, SmallIntegerField
 from peewee import ForeignKeyField, AutoField, DateTimeField, BooleanField
 
 
-# Local constants.
+# Database connection.
 # .............................................................................
+# Note: this is exported too, because other code sometimes needs to use context
+# managers on the database object to perform some atomic operations.
 
-_DATABASE = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+database = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
 
 # Database object schemas.
@@ -30,7 +32,7 @@ _DATABASE = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
 class BaseModel(Model):
     class Meta:
-        database = _DATABASE
+        database = database
 
 
 # Each item available for loaning out gets a separate Item object in the
