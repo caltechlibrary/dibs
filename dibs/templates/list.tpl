@@ -73,7 +73,6 @@
                   <td class="text-center">
                     <form action="{{base_url}}/ready" method="POST">
                       <input type="hidden" name="barcode" value="{{item.barcode}}">
-                      <input type="hidden" name="ready" value="{{item.ready}}">
                       <input type="checkbox" class="checkbox"
                              onChange="this.form.submit()"
                              {{'checked="checked"' if item.ready else ''}}/>

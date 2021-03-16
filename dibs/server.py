@@ -328,12 +328,9 @@ def update_item():
 def toggle_ready():
     '''Set the ready-to-loan field.'''
     barcode = request.POST.barcode.strip()
-    ready = (request.POST.ready.strip() == 'True')
     if __debug__: log(f'post /ready invoked on barcode {barcode}')
     item = Item.get(Item.barcode == barcode)
-    # The status we get from our web form is the availability status as it is
-    # currently, meaning the user's action is to flip the status.
-    item.ready = not ready
+    item.ready = not item.ready
     # If we're taking an item out of circulation, be safe & get an exclusive
     # lock to prevent concurrent processes from getting a loan on it.
     if __debug__: log(f'locking database to change {barcode} ready to {item.ready}')
