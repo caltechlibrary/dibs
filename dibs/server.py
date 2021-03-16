@@ -88,39 +88,35 @@ def page(name, **kargs):
                     staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)
 
 
-# Bootle hooks -- functions that are run every time a route is invoked.
-# .............................................................................
-
-# Expiring loans this way (using a function called at every route invocation)
-# is inefficient, but that's mitigated by the fact that we just don't have a
-# lot of loans at any given time.  On the plus side, the approach has a large
-# advantage of simplicity in a multi-process Apache server configuration.
-# The only alternative would be to implement a reaper process of some kind,
-# which would complicate things significantly.  (If we only had to worry
-# about multiple threads, it would be easier, but our httpd runs processes.)
-
-@dibs.hook('before_request')
-def expired_loan_removing_wrapper():
-    '''Clean up expired loans.'''
-    now = datetime.now()
-    for loan in Loan.select().where(now >= Loan.endtime):
-        if __debug__: log(f'locking database')
-        with database.atomic('immediate'):
-            barcode = loan.item.barcode
-            if __debug__: log(f'loan for {barcode} by {loan.user} expired')
-            Recent.create(item = loan.item, user = loan.user,
-                          nexttime = loan.endtime + timedelta(minutes = 1))
-            loan.delete_instance()
-    for recent in Recent.select().where(now >= Recent.nexttime):
-        if __debug__: log(f'locking database')
-        with database.atomic('immediate'):
-            barcode = recent.item.barcode
-            if __debug__: log(f'expiring recent record for {barcode} by {recent.user}')
-            recent.delete_instance()
-
-
 # Decorators -- functions that are run selectively on certain routes.
 # .............................................................................
+
+# Expiring loans this way is inefficient, but that's mitigated by the fact
+# that we won't have a lot of loans at any given time.  This approach does
+# have an advantage of simplicity in a multi-process Apache server config.
+# The alternative would be to implement a separate reaper process of some
+# kind, complicating things significantly.  (If we only had to worry about
+# multiple threads, it would be easier, but our httpd runs processes.)
+
+def expired_loans_removed(func):
+    '''Clean up expired loans.'''
+    @functools.wraps(func)
+    def expired_loan_removing_wrapper(*args, **kwargs):
+        now = datetime.now()
+        for loan in Loan.select().where(now >= Loan.endtime):
+            if __debug__: log(f'locking database')
+            with database.atomic('immediate'):
+                barcode = loan.item.barcode
+                if __debug__: log(f'loan for {barcode} by {loan.user} expired')
+                Recent.create(item = loan.item, user = loan.user,
+                              nexttime = loan.endtime + timedelta(minutes = 1))
+                loan.delete_instance()
+        # Deleting outdated Recent records is a simpler procedure.
+        deleted = Recent.delete().where(now >= Recent.nexttime).execute()
+        if __debug__ and deleted: log(f'removed {deleted} outdated Recent records')
+        return func(*args, **kwargs)
+    return expired_loan_removing_wrapper
+
 
 def barcode_verified(func):
     '''Check if the given barcode (passed as keyword argument) exists.'''
@@ -267,6 +263,7 @@ def edit(barcode):
 
 @dibs.post('/update/add')
 @dibs.post('/update/edit')
+@expired_loans_removed
 @authenticated
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
@@ -317,17 +314,18 @@ def update_item():
                         tind_id = rec.tind_id, year = rec.year,
                         edition = rec.edition, thumbnail = rec.thumbnail_url,
                         num_copies = num_copies, duration = duration)
-    else:
+    else: # The operation is /update/edit.
         if not item:
             if __debug__: log(f'there is no item with barcode {barcode}')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        if __debug__: log(f'locking database')
+        if __debug__: log(f'locking database to save changes to {barcode}')
         with database.atomic():
             item.barcode    = barcode
             item.duration   = duration
             item.num_copies = num_copies
             item.save(only = [Item.barcode, Item.num_copies, Item.duration])
+            # FIXME if we reduced the number of copies, we need to check loans.
     redirect(f'{dibs.base_url}/list')
 
 
@@ -396,6 +394,7 @@ def general_page(name = '/'):
 #FIXME: We need an item status which returns a JSON object
 # so the item page can update itself without reloading the whole page.
 @dibs.get('/item-status/<barcode:int>')
+@expired_loans_removed
 @authenticated
 def item_status(barcode):
     '''Returns an item summary status as a JSON string'''
@@ -459,6 +458,7 @@ def item_status(barcode):
 
 
 @dibs.get('/item/<barcode:int>')
+@expired_loans_removed
 @barcode_verified
 @authenticated
 def show_item_info(barcode):
@@ -510,6 +510,7 @@ def show_item_info(barcode):
 
 
 @dibs.post('/loan')
+@expired_loans_removed
 @barcode_verified
 @authenticated
 def loan_item():
@@ -570,6 +571,7 @@ def loan_item():
 
 
 @dibs.post('/return')
+@expired_loans_removed
 @barcode_verified
 @authenticated
 def end_loan():
@@ -599,6 +601,7 @@ def end_loan():
 
 
 @dibs.get('/view/<barcode:int>')
+@expired_loans_removed
 @barcode_verified
 @authenticated
 def send_item_to_viewer(barcode):
@@ -619,6 +622,7 @@ def send_item_to_viewer(barcode):
 
 
 @dibs.get('/manifests/<barcode:int>')
+@expired_loans_removed
 @barcode_verified
 @authenticated
 def return_manifest(barcode):
