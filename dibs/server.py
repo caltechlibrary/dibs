@@ -376,7 +376,7 @@ def remove_item():
 @dibs.get('/<name:re:(info|welcome|about|thankyou)>')
 def general_page(name = '/'):
     '''Display the welcome page.'''
-    if __debug__: log(f'get {name} invoked')
+    if __debug__: log(f'get /{name} invoked')
     if name == 'about':
         return page('about')
     elif name == 'thankyou':
