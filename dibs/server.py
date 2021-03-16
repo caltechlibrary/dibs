@@ -91,11 +91,19 @@ def page(name, **kargs):
 # Bootle hooks -- functions that are run every time a route is invoked.
 # .............................................................................
 
+# Expiring loans this way (using a function called at every route invocation)
+# is inefficient, but that's mitigated by the fact that we just don't have a
+# lot of loans at any given time.  On the plus side, the approach has a large
+# advantage of simplicity in a multi-process Apache server configuration.
+# The only alternative would be to implement a reaper process of some kind,
+# which would complicate things significantly.  (If we only had to worry
+# about multiple threads, it would be easier, but our httpd runs processes.)
+
 @dibs.hook('before_request')
 def expired_loan_removing_wrapper():
     '''Clean up expired loans.'''
     now = datetime.now()
-    for loan in [record for record in Loan.select() if now >= record.endtime]:
+    for loan in Loan.select().where(now >= Loan.endtime):
         if __debug__: log(f'locking database')
         with database.atomic('immediate'):
             barcode = loan.item.barcode
@@ -103,7 +111,7 @@ def expired_loan_removing_wrapper():
             Recent.create(item = loan.item, user = loan.user,
                           nexttime = loan.endtime + timedelta(minutes = 1))
             loan.delete_instance()
-    for recent in [record for record in Recent.select() if now >= record.nexttime]:
+    for recent in Recent.select().where(now >= Recent.nexttime):
         if __debug__: log(f'locking database')
         with database.atomic('immediate'):
             barcode = recent.item.barcode
@@ -376,7 +384,7 @@ def remove_item():
 @dibs.get('/<name:re:(info|welcome|about|thankyou)>')
 def general_page(name = '/'):
     '''Display the welcome page.'''
-    if __debug__: log(f'get /{name} invoked')
+    if __debug__: log(f'get /{"" if name == "/" else name} invoked')
     if name == 'about':
         return page('about')
     elif name == 'thankyou':
