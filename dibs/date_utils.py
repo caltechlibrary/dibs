@@ -19,4 +19,6 @@ def human_datetime(value):
     '''Return a human-friendly string for the given datetime in local time.'''
     if not value:
         return None
-    return arrow.get(value).to('local').strftime("%I:%M %p (%Z) on %Y-%m-%d")
+    time = arrow.get(value).to('local').strftime("%I:%M %p (%Z) on %Y-%m-%d")
+    # Stftime has no option to *not* zero-pad the numbers, so we have to do it:
+    return time.lstrip('0')
