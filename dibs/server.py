@@ -13,7 +13,9 @@ from   beaker.middleware import SessionMiddleware
 import bottle
 from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
-from   datetime import datetime, timedelta
+from   datetime import datetime as dt
+from   datetime import timedelta
+from   dateutil import tz
 from   decouple import config
 import functools
 from   humanize import naturaldelta
@@ -102,7 +104,7 @@ def expired_loans_removed(func):
     '''Clean up expired loans.'''
     @functools.wraps(func)
     def expired_loan_removing_wrapper(*args, **kwargs):
-        now = datetime.now()
+        now = dt.utcnow()
         for loan in Loan.select().where(now >= Loan.endtime):
             if __debug__: log(f'locking database')
             with database.atomic('immediate'):
@@ -511,7 +513,8 @@ def show_item_info(barcode):
             explanation = 'This item is not currently available through DIBS.'
         else:
             # It's available and they can have it.
-            endtime = datetime.now()
+            # FIXME this can't be right
+            endtime = dt.utcnow()
             explanation = None
     return page('item', item = item, available = available,
                 endtime = human_datetime(endtime), explanation = explanation)
@@ -569,7 +572,7 @@ def loan_item():
                                    'requesting the same item again. Please try '
                                    f'after {human_datetime(recent.nexttime)}'))
         # OK, the user is allowed to loan out this item.
-        start = datetime.now()
+        start = dt.utcnow()
         end   = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
@@ -601,7 +604,7 @@ def end_loan():
         with database.atomic('immediate'):
             user_loans[0].delete_instance()
             Recent.create(item = Item.get(Item.barcode == barcode), user = user,
-                          nexttime = datetime.now() + _RELOAN_WAIT_TIME)
+                          nexttime = dt.utcnow() + _RELOAN_WAIT_TIME)
     else:
         # User does not have this item loaned out. Ignore the request.
         if __debug__: log(f'{user} does not have {barcode} loaned out')
