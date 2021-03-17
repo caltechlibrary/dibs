@@ -70,6 +70,12 @@ class Item(BaseModel):
 # Loans periods could be represented as start + duration, but since we'll need
 # to test against the end of a loan repeatedly, it's easier to store the end
 # time here.
+#
+# Important: Peewee's DateTimeField is *not* time zone aware. If you hand it
+# a Python datetime value without a time zone, it will treat it as a datetime
+# object, but if you add a zone (e.g., storing datetime.now(tz = tz.tzlocal())
+# you will end up with string values.  In DIBS we store all values as UTC
+# and then convert to/from local time zone as needed.
 
 class Loan(BaseModel):
     loanid  = AutoField()
