@@ -9,12 +9,14 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from   datetime import datetime, timedelta
+import arrow
 
 
 # Exported functions.
 # .............................................................................
 
-def human_datetime(dt):
-    '''Return a more human-friendly string representing the given datetime.'''
-    return dt.strftime("%I:%M %p on %Y-%m-%d") if dt else None
+def human_datetime(value):
+    '''Return a human-friendly string for the given datetime in local time.'''
+    if not value:
+        return None
+    return arrow.get(value).to('local').strftime("%I:%M %p (%Z) on %Y-%m-%d")
