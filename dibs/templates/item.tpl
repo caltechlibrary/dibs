@@ -61,14 +61,12 @@
                       <th>Year</th>
                       <td>{{item.year}}</td>
                     </tr>
+                    %if item.edition != '':
                     <tr>
                       <th>Edition</th>
-                      %if item.edition != '':
                       <td>{{item.edition}}</td>
-                      %else:
-                      <td><i>Unknown</i></td>
-                      %end
                     </tr>
+                    %end
                     <tr><td></td><td></td></tr>
                   </tbody>
                 </table>
