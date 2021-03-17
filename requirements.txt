@@ -13,6 +13,7 @@
 # library on the system. If you get an error about "apxs" missing, try doing
 # `sudo apt install apache2-dev` and then try pip install mod_wsgi again.)
 
+arrow           >= 1.0.3
 beaker          >= 1.11.0
 boltons         >= 20.2.0
 bottle          >= 0.12.0
