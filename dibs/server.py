@@ -70,7 +70,7 @@ _SESSION_CONFIG = {
     'session.httponly'       : True,
 
     # The name of the session cookie.
-    'session.key'            : config('COOKIE_NAME') or 'dibs',
+    'session.key'            : config('SESSION_KEY') or 'dibs',
 
     # Seconds until the session is invalidated.
     'session.timeout'        : config('SESSION_TIMEOUT', cast = int) or 604800,

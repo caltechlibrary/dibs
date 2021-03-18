@@ -21,7 +21,7 @@ MAIL_PORT   = 25
 MAIL_SENDER = helpdesk@library.caltech.edu
 
 # User session details.
-COOKIE_NAME     = dibs
+SESSION_KEY     = dibs
 SESSION_TIMEOUT = 604800
 
 # Time a user must wait between when they return a title and when they can
