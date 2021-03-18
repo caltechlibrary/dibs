@@ -207,7 +207,7 @@ DIBS makes use of numerous open-source packages, without which it would have bee
 * [Python Decouple](https://github.com/henriquebastos/python-decouple/) &ndash; a high-level configuration file interface
 * [Rich](https://rich.readthedocs.io/en/latest/) &ndash; library for writing styled text to the terminal
 * [Sidetrack](https://github.com/caltechlibrary/sidetrack) &ndash; simple debug logging/tracing package
-* [Topi](https://github.com/caltechlibrary/commonpy) &ndash; a simple package for getting data from a TIND.io ILS instance
+* [Topi](https://github.com/caltechlibrary/topi) &ndash; a simple package for getting data from a TIND.io ILS instance
 * [Yurl](https://github.com/homm/yurl/) &ndash; an alternative to urlparse for parsing URLs in Python
 
 
