@@ -20,8 +20,9 @@ MAIL_HOST   = localhost
 MAIL_PORT   = 25
 MAIL_SENDER = helpdesk@library.caltech.edu
 
-# User session details.
-SESSION_KEY     = dibs
+# Session tracking. (Note: this is a temporary scheme.)
+SESSION_DIR     = /tmp/dibs
+SESSION_SECRET  = abc123
 SESSION_TIMEOUT = 604800
 
 # Time a user must wait between when they return a title and when they can

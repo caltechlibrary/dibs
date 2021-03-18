@@ -23,6 +23,8 @@ import json
 import os
 from   os.path import realpath, dirname, join
 from   peewee import *
+import random
+import string
 import sys
 from   topi import Tind
 
@@ -59,21 +61,24 @@ _FEEDBACK_URL = config('FEEDBACK_URL') or '/'
 # The next constant is used to configure Beaker sessions. This is used at
 # the very end of this file in the call to SessionMiddleware.
 _SESSION_CONFIG = {
-    # Use simple in-memory session handling.  Ultimately we will only need
-    # sessions for the admin pages, and we won't have many users.
-    'session.type'           : 'memory',
-
     # Save session data automatically, without requiring us to call save().
-    'session.auto'           : True,
+    'session.auto'     : True,
 
     # Session cookies should be accessible only to the browser, not JavaScript.
-    'session.httponly'       : True,
+    'session.httponly' : True,
+
+    # FIXME this is temporary and insecure.  When we have SSO hooked in,
+    # session tracking needs to be revisited anyway.
+    'session.type'     : 'file',
+    'session.data_dir' : config('SESSION_DIR') or '/tmp/dibs',
+    'session.secret'   : (config('SESSION_SECRET')
+                          or ''.join(random.choice(string.printable, k = 128))),
 
     # The name of the session cookie.
-    'session.key'            : config('SESSION_KEY') or 'dibs',
+    'session.key'      : 'dibssession',
 
     # Seconds until the session is invalidated.
-    'session.timeout'        : config('SESSION_TIMEOUT', cast = int) or 604800,
+    'session.timeout'  : config('SESSION_TIMEOUT', cast = int) or 604800,
 }
 
 
