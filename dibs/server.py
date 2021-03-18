@@ -53,32 +53,32 @@ dibs = Bottle()
 bottle.TEMPLATE_PATH.append(join(realpath(dirname(__file__)), 'templates'))
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME') or 30))
+_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))
 
 # Where we send users to give feedback.
-_FEEDBACK_URL = config('FEEDBACK_URL') or '/'
+_FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
 # The next constant is used to configure Beaker sessions. This is used at
 # the very end of this file in the call to SessionMiddleware.
 _SESSION_CONFIG = {
     # Save session data automatically, without requiring us to call save().
-    'session.auto'     : True,
+    'session.auto'    : True,
 
     # Session cookies should be accessible only to the browser, not JavaScript.
-    'session.httponly' : True,
+    'session.httponly': True,
 
     # FIXME this is temporary and insecure.  When we have SSO hooked in,
     # session tracking needs to be revisited anyway.
-    'session.type'     : 'file',
-    'session.data_dir' : config('SESSION_DIR') or '/tmp/dibs',
-    'session.secret'   : (config('SESSION_SECRET')
-                          or ''.join(random.choice(string.printable, k = 128))),
+    'session.type'    : 'file',
+    'session.data_dir': config('SESSION_DIR', default = '/tmp/dibs'),
+    'session.secret'  : config('SESSION_SECRET', default =
+                               ''.join(random.choice(string.printable, k = 128))),
 
     # The name of the session cookie.
-    'session.key'      : 'dibssession',
+    'session.key'     : 'dibssession',
 
     # Seconds until the session is invalidated.
-    'session.timeout'  : config('SESSION_TIMEOUT', cast = int) or 604800,
+    'session.timeout' : config('SESSION_TIMEOUT', cast = int, default = 604800),
 }
 
 
