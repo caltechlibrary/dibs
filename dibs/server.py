@@ -53,7 +53,7 @@ dibs = Bottle()
 bottle.TEMPLATE_PATH.append(join(realpath(dirname(__file__)), 'templates'))
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))
+_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME', default = 30)))
 
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
