@@ -72,7 +72,7 @@ _SESSION_CONFIG = {
     'session.type'    : 'file',
     'session.data_dir': config('SESSION_DIR', default = '/tmp/dibs'),
     'session.secret'  : config('SESSION_SECRET', default =
-                               ''.join(random.choice(string.printable, k = 128))),
+                               ''.join(random.choices(string.printable, k = 128))),
 
     # The name of the session cookie.
     'session.key'     : 'dibssession',
