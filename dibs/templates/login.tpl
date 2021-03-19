@@ -25,6 +25,12 @@
         <div class="row pt-2 mx-auto text-center">
           <form class="form-horizontal col-sm-12" action="{{base_url}}/login" method="post">
 
+            %if get('login_failed', False):
+            <div classs="form-group">
+              <span class="error text-danger">Ooops! Incorrect user or password. Try again?</span>
+            </div>
+            %end
+
             <div class="form-group">
               <label class="col-form-label col-sm-5 text-left">DIBS user</label>
               <input class="form-control col-sm-5 mx-auto" name="email" type="text" autocomplete="off"
