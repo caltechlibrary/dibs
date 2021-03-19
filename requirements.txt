@@ -25,6 +25,7 @@ peewee          >= 3.14.0
 plac            >= 1.2.0
 python-daemon   >= 2.2.4
 python-decouple >= 3.4
+ratelimit       >= 2.2.1
 rich            >= 9.2.0
 sidetrack       >= 1.4.0
 topi            >= 1.0.1

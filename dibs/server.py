@@ -24,6 +24,7 @@ import os
 from   os.path import realpath, dirname, join
 from   peewee import *
 import random
+import ratelimit
 import string
 import sys
 from   topi import Tind
@@ -80,6 +81,10 @@ _SESSION_CONFIG = {
     # Seconds until the session is invalidated.
     'session.timeout' : config('SESSION_TIMEOUT', cast = int, default = 604800),
 }
+
+# How many times a user can retry a login within a given window of time (sec).
+_LOGIN_RETRY_TIMES = 5
+_LOGIN_RETRY_WINDOW = 30
 
 
 # General-purpose utilities used later.
@@ -168,6 +173,20 @@ def authenticated(func):
         return func(*args, **kwargs)
     return authentication_check_wrapper
 
+
+def limit_login_attempts(func):
+    '''Rate-limit the number of login attempts within a given period of time.'''
+    @functools.wraps(func)
+    def limit_login_attempts_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ratelimit.exception.RateLimitException as ex:
+            client = request.environ.get('REMOTE_ADDR', 'unknown')
+            if __debug__: log(f'rate limit exceeded for client {client}')
+            return page('error', summary = 'too many login attempts',
+                        message = f'Please try again later.')
+    return limit_login_attempts_wrapper
+
 
 # Administrative interface endpoints.
 # .............................................................................
@@ -189,6 +208,8 @@ def show_login_page():
 
 
 @dibs.post('/login')
+@limit_login_attempts
+@ratelimit.limits(calls = _LOGIN_RETRY_TIMES, period = _LOGIN_RETRY_WINDOW)
 def login():
     '''Handle performing the login action from the login page.'''
     # NOTE: If SSO is implemented this end point will handle the
@@ -197,22 +218,20 @@ def login():
     password = request.forms.get('password')
     if __debug__: log(f'post /login invoked by {email}')
     # get our person obj from people.db for demo purposes
-    user = (Person.get_or_none(Person.uname == email))
-    if user != None:
-        if check_password(password, user.secret) == False:
-            if __debug__: log(f'wrong password -- rejecting {email}')
-            return page('login')
-        else:
-            if __debug__: log(f'creating session for {email}')
-            session = request.environ['beaker.session']
-            session['user'] = email
-            p = role_to_redirect(user.role)
-            if __debug__: log(f'redirecting to "{p}"')
-            redirect(f'{dibs.base_url}/{p}')
-            return
-    else:
+    user = Person.get_or_none(Person.uname == email)
+    if not user:
+        if __debug__: log(f'unknown user -- rejecting {email}')
+        return page('login', login_failed = True)
+    elif check_password(password, user.secret) == False:
         if __debug__: log(f'wrong password -- rejecting {email}')
-        return page('login')
+        return page('login', login_failed = True)
+    else:
+        if __debug__: log(f'creating session for {email}')
+        session = request.environ['beaker.session']
+        session['user'] = email
+        p = role_to_redirect(user.role)
+        if __debug__: log(f'redirecting to "{p}"')
+        redirect(f'{dibs.base_url}/{p}')
 
 
 @dibs.post('/logout')
