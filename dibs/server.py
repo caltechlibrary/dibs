@@ -68,6 +68,12 @@ _SESSION_CONFIG = {
     # Session cookies should be accessible only to the browser, not JavaScript.
     'session.httponly': True,
 
+    # Session cookies should be marked secure, but it requires https, so we
+    # can't set it unconditionally.  Since this module (server.py) is loaded
+    # before adapter.wsgi, we don't have the info about whether https is in
+    # use.  Right now I don't see a better way but to use a settings.ini var.
+    'session.secure'  : config('SECURE_COOKIES', default = False),
+
     # FIXME this is temporary and insecure.  When we have SSO hooked in,
     # session tracking needs to be revisited anyway.
     'session.type'    : 'file',
