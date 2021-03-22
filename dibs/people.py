@@ -52,7 +52,6 @@ class Person(Model):
     secret = CharField() # password
     role = CharField()   # role is empty or "staff"
     display_name = CharField() # display_name, optional
-    auth_type = CharField() # local, OAuth2
     updated = TimestampField() # last successful login timestamp
 
     def has_role(self, required_role):
