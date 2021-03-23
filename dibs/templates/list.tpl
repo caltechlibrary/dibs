@@ -20,8 +20,10 @@
         <h2 class="mx-auto text-center pb-2 mt-4">
           Items in DIBS
         </h2>
+        <p class="mx-auto text-center font-italic">
+          Click on the column titles to sort the table by that column.
+        </p>
         <div class="d-grid gap-3">
-
           <div class="mb-3 table-responsive">
             <table class="table table-borderless"
                    data-toggle="table" data-pagination="true" data-escape="false">
