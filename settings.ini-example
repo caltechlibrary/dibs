@@ -15,6 +15,15 @@
 # Path to the sqlite database, relative to here.
 DATABASE_FILE = dibs.db
 
+# Directory containing IIIF manifest files.  Each file name should follow the
+# pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
+# for DIBS contains a subdirectory called "manifests" with a demo file in it,
+# but the path can be changed if you put your manifests elsewhere.
+MANIFEST_DIR = manifests
+
+# IIIF server base path.
+IIIF_BASE_URL = https://ihjyf3qcxl.execute-api.us-west-2.amazonaws.com/dibs/iiif
+
 # Email details. The user has to be an account authenticated to the server.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25

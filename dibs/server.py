@@ -13,6 +13,7 @@ from   beaker.middleware import SessionMiddleware
 import bottle
 from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
+from   commonpy.network_utils import net
 from   datetime import datetime as dt
 from   datetime import timedelta
 from   dateutil import tz
@@ -27,6 +28,7 @@ import random
 import ratelimit
 import string
 import sys
+from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
 from .database import Item, Loan, Recent, database
@@ -53,8 +55,19 @@ dibs = Bottle()
 # find the templates is to set this Bottle package-level variable.
 bottle.TEMPLATE_PATH.append(join(realpath(dirname(__file__)), 'templates'))
 
+# Directory containing IIIF manifest files.
+_MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
+
+# The base URL of the IIIF server endpoint. Note: there is no reasonable
+# default value for this one, so we fail if this is not set.
+_IIIF_BASE_URL = config('IIIF_BASE_URL')
+
 # Cooling-off period after a loan ends, before user can borrow same title again.
 _RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME', default = 30)))
+
+# How many times a user can retry a login within a given window of time (sec).
+_LOGIN_RETRY_TIMES = 5
+_LOGIN_RETRY_WINDOW = 30
 
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
@@ -87,10 +100,6 @@ _SESSION_CONFIG = {
     # Seconds until the session is invalidated.
     'session.timeout' : config('SESSION_TIMEOUT', cast = int, default = 604800),
 }
-
-# How many times a user can retry a login within a given window of time (sec).
-_LOGIN_RETRY_TIMES = 5
-_LOGIN_RETRY_WINDOW = 30
 
 
 # General-purpose utilities used later.
@@ -666,7 +675,7 @@ def send_item_to_viewer(barcode):
 @expired_loans_removed
 @barcode_verified
 @authenticated
-def return_manifest(barcode):
+def return_iiif_manifest(barcode):
     '''Return the manifest file for a given item.'''
     user = request.environ['beaker.session'].get('user')
     if __debug__: log(f'get /manifests/{barcode} invoked by {user}')
@@ -674,11 +683,52 @@ def return_manifest(barcode):
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     if any(loan.user for loan in loans if user == loan.user):
         if __debug__: log(f'returning manifest file for {barcode} for {user}')
-        return static_file(f'{barcode}-manifest.json', root = 'manifests')
+        with open(join(_MANIFEST_DIR, f'{barcode}-manifest.json'), 'r') as mf:
+            data = mf.read()
+            content = data.replace(_IIIF_BASE_URL, f'/iiif/{barcode}')
+        with NamedTemporaryFile() as new_manifest:
+            new_manifest.write(content.encode())
+            new_manifest.seek(0)
+            return static_file(new_manifest.name, root = '/')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
         return
+
+
+@dibs.get('/iiif/<barcode>/<rest:re:.+>')
+@expired_loans_removed
+@barcode_verified
+@authenticated
+def return_iiif_content(barcode, rest):
+    '''Return the manifest file for a given item.'''
+    user = request.environ['beaker.session'].get('user')
+    if __debug__: log(f'get /iiif/{barcode}/{rest} invoked by {user}')
+
+    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
+    if not any(loan.user for loan in loans if user == loan.user):
+        if __debug__: log(f'{user} does not have {barcode} loaned out')
+        redirect(f'{dibs.base_url}/notallowed')
+        return
+
+    # We need to fix an artifact introduced by WSGI. The path should be (e.g.)
+    # 2/35047018586479%2F015/full/90,/0/default.jpg but WSGI replaces the %2F.
+    corrected = rest.replace(f'{barcode}/', f'{barcode}%2F')
+    url = _IIIF_BASE_URL + '/' + corrected
+
+    # UV uses ajax to get info.json files, which fails if we redirect the
+    # requests to the IIIF server. Grab & serve the content ourselves.
+    if url.endswith('json'):
+        response, error = net('get', url)
+        with NamedTemporaryFile() as data_file:
+            data_file.write(response.content)
+            data_file.seek(0)
+            if __debug__: log(f'returning {len(response.content)} bytes for'
+                              f' /iiif/{barcode}/{rest}')
+            return static_file(data_file.name, root = '/')
+    else:
+        if __debug__: log(f'redirecting to {url} for {barcode} for {user}')
+        redirect(url)
 
 
 # Universal viewer interface.
