@@ -652,10 +652,10 @@ def end_loan():
             user_loans[0].delete_instance()
             Recent.create(item = Item.get(Item.barcode == barcode), user = user,
                           nexttime = dt.utcnow() + _RELOAN_WAIT_TIME)
+        redirect(f'{dibs.base_url}/thankyou')
     else:
         # User does not have this item loaned out. Ignore the request.
         log(f'{user} does not have {barcode} loaned out')
-    redirect(f'{dibs.base_url}/thankyou')
 
 
 @dibs.get('/view/<barcode:int>')
