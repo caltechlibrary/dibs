@@ -612,7 +612,11 @@ def loan_item():
                                    f'after {human_datetime(recent.nexttime)}'))
         # OK, the user is allowed to loan out this item.
         start = dt.utcnow()
-        end   = start + timedelta(hours = item.duration)
+        if os.environ.get('BOTTLE_CHILD'):
+            # We are running in debug mode in the Bottle server.
+            end = start + timedelta(minutes = 1)
+        else:
+            end = start + timedelta(hours = item.duration)
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
 
