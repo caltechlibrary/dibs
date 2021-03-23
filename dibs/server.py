@@ -689,7 +689,7 @@ def return_iiif_manifest(barcode):
         with open(join(_MANIFEST_DIR, f'{barcode}-manifest.json'), 'r') as mf:
             data = mf.read()
             # Change refs to the IIIF server to point to our DIBS route instead.
-            content = data.replace(_IIIF_BASE_URL, f'/iiif/{barcode}')
+            content = data.replace(_IIIF_BASE_URL, f'{dibs.base_url}/iiif/{barcode}')
             # Change occurrences of %2F (slashes) in IIIF identifiers to '!' so
             # Apache doesn't auto-convert %2F when UV fetches /iiif/...
             content = content.replace(str(barcode) + r'%2F', f'{barcode}!')
