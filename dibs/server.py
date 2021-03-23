@@ -244,11 +244,10 @@ def login():
         log(f'wrong password -- rejecting {email}')
         return page('login', login_failed = True)
     else:
-        log(f'creating session for {email}')
         session = request.environ['beaker.session']
         session['user'] = email
         p = role_to_redirect(user.role)
-        log(f'redirecting to "{p}"')
+        log(f'created session for {email} & redirecting to {dibs.base_url}/{p}')
         redirect(f'{dibs.base_url}/{p}')
 
 
@@ -271,6 +270,7 @@ def list_items():
     '''Display the list of known items.'''
     person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
+        log(f'get /list invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /list invoked')
@@ -283,6 +283,7 @@ def list_items():
     '''Display the list of known items.'''
     person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
+        log(f'get /manage invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /manage invoked')
@@ -295,6 +296,7 @@ def add():
     '''Display the page to add new items.'''
     person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
+        log(f'get /add invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /add invoked')
@@ -308,6 +310,7 @@ def edit(barcode):
     '''Display the page to add new items.'''
     person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
+        log(f'get /edit invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log(f'get /edit invoked on {barcode}')
@@ -322,6 +325,7 @@ def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
+        log(f'post /update invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log(f'post {request.path} invoked')
@@ -410,6 +414,7 @@ def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     person = person_from_session(request.environ['beaker.session'])
     if has_required_role(person, 'library') == False:
+        log(f'post /remove invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
     barcode = request.POST.barcode.strip()
@@ -595,8 +600,7 @@ def loan_item():
             # Shouldn't be able to reach this point b/c the item page shouldn't
             # make a loan available for this user & item combo. But if
             # something weird happens (e.g., double posting), we might.
-            log(f'{user} already has {barcode} loaned out')
-            log(f'redirecting {user} to /view for {barcode}')
+            log(f'{user} already has {barcode} loaned out -- redirecting to /view')
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
         if len(loans) >= item.num_copies:
@@ -736,8 +740,7 @@ def return_iiif_content(barcode, rest):
         with NamedTemporaryFile() as data_file:
             data_file.write(response.content)
             data_file.seek(0)
-            log(f'returning {len(response.content)} bytes for'
-                              f' /iiif/{barcode}/{rest}')
+            log(f'returning {len(response.content)} bytes for /iiif/{barcode}/{rest}')
             return static_file(data_file.name, root = '/')
     else:
         log(f'redirecting to {url} for {barcode} for {user}')
