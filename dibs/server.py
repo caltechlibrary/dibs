@@ -15,7 +15,7 @@ from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
 from   commonpy.network_utils import net
 from   datetime import datetime as dt
-from   datetime import timedelta
+from   datetime import timedelta as delta
 from   dateutil import tz
 from   decouple import config
 import functools
@@ -63,14 +63,14 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = timedelta(minutes = int(config('RELOAN_WAIT_TIME', default = 30)))
+_RELOAN_WAIT_TIME = delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30)))
+
+# Where we send users to give feedback.
+_FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
 # How many times a user can retry a login within a given window of time (sec).
 _LOGIN_RETRY_TIMES = 5
 _LOGIN_RETRY_WINDOW = 30
-
-# Where we send users to give feedback.
-_FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
 # The next constant is used to configure Beaker sessions. This is used at
 # the very end of this file in the call to SessionMiddleware.
@@ -114,6 +114,11 @@ def page(name, **kargs):
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)
 
+
+def debug_mode():
+    '''Return True if we're running Bottle's default server in debug mode.'''
+    return os.environ.get('BOTTLE_CHILD')
+
 
 # Decorators -- functions that are run selectively on certain routes.
 # .............................................................................
@@ -136,7 +141,7 @@ def expired_loans_removed(func):
                 barcode = loan.item.barcode
                 if __debug__: log(f'loan for {barcode} by {loan.user} expired')
                 Recent.create(item = loan.item, user = loan.user,
-                              nexttime = loan.endtime + timedelta(minutes = 1))
+                              nexttime = loan.endtime + delta(minutes = 1))
                 loan.delete_instance()
         # Deleting outdated Recent records is a simpler procedure.
         num = Recent.delete().where(now >= Recent.nexttime).execute()
@@ -612,11 +617,8 @@ def loan_item():
                                    f'after {human_datetime(recent.nexttime)}'))
         # OK, the user is allowed to loan out this item.
         start = dt.utcnow()
-        if os.environ.get('BOTTLE_CHILD'):
-            # We are running in debug mode in the Bottle server.
-            end = start + timedelta(minutes = 1)
-        else:
-            end = start + timedelta(hours = item.duration)
+        time = delta(minutes = 1) if debug_mode() else delta(hours = item.duration)
+        end = start + time
         if __debug__: log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, user = user, started = start, endtime = end)
 
@@ -667,9 +669,12 @@ def send_item_to_viewer(barcode):
     user_loans = [loan for loan in loans if user == loan.user]
     if user_loans:
         if __debug__: log(f'redirecting to viewer for {barcode} for {user}')
+        endtime = user_loans[0].endtime    # Remember this is in UTC.
+        wait_time = delta(minutes = 1) if debug_mode() else _RELOAN_WAIT_TIME
         return page('uv', barcode = barcode,
-                    endtime = human_datetime(user_loans[0].endtime),
-                    reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
+                    human_endtime = human_datetime(endtime),
+                    js_endtime = human_datetime(endtime, '%m/%d/%Y %H:%M:%S'),
+                    reloan_wait_time = naturaldelta(wait_time))
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/item/{barcode}')
