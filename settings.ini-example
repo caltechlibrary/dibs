@@ -22,7 +22,7 @@ DATABASE_FILE = dibs.db
 MANIFEST_DIR = manifests
 
 # IIIF server base path.
-IIIF_BASE_URL = https://ihjyf3qcxl.execute-api.us-west-2.amazonaws.com/dibs/iiif
+IIIF_BASE_URL = https://yourserver.com/iiif
 
 # Email details. The user has to be an account authenticated to the server.
 MAIL_HOST   = localhost
