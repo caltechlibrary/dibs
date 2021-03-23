@@ -53,7 +53,7 @@
 
     <div class="row bg-light" style="margin: auto 0px">
       <div class="col-6">
-        <div class="float-left my-1"><p>Loan expires at {{endtime}}.</p></div>
+        <div class="float-left my-1"><p>Loan expires at {{human_endtime}}.</p></div>
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
@@ -81,9 +81,17 @@
        console.log('parsed metadata', myUV.extension.helper.manifest.getMetadata());
        console.log('raw jsonld', myUV.extension.helper.manifest.__jsonld);
      });
+
+     // Calculate the delay to exiration (in msec) and force a reload then.
+     var now = new Date().getTime();
+     var end = new Date("{{js_endtime}}").getTime();
+     var timeout = (end - now) + 1000;
+     setTimeout(() => { window.location.reload(); }, timeout);
+
    }, false);
 
    window.onpageshow = function (event) {
+     // If this page was loaded from cache, force a reload.
      if (event.persisted) {
        window.location.reload();
      }
