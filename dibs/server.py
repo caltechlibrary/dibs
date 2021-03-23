@@ -22,7 +22,7 @@ import functools
 from   humanize import naturaldelta
 import json
 import os
-from   os.path import realpath, dirname, join
+from   os.path import realpath, dirname, join, exists
 from   peewee import *
 import random
 import ratelimit
@@ -682,13 +682,21 @@ def return_iiif_manifest(barcode):
 
     loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
     if any(loan.user for loan in loans if user == loan.user):
-        if __debug__: log(f'returning manifest file for {barcode} for {user}')
+        manifest_file = join(_MANIFEST_DIR, f'{barcode}-manifest.json')
+        if not exists(manifest_file):
+            if __debug__: log(f'{manifest_file} does not exist')
+            return
         with open(join(_MANIFEST_DIR, f'{barcode}-manifest.json'), 'r') as mf:
             data = mf.read()
+            # Change refs to the IIIF server to point to our DIBS route instead.
             content = data.replace(_IIIF_BASE_URL, f'/iiif/{barcode}')
+            # Change occurrences of %2F (slashes) in IIIF identifiers to '!' so
+            # Apache doesn't auto-convert %2F when UV fetches /iiif/...
+            content = content.replace(str(barcode) + r'%2F', f'{barcode}!')
         with NamedTemporaryFile() as new_manifest:
             new_manifest.write(content.encode())
             new_manifest.seek(0)
+            if __debug__: log(f'returning manifest for {barcode} for {user}')
             return static_file(new_manifest.name, root = '/')
     else:
         if __debug__: log(f'{user} does not have {barcode} loaned out')
@@ -710,10 +718,8 @@ def return_iiif_content(barcode, rest):
         if __debug__: log(f'{user} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
         return
-
-    # We need to fix an artifact introduced by WSGI. The path should be (e.g.)
-    # 2/35047018586479%2F015/full/90,/0/default.jpg but WSGI replaces the %2F.
-    corrected = rest.replace(f'{barcode}/', f'{barcode}%2F')
+    # Undo the temporary encoding done by return_iiif_manifest().
+    corrected = rest.replace(f'{barcode}!', str(barcode) + r'%2F')
     url = _IIIF_BASE_URL + '/' + corrected
 
     # UV uses ajax to get info.json files, which fails if we redirect the
