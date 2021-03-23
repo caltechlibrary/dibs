@@ -89,7 +89,7 @@ Display Name: {row.display_name}
         print(f'''Username\tDisplay Name\tRole\tUpdated''')
         query = (Person.select().order_by(Person.display_name))
         for row in query:
-            print(f'''{row.uname}\t{row.display_name}\t{row.role}\t{row.updated}''')
+            print(f'''{row.uname}\t{row.display_name}\t{row.role}\t{row.auth_type}\t{row.updated}''')
 
 
 def add_people(kv):
@@ -105,11 +105,12 @@ def add_people(kv):
             sys.exit(1)
     else:
         kv['secret'] = '' 
-    for key in [ 'role', 'display_name' ]:
+    for key in [ 'role', 'display_name', 'auth_type' ]:
         if not key in kv:
             kv[key] = ''
     user = Person(uname = kv['uname'], secret = kv['secret'],
         role = kv['role'], display_name = kv['display_name'],
+        auth_type = kv['auth_type'])
     user.save()
 
 
@@ -126,6 +127,8 @@ def update_people(kv):
         user.display_name = kv['display_name']
     if 'role' in kv:
         user.role = kv['role']
+    if 'auth_type' in kv:
+        user.auth_type = kv['auth_type']
     user.save()
 
 
