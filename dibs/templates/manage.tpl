@@ -84,6 +84,13 @@
             </table>
           </div>
 
+          <div class="mx-auto w-50 text-center">
+            <a href="{{base_url}}/list"
+               class="btn btn-primary m-0 mr-2 my-2 no-underline">
+              Return to list page
+            </a>
+          </div>
+
         </div>
       </div>
 
