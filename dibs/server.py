@@ -463,7 +463,7 @@ class Status(Enum):
 
 
 def loan_availability(user, barcode):
-    '''Return multiple values: (item, status, explanation, when).'''
+    '''Return multiple values: (item, status, explanation, when_available).'''
 
     item = Item.get_or_none(Item.barcode == barcode)
     if not item:
@@ -478,9 +478,9 @@ def loan_availability(user, barcode):
         return item, status, explanation, None
 
     # Start by checking if the user has any active or recent loans.
-    when = None
     allowed = False
     explanation = ''
+    when_available = None
     loan = Loan.get_or_none(Loan.user == user)
     if loan is None:
         allowed = True
@@ -493,7 +493,7 @@ def loan_availability(user, barcode):
             log(f'{user} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
             explanation = 'It is too soon after the last time you borrowed it.'
-            when = loan.reloan_time
+            when_available = loan.reloan_time
     else:
         # It's a loan on another item.
         if loan.state == 'active':
@@ -501,7 +501,7 @@ def loan_availability(user, barcode):
             status = Status.USER_HAS_OTHER
             explanation = ('You have another item currently on loan'
                            + f' ("{loan.item.title}" by {loan.item.author})')
-            when = loan.end_time
+            when_available = loan.end_time
         else:
             allowed = True
 
@@ -512,12 +512,12 @@ def loan_availability(user, barcode):
             log(f'all copies of {barcode} are currently loaned')
             status = Status.NO_COPIES_LEFT
             explanation = 'All available copies are currently on loan.'
-            when = min(loan.end_time for loan in loans)
+            when_available = min(loan.end_time for loan in loans)
         else:
             log(f'{user} is allowed to borrow {barcode}')
             status = Status.AVAILABLE
 
-    return item, status, explanation, when
+    return item, status, explanation, when_available
 
 
 @dibs.get('/')
@@ -544,9 +544,9 @@ def item_status(barcode):
     log(f'get /item-status invoked on barcode {barcode} and {user}')
 
     item, status, explanation, when_available = loan_availability(user, barcode)
-    return json.dumps({'available'   : (status == Status.AVAILABLE),
-                       'explanation' : explanation,
-                       'end_time'    : human_datetime(when_available)})
+    return json.dumps({'available'     : (status == Status.AVAILABLE),
+                       'explanation'   : explanation,
+                       'when_available': human_datetime(when_available)})
 
 
 @dibs.get('/item/<barcode:int>')
@@ -564,7 +564,8 @@ def show_item_info(barcode):
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
     return page('item', item = item, available = (status == Status.AVAILABLE),
-                end_time = human_datetime(when_available), explanation = explanation)
+                when_available = human_datetime(when_available),
+                explanation = explanation)
 
 
 @dibs.post('/loan')
@@ -606,7 +607,7 @@ def loan_item():
                         message = ('We ask that you wait at least '
                                    f'{naturaldelta(_RELOAN_WAIT_TIME)} before '
                                    'requesting the same item again. Please try '
-                                   f'after {human_datetime(loan.reloan_time)}'))
+                                   f'after {human_datetime(when_available)}'))
         if status == Status.NO_COPIES_LEFT:
             # The loan button shouldn't have been clickable in this case, but
             # someone else might have gotten the loan between the last status

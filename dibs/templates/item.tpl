@@ -80,7 +80,7 @@
             currently available to you for a digital loan.
             <span id="explanation">{{explanation}}</span>
             <span id="when">This item is scheduled to become available again
-              no later than {{end_time if end_time else 'unknown'}}.</span>
+              no later than {{when_available if when_available else 'unknown'}}.</span>
           </p>
 
           <div class="col-md-3 mx-auto text-center">
@@ -121,7 +121,7 @@ rendered start conditions and to limit calls to server */
      
     // Toggle the visibility of the loan button, expire times and explanation
     // depending on availability.
-    function set_book_status(available, explanation, end_time) {
+    function set_book_status(available, explanation, when_available) {
         if (available == true) {
             console.log("DEBUG book is available");
             loanButton.removeAttribute('disabled');
@@ -139,12 +139,12 @@ rendered start conditions and to limit calls to server */
             loanButton.classList.add('btn-secondary');
             notAvailableElement.innerHTML = 'not';
             explanationElement.innerHTML = explanation;
-            if (end_time != "None") {
-              console.log('end_time');
-              console.log(end_time);
+            if (when_available != "None") {
+              console.log('when_available');
+              console.log(when_available);
                 whenElement.innerHTML = 
                    'This item will become available again by ' +
-                   '<nobr>{{end_time if end_time else "unknown"}}</nobr>.';
+                   '<nobr>{{when_available if when_available else "unknown"}}</nobr>.';
             } else {
                 whenElement.innerHTML = '';
             }
@@ -154,7 +154,7 @@ rendered start conditions and to limit calls to server */
     if ("{{available}}" == "True") {
         set_book_status(true, '', '');
     } else {
-        set_book_status(false, '{{explanation}}', '{{end_time}}');
+        set_book_status(false, '{{explanation}}', '{{when_available}}');
     }
 
 
@@ -210,7 +210,7 @@ rendered start conditions and to limit calls to server */
                 console.log("DEBUG update page here...");
 		console.log('DEBUG typeof ', typeof(data));
                 console.log('DEBUG data: ', data);
-		set_book_status(data.available, data.explanation, data.end_time);
+		set_book_status(data.available, data.explanation, data.when_available);
             } else {
                 console.log("ERROR: " + err);
             }
