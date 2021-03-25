@@ -419,8 +419,8 @@ def toggle_ready():
         if not item.ready:
             for loan in Loan.select().where(Loan.item == item):
                 log(f'deleting {loan.state} loan for {barcode}')
-                History.save(type = 'loan', what = loan.item.barcode,
-                             start_time = loan.start_time, end_time = loan.end_time)
+                History.create(type = 'loan', what = loan.item.barcode,
+                               start_time = loan.start_time, end_time = loan.end_time)
                 loan.delete_instance()
     redirect(f'{dibs.base_url}/list')
 
@@ -444,8 +444,8 @@ def remove_item():
         # First clean up loans while we still have the item object.
         for loan in Loan.select().where(Loan.item == item):
             log(f'deleting {loan.state} loan for {barcode}')
-            History.save(type = 'loan', what = loan.item.barcode,
-                         start_time = loan.start_time, end_time = loan.end_time)
+            History.create(type = 'loan', what = loan.item.barcode,
+                           start_time = loan.start_time, end_time = loan.end_time)
             loan.delete_instance()
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
