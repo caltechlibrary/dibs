@@ -653,10 +653,10 @@ def loan_item():
             return
 
         # OK, the user is allowed to loan out this item.
-        time = delta(minutes = 1) if debug_mode() else delta(hours = item.duration)
+        time = delta(hours = item.duration)
         start = time_now()
         end = start + time
-        reloan = end + (delta(minutes = 1) if debug_mode() else _RELOAN_WAIT_TIME)
+        reloan = end + _RELOAN_WAIT_TIME
         log(f'creating new loan for {barcode} for {user}')
         Loan.create(item = item, state = 'active', user = user,
                     start_time = start, end_time = end, reloan_time = reloan)
@@ -684,8 +684,7 @@ def end_loan():
             now = time_now()
             loan.state = 'recent'
             loan.end_time = now
-            loan.reloan_time = now + (delta(minutes = 1) if debug_mode()
-                                      else _RELOAN_WAIT_TIME)
+            loan.reloan_time = now + _RELOAN_WAIT_TIME
             loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
             History.create(type = 'loan', what = loan.item.barcode,
                            start_time = loan.start_time, end_time = loan.end_time)
@@ -708,7 +707,7 @@ def send_item_to_viewer(barcode):
     loan = Loan.get_or_none(Loan.item == item, Loan.user == user)
     if loan and loan.state == 'active':
         log(f'redirecting to viewer for {barcode} for {user}')
-        wait_time = delta(minutes = 1) if debug_mode() else _RELOAN_WAIT_TIME
+        wait_time = _RELOAN_WAIT_TIME
         return page('uv', barcode = barcode,
                     end_time = human_datetime(loan.end_time),
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
