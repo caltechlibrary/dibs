@@ -102,3 +102,25 @@ class Loan(BaseModel):
     start_time  = DateTimeField()       # When did the patron start the loan?
     end_time    = DateTimeField()       # When does the loan end?
     reloan_time = DateTimeField()       # When can this user loan this again?
+
+
+# The History class is used to keep records of things for which we want to do
+# basic statistics, such as which items are loaned out most.  It's a generic
+# object class meant to be suitable for more than just loan data.  The
+# intended use of the fields is as follows:
+#
+#  type:   what is the event? A short string like "loan".
+#
+#  what:   if the event involves an item, this string holds the item barcode,
+#          else the string is a short description of the thing affected
+#
+#  start:  when did the even start
+#
+#  stop:   when did the event stop
+
+class History(BaseModel):
+    eventid    = AutoField()
+    type       = CharField()            # String describing the event
+    what       = CharField()            # What is this about? (e.g. a barcode)
+    start_time = DateTimeField()        # When did the event start?
+    end_time   = DateTimeField()        # When did the event stop?

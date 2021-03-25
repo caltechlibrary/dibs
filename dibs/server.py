@@ -33,7 +33,7 @@ import sys
 from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
-from .database import Item, Loan, database
+from .database import Item, Loan, History, database
 from .date_utils import human_datetime
 from .email import send_email
 from .people import Person, check_password, person_from_session
@@ -116,7 +116,7 @@ def page(name, **kargs):
 
 def time_now():
     '''Return datetime.utcnow() but with seconds and microseconds zeroed out.'''
-    return dt.utcnow().replace(second = 0, microsecond = 0)
+    return dt.utcnow().replace(microsecond = 0)
 
 
 def debug_mode():
@@ -140,9 +140,9 @@ def expired_loans_removed(func):
     def expired_loan_removing_wrapper(*args, **kwargs):
         now = time_now()
         # Delete expired loan recency records.
-        num = Loan.delete().where(Loan.state == 'recent',
-                                  now >= Loan.reloan_time).execute()
-        if num: log(f'removed {num} outdated recent loan records')
+        for loan in Loan.select().where(Loan.state == 'recent', now >= Loan.reloan_time):
+            log(f'removing expired loan by {loan.user} on {loan.item.barcode}')
+            loan.delete_instance()
         # Change the state of active loans that are past due.
         for loan in Loan.select().where(Loan.state == 'active', now >= Loan.end_time):
             barcode = loan.item.barcode
@@ -151,6 +151,8 @@ def expired_loans_removed(func):
                 loan.state = 'recent'
                 loan.reloan_time = loan.end_time + _RELOAN_WAIT_TIME
                 loan.save(only = [Loan.state, Loan.reloan_time])
+                History.create(type = 'loan', what = loan.item.barcode,
+                               start_time = loan.start_time, end_time = loan.end_time)
         return func(*args, **kwargs)
     return expired_loan_removing_wrapper
 
@@ -412,12 +414,14 @@ def toggle_ready():
     log(f'locking db to change {barcode} ready to {item.ready}')
     with database.atomic('exclusive'):
         item.save(only = [Item.ready])
-        # If we removed readiness after the item is let out for loans, we may
-        # have to close outstanding loans. Doesn't matter if these are active
-        # or recent loans.
+        # If we are removing readiness, we may have to close outstanding
+        # loans.  Doesn't matter if these are active or recent loans.
         if not item.ready:
-            num = Loan.delete().where(Loan.item == item).execute()
-            if num: log(f'removed {num} loans for {barcode}')
+            for loan in Loan.select().where(Loan.item == item):
+                log(f'deleting {loan.state} loan for {barcode}')
+                History.save(type = 'loan', what = loan.item.barcode,
+                             start_time = loan.start_time, end_time = loan.end_time)
+                loan.delete_instance()
     redirect(f'{dibs.base_url}/list')
 
 
@@ -438,10 +442,42 @@ def remove_item():
         item.ready = False
         item.save(only = [Item.ready])
         # First clean up loans while we still have the item object.
-        num = Loan.delete().where(Loan.item == item).execute()
-        if num: log(f'removed {num} loans for {barcode}')
+        for loan in Loan.select().where(Loan.item == item):
+            log(f'deleting {loan.state} loan for {barcode}')
+            History.save(type = 'loan', what = loan.item.barcode,
+                         start_time = loan.start_time, end_time = loan.end_time)
+            loan.delete_instance()
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
+
+
+@dibs.get('/stats')
+@dibs.get('/status')
+@authenticated
+def show_stats():
+    '''Display the list of known items.'''
+    person = person_from_session(request.environ['beaker.session'])
+    if has_required_role(person, 'library') == False:
+        log(f'get /stats invoked by non-library user')
+        redirect(f'{dibs.base_url}/notallowed')
+        return
+    log('get /stats invoked')
+    usage_data = []
+    for item in Item.select():
+        barcode = item.barcode
+        active = Loan.select().where(Loan.item == item, Loan.state == 'active').count()
+        history = History.select().where(History.what == barcode, History.type == 'loan')
+        durations = [(loan.end_time - loan.start_time) for loan in history]
+        if durations:
+            avg_duration = sum(durations, delta()) // len(durations)
+            if avg_duration < delta(seconds = 30):
+                avg_duration = '< 30 seconds'
+            else:
+                avg_duration = naturaldelta(avg_duration)
+        else:
+            avg_duration = '(never borrowed)'
+        usage_data.append((item, active, len(durations), avg_duration))
+    return page('stats', usage_data = usage_data)
 
 
 # User endpoints.
@@ -651,6 +687,8 @@ def end_loan():
             loan.reloan_time = now + (delta(minutes = 1) if debug_mode()
                                       else _RELOAN_WAIT_TIME)
             loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
+            History.create(type = 'loan', what = loan.item.barcode,
+                           start_time = loan.start_time, end_time = loan.end_time)
         redirect(f'{dibs.base_url}/thankyou')
     else:
         log(f'{user} does not have {barcode} loaned out')

@@ -23,6 +23,7 @@
       %end
       %if staff_user:
         <li><a href="{{base_url}}/list">List Items</a></li>
+        <li><a href="{{base_url}}/stats">Loan statistics</a></li>
       %end
       <li><a href="https://caltechlibrary.github.io/dibs/usage.html">Help</a></li>
       <li><a href="{{feedback_url}}">Give feedback</a></li>
