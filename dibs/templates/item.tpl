@@ -110,7 +110,7 @@
 /* NOTE: these JavaScript functions are inlined to allow for template
 rendered start conditions and to limit calls to server */
 (function (document, window) {
-    const max_poll_count = 10, /* maximum number to times to poll /item-status */
+    const max_poll_count = 500, /* maximum number to times to poll /item-status */
           wait_period = 10000; /* wait period between polling /item-status */
 
     /* Get handles to the elements we need to change on pages */
