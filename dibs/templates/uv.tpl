@@ -15,7 +15,7 @@
     <script>
      function maybeEndLoan() {
        if (confirm('This will end your loan immediately. You will need to wait '
-                 + '{{reloan_wait_time}} before borrowing this item again.')) {
+                 + '{{wait_time}} before borrowing this item again.')) {
 
          var form = document.createElement('form');
          form.setAttribute('id', 'returnButton');
@@ -53,7 +53,7 @@
 
     <div class="row bg-light" style="margin: auto 0px">
       <div class="col-6">
-        <div class="float-left my-1"><p>Loan expires at {{human_endtime}}.</p></div>
+        <div class="float-left my-1"><p>Loan expires at {{end_time}}.</p></div>
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
@@ -84,7 +84,7 @@
 
      // Calculate the delay to exiration (in msec) and force a reload then.
      var now = new Date().getTime();
-     var end = new Date("{{js_endtime}}").getTime();
+     var end = new Date("{{js_end_time}}").getTime();
      var timeout = (end - now) + 1000;
      setTimeout(() => { window.location.reload(); }, timeout);
 
