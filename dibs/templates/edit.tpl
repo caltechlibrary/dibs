@@ -19,7 +19,7 @@
           %end
         </h2>
         <p class="col-10 mx-auto font-italic">
-          Please note that DIBS does not make any changes to the item status
+          Please note that DIBS does not change the item status
           in TIND. The TIND record should be updated manually to reflect
           the fact that some copies have been pulled from circulation and
           made available via DIBS.
