@@ -17,7 +17,7 @@ file "LICENSE" for more information.
 #  |    by the Makefile. Manual changes to these values will be lost.      |
 #  ╰────────────────────── Notice ── Notice ── Notice ─────────────────────╯
 
-__version__     = '0.0.3'
+__version__     = '0.0.4'
 __description__ = 'Caltech Digital Borrowing System'
 __url__         = 'https://github.com/caltechlibrary/dibs'
 __author__      = 'Caltech Digital Library Development Team'
