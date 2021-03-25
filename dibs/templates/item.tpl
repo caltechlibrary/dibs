@@ -102,7 +102,7 @@
           <p class="mx-auto text-center w-50 pt-3">
             Loan duration: {{item.duration}} hours
           </p>
-          <p class="mx-auto text-center w-50 text-info">
+          <p id="refresh-tip" class="mx-auto text-center w-50 text-info">
             This page will refresh automatically.
           </p>
         </div>
@@ -110,13 +110,14 @@
 /* NOTE: these JavaScript functions are inlined to allow for template
 rendered start conditions and to limit calls to server */
 (function (document, window) {
-    const max_poll_count = 500, /* maximum number to times to poll /item-status */
+    const max_poll_count = 360, /* maximum number to times to poll /item-status */
           wait_period = 10000; /* wait period between polling /item-status */
 
     /* Get handles to the elements we need to change on pages */
     let loanButton = document.getElementById('loan-button'),
         notAvailableElement = document.getElementById('not-available'),
         explanationElement = document.getElementById('explanation'),
+        refreshTip = document.getElementById('refresh-tip'),
         whenElement = document.getElementById('when');
      
     // Toggle the visibility of the loan button, expire times and explanation
@@ -197,7 +198,9 @@ rendered start conditions and to limit calls to server */
     refresher = setInterval(function() {
     httpGet('{{base_url}}/item-status/{{item.barcode}}', 'application/json',
         function(data, err) {
-            if (poll_count >= 12) {
+            if (poll_count >= max_poll_count) {
+                console.log("DEBUG reached max poll count");
+                refreshTip.innerHTML = '';
                 window.clearInterval(refresher);
             } else {
                 poll_count++;
