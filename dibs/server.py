@@ -32,7 +32,7 @@ import sys
 from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
-from .database import Item, Loan, Recent, database
+from .database import Item, Loan, database
 from .date_utils import human_datetime
 from .email import send_email
 from .people import Person, check_password, person_from_session
@@ -108,9 +108,14 @@ def page(name, **kargs):
     # Bottle is unusual in providing global objects like 'request'.
     session = request.environ.get('beaker.session', None)
     logged_in = session and bool(session.get('user', None))
-    staff_user = logged_in and has_required_role(person_from_session(session), 'library')
+    staff_user = has_required_role(person_from_session(session), 'library')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)
+
+
+def time_now():
+    '''Return datetime.utcnow() but with seconds and microseconds zeroed out.'''
+    return dt.utcnow().replace(second = 0, microsecond = 0)
 
 
 def debug_mode():
@@ -132,18 +137,19 @@ def expired_loans_removed(func):
     '''Clean up expired loans.'''
     @functools.wraps(func)
     def expired_loan_removing_wrapper(*args, **kwargs):
-        now = dt.utcnow()
-        for loan in Loan.select().where(now >= Loan.endtime):
-            log(f'locking database')
+        now = time_now()
+        # Delete expired loan recency records.
+        num = Loan.delete().where(Loan.state == 'recent',
+                                  now >= Loan.reloan_time).execute()
+        if num: log(f'removed {num} outdated recent loan records')
+        # Change the state of active loans that are past due.
+        for loan in Loan.select().where(Loan.state == 'active', now >= Loan.end_time):
+            barcode = loan.item.barcode
+            log(f'locking db to update loan state of {barcode} for {loan.user}')
             with database.atomic('immediate'):
-                barcode = loan.item.barcode
-                log(f'loan for {barcode} by {loan.user} expired')
-                Recent.create(item = loan.item, user = loan.user,
-                              nexttime = loan.endtime + delta(minutes = 1))
-                loan.delete_instance()
-        # Deleting outdated Recent records is a simpler procedure.
-        num = Recent.delete().where(now >= Recent.nexttime).execute()
-        if num: log(f'removed {num} outdated Recent records')
+                loan.state = 'recent'
+                loan.reloan_time = loan.end_time + _RELOAN_WAIT_TIME
+                loan.save(only = [Loan.state, Loan.reloan_time])
         return func(*args, **kwargs)
     return expired_loan_removing_wrapper
 
@@ -265,6 +271,7 @@ def logout():
 
 
 @dibs.get('/list')
+@expired_loans_removed
 @authenticated
 def list_items():
     '''Display the list of known items.'''
@@ -364,7 +371,7 @@ def update_item():
             log(f'could not find {barcode} in TIND')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        log(f'locking database to add {barcode}, title {rec.title}')
+        log(f'locking db to add {barcode}, title {rec.title}')
         with database.atomic():
             Item.create(barcode = barcode, title = rec.title, author = rec.author,
                         tind_id = rec.tind_id, year = rec.year,
@@ -375,7 +382,7 @@ def update_item():
             log(f'there is no item with barcode {barcode}')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        log(f'locking database to save changes to {barcode}')
+        log(f'locking db to save changes to {barcode}')
         with database.atomic():
             item.barcode    = barcode
             item.duration   = duration
@@ -390,6 +397,11 @@ def update_item():
 @authenticated
 def toggle_ready():
     '''Set the ready-to-loan field.'''
+    person = person_from_session(request.environ['beaker.session'])
+    if has_required_role(person, 'library') == False:
+        log(f'post /ready invoked by non-library user')
+        redirect(f'{dibs.base_url}/notallowed')
+        return
     barcode = request.POST.barcode.strip()
     log(f'post /ready invoked on barcode {barcode}')
     item = Item.get(Item.barcode == barcode)
@@ -398,12 +410,11 @@ def toggle_ready():
     with database.atomic('exclusive'):
         item.save(only = [Item.ready])
         # If we removed readiness after the item is let out for loans, we may
-        # have to close outstanding loans and remove Recent records.
+        # have to close outstanding loans. Doesn't matter if these are active
+        # or recent loans.
         if not item.ready:
             num = Loan.delete().where(Loan.item == item).execute()
             if num: log(f'removed {num} loans for {barcode}')
-            num = Recent.delete().where(Recent.item == item).execute()
-            if num: log(f'removed {num} Recent records for {barcode}')
     redirect(f'{dibs.base_url}/list')
 
 
@@ -419,15 +430,13 @@ def remove_item():
         return
     barcode = request.POST.barcode.strip()
     item = Item.get(Item.barcode == barcode)
-    log(f'locking database to remove {barcode}')
+    log(f'locking db to remove {barcode}')
     with database.atomic('exclusive'):
         item.ready = False
         item.save(only = [Item.ready])
-        # Clean up loans & recents, but do it 1st, while the item object exists.
+        # First clean up loans while we still have the item object.
         num = Loan.delete().where(Loan.item == item).execute()
         if num: log(f'removed {num} loans for {barcode}')
-        num = Recent.delete().where(Recent.item == item).execute()
-        if num: log(f'removed {num} Recent records for {barcode}')
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
 
@@ -459,58 +468,47 @@ def item_status(barcode):
     log(f'get /item-status invoked on barcode {barcode} and {user}')
 
     obj = {
-        'barcode': barcode,
-        'ready': False,
         'available': False,
         'explanation': '',
-        'endtime' : None,
-        'base_url': dibs.base_url
+        'end_time' : None,
         }
     item = Item.get_or_none(Item.barcode == barcode)
-    if (item != None) and (user != None):
-        obj['ready'] = item.ready
-        user_loans = list(Loan.select().where(Loan.user == user))
-        recent_history = list(Recent.select().where(Recent.item == item))
-        endtime = None
-        # First check if the user has recently loaned out this same item.
-        if any(loan for loan in recent_history if loan.user == user):
-            log(f'{user} recently borrowed {barcode}')
-            recent = next(loan for loan in recent_history if loan.user == user)
-            endtime = recent.nexttime
-            obj['available'] = False
-            obj['explanation'] = 'It is too soon after the last time you borrowed this book.'
-        elif any(user_loans):
-            # The user has a current loan. If it's for this title, redirect them
-            # to the viewer; if it's for another title, block the loan button.
-            if user_loans[0].item == item:
-                log(f'{user} already has {barcode}; redirecting to uv')
-                obj['explanation'] = 'You currently have borrowed this book.'
-            else:
-                log(f'{user} already has a loan on something else')
-                obj['available'] = False
-                endtime = user_loans[0].endtime
-                loaned_item = user_loans[0].item
-                obj['explanation'] = ('You have another item on loan'
-                               + f' ("{loaned_item.title}" by {loaned_item.author})'
-                               + ' and it has not yet been returned.')
+    if not item:
+        log(f'there is no item with barcode {barcode}')
+        return json.dumps(obj)
+
+    user_loan = Loan.get_or_none(Loan.user == user)
+    end_time = None
+    if user_loan:
+        if user_loan.item == item and user_loan.state == 'active':
+            log(f'{user} already has {barcode} on loan; redirecting to uv')
+            obj['explanation'] = 'You already have this item on loan.'
+        elif user_loan.item != item and user_loan.state == 'active':
+            log(f'{user} has a loan on another item: {user_loan.item.barcode}')
+            obj['explanation'] = ('You currently have another item on loan'
+                                  + f' ("{user_loan.item.title}" by'
+                                  + f' {user_loan.item.author})')
+            end_time = user_loan.end_time
         else:
-            log(f'{user} is allowed to borrow {barcode}')
-            loans = list(Loan.select().where(Loan.item == item))
-            obj['available'] = item.ready and (len(loans) < item.num_copies)
-            if item.ready and not obj['available']:
-                endtime = min(loan.endtime for loan in loans)
-                obj['explanation'] = 'All available copies are currently on loan.'
-            elif not item.ready:
-                endtime = None
-                obj['explanation'] = 'This item is not currently available through DIBS.'
-            else:
-                # It's available and they can have it.
-                endtime = None
-                obj['explanation'] = ''
-        if endtime != None:
-            obj['endtime'] = human_datetime(endtime)
+            log(f'{user} borrowed {barcode} too recently')
+            obj['explanation'] = 'It is too soon after the last time you borrowed it.'
+            end_time = user_loan.reloan_time
+    else:
+        log(f'{user} has no other loans')
+        loans = list(Loan.select().where(Loan.item == item, Loan.state == 'active'))
+        obj['available'] = item.ready and (len(loans) < item.num_copies)
+        if item.ready and not obj['available']:
+            end_time = min(loan.end_time for loan in loans)
+            obj['explanation'] = 'All available copies are currently on loan.'
+        elif not item.ready:
+            end_time = None
+            obj['explanation'] = 'This item is not currently available through DIBS.'
         else:
-            obj['endtime'] == None
+            # It's available and they can have it.
+            end_time = time_now() + delta(hours = item.duration)
+            obj['explanation'] = ''
+    if end_time != None:
+        obj['end_time'] = human_datetime(end_time)
     return json.dumps(obj)
 
 
@@ -524,47 +522,48 @@ def show_item_info(barcode):
     log(f'get /item invoked on barcode {barcode} by {user}')
 
     item = Item.get(Item.barcode == barcode)
-    user_loans = list(Loan.select().where(Loan.user == user))
-    recent_history = list(Recent.select().where(Recent.item == item))
-    # First check if the user has recently loaned out this same item.
-    if any(loan for loan in recent_history if loan.user == user):
-        log(f'{user} recently borrowed {barcode}')
-        recent = next(loan for loan in recent_history if loan.user == user)
-        endtime = recent.nexttime
-        available = False
-        explanation = 'It is too soon after the last time you borrowed this book.'
-    elif any(user_loans):
-        # The user has a current loan. If it's for this title, redirect them
-        # to the viewer; if it's for another title, block the loan button.
-        if user_loans[0].item == item:
-            log(f'{user} already has {barcode}; redirecting to uv')
-            redirect(f'{dibs.base_url}/view/{barcode}')
-            return
+    user_loan = Loan.get_or_none(Loan.user == user)
+    explanation = ''
+    available = False
+    end_time = None
+    if user_loan:
+        if user_loan.state == 'active':
+            if user_loan.item == item:
+                log(f'{user} already has {barcode} on loan; redirecting to uv')
+                redirect(f'{dibs.base_url}/view/{barcode}')
+                return
+            else:
+                log(f'{user} has another loan, on {user_loan.item.barcode}')
+                explanation = ('You currently have another item on loan'
+                               + f' ("{user_loan.item.title}" by'
+                               + f' {user_loan.item.author})')
+                end_time = user_loan.end_time
         else:
-            log(f'{user} already has a loan on something else')
-            available = False
-            endtime = user_loans[0].endtime
-            loaned_item = user_loans[0].item
-            explanation = ('You have another item on loan'
-                           + f' ("{loaned_item.title}" by {loaned_item.author})'
-                           + ' and it has not yet been returned.')
+            if user_loan.item == item:
+                log(f'{user} recently borrowed {barcode}')
+                explanation = 'It is too soon after the last time you borrowed it.'
+                end_time = user_loan.reloan_time
+            else:
+                log(f'{user} is allowed to borrow {barcode}')
+                available = True
+                end_time = None
     else:
-        log(f'{user} is allowed to borrow {barcode}')
-        loans = list(Loan.select().where(Loan.item == item))
+        loans = list(Loan.select().where(Loan.item == item, Loan.state == 'active'))
         available = item.ready and (len(loans) < item.num_copies)
         if item.ready and not available:
-            endtime = min(loan.endtime for loan in loans)
+            log(f'all copies of {barcode} are currently loaned')
+            end_time = min(loan.end_time for loan in loans)
             explanation = 'All available copies are currently on loan.'
         elif not item.ready:
-            endtime = None
+            log(f'{barcode} is not currently ready')
+            end_time = None
             explanation = 'This item is not currently available through DIBS.'
         else:
-            # It's available and they can have it.
-            # FIXME this can't be right
-            endtime = dt.utcnow()
-            explanation = None
+            log(f'{user} is allowed to borrow {barcode}')
+            end_time = time_now() + delta(hours = item.duration)
+            explanation = ''
     return page('item', item = item, available = available,
-                endtime = human_datetime(endtime), explanation = explanation)
+                end_time = human_datetime(end_time), explanation = explanation)
 
 
 @dibs.post('/loan')
@@ -583,46 +582,42 @@ def loan_item():
         # ready, so either staff has changed the status after item was made
         # available or someone got here accidentally (or deliberately).
         log(f'{barcode} is not ready for loans')
-        redirect(f'{dibs.base_url}/view/{barcode}')
+        redirect(f'{dibs.base_url}/item/{barcode}')
         return
 
     # Checking if the item is available requires steps, and we have to be sure
     # that two users don't do them concurrently, or else we might make 2 loans.
-    log(f'locking database')
+    log(f'locking db')
     with database.atomic('exclusive'):
-        if any(Loan.select().where(Loan.user == user)):
+        user_loan = Loan.get_or_none(Loan.user == user)
+        if user_loan and user_loan.item == item:
+            if user_loan.state == 'active':
+                # Shouldn't be able to reach this point b/c the item page
+                # shouldn't make a loan available for this user & item combo.
+                # But if something weird happens, we might.
+                log(f'{user} already has {barcode} loaned; redirecting to /view')
+                redirect(f'{dibs.base_url}/view/{barcode}')
+                return
+            else:                       # Must be a recently-ended loan.
+                log(f'{user} recently borrowed {barcode}')
+                return page('error', summary = 'too soon',
+                            message = ('We ask that you wait at least '
+                                       f'{naturaldelta(_RELOAN_WAIT_TIME)} before '
+                                       'requesting the same item again. Please try '
+                                       f'after {human_datetime(loan.reloan_time)}'))
+        elif user_loan and user_loan.state == 'active':
             log(f'{user} already has a loan on something else')
             return page('error', summary = 'only one loan at a time',
                         message = ('Our policy currently prevents users from '
                                    'borrowing more than one item at a time.'))
-        loans = list(Loan.select().where(Loan.item == item))
-        if any(loan.user for loan in loans if user == loan.user):
-            # Shouldn't be able to reach this point b/c the item page shouldn't
-            # make a loan available for this user & item combo. But if
-            # something weird happens (e.g., double posting), we might.
-            log(f'{user} already has {barcode} loaned out -- redirecting to /view')
-            redirect(f'{dibs.base_url}/view/{barcode}')
-            return
-        if len(loans) >= item.num_copies:
-            # This shouldn't be possible, but check it anyway.
-            log(f'# loans {len(loans)} >= num_copies for {barcode} ')
-            redirect(f'{dibs.base_url}/item/{barcode}')
-            return
-        recent_history = list(Recent.select().where(Recent.item == item))
-        if any(loan for loan in recent_history if loan.user == user):
-            log(f'{user} recently borrowed {barcode}')
-            recent = next(loan for loan in recent_history if loan.user == user)
-            return page('error', summary = 'too soon',
-                        message = ('We ask that you wait at least '
-                                   f'{naturaldelta(_RELOAN_WAIT_TIME)} before '
-                                   'requesting the same item again. Please try '
-                                   f'after {human_datetime(recent.nexttime)}'))
         # OK, the user is allowed to loan out this item.
-        start = dt.utcnow()
         time = delta(minutes = 1) if debug_mode() else delta(hours = item.duration)
+        start = time_now()
         end = start + time
+        reloan = end + (delta(minutes = 1) if debug_mode() else _RELOAN_WAIT_TIME)
         log(f'creating new loan for {barcode} for {user}')
-        Loan.create(item = item, user = user, started = start, endtime = end)
+        Loan.create(item = item, state = 'active', user = user,
+                    start_time = start, end_time = end, reloan_time = reloan)
 
     send_email(user, item, start, end, dibs.base_url)
     redirect(f'{dibs.base_url}/view/{barcode}')
@@ -638,23 +633,20 @@ def end_loan():
     user = request.environ['beaker.session'].get('user')
     log(f'get /return invoked on barcode {barcode} by {user}')
 
-    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
-    user_loans = [loan for loan in loans if user == loan.user]
-    if len(user_loans) > 1:
-        # Internal error -- users should not have more than one loan of an
-        # item. Right now, we simply log it and move on.
-        log(f'error: more than one loan for {barcode} by {user}')
-    elif user_loans:
-        # Normal case: user has loaned a copy of item. Delete the record
-        # and add a new Recent loan record.
-        log(f'locking database to delete loan of {barcode} by {user}')
+    item = Item.get(Item.barcode == barcode)
+    loan = Loan.get_or_none(Loan.item == item, Loan.user == user)
+    if loan and loan.state == 'active':
+        # Normal case: user has loaned a copy of item. Update to 'recent'.
+        log(f'locking db to change state of loan of {barcode} by {user}')
         with database.atomic('immediate'):
-            user_loans[0].delete_instance()
-            Recent.create(item = Item.get(Item.barcode == barcode), user = user,
-                          nexttime = dt.utcnow() + _RELOAN_WAIT_TIME)
+            now = time_now()
+            loan.state = 'recent'
+            loan.end_time = now
+            loan.reloan_time = now + (delta(minutes = 1) if debug_mode()
+                                      else _RELOAN_WAIT_TIME)
+            loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
         redirect(f'{dibs.base_url}/thankyou')
     else:
-        # User does not have this item loaned out. Ignore the request.
         log(f'{user} does not have {barcode} loaned out')
 
 
@@ -667,16 +659,15 @@ def send_item_to_viewer(barcode):
     user = request.environ['beaker.session'].get('user')
     log(f'get /view invoked on barcode {barcode} by {user}')
 
-    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
-    user_loans = [loan for loan in loans if user == loan.user]
-    if user_loans:
+    item = Item.get(Item.barcode == barcode)
+    loan = Loan.get_or_none(Loan.item == item, Loan.user == user)
+    if loan and loan.state == 'active':
         log(f'redirecting to viewer for {barcode} for {user}')
-        endtime = user_loans[0].endtime    # Remember this is in UTC.
         wait_time = delta(minutes = 1) if debug_mode() else _RELOAN_WAIT_TIME
         return page('uv', barcode = barcode,
-                    human_endtime = human_datetime(endtime),
-                    js_endtime = human_datetime(endtime, '%m/%d/%Y %H:%M:%S'),
-                    reloan_wait_time = naturaldelta(wait_time))
+                    end_time = human_datetime(loan.end_time),
+                    js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
+                    wait_time = naturaldelta(wait_time))
     else:
         log(f'{user} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/item/{barcode}')
@@ -691,8 +682,9 @@ def return_iiif_manifest(barcode):
     user = request.environ['beaker.session'].get('user')
     log(f'get /manifests/{barcode} invoked by {user}')
 
-    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
-    if any(loan.user for loan in loans if user == loan.user):
+    item = Item.get(Item.barcode == barcode)
+    loan = Loan.get_or_none(Loan.item == item, Loan.user == user)
+    if loan and loan.state == 'active':
         manifest_file = join(_MANIFEST_DIR, f'{barcode}-manifest.json')
         if not exists(manifest_file):
             log(f'{manifest_file} does not exist')
@@ -724,27 +716,28 @@ def return_iiif_content(barcode, rest):
     user = request.environ['beaker.session'].get('user')
     log(f'get /iiif/{barcode}/{rest} invoked by {user}')
 
-    loans = list(Loan.select().join(Item).where(Loan.item.barcode == barcode))
-    if not any(loan.user for loan in loans if user == loan.user):
+    item = Item.get(Item.barcode == barcode)
+    loan = Loan.get_or_none(Loan.item == item, Loan.user == user)
+    if loan and loan.state == 'active':
+        # Undo the temporary encoding done by return_iiif_manifest().
+        corrected = rest.replace(f'{barcode}!', str(barcode) + r'%2F')
+        url = _IIIF_BASE_URL + '/' + corrected
+
+        # UV uses ajax to get info.json files, which fails if we redirect the
+        # requests to the IIIF server. Grab & serve the content ourselves.
+        if url.endswith('json'):
+            response, error = net('get', url)
+            with NamedTemporaryFile() as data_file:
+                data_file.write(response.content)
+                data_file.seek(0)
+                log(f'returning {len(response.content)} bytes for /iiif/{barcode}/{rest}')
+                return static_file(data_file.name, root = '/')
+        else:
+            log(f'redirecting to {url} for {barcode} for {user}')
+            redirect(url)
+    else:
         log(f'{user} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
-        return
-    # Undo the temporary encoding done by return_iiif_manifest().
-    corrected = rest.replace(f'{barcode}!', str(barcode) + r'%2F')
-    url = _IIIF_BASE_URL + '/' + corrected
-
-    # UV uses ajax to get info.json files, which fails if we redirect the
-    # requests to the IIIF server. Grab & serve the content ourselves.
-    if url.endswith('json'):
-        response, error = net('get', url)
-        with NamedTemporaryFile() as data_file:
-            data_file.write(response.content)
-            data_file.seek(0)
-            log(f'returning {len(response.content)} bytes for /iiif/{barcode}/{rest}')
-            return static_file(data_file.name, root = '/')
-    else:
-        log(f'redirecting to {url} for {barcode} for {user}')
-        redirect(url)
 
 
 # Universal viewer interface.
@@ -776,18 +769,18 @@ def serve_uv_files(filepath):
 def not_allowed():
     log(f'serving /notallowed')
     return page('error', summary = 'access error',
-                message = ('The requested method does not exist or you do not '
+                message = ('The requested page does not exist or you do not '
                            'not have permission to access the requested item.'))
 
 @dibs.error(404)
 def error404(error):
-    log(f'error404 called on {request.path} with {error}')
+    log(f'{request.method} called on {request.path}, resulting in {error}')
     return page('404', code = error.status_code, message = error.body)
 
 
 @dibs.error(405)
 def error405(error):
-    log(f'error405 called on {request.path} with {error}')
+    log(f'{request.method} called on {request.path}, resulting in {error}')
     return page('error', summary = 'method not allowed',
                 message = ('The requested method does not exist or you do not '
                            'not have permission to perform the action.'))
