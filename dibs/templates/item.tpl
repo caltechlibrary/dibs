@@ -2,7 +2,6 @@
 <html lang="en">
   %include('common/banner.html')
   <head>
-    <meta http-equiv="Pragma" content="no-cache">
     %include('common/standard-inclusions.tpl')
 
     <title>Description page for {{item.title}}</title>
@@ -76,12 +75,12 @@
         </table>
 
         <div>
-          <p class="mx-auto text-center w-50">
+          <p class="mx-auto text-center w-75">
             This item is <span id="not-available">{{'' if available else 'not'}}</span>
             currently available to you for a digital loan.
             <span id="explanation">{{explanation}}</span>
             <span id="when">This item is scheduled to become available again
-              no later than {{endtime if endtime else 'unknown'}}.</span>
+              no later than {{end_time if end_time else 'unknown'}}.</span>
           </p>
 
           <div class="col-md-3 mx-auto text-center">
@@ -100,8 +99,11 @@
             </form>
           </div>
 
-          <p class="mx-auto text-center w-50 py-3">
+          <p class="mx-auto text-center w-50 pt-3">
             Loan duration: {{item.duration}} hours
+          </p>
+          <p class="mx-auto text-center w-50 text-info">
+            This page will refresh automatically.
           </p>
         </div>
         <script>
@@ -119,7 +121,7 @@ rendered start conditions and to limit calls to server */
      
     // Toggle the visibility of the loan button, expire times and explanation
     // depending on availability.
-    function set_book_status(available, explanation, endtime) {
+    function set_book_status(available, explanation, end_time) {
         if (available == true) {
             console.log("DEBUG book is available");
             loanButton.removeAttribute('disabled');
@@ -137,12 +139,12 @@ rendered start conditions and to limit calls to server */
             loanButton.classList.add('btn-secondary');
             notAvailableElement.innerHTML = 'not';
             explanationElement.innerHTML = explanation;
-            if (endtime != "None") {
-              console.log('endtime');
-              console.log(endtime);
+            if (end_time != "None") {
+              console.log('end_time');
+              console.log(end_time);
                 whenElement.innerHTML = 
-                   'This item will become available to you again no later than ' +
-                   '{{endtime if endtime else "unknown"}}.';
+                   'This item will become available again by ' +
+                   '<nobr>{{end_time if end_time else "unknown"}}</nobr>.';
             } else {
                 whenElement.innerHTML = '';
             }
@@ -152,7 +154,7 @@ rendered start conditions and to limit calls to server */
     if ("{{available}}" == "True") {
         set_book_status(true, '', '');
     } else {
-        set_book_status(false, '{{explanation}}', '{{endtime}}');
+        set_book_status(false, '{{explanation}}', '{{end_time}}');
     }
 
 
@@ -208,7 +210,7 @@ rendered start conditions and to limit calls to server */
                 console.log("DEBUG update page here...");
 		console.log('DEBUG typeof ', typeof(data));
                 console.log('DEBUG data: ', data);
-		set_book_status(data.available, data.explanation, data.endtime);
+		set_book_status(data.available, data.explanation, data.end_time);
             } else {
                 console.log("ERROR: " + err);
             }
