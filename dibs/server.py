@@ -35,7 +35,7 @@ from   topi import Tind
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime
 from .email import send_email
-from .people import Person, GuestPerson, person_from_environ
+from .people import Person, GuestPerson, person_from_environ, check_password
 from .roles import role_to_redirect, has_required_role
 
 
@@ -210,12 +210,13 @@ def login():
     else:
         uname = request.forms.get('email').strip()
         password = request.forms.get('password')
-        log(f'post /login invoked by {email}')
+        log(f'post /login invoked by {uname}')
         # get our person obj from people.db for demo purposes
         person = Person.get_or_none(Person.uname == uname)
         if check_password(password, person.secret) == False:
             log(f'wrong password -- rejecting {uname}')
             return page('login', login_failed = True)
+        p = role_to_redirect(person.role)
         redirect(f'{dibs.base_url}/{p}')
     p = role_to_redirect(person.role)
     log(f'person {person.uname} & redirecting to {dibs.base_url}/{p}')
@@ -239,7 +240,6 @@ def list_items():
         return
     log('get /list invoked')
     return page('list', items = Item.select())
-
 
 @dibs.get('/manage')
 def list_items():
