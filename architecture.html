@@ -267,6 +267,13 @@
       <a href="#endpoints" class="md-nav__link">Endpoints</a>
       
     
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="#architectural-notes" class="md-nav__link">Architectural notes</a>
+      
+    
     </li></ul>
     
     </li>
@@ -418,6 +425,24 @@
 </table>
 
 
+<h2 id="architectural-notes">Architectural notes<a class="headerlink" href="#architectural-notes" title="Permalink to this headline">¶</a></h2>
+
+<h3 id="about-peewee"><em>About Peewee</em><a class="headerlink" href="#about-peewee" title="Permalink to this headline">¶</a></h3>
+<p>The definition of the database is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/database.py</span></code></span>.  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
+<p>Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee <code class="docutils literal notranslate"><span class="pre">ModelSelector</span></code>, and not a single result or a list of results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Item</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Item</span><span class="o">.</span><span class="n">barcode</span> <span class="o">==</span> <span class="n">barcode</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and you can’t call something like Python’s <code class="docutils literal notranslate"><span class="pre">next(...)</span></code> on this because it’s an iterator and not a generator.  You have to either use a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it’s not a concern currently.</p>
+
+
+<h3 id="about-bottle"><em>About Bottle</em><a class="headerlink" href="#about-bottle" title="Permalink to this headline">¶</a></h3>
+<p>The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.  The endpoints are implemented using <a class="reference external" href="https://bottlepy.org">Bottle</a>.</p>
+<p>The web server used at the moment is the development server provided by Bottle.  It has live reload built-in, meaning that changes to the <code class="docutils literal notranslate"><span class="pre">.py</span></code> files are picked up automatically and the server updates its behavior on the fly.</p>
+<p>See <a class="reference external" href="http://bottlepy.org/docs/dev/tutorial.html#auto-reloading">http://bottlepy.org/docs/dev/tutorial.html#auto-reloading</a> for an important note about Bottle: when it’s running in auto-reload mode, <em>“the main process will not start a server, but spawn a new child process using the same command line arguments used to start the main process. All module-level code is executed at least twice”</em>.  This means some care is needed in how the top-level code is written.  Useful to know is that code can distinguish whether it’s in the parent or child process by looking for the presence of the environment variable <code class="docutils literal notranslate"><span class="pre">'BOTTLE_CHILD'</span></code> set by Bottle in the child process.</p>
+
+
+
 
 
           </article>
@@ -466,7 +491,7 @@
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.3.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
