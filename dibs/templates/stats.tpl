@@ -5,11 +5,10 @@
     <meta http-equiv="Pragma" content="no-cache">
     %include('common/standard-inclusions.tpl')
 
-    <title>List of items currently in Caltech DIBS</title>
+    <title>DIBS status page</title>
 
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
     <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
   </head>
 
   <body>
@@ -18,10 +17,13 @@
 
       <div class="container-fluid main-container">
         <h2 class="mx-auto text-center pb-2 mt-4">
-          Manage DIBS item list
+          Loan statistics
         </h2>
+        <p class="mx-auto text-center font-italic">
+          Click on the column titles to sort the table by that column.
+        </p>
+        </p>
         <div class="d-grid gap-3">
-
           <div class="mb-3 table-responsive">
             <table class="table table-borderless"
                    data-toggle="table" data-pagination="true" data-escape="false">
@@ -33,17 +35,20 @@
                   <th data-sortable="true" data-sorter="linkedTextSort"
                       data-field="title">&nbsp;<br>&nbsp;<br>Title</th>
 
-                  <th data-sortable="true"
-                      data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
+                  <th data-sortable="true" data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
 
-                  <th data-sortable="true" data-sorter="numberSort"
-                      data-field="year">&nbsp;<br>&nbsp;<br>Year</th>
+                  <th class="text-center" data-sortable="true"
+                      data-field="available">Current<br>active<br>loans</th>
 
-                  <th></th>
+                  <th class="text-center" data-sortable="true" data-field="time"
+                      data-sorter="numberSort">Total<br>loans<br>to&nbsp;date</th>
+
+                  <th class="text-center" data-sortable="true" data-field="copies"
+                       data-sorter="numberSort">Average<br>loan<br>duration</th>
                 </tr>
               </thead>
               <tbody>
-                %for item in items:
+                %for item, current_loans, total_loans, avg_duration in usage_data:
                 <tr scope="row">
                   <td>
                     %if item.tind_id != '':
@@ -62,23 +67,18 @@
                   </td>
 
                   <td>
-                    {{item.year}}
+                    {{current_loans}}
                   </td>
 
                   <td>
-                    <form action="{{base_url}}/remove" method="POST"
-                          onSubmit="return confirm('Remove list entry for {{item.barcode}} '
-                                                   + '(&#8220;{{item.title}}&#8221; by '
-                                                   + '{{item.author}})? This will not '
-                                                   + 'delete the files from storage; '
-                                                   + 'it will simply delist the entry '
-                                                   + 'from the DIBS database.');">
-                      <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-                      <input type="submit" name="remove" value="Delist"
-                             class="btn btn-danger btn-sm"/>
-                    </form>
+                    {{total_loans}}
                   </td>
-                </tr>
+
+                  <td>
+                    {{avg_duration}}
+                  </td>
+
+                </tr>                
                 %end
               </tbody>
             </table>

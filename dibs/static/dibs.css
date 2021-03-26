@@ -1,6 +1,7 @@
 /* ============================================================================
  * File:    dibs.css
  * Brief:   Style file for DIBS
+ * Created: 2021-02-01
  * License: Please see the file named LICENSE in the project directory
  * Project: https://github.com/caltechlibrary/dibs
  *
@@ -9,9 +10,9 @@
  * ============================================================================
  */
 
-/* Form customization .........................................................
+/* Form customizations ..................................................... */
 
-I find the shade of gray of the placeholders in Chrome & Firefox to be too
+/* I find the shade of gray of the placeholders in Chrome & Firefox to be too
 dark; it looks too close to typed text for my tastes.  This lightens it. */
 
 ::-webkit-input-placeholder                   { color: #bbb; }
@@ -41,11 +42,11 @@ html .form-control:-ms-input-placeholder      { color: #bbb; }
 }
 
 
-/* Footer placement ...........................................................
+/* Footer placement ........................................................ */
 
-The following combination of classes is used to put the foooter at the bottom
-of the viewport or the page content, whichever is lower.  The method is based
-on the Stack Overflow posting of 2012-09-03 by user "zzzzBov" at
+/* The following combination of classes is used to put the foooter at the
+bottom of the viewport or the page content, whichever is lower.  The method
+is based on the Stack Overflow posting of 2012-09-03 by user "zzzzBov" at
 https://stackoverflow.com/a/12253099/743730  The settings for html, body,
 .page-content, .main-container, and .footer-text all together cooperate to
 get the desired behavior. */
@@ -79,8 +80,7 @@ body {
 }
 
 
-/* Miscellaneous DIBS look & feel customizations ..............................
-*/
+/* Miscellaneous DIBS look & feel customizations ........................... */
 
 a {
   color: black;
@@ -99,4 +99,14 @@ a {
   width: 1.5rem;
   height: 1.5rem;
   top: 0.5rem
+}
+
+/* Used to make <input> and <button> look like links instead of buttons,
+used in situations where we need to make a link perform a POST request. */
+.link-not-button {
+  background: none!important;
+  border: none;
+  padding: 0!important;
+  text-decoration: underline;
+  cursor: pointer;
 }

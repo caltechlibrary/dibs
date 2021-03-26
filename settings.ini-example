@@ -1,32 +1,54 @@
 # =============================================================================
-# Settings file for DIBS.
-# This file must be located in the same directory as run-server
+# @file    settings.ini
+# @brief   Settings file for DIBS.
+# @created 2021-02-02
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# 
+#     ,------------------- Notice -- Notice -- Notice -------------------.
+#     | This file must be located in the same directory as adapter.wsgi. |
+#     `------------------------------------------------------------------'
+#
 # =============================================================================
 
 [settings]
-# Path to the sqlite database used by Peewee, relative to here.
+# Path to the sqlite database, relative to here.
 DATABASE_FILE = dibs.db
 
-# Path to Bottle templates, relative to here.
-TEMPLATE_DIR  = dibs/templates
+# Directory containing IIIF manifest files.  Each file name should follow the
+# pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
+# for DIBS contains a subdirectory called "manifests" with a demo file in it,
+# but the path can be changed if you put your manifests elsewhere.
+MANIFEST_DIR = manifests
+
+# IIIF server base path.
+IIIF_BASE_URL = https://yourserver.com/iiif
 
 # Email details. The user has to be an account authenticated to the server.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25
 MAIL_SENDER = helpdesk@library.caltech.edu
 
-# User session details.
-COOKIE_NAME = dibs
-COOKIE_LIFETIME = 86400
-
-# Feedback form URL.
-FEEDBACK_URL = https://forms.gle/uLGcpuTcgBeb9R6Q6
-
-# BASE_URL includes the protocol, hostname (and port if needed) and base url
-# path.  E.g. http://localhost:8080 (development) or
-# https://library.example.edu/dibs (WSGI hosting).
-BASE_URL = http://localhost:8080
+# Session tracking cookies. This is a temporary scheme.
+# Important: SECURE_COOKIES can only be set to True if https is being used.
+SESSION_DIR     = /tmp/dibs
+SESSION_SECRET  = abc123
+SESSION_TIMEOUT = 604800
+SECURE_COOKIES  = False
 
 # Time a user must wait between when they return a title and when they can
 # loan it out again (in minutes).
 RELOAN_WAIT_TIME = 30
+
+# Feedback form URL.
+FEEDBACK_URL = https://forms.gle/uLGcpuTcgBeb9R6Q6
+
+# When running locally using run-server, the following options are recognized:
+#   "normal": run adapter.wsgi in mod_wsgi-express without special options
+#   "test":   run adapter.wsgi in mod_wsgi-express with some debugging options
+#   "debug":  run Bottle's default server with full debugging options
+# When running in an Apache2 mod_wsgi environment, adapter.wsgi is always
+# used and both "test" and "debug" have the same effect, which is only to turn
+# Bottle's debug options (which provides more verbose logging, disables
+# template caching, and display tracebacks in web pages when errors occur).
+RUN_MODE = normal

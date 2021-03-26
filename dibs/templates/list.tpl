@@ -20,8 +20,10 @@
         <h2 class="mx-auto text-center pb-2 mt-4">
           Items in DIBS
         </h2>
+        <p class="mx-auto text-center font-italic">
+          Click on the column titles to sort the table by that column.
+        </p>
         <div class="d-grid gap-3">
-
           <div class="mb-3 table-responsive">
             <table class="table table-borderless"
                    data-toggle="table" data-pagination="true" data-escape="false">
@@ -73,7 +75,6 @@
                   <td class="text-center">
                     <form action="{{base_url}}/ready" method="POST">
                       <input type="hidden" name="barcode" value="{{item.barcode}}">
-                      <input type="hidden" name="ready" value="{{item.ready}}">
                       <input type="checkbox" class="checkbox"
                              onChange="this.form.submit()"
                              {{'checked="checked"' if item.ready else ''}}/>

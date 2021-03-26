@@ -2,6 +2,13 @@
 roles.py provides a DICT that maps a role string to a target
 redirect. The function role_to_redirect provides a safe encapsulation
 as the role application will likely evolve over time.
+
+Copyright
+---------
+
+Copyright (c) 2021 by the California Institute of Technology.  This code
+is open-source software released under a 3-clause BSD license.  Please see the
+file "LICENSE" for more information.
 '''
 
 

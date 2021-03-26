@@ -1,16 +1,29 @@
 #!/usr/bin/env python3
 # =============================================================================
 # @file    run-server
-# @brief   Simple server control program for DIBS experiment
+# @brief   Wrapper around mod_wsgi-express to start DIBS server for testing
+# @created 2021-01-12
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/dibs
+#
+# Important note about the code that follows.  When Bottle is running in
+# auto-reload mode (which is what we invoke in our debug mode), the main
+# process spawns a new child process using the same command line arguments
+# used to start the main process.  All module-level code is executed at least
+# twice -- in other words, the code in this file is executed twice when
+# running in Bottle's default server.  It's not an issue for efficiency
+# because this is only used to start the process (so we really don't care too
+# much if some things are done twice needlessly), but nevertheless, some care
+# is needed to avoid doing things that would cause problems if performed
+# twice.  It's possible to determine whether the current process is the
+# parent or child process by testing for the environment variable BOTTLE_CHILD.
 # =============================================================================
 
 # Initial imports. More things are imported later below.
 
 import pkg_resources
 import os
-from   os.path import exists, dirname, join
+from   os.path import exists, dirname, join, basename
 import sys
 from   sys import exit
 
@@ -18,7 +31,8 @@ from   sys import exit
 # Sanity-check the run-time environment before attempting anything else.
 # .............................................................................
 
-here = dirname(sys.argv[0])
+here  = dirname(sys.argv[0])
+where = 'the current directory' if here == '.' else here
 
 if not exists(join(here, 'requirements.txt')):
     print('‼️  Expected to be in same directory as requirements.txt')
@@ -33,126 +47,237 @@ else:
             exit(1)
 
 if not exists(join(here, 'settings.ini')):
-    where = 'the current directory' if here == '.' else here
     print(f'‼️  File "settings.ini" not found in {where}.')
+    print(f'‼️  Please create one starting with file "settings.ini-example".')
     exit(1)
 
 if not exists(join(here, 'viewer', 'node_modules')):
-    print(f'‼️  Node modules appear to be missing from "viewer" subdirectory.')
+    print(f'‼️  Node modules appear to be missing from {here}/viewer.')
+    print(f'‼️  Please cd to {here}/viewer and run "npm install".')
+    exit(1)
+
+if not exists(join(here, 'adapter.wsgi')):
+    print(f'‼️  File "adapter.wsgi" not found in {where}.')
     exit(1)
 
 
-# Define the main entry point.
+# Global defaults.
+# .............................................................................
+
+_DEFAULT_BASE_URL = 'http://localhost:8080'
+
+
+# Main entry point.
 # .............................................................................
 # Import 3rd-party dependencies here, after the tests above for their existence
-# in the user's environment.  Not importing them at the top of the file is
-# arguably against Pythonic best practices, but IMHO testing for the packages
-# first lets us give a more informative error if anything is missing.
+# in the user's environment.  Importing them here and not at the top of the
+# file is against Pythonic best practices, but IMHO, testing for the packages
+# first (above) lets us give a more informative error if anything is missing.
 
 from   boltons.debugutils import pdb_on_signal
+import bottle
 from   commonpy.data_utils import timestamp
 from   commonpy.string_utils import antiformat
 from   decouple import config
+from   mod_wsgi.server import cmd_start_server as mod_wsgi_start
+import os
 import plac
-from   shutil import which
-import signal
-from   subprocess import check_output
-from   urllib.parse import urlparse
+from   rich import box
+from   rich.box import DOUBLE_EDGE
+from   rich.console import Console
+from   rich.panel import Panel
+from   shutil import get_terminal_size
+from   sidetrack import set_debug, log, logr
+from   yurl import URL
 
-if __debug__:
-    from sidetrack import set_debug, log, logr
+from   dibs import dibs, print_version
 
-from   dibs.server import Server
 
 @plac.annotations(
-    address   = ('host name or address to use for the web server',     'option', 'a'),
-    port      = ('port number for the web server',                     'option', 'p'),
-    no_reload = ("turn off Bottle's auto-reloader (default: turn on)", 'flag',   'R'),
-    debug     = ('write detailed trace to "OUT" ("-" means console)',  'option', '@'),
+    base_url = (f'base URL (default: {_DEFAULT_BASE_URL})',           'option', 'b'),
+    mode     = ('run mode: normal, test, or debug (default: normal)', 'option', 'm'),
+    verbose  = ('write a trace of activity to the log stream',        'flag'  , 'v'),
+    version  = ('print version info and exit',                        'flag',   'V'),
 )
 
-def main(address = 'A', port = 'P', no_reload = False, debug = 'OUT'):
-    '''Server control script for DIBS experimental server.
+def main(base_url = 'B', mode = 'M', verbose = False, version = False):
+    '''Convenient interface for running the DIBS server during development.
 
-By default, this will read the file "settings.ini" for the value of the
-variable BASE_URL, and start the server on the host and port indicated.
-If given the option -a and/or -p on the command line, the given values will
-override the value of BASE_URL in settings.ini.
+This starts a local server running DIBS.  It always looks for a file named
+"settings.ini" in the current directory and reads it to set various DIBS
+configuration variables.  The command-line options to the current program
+(run-server) take precedence over the configuration values in "settings.ini".
 
-Additional command-line arguments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Run modes
+~~~~~~~~~
 
-If given the -@ argument, this program will output a detailed trace of
-what it is doing. The debug trace will be sent to the given destination,
-which can be '-' to indicate console output, or a file path to send the
-output to a file.
+There are 3 run modes available; they can be selected either via the option -m
+on the command line or by setting the RUN_MODE option in the settings.ini file.
+(Using the command-line option -m overrides the value of RUN_MODE.)
 
-When -@ has been given, Ottoman also installs a signal handler on signal
-SIGUSR1 that will drop Ottoman into the pdb debugger if the signal is sent
-to the running process.
+"normal": uses mod_wsgi-express without debugging options.  The server
+    will run multiple threads, will not reload if source files are changed,
+    will not reload templates if they are changed, and will not stop for
+    exceptions.  It looks for a file named "adapter.wsgi" in the current
+    directory and passes it to mod_wsgi.  This mode is a close approximation
+    to running DIBS in a basic Apache2 mod_wsgi environment, with adapter.wsgi.
+    May be combined with -v.  The normal mode is the default; it can also be
+    explicitly selected by using the value "normal" with the -m option.
+
+"test": uses mod_wsgi-express, with some debugging options turned on.
+    The server will run a single process and thread, will output detailed
+    logging to the terminal, will disable Bottle's template caching, will drop
+    into pdb upon any exceptions, but will not reload if source files are
+    changed.  This mode is useful for testing DIBS using adapter.wsgi in
+    mod_wsgi.  Test mode is invoked using the option -m test, or setting
+    RUN_MODE to "test" in settings.ini.  Implies option -v.
+
+"debug": this uses Bottle's development server instead of mod_wsgi-express
+    and turns on maximum debugging options.  This mode does NOT use
+    adapter.wsgi.  It will turn off template caching, and will drop into pdb
+    upon exceptions, and unlike mod_wsgi, the Bottle server will also
+    automatically reload any changed source files.  In addition, all loan
+    times are set to expire in 1 minute (overriding values set on individual
+    items).  Debug mode is invoked using the option -m debug, or setting
+    RUN_MODE to "debug" in settings.ini.  Implies option -v.
+
+Additional options
+~~~~~~~~~~~~~~~~~~
+
+In a live server, the default base URL for DIBS is normally set by the Apache2
+configuration.  For the local server started by this program, the default is
+http://localhost:8080.  The option -b can be used to change this.  The value
+given to -b should contain the protocol, hostname, port (if needed) and any
+additional path elements of the root of DIBS on the server; e.g.,
+"https://library.example.edu/dibs".  (Note: the path component is ignored when
+running in debug mode.)
+
+The -v option will turn on debug tracing in the output stream without turning
+on other debug features.  This can be useful in normal mode.  Using either of
+the values "test" or "debug" for option -m always turns on -v automatically.
+
+If given the -V option, this program will print the version and other
+information, and exit without doing anything else.
 
 Command-line arguments summary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 '''
+    # Do preliminary steps and handle early exits -----------------------------
 
-    # Set up debug logging as soon as possible, if requested ------------------
+    child = 'BOTTLE_CHILD' in os.environ
 
-    if debug != 'OUT':
-        if __debug__: set_debug(True, debug, print_package = True)
+    if version:
+        print_version()
+        exit(0)
+
+    base_url   = _DEFAULT_BASE_URL if base_url == 'B' else base_url
+    parsed_url = URL(base_url)
+    scheme     = parsed_url.scheme
+    host       = parsed_url.host
+    port       = parsed_url.port or ('80' if scheme == 'http' else '443')
+    extra_path = parsed_url.path
+    if not host:
+        print(f'‼️  Unable to parse -b value "{base_url}" -- quitting.')
+        exit(1)
+
+    mode = config('RUN_MODE', default = 'normal') if mode == 'M' else mode
+    if mode not in ['normal', 'test', 'debug']:
+        print(f'‼️  Unknown mode "{mode}" -- quitting.')
+        exit(1)
+    elif not child:
+        print(f'Run mode is {mode}.')
+
+    if mode == 'normal':
+        print_safety_warning()
+
+    if verbose or mode in ['test', 'debug']:
+        set_debug(True, '-', show_package = True)
         import faulthandler
         faulthandler.enable()
-        if not sys.platform.startswith('win'):
-            # Even with a different signal, I can't get this to work on Win.
-            pdb_on_signal(signal.SIGUSR1)
 
     # Do the real work --------------------------------------------------------
 
-    # See http://bottlepy.org/docs/dev/tutorial.html#auto-reloading for an
-    # important note about Bottle: when it's running in auto-reload mode,
-    # "the main process will not start a server, but spawn a new child
-    # process using the same command line arguments used to start the main
-    # process. All module-level code is executed at least twice".  We can test
-    # if we're in the child process by looking for a variable set by Bottle.
-
-    in_bottle_child = ('BOTTLE_CHILD' in os.environ)
-
-    if __debug__ and not in_bottle_child:
+    if not child:
         log('='*8 + f' started {timestamp()} ' + '='*8)
-
-    if not in_bottle_child:
-        if not which('redis-cli'):
-            print("⚠️ Can't find redis-cli -- proceeding anyway")
-        elif 'PONG' in check_output(['redis-cli', 'ping']).decode():
-            if __debug__: log('redis appears to be running')
-        else:
-            print(f'‼️  redis does not appear to be running.')
-            exit(1)
+        log(f'given base_url = {base_url}, mode = {mode}')
 
     try:
-        base_url = config('BASE_URL')
-        config_url = urlparse(base_url)
-        server_host = config_url.hostname if address == 'A' else address
-        server_port = config_url.port if port == 'P' else port
-        if not in_bottle_child:
-            if __debug__: log(f'starting server on {server_host}:{server_port}')
-        server = Server(host   = server_host,
-                        port   = server_port,
-                        debug  = False if debug == 'OUT' else debug,
-                        reload = not no_reload)
-        server.run()
-    except KeyboardInterrupt as ex:
-        print('⚠️ Interrupted by user -- exiting')
+        if mode == 'debug':
+            start_bottle_server(scheme, host, port, extra_path, mode, verbose)
+        else:
+            start_wsgi_server(scheme, host, port, extra_path, mode, verbose)
     except Exception as ex:
         exception = sys.exc_info()
         msg = antiformat(exception[1])
-        print(f'‼️  Encountered error {exception[0].__name__}: {msg}')
-        if __debug__:
+        if mode in ['test', 'debug']:
             from traceback import format_exception
             details = ''.join(format_exception(*exception))
-            logr(f'Exception: {msg}\n{details}')
+            print(f'Exception: {msg}\n{details}')
+        else:
+            print(f'‼️  Encountered error {exception[0].__name__}: {msg}')
 
-    if __debug__ and not in_bottle_child:
+    if not child:
         log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
+
+
+def start_wsgi_server(scheme, host, port, extra_path, mode, verbose):
+    # mod_wsgi-express doesn't have a direct way to set parameters; you have
+    # to construct a command line parsed by mod_wsgi_start(...).  Oh well.
+    args = ['adapter.wsgi', '--host', host, '--port', port,
+            '--setenv', 'RUN_MODE', mode, '--server-status']
+    if extra_path:
+        args += ['--mount-point', extra_path]
+    if verbose:
+        args += ['--setenv', 'VERBOSE', 'True']
+    if verbose or mode == 'test':
+        args += ['--log-level', 'debug', '--log-to-terminal']
+        args += ['--startup-log', '--access-log']
+        args += ['--error-log-format', '[%{%H:%M:%S}t] %M']
+        args += ['--access-log-format', '[%{%a %b %0e %H:%M:%S %Y}t] %h \"%r\" %>s']
+    if mode == 'test':
+        args += ['--enable-debugger', '--threads', '1']
+
+    logr(f'starting mod_wsgi with arguments: {" ".join(args)}')
+    mod_wsgi_start(args)
+
+
+def start_bottle_server(scheme, host, port, extra_path, mode, verbose):
+    # We only ever run the Bottle server in debug and verbose mode, so no
+    # need to test that here or change behaviors.  However, be mindful that
+    # Bottle will spawn a child process and execute everything a second time.
+
+    child = ('BOTTLE_CHILD' in os.environ)
+    log(f'running {"child " if child else ""}server process')
+
+    # Configure Bottle for debugging and also not to ignore exceptions.
+    bottle.debug(True)
+    dibs.catchall = False
+
+    # Set our special "base_url" attribute on our dibs application object.
+    # Note: Bottle doesn't have a way to pass extra_path, so it's ignored.
+    dibs.base_url = f'{scheme}://{host}'
+    if port not in ['80', '443']:
+        dibs.base_url = f'{dibs.base_url}:{port}'
+    if child:
+        log(f'base_url = {dibs.base_url}')
+
+    bottle.run(dibs, host = host, port = int(port), reloader = True)
+
+
+# Miscellaneous utilities.
+# .............................................................................
+
+def print_safety_warning():
+    name = basename(sys.argv[0])
+    text = ("⚠️  REMINDER: DON'T USE THIS AS A PUBLIC SERVER. ⚠️\n"
+            + f'"{name}" starts a server with weak security. \n'
+            + 'It is intended for testing and debugging only.\n'
+            + 'For production, set up Apache with adapter.wsgi.')
+    terminal_width = get_terminal_size().columns
+    panel_width = 55 if terminal_width > 55 else terminal_width
+    padding = min(abs(panel_width - len(text) - 2) // 2, 2)
+    Console().print(Panel(text, width = panel_width, padding = (0, padding),
+                          style = 'orange_red1'))
 
 
 # Main invocation.

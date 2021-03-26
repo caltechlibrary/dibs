@@ -5,6 +5,13 @@ information used to staff as well as last login time to expire
 logins and force a re-authorization. In development the "secret" field
 is used for authentication but in a production setting OAuth2+OpenID
 is used to authentication and retrieving the userid.
+
+Copyright
+---------
+
+Copyright (c) 2021 by the California Institute of Technology.  This code
+is open-source software released under a 3-clause BSD license.  Please see the
+file "LICENSE" for more information.
 '''
 
 from hashlib import blake2b
@@ -56,6 +63,6 @@ class Person(Model):
 
 
 def person_from_session(session):
-    if 'user' in session:
+    if session and 'user' in session:
         return (Person.get_or_none(Person.uname == session['user']))
     return None

@@ -12,6 +12,30 @@
 
     <script src="{{base_url}}/viewer/uv/lib/offline.js"></script>
     <script src="{{base_url}}/viewer/uv/helpers.js"></script>
+    <script>
+     function maybeEndLoan() {
+       if (confirm('This will end your loan immediately. You will need to wait '
+                 + '{{wait_time}} before borrowing this item again.')) {
+
+         var form = document.createElement('form');
+         form.setAttribute('id', 'returnButton');
+         form.setAttribute('method', 'post');
+         form.setAttribute('action', '{{base_url}}/return');
+         form.style.display = 'hidden';
+         document.body.appendChild(form)
+
+         var input = document.createElement('input');
+         input.setAttribute('type', 'hidden');
+         input.setAttribute('name', 'barcode');
+         input.setAttribute('value', '{{barcode}}');
+         document.getElementById('returnButton').appendChild(input);
+
+         form.submit();
+       } else {
+         return false;
+       }
+     }
+    </script>
 
     <style>
      html, body { height: 97% }
@@ -29,15 +53,11 @@
 
     <div class="row bg-light" style="margin: auto 0px">
       <div class="col-6">
-        <div class="float-left my-1"><p>Loan expires at {{endtime}}.</p></div>
+        <div class="float-left my-1"><p>Loan expires at {{end_time}}.</p></div>
       </div>
       <div class="col-6">
         <button type="button" class="btn btn-danger float-right my-1"
-                onclick="if ( confirm('This will end your loan immediately. '
-                                    + 'You will need to wait {{reloan_wait_time}} '
-                                    + 'before being able to borrow this item again.'
-                                    )) { window.location = '{{base_url}}/return/{{barcode}}';}
-                                        else { return false; }">
+                onclick="maybeEndLoan();">
           End loan now</button>
       </div>
     </div>
@@ -61,9 +81,17 @@
        console.log('parsed metadata', myUV.extension.helper.manifest.getMetadata());
        console.log('raw jsonld', myUV.extension.helper.manifest.__jsonld);
      });
+
+     // Calculate the delay to exiration (in msec) and force a reload then.
+     var now = new Date().getTime();
+     var end = new Date("{{js_end_time}}").getTime();
+     var timeout = (end - now) + 1000;
+     setTimeout(() => { window.location.reload(); }, timeout);
+
    }, false);
 
    window.onpageshow = function (event) {
+     // If this page was loaded from cache, force a reload.
      if (event.persisted) {
        window.location.reload();
      }

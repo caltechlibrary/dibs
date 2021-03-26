@@ -15,12 +15,15 @@
   <div class="collapse navbar-collapse" id="navbar-menu">
     <ul class="nav navbar-nav text-right">
       %if logged_in:
-        <li><a href="{{base_url}}/logout">Logout</a></li>
+        <form action="{{base_url}}/logout" method="POST">
+          <input class="link-not-button" type="submit" name="edit" value="Logout"/>
+        </form>
       %else:
         <li><a href="{{base_url}}/login">Staff login</a></li>
       %end
       %if staff_user:
         <li><a href="{{base_url}}/list">List Items</a></li>
+        <li><a href="{{base_url}}/stats">Loan statistics</a></li>
       %end
       <li><a href="https://caltechlibrary.github.io/dibs/usage.html">Help</a></li>
       <li><a href="{{feedback_url}}">Give feedback</a></li>

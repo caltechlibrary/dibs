@@ -1,14 +1,19 @@
 '''
 email.py: email utilities for DIBS
+
+Copyright
+---------
+
+Copyright (c) 2021 by the California Institute of Technology.  This code
+is open-source software released under a 3-clause BSD license.  Please see the
+file "LICENSE" for more information.
 '''
 
 from   decouple import config
+from   sidetrack import log
 import smtplib
 
 from .date_utils import human_datetime
-
-if __debug__:
-    from sidetrack import log
 
 
 # Constants used throughout this file.
@@ -52,8 +57,8 @@ def send_email(user, item, start, end, base_url):
                             subject   = subject,
                             sender    = config('MAIL_SENDER'),
                             feedback  = config('FEEDBACK_URL'))
-       if __debug__: log(f'sending mail to {user} about loan of {item.barcode}')
+       log(f'sending mail to {user} about loan of {item.barcode}')
        mailer  = smtplib.SMTP(config('MAIL_HOST'))
        mailer.sendmail(config('MAIL_SENDER'), [user], body)
    except Exception as ex:
-       if __debug__: log(f'unable to send mail: {str(ex)}')
+       log(f'unable to send mail: {str(ex)}')
