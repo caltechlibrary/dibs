@@ -78,12 +78,6 @@ class GuestPerson():
         return self.role == required_role
     
 
-def person_from_session(session):
-    '''Legacy session version when we used Beaker'''
-    if session and 'user' in session:
-        return (Person.get_or_none(Person.uname == session['user']))
-    return None
-
 def person_from_environ(environ):
     if 'REMOTE_USER' in environ:
         # NOTE: If we're shibbed then we always return a Person object.

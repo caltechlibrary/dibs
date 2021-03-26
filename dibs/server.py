@@ -78,7 +78,7 @@ def page(name, **kargs):
     '''Create a page using template "name" with some standard variables set.'''
     # Bottle is unusual in providing global objects like 'request'.
     person = person_from_environ(request.environ)
-    logged_in = (person.uname != '')
+    logged_in = ((person != None) and (person.uname != ''))
     staff_user = has_required_role(person, 'library')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user, feedback_url = _FEEDBACK_URL,
