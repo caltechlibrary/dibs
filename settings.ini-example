@@ -15,6 +15,9 @@
 # Path to the sqlite database, relative to here.
 DATABASE_FILE = dibs.db
 
+# Set the Shibboleth to True if running under Shib.
+SHIBBOLETH = True
+
 # Directory containing IIIF manifest files.  Each file name should follow the
 # pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
 # for DIBS contains a subdirectory called "manifests" with a demo file in it,

@@ -11,6 +11,7 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
+from sidetrack import log
 
 _role_table = {
     "library": "list",
@@ -19,6 +20,7 @@ _role_table = {
 def has_required_role(person, required_role):
     if (person == None):
         return False
+    log(f'person type: {type(person)}')
     return person.has_role(required_role)
 
 def role_to_redirect(role):
