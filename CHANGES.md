@@ -1,6 +1,12 @@
 Change log for DIBS
 ===================
 
+Version next
+------------
+
+* The author column in the `/list` page is now truncated if the author list is very long.
+
+
 Version 0.0.4
 -------------
 
