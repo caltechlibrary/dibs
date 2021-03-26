@@ -1,0 +1,82 @@
+
+Installing DIBS
+===============
+
+The following are instructions for installing DIBS on an Ubuntu
+20.04.2 LTS host.
+
+Requirements
+------------
+
++ Python3 and pip
++ NodeJS/npm (for installing the universal viewer)
++ Apache2 + WSGI
++ SQLite3
+
+Preparing your machine
+----------------------
+
+We can install the general environment via Debian's package
+manager.
+
+```shell
+    sudo apt install apache2 apache2-dev apache2-ssl-dev \
+        libapache2-mod-py3 python3 python3-pip sqlite3 \
+        npm
+```
+
+Cloning DIBS
+------------
+
+In this example we're assuming the host serving the application
+
+1. Take a look at https://github.com/caltechlibrary/dibs
+2. mkdir a directory to host our app (e.g. /Sites)
+3. Clone dibs into our host directory
+4. Clone submodules
+    a. Clone the repository into an appropriate directory
+    b. set the group onwership to www-data (the group Apache runs under)
+    c. Initialize and pull the submodule for the Universal Viewer
+5. Install Python3 modules required
+6. Install/update the Universal viewer
+7. Load test data
+8. Add users 
+9. Set permissions
+10. Configure Apache and the dibs application
+
+```shell
+   sudo mkdir /Sites && sudo chown www-data.www-data /Sites
+   cd /Sites || exit 1
+   git clone https://github.com/caltechlbirary/dibs
+   cd dibs
+   sudo chgrp -R www-data .
+   git submodule --init 
+   git submodule update --recursive
+   python3 -m pip install -r requirements.txt
+   cd viewer
+   npm install
+   npm audit fix
+   cd ..
+   python3 load-mock-data.py # This will configure your SQLite tables
+   sudo chown www-data.www-data dibs.db 
+   sudo chmod 664 dibs.db
+   python3 people-manager add uname=admin role=library secret=
+```
+
+Configuration
+-------------
+
+1. Setup Apache2 to support WSGI apps (see dibs.conf-example)
+2. Create settings.ini and edit as needed
+3. Restart apache and test3. Restart apache and test3. Restart apache and test
+
+```shell
+    cp settings.ini-example settings.ini
+    nano settings.ini
+    cp dibs.conf-example dibs.conf
+    nano dibs.conf
+    # NOTE: replace MYSITE with the name of our conf file
+    # Add an "include" link to include our dibs.conf to setup the WSGI connection.
+    sudo nano /etd/apache2/sites-enabled/MYSITE.conf 
+    sudo apache2ctl -t && sudo systemctl restart apache2
+```
