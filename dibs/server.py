@@ -111,7 +111,8 @@ def page(name, **kargs):
     logged_in = session and bool(session.get('user', None))
     staff_user = has_required_role(person_from_session(session), 'library')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
-                    staff_user = staff_user, feedback_url = _FEEDBACK_URL, **kargs)
+                    staff_user = staff_user, feedback_url = _FEEDBACK_URL,
+                    reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
 
 
 def time_now():
@@ -554,16 +555,14 @@ def loan_availability(user, barcode):
 
 
 @dibs.get('/')
-@dibs.get('/<name:re:(info|welcome|about|thankyou)>')
+@dibs.get('/<name:re:(info|about|thankyou)>')
 def general_page(name = '/'):
     '''Display the welcome page.'''
     log(f'get /{"" if name == "/" else name} invoked')
-    if name == 'about':
-        return page('about')
-    elif name == 'thankyou':
-        return page('thankyou')
+    if name and name in ['info', 'about', 'thankyou']:
+        return page(f'{name}')
     else:
-        return page('info', reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME))
+        return page('info')
 
 
 # Next one is used by the item page to update itself w/o reloading whole page.
