@@ -492,7 +492,7 @@ class Status(Enum):
     UNKNOWN_ITEM   = auto()         # Barcode is not in the DIBS database.
 
 
-def loan_availability(user, barcode):
+def loan_availability(uname, barcode):
     '''Return multiple values: (item, status, explanation, when_available).'''
 
     item = Item.get_or_none(Item.barcode == barcode)
@@ -511,23 +511,23 @@ def loan_availability(user, barcode):
     allowed = False
     explanation = ''
     when_available = None
-    loan = Loan.get_or_none(Loan.user == user)
+    loan = Loan.get_or_none(Loan.user == uname)
     if loan is None:
         allowed = True
     elif loan.item == item:
         if loan.state == 'active':
-            log(f'{user} already has {barcode} on loan')
+            log(f'{uname} already has {barcode} on loan')
             status = Status.LOANED_BY_USER
             explanation = 'This is currently on digital loan to you.'
         else:
-            log(f'{user} had a loan on {barcode} too recently')
+            log(f'{uname} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
             explanation = 'It is too soon after the last time you borrowed it.'
             when_available = loan.reloan_time
     else:
         # It's a loan on another item.
         if loan.state == 'active':
-            log(f'{user} has a loan on another item: {loan.item.barcode}')
+            log(f'{uname} has a loan on another item: {loan.item.barcode}')
             status = Status.USER_HAS_OTHER
             explanation = ('You have another item currently on loan'
                            + f' ("{loan.item.title}" by {loan.item.author})')
@@ -544,7 +544,7 @@ def loan_availability(user, barcode):
             explanation = 'All available copies are currently on loan.'
             when_available = min(loan.end_time for loan in loans)
         else:
-            log(f'{user} is allowed to borrow {barcode}')
+            log(f'{uname} is allowed to borrow {barcode}')
             status = Status.AVAILABLE
 
     return item, status, explanation, when_available
@@ -590,7 +590,7 @@ def show_item_info(barcode):
 
     item, status, explanation, when_available = loan_availability(person.uname, barcode)
     if status == Status.LOANED_BY_USER:
-        log(f'redirecting {user} to uv for {barcode}')
+        log(f'redirecting {person.uname} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
     return page('item', item = item, available = (status == Status.AVAILABLE),
@@ -655,7 +655,7 @@ def loan_item():
         Loan.create(item = item, state = 'active', user = person.uname,
                     start_time = start, end_time = end, reloan_time = reloan)
 
-    send_email(user, item, start, end, dibs.base_url)
+    send_email(person.uname, item, start, end, dibs.base_url)
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
@@ -670,7 +670,7 @@ def end_loan():
     log(f'get /return invoked on barcode {barcode} by {person.uname}')
 
     item = Item.get(Item.barcode == barcode)
-    loan = Loan.get_or_none(Loan.item == item, Loan.user == user)
+    loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
         # Normal case: user has loaned a copy of item. Update to 'recent'.
         log(f'locking db to change state of loan of {barcode} by {person.uname}')

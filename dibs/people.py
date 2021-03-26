@@ -91,7 +91,7 @@ def person_from_environ(environ):
         if person == None:
             person = GuestPerson()
             person.uname = environ['REMOTE_USER']
-            person.display_name = person.uname
+            person.display_name = environ['REMOTE_USER']
         return person
     else:
         return None
