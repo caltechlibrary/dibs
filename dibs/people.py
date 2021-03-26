@@ -1,5 +1,7 @@
 '''
-auth.py provides a means of managing authentication and authorization.
+people.py provides authorization for a person based on their statues
+in the person table.
+
 It requires an SQLite3 database called people.db for managing user
 information used to staff as well as last login time to expire
 logins and force a re-authorization. In development the "secret" field

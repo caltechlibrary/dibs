@@ -111,8 +111,9 @@ def expired_loans_removed(func):
         now = time_now()
         # Delete expired loan recency records.
         for loan in Loan.select().where(Loan.state == 'recent', now >= Loan.reloan_time):
-            log(f'removing expired loan by {loan.user} on {loan.item.barcode}')
-            loan.delete_instance()
+            log(f'locking db to expire loan by {loan.user} on {loan.item.barcode}')
+            with database.atomic('immediate'):
+                loan.delete_instance()
         # Change the state of active loans that are past due.
         for loan in Loan.select().where(Loan.state == 'active', now >= Loan.end_time):
             barcode = loan.item.barcode
@@ -441,7 +442,7 @@ class Status(Enum):
     UNKNOWN_ITEM   = auto()         # Barcode is not in the DIBS database.
 
 
-def loan_availability(uname, barcode):
+def loan_availability(user, barcode):
     '''Return multiple values: (item, status, explanation, when_available).'''
 
     item = Item.get_or_none(Item.barcode == barcode)
@@ -457,44 +458,40 @@ def loan_availability(uname, barcode):
         return item, status, explanation, None
 
     # Start by checking if the user has any active or recent loans.
-    allowed = False
     explanation = ''
     when_available = None
-    loan = Loan.get_or_none(Loan.user == uname)
-    if loan is None:
-        allowed = True
-    elif loan.item == item:
+    loan = Loan.get_or_none(Loan.user == user, Loan.item == item)
+    if loan:
         if loan.state == 'active':
-            log(f'{uname} already has {barcode} on loan')
+            log(f'{user} already has {barcode} on loan')
             status = Status.LOANED_BY_USER
             explanation = 'This is currently on digital loan to you.'
         else:
-            log(f'{uname} had a loan on {barcode} too recently')
+            log(f'{user} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
             explanation = 'It is too soon after the last time you borrowed it.'
             when_available = loan.reloan_time
     else:
-        # It's a loan on another item.
-        if loan.state == 'active':
-            log(f'{uname} has a loan on another item: {loan.item.barcode}')
+        loan = Loan.get_or_none(Loan.user == user, Loan.state == 'active')
+        if loan:
+            other = loan.item
+            log(f'{user} has a loan on another item: {other.barcode}')
             status = Status.USER_HAS_OTHER
+            author = other.author[:50]+"..." if len(other.author) > 50 else other.author
             explanation = ('You have another item currently on loan'
-                           + f' ("{loan.item.title}" by {loan.item.author})')
+                           + f' ("{other.title}" by {author})')
             when_available = loan.end_time
         else:
-            allowed = True
-
-    # The user may be allowed to loan this, but are there any copies available?
-    if allowed:
-        loans = list(Loan.select().where(Loan.item == item, Loan.state == 'active'))
-        if len(loans) == item.num_copies:
-            log(f'all copies of {barcode} are currently loaned')
-            status = Status.NO_COPIES_LEFT
-            explanation = 'All available copies are currently on loan.'
-            when_available = min(loan.end_time for loan in loans)
-        else:
-            log(f'{uname} is allowed to borrow {barcode}')
-            status = Status.AVAILABLE
+            # The user may be allowed to loan this, but are there any copies left?
+            loans = list(Loan.select().where(Loan.item == item, Loan.state == 'active'))
+            if len(loans) == item.num_copies:
+                log(f'all copies of {barcode} are currently loaned')
+                status = Status.NO_COPIES_LEFT
+                explanation = 'All available copies are currently on loan.'
+                when_available = min(loan.end_time for loan in loans)
+            else:
+                log(f'{user} is allowed to borrow {barcode}')
+                status = Status.AVAILABLE
 
     return item, status, explanation, when_available
 
@@ -776,7 +773,7 @@ def favicon():
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js)>')
+@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>')
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
