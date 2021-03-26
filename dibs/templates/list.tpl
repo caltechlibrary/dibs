@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
     <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.0/css/all.css">
   </head>
 
   <body>
@@ -54,7 +55,7 @@
                 </tr>
               </thead>
               <tbody>
-                %for item in items:
+                %for item, manifest_exists in items:
                 <tr scope="row">
                   <td>
                     %if item.tind_id != '':
@@ -73,12 +74,24 @@
                   </td>
 
                   <td class="text-center">
+
+                    
+
                     <form action="{{base_url}}/ready" method="POST">
+                      %if not manifest_exists:
+                      <i title="The manifest for this item is missing."
+                         style="margin-left: -2.6ex; margin-right: 2pt; filter:drop-shadow(2px 2px 2px #eee)"
+                         class="fas fa-exclamation-triangle text-warning"></i>
+                      %end
                       <input type="hidden" name="barcode" value="{{item.barcode}}">
                       <input type="checkbox" class="checkbox"
+                             %if not manifest_exists:
+                             disabled
+                             %end
                              onChange="this.form.submit()"
                              {{'checked="checked"' if item.ready else ''}}/>
                     </form>
+
                   </td>
 
                   <td class="text-center">

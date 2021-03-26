@@ -1,5 +1,7 @@
 '''
-auth.py provides a means of managing authentication and authorization.
+people.py provides authorization for a person based on their statues
+in the person table.
+
 It requires an SQLite3 database called people.db for managing user
 information used to staff as well as last login time to expire
 logins and force a re-authorization. In development the "secret" field
@@ -13,6 +15,8 @@ Copyright (c) 2021 by the California Institute of Technology.  This code
 is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
+
+from datetime import datetime
 
 from hashlib import blake2b
 from getpass import getpass
@@ -52,7 +56,6 @@ class Person(Model):
     secret = CharField() # password
     role = CharField()   # role is empty or "staff"
     display_name = CharField() # display_name, optional
-    auth_type = CharField() # local, OAuth2
     updated = TimestampField() # last successful login timestamp
 
     def has_role(self, required_role):
@@ -61,8 +64,31 @@ class Person(Model):
     class Meta:
         database = _db
 
+# GuestPerson only exists while REMOTE_USER available in the environment.
+# It is not stored in the person table as the Person model is.
+class GuestPerson():
+    '''GuestPerson is an object for non-staff people, it has the same signature but is not
+       persisted in the person table of the database'''
+    uname = ''  # user name, e.g. janedoe
+    role = ''   # role is empty or "staff"
+    display_name = '' # display_name, optional
+    updated = datetime.now()
 
-def person_from_session(session):
-    if session and 'user' in session:
-        return (Person.get_or_none(Person.uname == session['user']))
-    return None
+    def has_role(self, required_role):
+        return self.role == required_role
+    
+
+def person_from_environ(environ):
+    if 'REMOTE_USER' in environ:
+        # NOTE: If we're shibbed then we always return a Person object.
+        # Either they are a known person (e.g. library staff) or other community
+        # member without a role.
+        person = Person.get_or_none(Person.uname == environ['REMOTE_USER'])
+        if person == None:
+            person = GuestPerson()
+            person.uname = environ['REMOTE_USER']
+            person.display_name = environ['REMOTE_USER']
+        return person
+    else:
+        return None
+
