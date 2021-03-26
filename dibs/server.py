@@ -9,8 +9,6 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-# Dropping the need for session support, using REMOTE_USER and person lookup
-#from   beaker.middleware import SessionMiddleware
 import bottle
 from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
@@ -71,35 +69,6 @@ _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 # How many times a user can retry a login within a given window of time (sec).
 _LOGIN_RETRY_TIMES = 5
 _LOGIN_RETRY_WINDOW = 30
-
-## # The next constant is used to configure Beaker sessions. This is used at
-## # the very end of this file in the call to SessionMiddleware.
-## _SESSION_CONFIG = {
-##     # Save session data automatically, without requiring us to call save().
-##     'session.auto'    : True,
-## 
-##     # Session cookies should be accessible only to the browser, not JavaScript.
-##     'session.httponly': True,
-## 
-##     # Session cookies should be marked secure, but it requires https, so we
-##     # can't set it unconditionally.  Since this module (server.py) is loaded
-##     # before adapter.wsgi, we don't have the info about whether https is in
-##     # use.  Right now I don't see a better way but to use a settings.ini var.
-##     'session.secure'  : config('SECURE_COOKIES', default = False),
-## 
-##     # FIXME this is temporary and insecure.  When we have SSO hooked in,
-##     # session tracking needs to be revisited anyway.
-##     'session.type'    : 'file',
-##     'session.data_dir': config('SESSION_DIR', default = '/tmp/dibs'),
-##     'session.secret'  : config('SESSION_SECRET', default =
-##                                ''.join(random.choices(string.printable, k = 128))),
-## 
-##     # The name of the session cookie.
-##     'session.key'     : 'dibssession',
-## 
-##     # Seconds until the session is invalidated.
-##     'session.timeout' : config('SESSION_TIMEOUT', cast = int, default = 604800),
-## }
 
 
 # General-purpose utilities used later.
@@ -183,25 +152,13 @@ def barcode_verified(func):
     return barcode_verification_wrapper
 
 
-def authenticated(func):
-    '''Check if the user is authenticated and redirect to /login if not.'''
-    @functools.wraps(func)
-    def authentication_check_wrapper(*args, **kwargs):
-##         if request.method == 'HEAD':
-##             # A Beaker session is not present when we get a HEAD.  Unsure if
-##             # that's expected or just a Bottle or Beaker behavior.  We can't
-##             # proceed with the request, but it's not an error either.  I
-##             # haven't found a better alternative than simply returning nothing.
-##             log(f'returning empty HEAD on {request.path}')
-##             return
-##         session = request.environ['beaker.session']
-##         if not session.get('user', None):
-##             log(f'user not found in session object')
-##             redirect(f'{dibs.base_url}/login')
-##         else:
-##             log(f'user is authenticated: {session["user"]}')
-        return func(*args, **kwargs)
-    return authentication_check_wrapper
+#FIXME: Can I removed this?  A users is always authenticated by Apache2 before arriving here.
+#def authenticated(func):
+#    '''Check if the user is authenticated and redirect to /login if not.'''
+#    @functools.wraps(func)
+#    def authentication_check_wrapper(*args, **kwargs):
+#        return func(*args, **kwargs)
+#    return authentication_check_wrapper
 
 
 def limit_login_attempts(func):
@@ -271,7 +228,6 @@ def logout():
 
 @dibs.get('/list')
 @expired_loans_removed
-@authenticated
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
@@ -284,7 +240,6 @@ def list_items():
 
 
 @dibs.get('/manage')
-@authenticated
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
@@ -297,7 +252,6 @@ def list_items():
 
 
 @dibs.get('/add')
-@authenticated
 def add():
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
@@ -311,7 +265,6 @@ def add():
 
 @dibs.get('/edit/<barcode:int>')
 @barcode_verified
-@authenticated
 def edit(barcode):
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
@@ -326,7 +279,6 @@ def edit(barcode):
 @dibs.post('/update/add')
 @dibs.post('/update/edit')
 @expired_loans_removed
-@authenticated
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     person = person_from_environ(request.environ)
@@ -393,7 +345,6 @@ def update_item():
 
 @dibs.post('/ready')
 @barcode_verified
-@authenticated
 def toggle_ready():
     '''Set the ready-to-loan field.'''
     person = person_from_environ(request.environ)
@@ -421,7 +372,6 @@ def toggle_ready():
 
 @dibs.post('/remove')
 @barcode_verified
-@authenticated
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     person = person_from_environ(request.environ)
@@ -447,7 +397,6 @@ def remove_item():
 
 @dibs.get('/stats')
 @dibs.get('/status')
-@authenticated
 def show_stats():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
@@ -567,7 +516,6 @@ def general_page(name = '/'):
 
 @dibs.get('/item-status/<barcode:int>')
 @expired_loans_removed
-@authenticated
 def item_status(barcode):
     '''Returns an item summary status as a JSON string'''
     person = person_from_environ(request.environ)
@@ -582,7 +530,6 @@ def item_status(barcode):
 @dibs.get('/item/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-@authenticated
 def show_item_info(barcode):
     '''Display information about the given item.'''
     person = person_from_environ(request.environ)
@@ -601,7 +548,6 @@ def show_item_info(barcode):
 @dibs.post('/loan')
 @expired_loans_removed
 @barcode_verified
-@authenticated
 def loan_item():
     '''Handle http post request to loan out an item, from the item info page.'''
     person = person_from_environ(request.environ)
@@ -662,7 +608,6 @@ def loan_item():
 @dibs.post('/return')
 @expired_loans_removed
 @barcode_verified
-@authenticated
 def end_loan():
     '''Handle http post request to return the given item early.'''
     barcode = request.forms.get('barcode').strip()
@@ -691,7 +636,6 @@ def end_loan():
 @dibs.get('/view/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-@authenticated
 def send_item_to_viewer(barcode):
     '''Redirect to the viewer.'''
     person = person_from_environ(request.environ)
@@ -714,7 +658,6 @@ def send_item_to_viewer(barcode):
 @dibs.get('/manifests/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-@authenticated
 def return_iiif_manifest(barcode):
     '''Return the manifest file for a given item.'''
     person = person_from_environ(request.environ)
@@ -748,7 +691,6 @@ def return_iiif_manifest(barcode):
 @dibs.get('/iiif/<barcode>/<rest:re:.+>')
 @expired_loans_removed
 @barcode_verified
-@authenticated
 def return_iiif_content(barcode, rest):
     '''Return the manifest file for a given item.'''
     person = person_from_environ(request.environ)
