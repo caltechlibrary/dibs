@@ -63,7 +63,7 @@
                   </td>
 
                   <td>
-                    {{item.author}}
+                    {{item.author[:50]+"..." if len(item.author) > 50 else item.author}}
                   </td>
 
                   <td>
