@@ -2,7 +2,6 @@
 <html lang="en">
   %include('common/banner.html')
   <head>
-    <meta http-equiv="Pragma" content="no-cache">
     %include('common/standard-inclusions.tpl')
 
     <title>Description page for {{item.title}}</title>
@@ -61,14 +60,12 @@
                       <th>Year</th>
                       <td>{{item.year}}</td>
                     </tr>
+                    %if item.edition != '':
                     <tr>
                       <th>Edition</th>
-                      %if item.edition != '':
                       <td>{{item.edition}}</td>
-                      %else:
-                      <td><i>Unknown</i></td>
-                      %end
                     </tr>
+                    %end
                     <tr><td></td><td></td></tr>
                   </tbody>
                 </table>
@@ -78,12 +75,12 @@
         </table>
 
         <div>
-          <p class="mx-auto text-center w-50">
+          <p class="mx-auto text-center w-75">
             This item is <span id="not-available">{{'' if available else 'not'}}</span>
             currently available to you for a digital loan.
             <span id="explanation">{{explanation}}</span>
             <span id="when">This item is scheduled to become available again
-              no later than {{endtime if endtime else 'unknown'}}.</span>
+              no later than {{when_available if when_available else 'unknown'}}.</span>
           </p>
 
           <div class="col-md-3 mx-auto text-center">
@@ -102,26 +99,30 @@
             </form>
           </div>
 
-          <p class="mx-auto text-center w-50 py-3">
+          <p class="mx-auto text-center w-50 pt-3">
             Loan duration: {{item.duration}} hours
+          </p>
+          <p id="refresh-tip" class="mx-auto text-center w-50 text-info">
+            This page will refresh automatically.
           </p>
         </div>
         <script>
 /* NOTE: these JavaScript functions are inlined to allow for template
 rendered start conditions and to limit calls to server */
 (function (document, window) {
-    const max_poll_count = 10, /* maximum number to times to poll /item-status */
+    const max_poll_count = 360, /* maximum number to times to poll /item-status */
           wait_period = 10000; /* wait period between polling /item-status */
 
     /* Get handles to the elements we need to change on pages */
     let loanButton = document.getElementById('loan-button'),
         notAvailableElement = document.getElementById('not-available'),
         explanationElement = document.getElementById('explanation'),
+        refreshTip = document.getElementById('refresh-tip'),
         whenElement = document.getElementById('when');
      
     // Toggle the visibility of the loan button, expire times and explanation
     // depending on availability.
-    function set_book_status(available, explanation, endtime) {
+    function set_book_status(available, explanation, when_available) {
         if (available == true) {
             console.log("DEBUG book is available");
             loanButton.removeAttribute('disabled');
@@ -139,12 +140,12 @@ rendered start conditions and to limit calls to server */
             loanButton.classList.add('btn-secondary');
             notAvailableElement.innerHTML = 'not';
             explanationElement.innerHTML = explanation;
-            if (endtime != "None") {
-              console.log('endtime');
-              console.log(endtime);
+            if (when_available != "None") {
+              console.log('when_available');
+              console.log(when_available);
                 whenElement.innerHTML = 
-                   'This item will become available to you again no later than ' +
-                   '{{endtime if endtime else "unknown"}}.';
+                   'This item will become available again by ' +
+                   '<nobr>{{when_available if when_available else "unknown"}}</nobr>.';
             } else {
                 whenElement.innerHTML = '';
             }
@@ -154,7 +155,7 @@ rendered start conditions and to limit calls to server */
     if ("{{available}}" == "True") {
         set_book_status(true, '', '');
     } else {
-        set_book_status(false, '{{explanation}}', '{{endtime}}');
+        set_book_status(false, '{{explanation}}', '{{when_available}}');
     }
 
 
@@ -197,7 +198,9 @@ rendered start conditions and to limit calls to server */
     refresher = setInterval(function() {
     httpGet('{{base_url}}/item-status/{{item.barcode}}', 'application/json',
         function(data, err) {
-            if (poll_count >= 12) {
+            if (poll_count >= max_poll_count) {
+                console.log("DEBUG reached max poll count");
+                refreshTip.innerHTML = '';
                 window.clearInterval(refresher);
             } else {
                 poll_count++;
@@ -210,7 +213,7 @@ rendered start conditions and to limit calls to server */
                 console.log("DEBUG update page here...");
 		console.log('DEBUG typeof ', typeof(data));
                 console.log('DEBUG data: ', data);
-		set_book_status(data.available, data.explanation, data.endtime);
+		set_book_status(data.available, data.explanation, data.when_available);
             } else {
                 console.log("ERROR: " + err);
             }

@@ -47,8 +47,15 @@ The patron can elect to end the loan early.  If they do, the viewer will close a
     <img src="_static/media/loan-ended.png">
 </figure>
 
+In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user's institutional SSO identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.
+
 
 ## The staff experience
+
+Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the [patron experience](#the-patron-experience) described in the previous section.)
+
+
+### Logging in
 
 The current development version of DIBS does not yet integrate with Caltech's SSO for authentication, and consequently, DIBS has its own login mechanism for demonstration purposes.  The login page is accessible from the drop-down menu in the upper right-hand corner of every page in DIBS:
 
@@ -62,7 +69,12 @@ Selecting the **Staff login** option from the menu redirects the user to the log
     <img src="_static/media/login-page.png">
 </figure>
 
-Staff users can log in with their email address.  Once logged in, staff are redirected to the main entry point for staff, which is the list page located at `/list`:
+Staff users can log in with their email address.
+
+
+### The list page
+
+Once logged in, staff are redirected to the main entry point for staff, which is the list page located at `/list`:
 
 <figure>
     <img src="_static/media/list-page.png">
@@ -79,7 +91,10 @@ As its name implies, the list page provides a list all of the items known to DIB
 * <span class="button color-secondary">Copy link</span>: this copies to the user's clipboard a link to the item loan page.  This is what should be communicated to course instructors, so that they can pass on the URLs to their students.
 * <span class="button color-info">Edit entry</span>: edit the entry. This brings up the same form as is used to add new entries, but with the values filled in, allowing the user to change the values and save the results.
 
-The two buttons on the bottom the of page allow staff users to either add new items, or edit the list of items (to remove entries to the list).  If the user clicks the <span class="button color-primary">Add new item</span> button, they are presented with the following screen:
+
+### Adding new items
+
+If the user clicks the <span class="button color-primary">Add a new item</span> button, they are presented with the following screen:
 
 <figure>
     <img src="_static/media/add-item-page.png">

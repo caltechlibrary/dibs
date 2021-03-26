@@ -10,11 +10,25 @@
     <div class="page-content">
       %include('common/navbar.tpl')
 
-      <div class="container main-container text-center mx-auto mt-4">
+      <div class="container main-container  mx-auto mt-4">
+        <h2 class="mx-auto text-center pb-2">
+          %if item:
+          Edit item with barcode {{item.barcode}}
+          %else:
+          Add new item to DIBS
+          %end
+        </h2>
+        <p class="col-10 mx-auto font-italic">
+          Please note that DIBS does not change the item status
+          in TIND. The TIND record should be updated manually to reflect
+          the fact that some copies have been pulled from circulation and
+          made available via DIBS.
+        </p>
+
         <form class="form-horizontal" action="{{base_url}}/update/{{action}}" method="POST">
 
           <label for="barcode" class="form-group control-label" style="display: block">
-            <span class="control-label col-md-4">Barcode</span>
+            <span class="control-label">Barcode</span>
             <input name="barcode" type="number" class="form-control"
                    placeholder="Barcode"
                    %if item:
@@ -24,7 +38,7 @@
           </label>
 
           <label for="numCopies" class="form-group control-label" style="display: block">
-            <span class="control-label">Copies</span>
+            <span class="control-label">Number of copies</span>
             <input name="num_copies" type="number" class="form-control"
                    placeholder="Number of copies to be made available for simultaneous loans"
                    step="any" min="1"

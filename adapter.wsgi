@@ -14,6 +14,7 @@ from   os import chdir
 from   os.path import realpath, dirname
 from   sidetrack import log, set_debug
 import sys
+from   werkzeug.wsgi import get_host, get_script_name
 
 # The following sets the default directory to the current app's directory, so
 # that imports and calls to config(...) work as expected.  It also prevents a
@@ -31,7 +32,7 @@ from dibs import dibs
 # Notes:
 #
 # 1) In the function dibs_application() below, we set variable "base_url" on
-# "dibgs" (our application object).  Our application code in dibs/server.py
+# "dibs" (our application object).  Our application code in dibs/server.py
 # relies on this being set.  It's set only once.
 #
 # 2) Mod_wsgi runs this .wsgi adapter with a clean environment; you cannot pass
@@ -47,6 +48,10 @@ from dibs import dibs
 # avoid the inefficiency of doing that at every invocation.  Our "run-server"
 # script takes advantage of that: it uses mod_wsgi-express's ability to set
 # environment variables, and sets debug & verbose options if requested.
+#
+# 3) Keep in mind that mod_wsgi will normally run multiple processes and/or
+# multiple threads (depending on the server configuration), which means this
+# module (adapter.wsgi) will be invoked multiple times.
 
 dibs._config_done = False
 
@@ -69,23 +74,11 @@ def dibs_application(env, start_response):
         # Determine our base url and set it once. No sense in computing this
         # on every call, because it won't change while running.  Set a custom
         # property on the dibs Bottle object so our server code can read it.
-        if not env.get('SERVER_NAME', None):
-            raise ValueError('SERVER_NAME not set in WSGI environment')
-        host = env['SERVER_NAME']
-        if env.get('wsgi.url_scheme', None):
-            url = f'{env["wsgi.url_scheme"]}://{host}'
-        elif env.get('REQUEST_SCHEME', None):
-            url = f'{env["REQUEST_SCHEME"]}://{host}'
-        elif env.get('SERVER_PORT', None) and env['SERVER_PORT'] == '443':
-            url = f'https://{host}'
-        else:
-            url = f'http://{host}'
-        if env.get('SERVER_PORT', '') and env['SERVER_PORT'] not in ['80', '443']:
-            url = f'{url}:{env["SERVER_PORT"]}'
-        if env.get('SCRIPT_NAME', ''):
-            url = f'{url}{env["SCRIPT_NAME"]}'
-        dibs.base_url = url
-        log(f'dibs.base_url = {url}')
+        scheme = env.get('wsgi.url_scheme', '') or env.get('REQUEST_SCHEME', '')
+        host   = get_host(env)
+        path   = get_script_name(env)
+        dibs.base_url = f'{scheme}://{host}{path}'
+        log(f'dibs.base_url = {dibs.base_url}')
 
         # Mark this done.
         dibs._config_done = True

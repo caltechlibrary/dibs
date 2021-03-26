@@ -10,14 +10,14 @@ from datetime import datetime, timedelta
 from decouple import config
 from peewee import SqliteDatabase
 
-from dibs.database import Item, Loan, Recent
+from dibs.database import Item, Loan, History
 from dibs.people import Person
 
 db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
 # Peewee autoconnects to the database if doing queries but not other ops.
 db.connect()
-db.create_tables([Item, Loan, Recent, Person])
+db.create_tables([Item, Loan, History, Person])
 
 # This next one is a demo item.  We provide a manifest in ./manifests/ and
 # it references an open copy of the book at the Wellcome Collection in the UK.

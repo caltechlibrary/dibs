@@ -1,6 +1,8 @@
 # System architecture
 
-This page describes the system archicture of DIBS.
+The architecture of DIBS consists of a server written in Python, using the [Bottle](https://bottlepy.org) framework for template-driven web pages, an SQLite database for tracking items and loans, SSO authentication, and a configuration of the JavaScript-based Universal Viewer for displaying materials. For any given item made available via DIBS, the scanned pages of the original are stored on an internal shared file system and identified by a barcode. A workflow written in Python is used to create a [IIIF](https://iiif.io) manifest; this manifest is added to the system, which then makes the scanned contents available via a data endpoint served by DIBS. This allows DIBS to implement the digital loan policies developed by our institution, such as that patrons can only borrow one item at a time.
+
+In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user's institutional SSO identity combined with the (single) title they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.
 
 
 ## Configuration

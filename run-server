@@ -136,9 +136,10 @@ on the command line or by setting the RUN_MODE option in the settings.ini file.
     and turns on maximum debugging options.  This mode does NOT use
     adapter.wsgi.  It will turn off template caching, and will drop into pdb
     upon exceptions, and unlike mod_wsgi, the Bottle server will also
-    automatically reload any changed source files.  Debug mode is invoked
-    using the option -m debug, or setting RUN_MODE to "debug" in settings.ini.
-    Implies option -v.
+    automatically reload any changed source files.  In addition, all loan
+    times are set to expire in 1 minute (overriding values set on individual
+    items).  Debug mode is invoked using the option -m debug, or setting
+    RUN_MODE to "debug" in settings.ini.  Implies option -v.
 
 Additional options
 ~~~~~~~~~~~~~~~~~~

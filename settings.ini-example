@@ -15,14 +15,26 @@
 # Path to the sqlite database, relative to here.
 DATABASE_FILE = dibs.db
 
+# Directory containing IIIF manifest files.  Each file name should follow the
+# pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
+# for DIBS contains a subdirectory called "manifests" with a demo file in it,
+# but the path can be changed if you put your manifests elsewhere.
+MANIFEST_DIR = manifests
+
+# IIIF server base path.
+IIIF_BASE_URL = https://yourserver.com/iiif
+
 # Email details. The user has to be an account authenticated to the server.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25
 MAIL_SENDER = helpdesk@library.caltech.edu
 
-# User session details.
-COOKIE_NAME     = dibs
+# Session tracking cookies. This is a temporary scheme.
+# Important: SECURE_COOKIES can only be set to True if https is being used.
+SESSION_DIR     = /tmp/dibs
+SESSION_SECRET  = abc123
 SESSION_TIMEOUT = 604800
+SECURE_COOKIES  = False
 
 # Time a user must wait between when they return a title and when they can
 # loan it out again (in minutes).
