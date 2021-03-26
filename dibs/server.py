@@ -239,7 +239,14 @@ def list_items():
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /list invoked')
-    return page('list', items = Item.select())
+    # Test for presence of manifest files for each item, and create a tuple
+    # of the form (Item, bool), where the boolean is True if a manifest exists.
+    items = []
+    for item in Item.select():
+        mf_exists = exists(join(_MANIFEST_DIR, f'{item.barcode}-manifest.json'))
+        items.append((item, mf_exists))
+    return page('list', items = items)
+
 
 @dibs.get('/manage')
 def list_items():
