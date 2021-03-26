@@ -74,7 +74,7 @@
    window.addEventListener('uvLoaded', function (e) {
      myUV = createUV('#uv', {
        iiifResourceUri: '{{base_url}}/manifests/{{barcode}}',
-       configUri: '{{base_url}}/viewer/uv-config.json'
+       configUri: '{{base_url}}/static/uv-config.json'
      }, new UV.URLDataProvider());
 
      myUV.on("created", function(obj) {

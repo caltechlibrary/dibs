@@ -840,7 +840,7 @@ def favicon():
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js)>')
+@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>')
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
