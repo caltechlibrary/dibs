@@ -38,23 +38,23 @@
           </label>
 
           <label for="numCopies" class="form-group control-label" style="display: block">
-            <span class="control-label">Number of copies</span>
-            <input name="num_copies" type="number" class="form-control"
-                   placeholder="Number of copies to be made available for simultaneous loans"
-                   step="any" min="1"
-                   %if item:
-                   value="{{item.num_copies}}"
-                   %end
-                   required>
-          </label>
-
-          <label for="numCopies" class="form-group control-label" style="display: block">
             <span class="control-label">Loan duration (in hours)</span>
             <input name="duration" type="number" class="form-control"
                    placeholder="Maximum duration of a loan (in hours)"
                    step="any" min="1"
                    %if item:
                    value="{{item.duration}}"
+                   %end
+                   required>
+          </label>
+
+          <label for="numCopies" class="form-group control-label" style="display: block">
+            <span class="control-label">Number of copies</span>
+            <input name="num_copies" type="number" class="form-control"
+                   placeholder="Number of copies to be made available for simultaneous loans"
+                   step="any" min="1"
+                   %if item:
+                   value="{{item.num_copies}}"
                    %end
                    required>
           </label>
