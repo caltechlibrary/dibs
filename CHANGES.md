@@ -5,6 +5,7 @@ Version next
 ------------
 
 * Manifest URL rewriting now includes the IIIF version number as part of the base URL pattern that it substitutes. 
+* The UV configuration file is now kept in `dibs/static`.
 * The author column in the `/list` page is now truncated if the author list is very long.
 
 
