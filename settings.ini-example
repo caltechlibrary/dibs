@@ -21,8 +21,8 @@ DATABASE_FILE = dibs.db
 # but the path can be changed if you put your manifests elsewhere.
 MANIFEST_DIR = manifests
 
-# IIIF server base path.
-IIIF_BASE_URL = https://yourserver.com/iiif
+# IIIF server base path.  Include the protocol version.
+IIIF_BASE_URL = https://yourserver.com/iiif/2
 
 # Email details. The user has to be an account authenticated to the server.
 MAIL_HOST   = localhost
