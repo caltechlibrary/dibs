@@ -24,6 +24,7 @@
 
           <div class="mb-3 table-responsive">
             <table class="table table-borderless"
+                   data-page-size="50"
                    data-toggle="table" data-pagination="true" data-escape="false">
               <thead class="thead-light align-bottom align-text-bottom">
                 <tr>
