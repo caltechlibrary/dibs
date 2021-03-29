@@ -124,8 +124,10 @@ def expired_loans_removed(func):
                 loan.state = 'recent'
                 loan.reloan_time = loan.end_time + _RELOAN_WAIT_TIME
                 loan.save(only = [Loan.state, Loan.reloan_time])
-                History.create(type = 'loan', what = loan.item.barcode,
-                               start_time = loan.start_time, end_time = loan.end_time)
+                if not has_required_role(loan.user, 'library') or debug_mode():
+                    History.create(type = 'loan', what = loan.item.barcode,
+                                   start_time = loan.start_time,
+                                   end_time = loan.end_time)
         return func(*args, **kwargs)
     return expired_loan_removing_wrapper
 
@@ -373,9 +375,11 @@ def toggle_ready():
         # loans.  Doesn't matter if these are active or recent loans.
         if not item.ready:
             for loan in Loan.select().where(Loan.item == item):
+                if not has_required_role(loan.user, 'library') or debug_mode():
+                    History.create(type = 'loan', what = loan.item.barcode,
+                                   start_time = loan.start_time,
+                                   end_time = loan.end_time)
                 log(f'deleting {loan.state} loan for {barcode}')
-                History.create(type = 'loan', what = loan.item.barcode,
-                               start_time = loan.start_time, end_time = loan.end_time)
                 loan.delete_instance()
     redirect(f'{dibs.base_url}/list')
 
@@ -398,8 +402,10 @@ def remove_item():
         # First clean up loans while we still have the item object.
         for loan in Loan.select().where(Loan.item == item):
             log(f'deleting {loan.state} loan for {barcode}')
-            History.create(type = 'loan', what = loan.item.barcode,
-                           start_time = loan.start_time, end_time = loan.end_time)
+            if not has_required_role(loan.user, 'library') or debug_mode():
+                History.create(type = 'loan', what = loan.item.barcode,
+                               start_time = loan.start_time,
+                               end_time = loan.end_time)
             loan.delete_instance()
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
@@ -629,8 +635,10 @@ def end_loan():
             loan.end_time = now
             loan.reloan_time = now + _RELOAN_WAIT_TIME
             loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
-            History.create(type = 'loan', what = loan.item.barcode,
-                           start_time = loan.start_time, end_time = loan.end_time)
+            if not has_required_role(loan.user, 'library') or debug_mode():
+                History.create(type = 'loan', what = loan.item.barcode,
+                               start_time = loan.start_time,
+                               end_time = loan.end_time)
         redirect(f'{dibs.base_url}/thankyou')
     else:
         log(f'{person.uname} does not have {barcode} loaned out')
