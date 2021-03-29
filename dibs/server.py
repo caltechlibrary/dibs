@@ -26,7 +26,7 @@ from   os.path import realpath, dirname, join, exists
 from   peewee import *
 import random
 import ratelimit
-from   sidetrack import log, logr, set_debug
+from   sidetrack import log, logr
 import string
 import sys
 from   tempfile import NamedTemporaryFile
@@ -61,7 +61,8 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30)))
+_RELOAN_WAIT_TIME = (delta(minutes = 1) if os.environ.get('BOTTLE_CHILD', False)
+                     else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
 
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
@@ -92,7 +93,7 @@ def time_now():
 
 def debug_mode():
     '''Return True if we're running Bottle's default server in debug mode.'''
-    return os.environ.get('BOTTLE_CHILD')
+    return os.environ.get('BOTTLE_CHILD', False)
 
 
 # Decorators -- functions that are run selectively on certain routes.
@@ -123,8 +124,10 @@ def expired_loans_removed(func):
                 loan.state = 'recent'
                 loan.reloan_time = loan.end_time + _RELOAN_WAIT_TIME
                 loan.save(only = [Loan.state, Loan.reloan_time])
-                History.create(type = 'loan', what = loan.item.barcode,
-                               start_time = loan.start_time, end_time = loan.end_time)
+                if not has_required_role(loan.user, 'library') or debug_mode():
+                    History.create(type = 'loan', what = loan.item.barcode,
+                                   start_time = loan.start_time,
+                                   end_time = loan.end_time)
         return func(*args, **kwargs)
     return expired_loan_removing_wrapper
 
@@ -234,7 +237,7 @@ def logout():
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /list invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -252,7 +255,7 @@ def list_items():
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /manage invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -264,7 +267,7 @@ def list_items():
 def add():
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /add invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -277,7 +280,7 @@ def add():
 def edit(barcode):
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /edit invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -291,7 +294,7 @@ def edit(barcode):
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'post /update invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -357,7 +360,7 @@ def update_item():
 def toggle_ready():
     '''Set the ready-to-loan field.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'post /ready invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -372,9 +375,11 @@ def toggle_ready():
         # loans.  Doesn't matter if these are active or recent loans.
         if not item.ready:
             for loan in Loan.select().where(Loan.item == item):
+                if not has_required_role(loan.user, 'library') or debug_mode():
+                    History.create(type = 'loan', what = loan.item.barcode,
+                                   start_time = loan.start_time,
+                                   end_time = loan.end_time)
                 log(f'deleting {loan.state} loan for {barcode}')
-                History.create(type = 'loan', what = loan.item.barcode,
-                               start_time = loan.start_time, end_time = loan.end_time)
                 loan.delete_instance()
     redirect(f'{dibs.base_url}/list')
 
@@ -384,7 +389,7 @@ def toggle_ready():
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'post /remove invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -397,8 +402,10 @@ def remove_item():
         # First clean up loans while we still have the item object.
         for loan in Loan.select().where(Loan.item == item):
             log(f'deleting {loan.state} loan for {barcode}')
-            History.create(type = 'loan', what = loan.item.barcode,
-                           start_time = loan.start_time, end_time = loan.end_time)
+            if not has_required_role(loan.user, 'library') or debug_mode():
+                History.create(type = 'loan', what = loan.item.barcode,
+                               start_time = loan.start_time,
+                               end_time = loan.end_time)
             loan.delete_instance()
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
@@ -409,7 +416,7 @@ def remove_item():
 def show_stats():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /stats invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -596,7 +603,7 @@ def loan_item():
             return
 
         # OK, the user is allowed to loan out this item.
-        time = delta(hours = item.duration)
+        time = delta(minutes = 1) if debug_mode() else delta(hours = item.duration)
         start = time_now()
         end = start + time
         reloan = end + _RELOAN_WAIT_TIME
@@ -628,8 +635,10 @@ def end_loan():
             loan.end_time = now
             loan.reloan_time = now + _RELOAN_WAIT_TIME
             loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
-            History.create(type = 'loan', what = loan.item.barcode,
-                           start_time = loan.start_time, end_time = loan.end_time)
+            if not has_required_role(loan.user, 'library') or debug_mode():
+                History.create(type = 'loan', what = loan.item.barcode,
+                               start_time = loan.start_time,
+                               end_time = loan.end_time)
         redirect(f'{dibs.base_url}/thankyou')
     else:
         log(f'{person.uname} does not have {barcode} loaned out')

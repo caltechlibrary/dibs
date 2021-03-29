@@ -1,6 +1,16 @@
 Change log for DIBS
 ===================
 
+Version 0.1.1
+--------------
+
+* When running in debug mode, loan durations and reloan waits are set to 1 minute.
+* When _not_ running in debug, loans by staff/library users are not counted in the histories, to avoid skewing the loan statistics.
+* Currently active loans are shown in bold face in the `/stats` page.
+* When the refresh poll max is reached during auto-refresh on the `/item` pages, a different message is shown to the user alerting them that they need to manually reload the page in order to see updates.
+* The `/item` pages should have disabled to the page cache to prevent stale data from being shown to users.
+
+
 Version 0.1.0
 -------------
 
