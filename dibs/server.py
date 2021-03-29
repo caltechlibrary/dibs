@@ -237,7 +237,7 @@ def logout():
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /list invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -255,7 +255,7 @@ def list_items():
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /manage invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -267,7 +267,7 @@ def list_items():
 def add():
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /add invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -280,7 +280,7 @@ def add():
 def edit(barcode):
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /edit invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -294,7 +294,7 @@ def edit(barcode):
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'post /update invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -360,7 +360,7 @@ def update_item():
 def toggle_ready():
     '''Set the ready-to-loan field.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'post /ready invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -389,7 +389,7 @@ def toggle_ready():
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'post /remove invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -416,7 +416,7 @@ def remove_item():
 def show_stats():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if has_required_role(person, 'library') == False:
+    if not has_required_role(person, 'library'):
         log(f'get /stats invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
