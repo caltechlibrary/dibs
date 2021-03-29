@@ -1,7 +1,7 @@
 Change log for DIBS
 ===================
 
-Version (next)
+Version 0.1.1
 --------------
 
 * When running in debug mode, loan durations and reloan waits are set to 1 minute.
