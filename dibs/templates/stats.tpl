@@ -50,7 +50,11 @@
               </thead>
               <tbody>
                 %for item, current_loans, total_loans, avg_duration in usage_data:
-                <tr scope="row">
+                <tr scope="row" 
+                    %if current_loans > 0:
+                    class="font-weight-bold"
+                    %end
+                  >
                   <td>
                     %if item.tind_id != '':
                     <a href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.barcode}}</a>
