@@ -61,7 +61,7 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = (delta(minutes = 1) if os.environ.get('BOTTLE_CHILD')
+_RELOAN_WAIT_TIME = (delta(minutes = 1) if os.environ.get('BOTTLE_CHILD', False)
                      else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
 
 # Where we send users to give feedback.
