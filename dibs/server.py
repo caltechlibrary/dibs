@@ -93,7 +93,7 @@ def time_now():
 
 def debug_mode():
     '''Return True if we're running Bottle's default server in debug mode.'''
-    return os.environ.get('BOTTLE_CHILD')
+    return os.environ.get('BOTTLE_CHILD', False)
 
 
 # Decorators -- functions that are run selectively on certain routes.
