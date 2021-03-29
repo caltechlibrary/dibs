@@ -200,7 +200,8 @@ rendered start conditions and to limit calls to server */
         function(data, err) {
             if (poll_count >= max_poll_count) {
                 console.log("DEBUG reached max poll count");
-                refreshTip.innerHTML = '';
+                refreshTip.innerHTML = 'Auto-refresh paused. Reload this browser window to see updates.';
+                refreshTip.classList.add('text-danger');
                 window.clearInterval(refresher);
             } else {
                 poll_count++;
