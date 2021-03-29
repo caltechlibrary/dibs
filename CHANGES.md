@@ -1,12 +1,17 @@
 Change log for DIBS
 ===================
 
-Version next
-------------
+Version 0.1.0
+-------------
 
+* Now assumes authentication via Shibboleth or similar scheme is handled by the server. Along with this, it no longer uses sessions.
 * Manifest URL rewriting now includes the IIIF version number as part of the base URL pattern that it substitutes. 
 * The UV configuration file is now kept in `dibs/static`.
+* The `/list` page shows an icond when a manifest is not available for an item and the ready-to-loan buttong is blocked.
 * The author column in the `/list` page is now truncated if the author list is very long.
+* The default number of rows in the `/list` page is now 50.
+* Various small tweaks have been implemented.
+* Various problems and bugs have been fixed.
 
 
 Version 0.0.4
