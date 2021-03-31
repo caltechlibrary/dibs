@@ -1,7 +1,7 @@
 '''
-roles.py provides a DICT that maps a role string to a target
-redirect. The function role_to_redirect provides a safe encapsulation
-as the role application will likely evolve over time.
+roles.py uses a DICT to map a role string to a redirect destination. The
+function role_to_redirect(...) provides a safe encapsulation, as the role
+application will likely evolve over time.
 
 Copyright
 ---------
@@ -11,15 +11,18 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
+from .people import Person
+
 
 _role_table = {
     "library": "list",
 }
 
-def has_required_role(person, required_role):
+def has_role(person, role):
     if (person == None):
         return False
-    return person.has_role(required_role)
+    return person.has_role(role)
+
 
 def role_to_redirect(role):
     '''given a user role (including an empty string) return the target path for a redirect'''
@@ -28,3 +31,10 @@ def role_to_redirect(role):
     else:
         return ''
 
+
+def staff_user(who):
+    '''Return True if the person has admin priviledges in the system.'''
+    if isinstance(who, str):
+        # Given a user name -- look them up and try to retrieve a Person object.
+        who = Person.get_or_none(Person.uname == who)
+    return has_role(who, 'library')
