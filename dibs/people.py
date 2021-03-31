@@ -84,15 +84,16 @@ class GuestPerson():
         return self.role == required_role
 
 
-def person_from_environ(environ, default = None):
-    # NOTE: If we're shibbed then we always return a Person object.
-    # Either they are a known person (e.g. library staff) or other
-    # community member without a role.
-    person = Person.get_or_none(Person.uname == environ.get('REMOTE_USER', None))
-    if person is not None:
+def person_from_environ(environ):
+    if 'REMOTE_USER' in environ:
+        # NOTE: If we're shibbed then we always return a Person object.
+        # Either they are a known person (e.g. library staff) or other community
+        # member without a role.
+        person = Person.get_or_none(Person.uname == environ['REMOTE_USER'])
+        if person == None:
+            person = GuestPerson()
+            person.uname = environ['REMOTE_USER']
+            person.display_name = environ['REMOTE_USER']
         return person
-    elif default:
-        return default
     else:
-        return GuestPerson(uname = environ.get('REMOTE_USER', ''),
-                           display_name = environ.get('REMOTE_USER', ''))
+        return None
