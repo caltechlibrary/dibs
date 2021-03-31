@@ -25,6 +25,9 @@ from decouple import config
 from peewee import SqliteDatabase, Model
 from peewee import AutoField, CharField, TimestampField
 
+import os
+
+
 def hashify(s):
     '''Return retring as blake2b has digest'''
     h = blake2b()
@@ -64,31 +67,32 @@ class Person(Model):
     class Meta:
         database = _db
 
+
 # GuestPerson only exists while REMOTE_USER available in the environment.
 # It is not stored in the person table as the Person model is.
 class GuestPerson():
-    '''GuestPerson is an object for non-staff people, it has the same signature but is not
-       persisted in the person table of the database'''
-    uname = ''  # user name, e.g. janedoe
-    role = ''   # role is empty or "staff"
-    display_name = '' # display_name, optional
-    updated = datetime.now()
+    '''GuestPerson is an object for non-staff people.  It has the same
+    signature but is not persisted in the person table of the database.
+    '''
+    def __init__(self, uname = '', display_name = '', role = ''):
+        self.uname = uname               # user name, e.g. janedoe
+        self.display_name = display_name # display_name, optional
+        self.role = role                 # role is empty or "staff"
+        self.updated = datetime.now()
 
     def has_role(self, required_role):
         return self.role == required_role
-    
 
-def person_from_environ(environ):
-    if 'REMOTE_USER' in environ:
-        # NOTE: If we're shibbed then we always return a Person object.
-        # Either they are a known person (e.g. library staff) or other community
-        # member without a role.
-        person = Person.get_or_none(Person.uname == environ['REMOTE_USER'])
-        if person == None:
-            person = GuestPerson()
-            person.uname = environ['REMOTE_USER']
-            person.display_name = environ['REMOTE_USER']
+
+def person_from_environ(environ, default = None):
+    # NOTE: If we're shibbed then we always return a Person object.
+    # Either they are a known person (e.g. library staff) or other
+    # community member without a role.
+    person = Person.get_or_none(Person.uname == environ.get('REMOTE_USER', None))
+    if person is not None:
         return person
+    elif default:
+        return default
     else:
-        return None
-
+        return GuestPerson(uname = environ.get('REMOTE_USER', ''),
+                           display_name = environ.get('REMOTE_USER', ''))
