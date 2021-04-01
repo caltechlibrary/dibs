@@ -56,10 +56,6 @@ if not exists(join(here, 'viewer', 'node_modules')):
     print(f'‼️  Please cd to {here}/viewer and run "npm install".')
     exit(1)
 
-if not exists(join(here, 'adapter.wsgi')):
-    print(f'‼️  File "adapter.wsgi" not found in {where}.')
-    exit(1)
-
 
 # Global defaults.
 # .............................................................................
@@ -96,17 +92,18 @@ from   dibs import dibs, print_version
 
 
 @plac.annotations(
-    base_url   = (f'base URL (default: {_DEFAULT_BASE_URL})',              'option', 'b'),
-    database   = ('use "D" as the database file',                          'option', 'd'),
-    manifests  = ('look for manifest files in directory "F"',              'option', 'f'),
-    iiif_url   = ('use "I" as the IIIF server endpoint',                   'option', 'i'),
-    mode       = ('run mode: normal, verbose, or debug (default: normal)', 'option', 'm'),
-    debug_user = ('identity of staff user in debug mode (default: none)',  'option', 'u'),
-    version    = ('print version info and exit',                           'flag',   'V'),
+    adapter    = ('use file "A" as the WSGI adapter (default: adapter.wsgi)', 'option', 'a'),
+    base_url   = (f'set the server address (default: {_DEFAULT_BASE_URL})',   'option', 'b'),
+    database   = ('use "D" as the database file',                             'option', 'd'),
+    manifests  = ('look for manifest files in directory "F"',                 'option', 'f'),
+    iiif_url   = ('use "I" as the IIIF server endpoint',                      'option', 'i'),
+    mode       = ('run mode: normal, verbose, or debug (default: normal)',    'option', 'm'),
+    debug_user = ('identity of staff user in debug mode (default: none)',     'option', 'u'),
+    version    = ('print version info and exit',                              'flag',   'V'),
 )
 
-def main(base_url = 'B', database = 'D', manifests = 'F', iiif_url = 'I',
-         mode = 'M', debug_user = 'U', version = False):
+def main(adapter = 'A', base_url = 'B', database = 'D', manifests = 'F',
+         iiif_url = 'I', mode = 'M', debug_user = 'U', version = False):
     '''Convenient interface for running the DIBS server during development.
 
 This starts a local server running DIBS. It always looks for a file named
@@ -155,17 +152,6 @@ name of the user you defined.  Here is an example of running in debug mode:
   people-manager add uname="debuguser" role="library"
   run-server -m debug -u debuguser
 
-Base URL
-~~~~~~~~
-
-In a live server, the default base URL for DIBS is normally set by the Apache2
-configuration. For the local server started by this program, the default is
-http://localhost:8080. The option -b can be used to change this. The value
-given to -b should contain the protocol, hostname, port (if needed) and any
-additional path elements of the root of DIBS on the server; e.g.,
-"https://library.example.edu/dibs". (Note: the path component is ignored when
-running in debug mode.)
-
 Database file, manifests directory, and IIIF server URL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -182,9 +168,16 @@ information about the purpose of these configuration variables.
 Additional options
 ~~~~~~~~~~~~~~~~~~
 
-The -v option will turn on debug tracing in the output stream without turning
-on other debug features. This can be useful in normal mode. Using either of
-the values "test" or "debug" for option -m always turns on -v automatically.
+In a live server, the default base URL for DIBS is normally set by the Apache2
+configuration. For the local server started by this program, the default is
+http://localhost:8080. The option -b can be used to change this. The value
+given to -b should contain the protocol, hostname, port (if needed) and any
+additional path elements of the root of DIBS on the server; e.g.,
+"https://library.example.edu/dibs". (Note: the path component is ignored when
+running in debug mode.)
+
+By default, run-server looks for a WSGI adapter named "adapter.wsgi" in the
+current directory. The option -a tells run-server to use a different file.
 
 If given the -V option, this program will print the version and other
 information, and exit without doing anything else.
@@ -222,6 +215,11 @@ Command-line arguments summary
 
     debug_user = None if debug_user == 'U' else debug_user
 
+    adapter_file = join(here, 'adapter.wsgi') if adapter == 'A' else adapter
+    if not exists(adapter_file) or not readable(adapter_file):
+        print(f'‼️  File not found or not readable: {adapter_file}')
+        exit(1)
+
     if database != 'D':
         if exists(database) and readable(database):
             os.environ['DATABASE_FILE'] = database
@@ -237,11 +235,11 @@ Command-line arguments summary
             exit(1)
 
     if iiif_url != 'I':
-        if not iiif_url.startswith('http'):
+        if iiif_url.startswith('http'):
+            os.environ['IIIF_BASE_URL'] = iiif_url
+        else:
             print(f'‼️  Value does not look like a URL: "{iiif_url}"')
             exit(1)
-        else:
-            os.environ['IIIF_BASE_URL'] = iiif_url
 
     if mode != 'debug':
         print_safety_warning()
@@ -256,7 +254,7 @@ Command-line arguments summary
         if mode == 'debug':
             start_bottle_server(scheme, host, port, extra_path, debug_user)
         else:
-            start_wsgi_server(scheme, host, port, extra_path, mode)
+            start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode)
     except Exception as ex:
         exception = sys.exc_info()
         msg = antiformat(exception[1])
@@ -271,10 +269,10 @@ Command-line arguments summary
         log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
 
 
-def start_wsgi_server(scheme, host, port, extra_path, mode):
+def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode):
     # mod_wsgi-express doesn't have a direct way to set parameters; you have
     # to construct a command line parsed by mod_wsgi_start(...).  Oh well.
-    args = ['adapter.wsgi', '--host', host, '--port', port,
+    args = [adapter_file, '--host', host, '--port', port,
             '--setenv', 'RUN_MODE', mode]
     if extra_path:
         args += ['--mount-point', extra_path]
@@ -284,7 +282,7 @@ def start_wsgi_server(scheme, host, port, extra_path, mode):
         args += ['--startup-log', '--access-log']
         args += ['--error-log-format', '[%{%H:%M:%S}t] %M']
         args += ['--access-log-format', '[%{%a %b %0e %H:%M:%S %Y}t] %h \"%r\" %>s']
-        print_settings(mode)
+        print_settings(mode, adapter_file)
 
     logr(f'starting mod_wsgi with arguments: {" ".join(args)}')
     mod_wsgi_start(args)
@@ -336,10 +334,12 @@ def print_safety_warning():
                           style = 'orange_red1'))
 
 
-def print_settings(mode):
+def print_settings(mode, adapter_file = None):
     server = 'Bottle' if mode == 'debug' else 'mod_wsgi-express'
+    adapter = adapter_file or '(not applicable)'
     settings = ('\n  Current settings are:\n'
                 + f'    Run mode:      {mode} (using {server} server)\n'
+                + f'    WSGI adapter:  {adapter}\n'
                 + f'    DATABASE_FILE: {config("DATABASE_FILE")}\n'
                 + f'    MANIFEST_DIR:  {config("MANIFEST_DIR")}\n'
                 + f'    IIIF_BASE_URL: {config("IIIF_BASE_URL")}')
