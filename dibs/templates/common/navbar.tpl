@@ -18,8 +18,6 @@
         <form action="{{base_url}}/logout" method="POST">
           <input class="link-not-button" type="submit" name="edit" value="Logout"/>
         </form>
-      %else:
-        <li><a href="{{base_url}}/login">Staff login</a></li>
       %end
       %if staff_user:
         <li><a href="{{base_url}}/list">List Items</a></li>

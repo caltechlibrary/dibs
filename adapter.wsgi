@@ -58,18 +58,11 @@ dibs._config_done = False
 def dibs_application(env, start_response):
     '''DIBS wrapper around Bottle WSGI application.'''
     if not dibs._config_done:
-        if env.get('VERBOSE', False):
+        # VERBOSE in env overrides RUN_MODE which overrides settings.ini.
+        mode = env.get('RUN_MODE', '') or config('RUN_MODE', default = 'normal')
+        if env.get('VERBOSE', False) or mode == 'verbose':
             set_debug(True, '-', show_package = True)
             log('VERBOSE found in env')
-
-        # Note 1: even though run-server does set_debug, need do it again here.
-        # Note 2: RUN_MODE in env overrides settings.ini, hence test it first.
-        mode = env.get('RUN_MODE', '') or config('RUN_MODE', default = 'normal')
-        if mode in ['test', 'dev', 'debug']:
-            set_debug(True, '-', show_package = True)
-            bottle.debug(True)
-            dibs.catchall = False       # Make Bottle not ignore exceptions.
-            log(f'run mode is {mode} -- debug options turned on')
 
         # Determine our base url and set it once. No sense in computing this
         # on every call, because it won't change while running.  Set a custom
