@@ -13,7 +13,7 @@ Table of contents
 * [Introduction](#introduction)
 * [Requirements](#requirements)
 * [Installation](#installation)
-* [Usage: running the server on localhost](#running-the-server-on-localhost)
+* [Usage: running the server locally](#usage-running-the-server-locally)
 * [General information](#general-information)
 * [Known issues and limitations](#known-issues-and-limitations)
 * [Getting help](#getting-help)
