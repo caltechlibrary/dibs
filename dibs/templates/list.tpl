@@ -75,9 +75,6 @@
                   </td>
 
                   <td class="text-center">
-
-                    
-
                     <form action="{{base_url}}/ready" method="POST">
                       %if not manifest_exists:
                       <i title="The manifest for this item is missing."
@@ -92,7 +89,6 @@
                              onChange="this.form.submit()"
                              {{'checked="checked"' if item.ready else ''}}/>
                     </form>
-
                   </td>
 
                   <td class="text-center">
