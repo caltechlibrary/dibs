@@ -28,7 +28,7 @@ Introduction
 
 The Caltech Library's DIBS enables members of Caltech to borrow materials (e.g., older books) that are not otherwise available in e-book or other electronic formats.  The system was implemented in the year 2021 to help Caltech students and faculty continue their studies and work during the global [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019).
 
-The concept of [controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) (CDL) is to allow libraries to loan items to digital patrons in a "lend like print" fashion.  The number of digital copies of an item allowed to be loaned at any given time is strictly controlled to match the number of physical print copies taken off the shelves, to ensure an exact "owned-to-loaned" ratio.  DIBS implements two main components of a CDL system: a patron loan tracking system, and an integrated digital content viewing interface.  DIBS makes use of the [Universal Viewer](http://universalviewer.io) to implement the viewer.
+The concept of [controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) (CDL) is to allow libraries to loan items to digital patrons in a "lend like print" fashion.  The number of digital copies of an item allowed to be loaned at any given time is strictly controlled to match the number of physical print copies taken off the shelves, to ensure an exact "owned-to-loaned" ratio.  DIBS implements two main components of a CDL system: a loan tracking system, and an integrated digital content viewing interface.  DIBS makes use of the [Universal Viewer](http://universalviewer.io) to implement the viewer.
 
 Access to materials in Caltech DIBS is limited to current Caltech faculty, students and staff, but the software for DIBS itself is open-sourced under a BSD type license.
 
@@ -38,7 +38,7 @@ Access to materials in Caltech DIBS is limited to current Caltech faculty, stude
 Requirements
 -----------
 
-DIBS is written in Python 3 and depends on additional software to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universal Viewer; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.
+DIBS is written in Python 3 and depends on additional software to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universal Viewer; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.  Finally, authentication is assumed to be handled by a single-signon system (in Caltech's case,  [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture)) that is external to DIBS.
 
 
 Installation
@@ -83,7 +83,7 @@ npm install
 Usage: running the server locally
 ---------------------------------
 
-For demonstration purposes as well as development, it's very convenient to run DIBS on your local machine.  The following instructions describe the process assuming that DIBS has never been configured or run on your system.
+For demonstration purposes as well as development, it's convenient to run DIBS on your local machine.  The following instructions describe the process, assuming that DIBS has never been configured or run on your system.
 
 
 ### ⓵ _Copy the sample `settings.ini` configuration file_
@@ -108,10 +108,10 @@ python3 load-mock-data.py
 
 ### ⓷ _Load a sample user into DIBS_
 
-The program [`people-manager`](people-manager) is an interface to adding and manipulating user data.  To log into the demo DIBS configuration, create at least one user with a role of "library":
+The program [`people-manager`](people-manager) is an interface to adding and manipulating user data.  To log into the demo DIBS configuration, create at least one user with a role of "library".  Suppose you want to name your sample user "dibsuser", then you could run the following command:
 
 ```sh
-./people-manager add role="library" uname= secret=
+./people-manager add role="library" uname=dibsuser
 ```
 
 
@@ -123,23 +123,13 @@ For local experimentation and development, the script [`run-server`](run-server)
 ./run-server -h
 ```
 
-You can run it without any arguments to try out DIBS.  By default it starts the server on `localhost` port 8080.
+In a real installation, DIBS needs a single-signon system on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
 
-```sh
-./run-server
+```
+./run-server -m debug -u dibsuser
 ```
 
-To see more information about about what DIBS is doing in response to every request, you may find the option `--verbose` useful:
-
-```sh
-./run-server --verbose
-```
-
-If you are doing development on DIBS, you may find the run-mode option `-m` useful.  Using the value `debug` changes the server behavior in various useful ways, such as to reload the source files automatically if any of them are edited and to run `pdb` upon any exceptions.  (It also turns on `--verbose` automatically.)
-
-```sh
-./run-server --mode debug
-```
+By default it starts the server on `localhost` port 8080.  Using the `debug` run mode changes the behavior in various useful ways, such as to reload the source files automatically if any of them are edited, and to run `pdb` upon any exceptions.  (These would not be enabled in a production server.)
 
 
 General information
@@ -151,13 +141,9 @@ The docs are available online at [https://caltechlibrary.github.io/dibs/](https:
 Known issues and limitations
 ----------------------------
 
-DIBS is in active development.  The current version was produced rapidly, and some of its current features are a consequence of working towards a minimal viable product as quickly as possible.  **The current version has known limitations** that we intend to address before it can be deployed for real use.  Among the known problems:
+DIBS is in active development.  The current version was produced rapidly, and some of its current features are a consequence of working towards a minimal viable product as quickly as possible.  We continue to improve DIBS in various ways.
 
-* _Authentication is not yet handled_.  The login and session handling in the current version are temporary minimal implementations for demo purposes only.  We are working on integrating our institution's SSO.
-
-* _Item pages use polling for loan status checks_.  We will replace the current polling-based status checks with something more efficient in the very near future.
-
-* _No queue for loan requests_.  This is a conscious design decision.  Queuing systems tend to lead to complexity quickly, and we want to delay implementing a queue until it becomes clear that it's really essential.  (After all, in a physical library, there are no queues for borrowing books: you go to see if it's available, and if it's not, you can't borrow it.)  Perhaps we can implement interfaces and behaviors in DIBS that avoid the need for a queue at all!
+It is worth mentioning that DIBS does not (currently) implement a queue for loan requests.  This is a conscious design decision.  Queuing systems tend to lead to complexity quickly, and we want to delay implementing a queue until it becomes clear that it's really essential.  (After all, in a physical library, there are no queues for borrowing books: you go to see if it's available, and if it's not, you can't borrow it.)  Perhaps we can implement interfaces and behaviors in DIBS that avoid the need for a queue at all!
 
 
 Getting help and support
@@ -195,7 +181,7 @@ The [vector artwork](https://thenounproject.com/term/book-waiting/1531542/) of a
 
 DIBS makes use of numerous open-source packages, without which it would have been effectively impossible to develop DIBS with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
 
-* [Beaker](https://beaker.readthedocs.io/en/latest/) &ndash; a library for sessions and caching for web applications
+* [Arrow](https://pypi.org/project/arrow/) &ndash; a library for creating & manipulating dates
 * [Boltons](https://github.com/mahmoud/boltons/) &ndash; package of miscellaneous Python utilities
 * [Bottle](https://bottlepy.org) &ndash; a lightweight WSGI micro web framework for Python
 * [CommonPy](https://github.com/caltechlibrary/commonpy) &ndash; a collection of commonly-useful Python functions
@@ -209,6 +195,7 @@ DIBS makes use of numerous open-source packages, without which it would have bee
 * [Sidetrack](https://github.com/caltechlibrary/sidetrack) &ndash; simple debug logging/tracing package
 * [Topi](https://github.com/caltechlibrary/topi) &ndash; a simple package for getting data from a TIND.io ILS instance
 * [Yurl](https://github.com/homm/yurl/) &ndash; an alternative to urlparse for parsing URLs in Python
+* [Werkzeug](https://pypi.org/project/Werkzeug/) &ndash; a WSGI application library
 
 
 <div align="center">
