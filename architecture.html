@@ -4,7 +4,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -306,15 +307,15 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  
+  <section id="system-architecture">
 <h1 id="architecture--page-root">System architecture<a class="headerlink" href="#architecture--page-root" title="Permalink to this headline">¶</a></h1>
 <p>The architecture of DIBS consists of a server written in Python, using the <a class="reference external" href="https://bottlepy.org">Bottle</a> framework for template-driven web pages, an SQLite database for tracking items and loans, SSO authentication, and a configuration of the JavaScript-based Universal Viewer for displaying materials. For any given item made available via DIBS, the scanned pages of the original are stored on an internal shared file system and identified by a barcode. A workflow written in Python is used to create a <a class="reference external" href="https://iiif.io">IIIF</a> manifest; this manifest is added to the system, which then makes the scanned contents available via a data endpoint served by DIBS. This allows DIBS to implement the digital loan policies developed by our institution, such as that patrons can only borrow one item at a time.</p>
 <p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) title they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
-
+<section id="configuration">
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
 <p>Settings are stored in the file <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">settings.ini</span></code></span>.  This file is read at run time by the server and database components.</p>
-
-
+</section>
+<section id="database">
 <h2 id="database">Database<a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h2>
 <p>The definition of the database is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/database.py</span></code></span>.  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
 <p>Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee <code class="docutils literal notranslate"><span class="pre">ModelSelector</span></code>, and not a single result or a list of results:</p>
@@ -322,11 +323,11 @@
 </pre></div>
 </div>
 <p>and you can’t call something like Python’s <code class="docutils literal notranslate"><span class="pre">next(...)</span></code> on this because it’s an iterator and not a generator.  You have to either use a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it’s not a concern currently.</p>
-
-
+</section>
+<section id="server">
 <h2 id="server">Server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
-
-
+</section>
+<section id="endpoints">
 <h2 id="endpoints">Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">¶</a></h2>
 <p>The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.  The endpoints are implemented using <a class="reference external" href="https://bottlepy.org">Bottle</a>.  Here is a summary of the endpoints implemented by the system:</p>
 <table>
@@ -423,10 +424,10 @@
 </tr>
 </tbody>
 </table>
-
-
+</section>
+<section id="architectural-notes">
 <h2 id="architectural-notes">Architectural notes<a class="headerlink" href="#architectural-notes" title="Permalink to this headline">¶</a></h2>
-
+<section id="about-peewee">
 <h3 id="about-peewee"><em>About Peewee</em><a class="headerlink" href="#about-peewee" title="Permalink to this headline">¶</a></h3>
 <p>The definition of the database is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/database.py</span></code></span>.  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
 <p>Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee <code class="docutils literal notranslate"><span class="pre">ModelSelector</span></code>, and not a single result or a list of results:</p>
@@ -434,15 +435,15 @@
 </pre></div>
 </div>
 <p>and you can’t call something like Python’s <code class="docutils literal notranslate"><span class="pre">next(...)</span></code> on this because it’s an iterator and not a generator.  You have to either use a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it’s not a concern currently.</p>
-
-
+</section>
+<section id="about-bottle">
 <h3 id="about-bottle"><em>About Bottle</em><a class="headerlink" href="#about-bottle" title="Permalink to this headline">¶</a></h3>
 <p>The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.  The endpoints are implemented using <a class="reference external" href="https://bottlepy.org">Bottle</a>.</p>
 <p>The web server used at the moment is the development server provided by Bottle.  It has live reload built-in, meaning that changes to the <code class="docutils literal notranslate"><span class="pre">.py</span></code> files are picked up automatically and the server updates its behavior on the fly.</p>
 <p>See <a class="reference external" href="http://bottlepy.org/docs/dev/tutorial.html#auto-reloading">http://bottlepy.org/docs/dev/tutorial.html#auto-reloading</a> for an important note about Bottle: when it’s running in auto-reload mode, <em>“the main process will not start a server, but spawn a new child process using the same command line arguments used to start the main process. All module-level code is executed at least twice”</em>.  This means some care is needed in how the top-level code is written.  Useful to know is that code can distinguish whether it’s in the parent or child process by looking for the presence of the environment variable <code class="docutils literal notranslate"><span class="pre">'BOTTLE_CHILD'</span></code> set by Bottle in the child process.</p>
-
-
-
+</section>
+</section>
+</section>
 
 
           </article>
