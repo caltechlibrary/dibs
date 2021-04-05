@@ -36,12 +36,9 @@ RELOAN_WAIT_TIME = 30
 # Feedback form URL.
 FEEDBACK_URL = https://some.forms.server/your/feedback/form
 
-# When running locally using run-server, the following options are recognized:
-#   "normal": run adapter.wsgi in mod_wsgi-express without special options
-#   "test":   run adapter.wsgi in mod_wsgi-express with some debugging options
-#   "debug":  run Bottle's default server with full debugging options
-# When running in an Apache2 mod_wsgi environment, adapter.wsgi is always
-# used and both "test" and "debug" have the same effect, which is only to turn
-# Bottle's debug options (which provides more verbose logging, disables
-# template caching, and display tracebacks in web pages when errors occur).
+# The following run mode options are recognized:
+#   "normal":  use adapter.wsgi without special options
+#   "verbose": use adapter.wsgi with verbose logging options
+# When started using the program run-server included with DIBS, this value
+# maybe overriden by command-line options given to run-server.
 RUN_MODE = normal

@@ -25,6 +25,9 @@ from decouple import config
 from peewee import SqliteDatabase, Model
 from peewee import AutoField, CharField, TimestampField
 
+import os
+
+
 def hashify(s):
     '''Return retring as blake2b has digest'''
     h = blake2b()
@@ -64,19 +67,22 @@ class Person(Model):
     class Meta:
         database = _db
 
+
 # GuestPerson only exists while REMOTE_USER available in the environment.
 # It is not stored in the person table as the Person model is.
 class GuestPerson():
-    '''GuestPerson is an object for non-staff people, it has the same signature but is not
-       persisted in the person table of the database'''
-    uname = ''  # user name, e.g. janedoe
-    role = ''   # role is empty or "staff"
-    display_name = '' # display_name, optional
-    updated = datetime.now()
+    '''GuestPerson is an object for non-staff people.  It has the same
+    signature but is not persisted in the person table of the database.
+    '''
+    def __init__(self, uname = '', display_name = '', role = ''):
+        self.uname = uname               # user name, e.g. janedoe
+        self.display_name = display_name # display_name, optional
+        self.role = role                 # role is empty or "staff"
+        self.updated = datetime.now()
 
     def has_role(self, required_role):
         return self.role == required_role
-    
+
 
 def person_from_environ(environ):
     if 'REMOTE_USER' in environ:
@@ -91,4 +97,3 @@ def person_from_environ(environ):
         return person
     else:
         return None
-

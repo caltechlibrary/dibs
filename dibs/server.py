@@ -35,8 +35,8 @@ from   topi import Tind
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime
 from .email import send_email
-from .people import Person, GuestPerson, person_from_environ, check_password
-from .roles import role_to_redirect, has_required_role
+from .people import Person, person_from_environ, check_password
+from .roles import role_to_redirect, has_role, staff_user
 
 
 # General configuration and initialization.
@@ -61,39 +61,34 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = (delta(minutes = 1) if os.environ.get('BOTTLE_CHILD', False)
+_RELOAN_WAIT_TIME = (delta(minutes = 1) if getattr(dibs, 'debug_mode', False)
                      else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
 
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
-# How many times a user can retry a login within a given window of time (sec).
-_LOGIN_RETRY_TIMES = 5
-_LOGIN_RETRY_WINDOW = 30
-
 
-# General-purpose utilities used later.
+# General-purpose utilities used repeatedly.
 # .............................................................................
 
 def page(name, **kargs):
     '''Create a page using template "name" with some standard variables set.'''
     # Bottle is unusual in providing global objects like 'request'.
     person = person_from_environ(request.environ)
-    logged_in = ((person != None) and (person.uname != ''))
-    staff_user = has_required_role(person, 'library')
+    logged_in = (person != None and person.uname != '')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
-                    staff_user = staff_user, feedback_url = _FEEDBACK_URL,
+                    staff_user = staff_user(person), feedback_url = _FEEDBACK_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
 
 
 def time_now():
-    '''Return datetime.utcnow() but with seconds and microseconds zeroed out.'''
+    '''Return datetime.utcnow() but with microseconds zeroed out.'''
     return dt.utcnow().replace(microsecond = 0)
 
 
 def debug_mode():
     '''Return True if we're running Bottle's default server in debug mode.'''
-    return os.environ.get('BOTTLE_CHILD', False)
+    return getattr(dibs, 'debug_mode', False)
 
 
 # Decorators -- functions that are run selectively on certain routes.
@@ -124,7 +119,8 @@ def expired_loans_removed(func):
                 loan.state = 'recent'
                 loan.reloan_time = loan.end_time + _RELOAN_WAIT_TIME
                 loan.save(only = [Loan.state, Loan.reloan_time])
-                if not has_required_role(loan.user, 'library') or debug_mode():
+                # We don't count staff users in loan stats, except in debug mode
+                if not staff_user(loan.user) or debug_mode():
                     History.create(type = 'loan', what = loan.item.barcode,
                                    start_time = loan.start_time,
                                    end_time = loan.end_time)
@@ -156,80 +152,26 @@ def barcode_verified(func):
         return func(*args, **kwargs)
     return barcode_verification_wrapper
 
-
-#FIXME: Can I removed this?  A users is always authenticated by Apache2 before arriving here.
-#def authenticated(func):
-#    '''Check if the user is authenticated and redirect to /login if not.'''
-#    @functools.wraps(func)
-#    def authentication_check_wrapper(*args, **kwargs):
-#        return func(*args, **kwargs)
-#    return authentication_check_wrapper
-
-
-def limit_login_attempts(func):
-    '''Rate-limit the number of login attempts within a given period of time.'''
-    @functools.wraps(func)
-    def limit_login_attempts_wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except ratelimit.exception.RateLimitException as ex:
-            client = request.environ.get('REMOTE_ADDR', 'unknown')
-            log(f'rate limit exceeded for client {client}')
-            return page('error', summary = 'too many login attempts',
-                        message = f'Please try again later.')
-    return limit_login_attempts_wrapper
-
 
 # Administrative interface endpoints.
 # .............................................................................
 
-# NOTE: there are three approaches for integrating SSO. First is always
-# require SSO before showing anything (not terribly useful here).
-# Second use existing end points (e.g. /login, /logout) this supports
-# everyone as SSO or not at all, third would be to support both
-# SSO via its own end points and allow the app based authentication
-# end points to remain for users who are defined in the system only.
-# This can be helpful in the case of admin users or service accounts.
-
-@dibs.get('/login')
-def show_login_page():
-    # NOTE: If SSO is implemented this should redirect to the
-    # SSO end point with a return to /login on success.
-    if 'REMOTE_USER' in request.environ:
-        return login()
-    log('get /login invoked')
-    return page('login')
-
-
-@dibs.post('/login')
-@limit_login_attempts
-@ratelimit.limits(calls = _LOGIN_RETRY_TIMES, period = _LOGIN_RETRY_WINDOW)
-def login():
-    '''Handle performing the login action from the login page.'''
-    # NOTE: If SSO is implemented this end point will handle the
-    # successful login case applying role rules if necessary.
-    if 'REMOTE_USER' in request.environ:
-        person = person_from_environ(request.environ)
-    else:
-        uname = request.forms.get('email').strip()
-        password = request.forms.get('password')
-        log(f'post /login invoked by {uname}')
-        # get our person obj from people.db for demo purposes
-        person = Person.get_or_none(Person.uname == uname)
-        if check_password(password, person.secret) == False:
-            log(f'wrong password -- rejecting {uname}')
-            return page('login', login_failed = True)
-        p = role_to_redirect(person.role)
-        redirect(f'{dibs.base_url}/{p}')
-    p = role_to_redirect(person.role)
-    log(f'person {person.uname} & redirecting to {dibs.base_url}/{p}')
-    return page('login', login_failed = False)
-
+# A note about authentication: the entire DIBS application is assumed to be
+# behind a server that implements authentication, for example using SSO.
+# This means we never need to log a person in: they will be authenticated by
+# SSO before they can get to DIBS pages.  However, once in DIBS, we do need
+# to provide a way for them to un-authenticate themselves.  This is the
+# reason for the asymmetry between /logout and (lack of) login.
 
 @dibs.post('/logout')
 def logout():
     '''Handle the logout action from the navbar menu on every page.'''
-    redirect(f'/Shibboleth.sso/Logout')
+    # If we are not in debug mode, then whether the user is authenticated or
+    # not is determined by the presence of REMOTE_USER.
+    if request.environ.get('REMOTE_USER', None) and not debug_mode():
+        redirect(f'/Shibboleth.sso/Logout')
+    else:
+        redirect('/')
 
 
 @dibs.get('/list')
@@ -237,7 +179,7 @@ def logout():
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'get /list invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -255,7 +197,7 @@ def list_items():
 def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'get /manage invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -267,7 +209,7 @@ def list_items():
 def add():
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'get /add invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -280,7 +222,7 @@ def add():
 def edit(barcode):
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'get /edit invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -294,7 +236,7 @@ def edit(barcode):
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'post /update invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -360,7 +302,7 @@ def update_item():
 def toggle_ready():
     '''Set the ready-to-loan field.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'post /ready invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -375,7 +317,8 @@ def toggle_ready():
         # loans.  Doesn't matter if these are active or recent loans.
         if not item.ready:
             for loan in Loan.select().where(Loan.item == item):
-                if not has_required_role(loan.user, 'library') or debug_mode():
+                if not staff_user(loan.user) or debug_mode():
+                    # Don't count staff users in loan stats except in debug mode
                     History.create(type = 'loan', what = loan.item.barcode,
                                    start_time = loan.start_time,
                                    end_time = loan.end_time)
@@ -389,7 +332,7 @@ def toggle_ready():
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'post /remove invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -402,7 +345,8 @@ def remove_item():
         # First clean up loans while we still have the item object.
         for loan in Loan.select().where(Loan.item == item):
             log(f'deleting {loan.state} loan for {barcode}')
-            if not has_required_role(loan.user, 'library') or debug_mode():
+            if not staff_user(loan.user) or debug_mode():
+                # Don't count staff users in loan stats except in debug mode
                 History.create(type = 'loan', what = loan.item.barcode,
                                start_time = loan.start_time,
                                end_time = loan.end_time)
@@ -416,7 +360,7 @@ def remove_item():
 def show_stats():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
-    if not has_required_role(person, 'library'):
+    if not staff_user(person):
         log(f'get /stats invoked by non-library user')
         redirect(f'{dibs.base_url}/notallowed')
         return
@@ -635,7 +579,8 @@ def end_loan():
             loan.end_time = now
             loan.reloan_time = now + _RELOAN_WAIT_TIME
             loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
-            if not has_required_role(loan.user, 'library') or debug_mode():
+            if not staff_user(loan.user) or debug_mode():
+                # Don't count staff users in loan stats except in debug mode.
                 History.create(type = 'loan', what = loan.item.barcode,
                                start_time = loan.start_time,
                                end_time = loan.end_time)
@@ -793,13 +738,3 @@ def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = 'dibs/static')
-
-
-# Main exported application.
-# .............................................................................
-# In the file above, we defined a Bottle application and its routes.  Now we
-# take that application definition and hand it to a middleware layer for
-# session handling (using Beaker).  The new "dibs" constitutes the final
-# application that is invoked by the WSGI server via ../adapter.wsgi.
-
-#dibs = SessionMiddleware(dibs, _SESSION_CONFIG)
