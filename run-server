@@ -56,10 +56,6 @@ if not exists(join(here, 'viewer', 'node_modules')):
     print(f'‼️  Please cd to {here}/viewer and run "npm install".')
     exit(1)
 
-if not exists(join(here, 'adapter.wsgi')):
-    print(f'‼️  File "adapter.wsgi" not found in {where}.')
-    exit(1)
-
 
 # Global defaults.
 # .............................................................................
@@ -76,7 +72,9 @@ _DEFAULT_BASE_URL = 'http://localhost:8080'
 
 from   boltons.debugutils import pdb_on_signal
 import bottle
+from   bottle import request
 from   commonpy.data_utils import timestamp
+from   commonpy.file_utils import readable
 from   commonpy.string_utils import antiformat
 from   decouple import config
 from   mod_wsgi.server import cmd_start_server as mod_wsgi_start
@@ -94,70 +92,92 @@ from   dibs import dibs, print_version
 
 
 @plac.annotations(
-    base_url = (f'base URL (default: {_DEFAULT_BASE_URL})',           'option', 'b'),
-    mode     = ('run mode: normal, test, or debug (default: normal)', 'option', 'm'),
-    verbose  = ('write a trace of activity to the log stream',        'flag'  , 'v'),
-    version  = ('print version info and exit',                        'flag',   'V'),
+    adapter    = ('use file "A" as the WSGI adapter (default: adapter.wsgi)', 'option', 'a'),
+    base_url   = (f'set the server address (default: {_DEFAULT_BASE_URL})',   'option', 'b'),
+    database   = ('use "D" as the database file',                             'option', 'd'),
+    manifests  = ('look for manifest files in directory "F"',                 'option', 'f'),
+    iiif_url   = ('use "I" as the IIIF server endpoint',                      'option', 'i'),
+    mode       = ('run mode: normal, verbose, or debug (default: normal)',    'option', 'm'),
+    debug_user = ('identity of staff user in debug mode (default: none)',     'option', 'u'),
+    version    = ('print version info and exit',                              'flag',   'V'),
 )
 
-def main(base_url = 'B', mode = 'M', verbose = False, version = False):
+def main(adapter = 'A', base_url = 'B', database = 'D', manifests = 'F',
+         iiif_url = 'I', mode = 'M', debug_user = 'U', version = False):
     '''Convenient interface for running the DIBS server during development.
 
-This starts a local server running DIBS.  It always looks for a file named
+This starts a local server running DIBS. It always looks for a file named
 "settings.ini" in the current directory and reads it to set various DIBS
-configuration variables.  The command-line options to the current program
-(run-server) take precedence over the configuration values in "settings.ini".
+configuration variables. The command-line options to run-server can override
+some of the configuration values in "settings.ini".
 
 Run modes
 ~~~~~~~~~
 
-There are 3 run modes available; they can be selected either via the option -m
-on the command line or by setting the RUN_MODE option in the settings.ini file.
-(Using the command-line option -m overrides the value of RUN_MODE.)
+There are 3 run modes available. Two of the modes can be selected from the
+settings.ini file, but are overriden via the option -m on the command line.
+If no -m option is given, then this program uses the RUN_MODE value from
+settings.ini. In addition, this program offers a third run mode only available
+using the -m option. The possible run modes and their effects are as follows:
 
-"normal": uses mod_wsgi-express without debugging options.  The server
-    will run multiple threads, will not reload if source files are changed,
-    will not reload templates if they are changed, and will not stop for
-    exceptions.  It looks for a file named "adapter.wsgi" in the current
-    directory and passes it to mod_wsgi.  This mode is a close approximation
-    to running DIBS in a basic Apache2 mod_wsgi environment, with adapter.wsgi.
-    May be combined with -v.  The normal mode is the default; it can also be
-    explicitly selected by using the value "normal" with the -m option.
+"normal": uses mod_wsgi-express without debugging options. The server
+  will run multiple threads, will not reload if source files are changed,
+  will not reload templates if they are changed, and will not stop for
+  exceptions. It looks for a file named "adapter.wsgi" in the current
+  directory and passes it to mod_wsgi. This mode is a close approximation
+  to running DIBS in a basic Apache2 mod_wsgi environment, with adapter.wsgi.
 
-"test": uses mod_wsgi-express, with some debugging options turned on.
-    The server will run a single process and thread, will output detailed
-    logging to the terminal, will disable Bottle's template caching, will drop
-    into pdb upon any exceptions, but will not reload if source files are
-    changed.  This mode is useful for testing DIBS using adapter.wsgi in
-    mod_wsgi.  Test mode is invoked using the option -m test, or setting
-    RUN_MODE to "test" in settings.ini.  Implies option -v.
+"verbose": like normal mode, but will produce detailed logging to the terminal.
+  This mode is useful for testing DIBS using adapter.wsgi in mod_wsgi.
+  Verbose mode is invoked using the option -m verbose, or setting RUN_MODE
+  to "verbose" in settings.ini. (Using -m verbose overrides settings.ini.)
 
 "debug": this uses Bottle's development server instead of mod_wsgi-express
-    and turns on maximum debugging options.  This mode does NOT use
-    adapter.wsgi.  It will turn off template caching, and will drop into pdb
-    upon exceptions, and unlike mod_wsgi, the Bottle server will also
-    automatically reload any changed source files.  In addition, the reloan
-    wait time and loan expirations are set to 1 minute (overriding values set
-    on individual items), and finally, the statistics gathering will include
-    loans by staff users.  (Normally, staff users are not included in the
-    statistics to avoid skewing the results.) Debug mode is invoked using the
-    option -m debug, or setting RUN_MODE to "debug" in settings.ini.
-    Implies option -v.
+  and turns on maximum debugging options. This mode does NOT use
+  adapter.wsgi. It will turn off template caching, will drop into pdb upon
+  exceptions, and unlike mod_wsgi-express, the Bottle server will also
+  automatically reload any changed source files. In addition, the reloan
+  wait time and loan expirations are set to 1 minute (overriding values set
+  on individual items), and finally, the statistics gathering will include
+  loans by staff users. (Normally, staff users are not included in the
+  statistics to avoid skewing the results.) Debug mode is invoked using the
+  option -m debug. It has no corresponding RUN_MODE value in settings.ini.
+
+Since debug mode uses Bottle's default server, the normal authentication
+mechanism is nonfunctional and you will not be able to access most pages
+unless you define a person using DIBS's people-manager interface and tell
+run-server the identity of that user.  To do this, use option -u with the
+name of the user you defined.  Here is an example of running in debug mode:
+
+  people-manager add uname="debuguser" role="library"
+  run-server -m debug -u debuguser
+
+Database file, manifests directory, and IIIF server URL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A number of additional command-line options allow you to override values set in
+settings.ini. These are:
+
+ -d: override the value of DATABASE_FILE
+ -f: override the value of MANIFEST_DIR
+ -i: override the value of IIIF_BASE_URL
+
+Please consult the comments in settings.ini or the DIBS documentation for more
+information about the purpose of these configuration variables.
 
 Additional options
 ~~~~~~~~~~~~~~~~~~
 
 In a live server, the default base URL for DIBS is normally set by the Apache2
-configuration.  For the local server started by this program, the default is
-http://localhost:8080.  The option -b can be used to change this.  The value
+configuration. For the local server started by this program, the default is
+http://localhost:8080. The option -b can be used to change this. The value
 given to -b should contain the protocol, hostname, port (if needed) and any
 additional path elements of the root of DIBS on the server; e.g.,
-"https://library.example.edu/dibs".  (Note: the path component is ignored when
+"https://library.example.edu/dibs". (Note: the path component is ignored when
 running in debug mode.)
 
-The -v option will turn on debug tracing in the output stream without turning
-on other debug features.  This can be useful in normal mode.  Using either of
-the values "test" or "debug" for option -m always turns on -v automatically.
+By default, run-server looks for a WSGI adapter named "adapter.wsgi" in the
+current directory. The option -a tells run-server to use a different file.
 
 If given the -V option, this program will print the version and other
 information, and exit without doing anything else.
@@ -184,19 +204,45 @@ Command-line arguments summary
         exit(1)
 
     mode = config('RUN_MODE', default = 'normal') if mode == 'M' else mode
-    if mode not in ['normal', 'test', 'debug']:
+    if mode not in ['normal', 'verbose', 'debug']:
         print(f'‼️  Unknown mode "{mode}" -- quitting.')
         exit(1)
-    elif not child:
-        print(f'Run mode is {mode}.')
-
-    if mode == 'normal':
-        print_safety_warning()
-
-    if verbose or mode in ['test', 'debug']:
+    if mode in ['verbose', 'debug']:
         set_debug(True, '-', show_package = True)
+    if mode == 'debug':
         import faulthandler
         faulthandler.enable()
+
+    debug_user = None if debug_user == 'U' else debug_user
+
+    adapter_file = join(here, 'adapter.wsgi') if adapter == 'A' else adapter
+    if not exists(adapter_file) or not readable(adapter_file):
+        print(f'‼️  File not found or not readable: {adapter_file}')
+        exit(1)
+
+    if database != 'D':
+        if exists(database) and readable(database):
+            os.environ['DATABASE_FILE'] = database
+        else:
+            print(f'‼️  Database file not found or not readable: "{database}"')
+            exit(1)
+
+    if manifests != 'F':
+        if exists(manifests) and readable(manifests):
+            os.environ['MANIFEST_DIR'] = manifests
+        else:
+            print(f'‼️  Manifests directory not found or not readable: "{manifests}"')
+            exit(1)
+
+    if iiif_url != 'I':
+        if iiif_url.startswith('http'):
+            os.environ['IIIF_BASE_URL'] = iiif_url
+        else:
+            print(f'‼️  Value does not look like a URL: "{iiif_url}"')
+            exit(1)
+
+    if mode != 'debug':
+        print_safety_warning()
 
     # Do the real work --------------------------------------------------------
 
@@ -206,13 +252,13 @@ Command-line arguments summary
 
     try:
         if mode == 'debug':
-            start_bottle_server(scheme, host, port, extra_path, mode, verbose)
+            start_bottle_server(scheme, host, port, extra_path, debug_user)
         else:
-            start_wsgi_server(scheme, host, port, extra_path, mode, verbose)
+            start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode)
     except Exception as ex:
         exception = sys.exc_info()
         msg = antiformat(exception[1])
-        if mode in ['test', 'debug']:
+        if mode == 'debug':
             from traceback import format_exception
             details = ''.join(format_exception(*exception))
             print(f'Exception: {msg}\n{details}')
@@ -223,28 +269,26 @@ Command-line arguments summary
         log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
 
 
-def start_wsgi_server(scheme, host, port, extra_path, mode, verbose):
+def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode):
     # mod_wsgi-express doesn't have a direct way to set parameters; you have
     # to construct a command line parsed by mod_wsgi_start(...).  Oh well.
-    args = ['adapter.wsgi', '--host', host, '--port', port,
-            '--setenv', 'RUN_MODE', mode, '--server-status']
+    args = [adapter_file, '--host', host, '--port', port,
+            '--setenv', 'RUN_MODE', mode]
     if extra_path:
         args += ['--mount-point', extra_path]
-    if verbose:
-        args += ['--setenv', 'VERBOSE', 'True']
-    if verbose or mode == 'test':
+    if mode == 'verbose':
+        args += ['--setenv', 'VERBOSE', 'True', '--server-status']
         args += ['--log-level', 'debug', '--log-to-terminal']
         args += ['--startup-log', '--access-log']
         args += ['--error-log-format', '[%{%H:%M:%S}t] %M']
         args += ['--access-log-format', '[%{%a %b %0e %H:%M:%S %Y}t] %h \"%r\" %>s']
-    if mode == 'test':
-        args += ['--enable-debugger', '--threads', '1']
+        print_settings(mode, adapter_file)
 
     logr(f'starting mod_wsgi with arguments: {" ".join(args)}')
     mod_wsgi_start(args)
 
 
-def start_bottle_server(scheme, host, port, extra_path, mode, verbose):
+def start_bottle_server(scheme, host, port, extra_path, debug_user):
     # We only ever run the Bottle server in debug and verbose mode, so no
     # need to test that here or change behaviors.  However, be mindful that
     # Bottle will spawn a child process and execute everything a second time.
@@ -253,16 +297,23 @@ def start_bottle_server(scheme, host, port, extra_path, mode, verbose):
     log(f'running {"child " if child else ""}server process')
 
     # Configure Bottle for debugging and also not to ignore exceptions.
+    # Also set a property, dibs.debug, that we can reference in server code.
     bottle.debug(True)
     dibs.catchall = False
+    dibs.debug_mode = True
 
     # Set our special "base_url" attribute on our dibs application object.
     # Note: Bottle doesn't have a way to pass extra_path, so it's ignored.
     dibs.base_url = f'{scheme}://{host}'
     if port not in ['80', '443']:
         dibs.base_url = f'{dibs.base_url}:{port}'
-    if child:
-        log(f'base_url = {dibs.base_url}')
+
+    @dibs.hook('before_request')
+    def add_remote_user():
+        request.environ['REMOTE_USER'] = debug_user
+
+    if not child:
+        print_settings('debug')
 
     bottle.run(dibs, host = host, port = int(port), reloader = True)
 
@@ -281,6 +332,18 @@ def print_safety_warning():
     padding = min(abs(panel_width - len(text) - 2) // 2, 2)
     Console().print(Panel(text, width = panel_width, padding = (0, padding),
                           style = 'orange_red1'))
+
+
+def print_settings(mode, adapter_file = None):
+    server = 'Bottle' if mode == 'debug' else 'mod_wsgi-express'
+    adapter = adapter_file or '(not applicable)'
+    settings = ('\n  Current settings are:\n'
+                + f'    Run mode:      {mode} (using {server} server)\n'
+                + f'    WSGI adapter:  {adapter}\n'
+                + f'    DATABASE_FILE: {config("DATABASE_FILE")}\n'
+                + f'    MANIFEST_DIR:  {config("MANIFEST_DIR")}\n'
+                + f'    IIIF_BASE_URL: {config("IIIF_BASE_URL")}')
+    log(settings)
 
 
 # Main invocation.
