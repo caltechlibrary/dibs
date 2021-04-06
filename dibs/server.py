@@ -61,10 +61,8 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-# _RELOAN_WAIT_TIME = (delta(minutes = 1) if getattr(dibs, 'debug_mode', False)
-#                      else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
-
-_RELOAN_WAIT_TIME = delta(minutes = 1)
+_RELOAN_WAIT_TIME = (delta(minutes = 1) if getattr(dibs, 'debug_mode', False)
+                     else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
 
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
