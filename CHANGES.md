@@ -1,6 +1,12 @@
 Change log for DIBS
 ===================
 
+Version (next)
+--------------
+
+* The `/stats` page now has shows symbols to indicate recent page retrieval activity, to help gauge how active a given item currently is.
+
+
 Version 0.1.1
 --------------
 
