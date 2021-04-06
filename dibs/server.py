@@ -68,10 +68,11 @@ _RELOAN_WAIT_TIME = (delta(minutes = 1) if getattr(dibs, 'debug_mode', False)
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
 # Remember the most recent accesses so we can provide stats on recent activity.
-_REQUESTS_15MIN = ExpiringDict(max_len = 1000000, max_age_seconds = 15*60)
-_REQUESTS_30MIN = ExpiringDict(max_len = 1000000, max_age_seconds = 30*60)
-_REQUESTS_45MIN = ExpiringDict(max_len = 1000000, max_age_seconds = 45*60)
-_REQUESTS_60MIN = ExpiringDict(max_len = 1000000, max_age_seconds = 60*60)
+# This is a dictionary whose elements are dictionaries.
+_REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
+              '30': ExpiringDict(max_len = 1000000, max_age_seconds = 30*60),
+              '45': ExpiringDict(max_len = 1000000, max_age_seconds = 45*60),
+              '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
 
 
 # General-purpose utilities used repeatedly.
@@ -90,10 +91,10 @@ def page(name, **kargs):
 def record_request(barcode):
     '''Record requests for content related to barcode.'''
     # The expiring dict takes care of everthing -- we just need to add entries.
-    _REQUESTS_15MIN[barcode] = _REQUESTS_15MIN.get(barcode, 0) + 1
-    _REQUESTS_30MIN[barcode] = _REQUESTS_30MIN.get(barcode, 0) + 1
-    _REQUESTS_45MIN[barcode] = _REQUESTS_45MIN.get(barcode, 0) + 1
-    _REQUESTS_60MIN[barcode] = _REQUESTS_60MIN.get(barcode, 0) + 1
+    _REQUESTS['15'][barcode] = _REQUESTS['15'].get(barcode, 0) + 1
+    _REQUESTS['30'][barcode] = _REQUESTS['30'].get(barcode, 0) + 1
+    _REQUESTS['45'][barcode] = _REQUESTS['45'].get(barcode, 0) + 1
+    _REQUESTS['60'][barcode] = _REQUESTS['60'].get(barcode, 0) + 1
 
 
 def time_now():
@@ -385,10 +386,10 @@ def show_stats():
         barcode = item.barcode
         active = Loan.select().where(Loan.item == item, Loan.state == 'active').count()
         history = History.select().where(History.what == barcode, History.type == 'loan')
-        last_15min = _REQUESTS_15MIN.get(barcode, 0)
-        last_30min = _REQUESTS_30MIN.get(barcode, 0)
-        last_45min = _REQUESTS_45MIN.get(barcode, 0)
-        last_60min = _REQUESTS_60MIN.get(barcode, 0)
+        last_15min = _REQUESTS['15'].get(barcode, 0)
+        last_30min = _REQUESTS['30'].get(barcode, 0)
+        last_45min = _REQUESTS['45'].get(barcode, 0)
+        last_60min = _REQUESTS['60'].get(barcode, 0)
         retrievals = [ last_15min ,
                        max(0, last_30min - last_15min),
                        max(0, last_45min - last_30min - last_15min),
