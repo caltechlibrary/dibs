@@ -25,7 +25,6 @@ import os
 from   os.path import realpath, dirname, join, exists
 from   peewee import *
 import random
-import ratelimit
 from   sidetrack import log, logr
 import string
 import sys
