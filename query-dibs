@@ -53,33 +53,33 @@ def main(list_loans = False, version = False):
         active = list(Loan.select().where(Loan.state == 'active'))
         recent = list(Loan.select().where(Loan.state == 'recent'))
         total = len(active) + len(recent)
-        now = dt.utcnow().replace(microsecond = 0).strftime(_DATETIME_FORMAT)
+        now = dt.utcnow().replace(microsecond = 0)
 
         console = Console()
-        console.print(Padding(f'Current time: {now}', (1, 0, 0, 1)))
-        console.print(Padding(f'[bold yellow]Total loans:  {total}[/]', (0, 0, 0, 1)))
+        console.print(Padding(f'Current time: {human_datetime(now)}', (1, 0, 0, 1)))
+        console.print(Padding(f'Total loans:  {total}', (0, 0, 0, 1)))
         if active:
-            console.print(loans_table('active', active))
+            console.print(loans_table('active', active, 'bold red'))
         if recent:
-            console.print(loans_table('recent', recent))
+            console.print(loans_table('recent', recent, 'bold white'))
 
 
 # Miscellaneous utilities.
 # .............................................................................
 
-def loans_table(category, loans):
-    table = Table(title = f'[bold white]{category.title()}[/] loans: [yellow2]{len(loans)}[/]',
+def loans_table(category, loans, color):
+    table = Table(title = f'[{color}]{category.title()}[/] loans: [{color}]{len(loans)}[/]',
                   pad_edge = False, box = box.MINIMAL_DOUBLE_HEAD)
     table.add_column('Barcode', style = 'sky_blue2', width = 14)
-    table.add_column('Title',   style = 'medium_turquoise', width = 20)
+    table.add_column('Title',   style = 'medium_turquoise', width = 22)
     table.add_column('Start')
     table.add_column('End',     style = 'light_cyan3')
     table.add_column('User')
     for loan in loans:
         table.add_row(loan.item.barcode,
                       loan.item.title,
-                      loan.start_time.strftime(_DATETIME_FORMAT),
-                      loan.end_time.strftime(_DATETIME_FORMAT),
+                      human_datetime(loan.start_time, format = _DATETIME_FORMAT),
+                      human_datetime(loan.end_time, format = _DATETIME_FORMAT),
                       loan.user)
     return table
 
