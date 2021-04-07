@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    query-server
+# @brief   Ask DIBS for info
+# @created 2021-04-07
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+from   datetime import datetime as dt
+from   decouple import config
+import os
+from   os.path import exists, dirname, join, basename
+from   peewee import *
+import plac
+from   rich import box
+from   rich.console import Console
+from   rich.padding import Padding
+from   rich.table import Table
+import sys
+from   sys import exit
+
+from   dibs.database import Item, Loan, History, database
+from   dibs.date_utils import human_datetime
+from   dibs.people import Person, person_from_environ, check_password
+from   dibs.roles import role_to_redirect, has_role, staff_user
+
+
+# Globals.
+# .............................................................................
+
+database = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+
+_DATETIME_FORMAT = '%m/%d %I:%M %p'
+
+
+# Main entry point.
+# .............................................................................
+
+@plac.annotations(
+    list_loans = ('list the current loans',      'flag', 'l'),
+    version    = ('print version info and exit', 'flag', 'V'),
+)
+
+def main(list_loans = False, version = False):
+    '''Query the DIBS database and print contents.'''
+
+    if version:
+        print_version()
+        exit(0)
+
+    if list_loans:
+        active = list(Loan.select().where(Loan.state == 'active'))
+        recent = list(Loan.select().where(Loan.state == 'recent'))
+        total = len(active) + len(recent)
+        now = dt.utcnow().replace(microsecond = 0).strftime(_DATETIME_FORMAT)
+
+        console = Console()
+        console.print(Padding(f'Current time: {now}', (1, 0, 0, 1)))
+        console.print(Padding(f'[bold yellow]Total loans:  {total}[/]', (0, 0, 0, 1)))
+        if active:
+            console.print(loans_table('active', active))
+        if recent:
+            console.print(loans_table('recent', recent))
+
+
+# Miscellaneous utilities.
+# .............................................................................
+
+def loans_table(category, loans):
+    table = Table(title = f'[bold white]{category.title()}[/] loans: [yellow2]{len(loans)}[/]',
+                  pad_edge = False, box = box.MINIMAL_DOUBLE_HEAD)
+    table.add_column('Barcode', style = 'sky_blue2', width = 14)
+    table.add_column('Title',   style = 'medium_turquoise', width = 20)
+    table.add_column('Start')
+    table.add_column('End',     style = 'light_cyan3')
+    table.add_column('User')
+    for loan in loans:
+        table.add_row(loan.item.barcode,
+                      loan.item.title,
+                      loan.start_time.strftime(_DATETIME_FORMAT),
+                      loan.end_time.strftime(_DATETIME_FORMAT),
+                      loan.user)
+    return table
+
+
+# Main invocation.
+# .............................................................................
+
+plac.call(main)
