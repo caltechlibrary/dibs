@@ -10,6 +10,8 @@ file "LICENSE" for more information.
 '''
 
 import arrow
+import datetime
+from   datetime import timedelta
 
 
 # Exported functions.
@@ -22,3 +24,10 @@ def human_datetime(value, format = "%I:%M %p (%Z) on %Y-%m-%d"):
     time = arrow.get(value).to('local').strftime(format)
     # Stftime has no option to *not* zero-pad the numbers, so we have to do it:
     return time.lstrip('0')
+
+
+def round_minutes(time, direction):
+    '''Round the given time to the minute according in the desired direction.'''
+    new_minute = (time.minute + (1 if direction == 'up' else 0))
+    new_time = time + datetime.timedelta(minutes = new_minute - time.minute)
+    return new_time.replace(second = 0, microsecond = 0)

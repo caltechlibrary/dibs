@@ -3,12 +3,14 @@
   %include('common/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="refresh" content="10">
     %include('common/standard-inclusions.tpl')
 
     <title>DIBS status page</title>
 
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
     <script src="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.0/css/all.css">
   </head>
 
   <body>
@@ -36,7 +38,8 @@
                   <th data-sortable="true" data-sorter="linkedTextSort"
                       data-field="title">&nbsp;<br>&nbsp;<br>Title</th>
 
-                  <th data-sortable="true" data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
+                  <th data-sortable="true"
+                      data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
 
                   <th class="text-center" data-sortable="true"
                       data-field="available">Current<br>active<br>loans</th>
@@ -46,10 +49,15 @@
 
                   <th class="text-center" data-sortable="true" data-field="copies"
                        data-sorter="numberSort">Average<br>loan<br>duration</th>
+
+                  <th class="text-center">
+                    Content<br>retrievals<br>
+                    <span style="letter-spacing: -1px; font-size: 0.9rem">15/30/45/60</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                %for item, current_loans, total_loans, avg_duration in usage_data:
+                %for (item, current_loans, total_loans, avg_duration, retrievals) in usage_data:
                 <tr scope="row" 
                     %if current_loans > 0:
                     class="font-weight-bold"
@@ -81,6 +89,13 @@
 
                   <td>
                     {{avg_duration}}
+                  </td>
+
+                  <td class="text-center text-monospace m-0 p-0" style="letter-spacing: -4px">
+                    %include('common/bar.tpl', value = retrievals[0])
+                    %include('common/bar.tpl', value = retrievals[1])
+                    %include('common/bar.tpl', value = retrievals[2])
+                    %include('common/bar.tpl', value = retrievals[3])
                   </td>
 
                 </tr>                
