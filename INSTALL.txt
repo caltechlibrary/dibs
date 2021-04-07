@@ -21,7 +21,7 @@ manager.
 
 ```shell
     sudo apt install apache2 apache2-dev apache2-ssl-dev \
-        libapache2-mod-py3 python3 python3-pip sqlite3 \
+        libapache2-mod-wsgi-py3 python3 python3-pip sqlite3 \
         npm
 ```
 

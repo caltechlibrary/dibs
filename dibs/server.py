@@ -18,6 +18,7 @@ from   datetime import timedelta as delta
 from   dateutil import tz
 from   decouple import config
 from   enum import Enum, auto
+from   expiringdict import ExpiringDict
 import functools
 from   humanize import naturaldelta
 import json
@@ -25,7 +26,6 @@ import os
 from   os.path import realpath, dirname, join, exists
 from   peewee import *
 import random
-import ratelimit
 from   sidetrack import log, logr
 import string
 import sys
@@ -33,7 +33,7 @@ from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
 from .database import Item, Loan, History, database
-from .date_utils import human_datetime
+from .date_utils import human_datetime, round_minutes
 from .email import send_email
 from .people import Person, person_from_environ, check_password
 from .roles import role_to_redirect, has_role, staff_user
@@ -61,11 +61,20 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = (delta(minutes = 1) if getattr(dibs, 'debug_mode', False)
+# Set it to 1 minute in debug mode. (Note: can't test dibs.debug_mode b/c when
+# this file is loaded, it's not set yet.  Test a Bottle variable instead.)
+_RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
                      else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
 
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
+
+# Remember the most recent accesses so we can provide stats on recent activity.
+# This is a dictionary whose elements are dictionaries.
+_REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
+              '30': ExpiringDict(max_len = 1000000, max_age_seconds = 30*60),
+              '45': ExpiringDict(max_len = 1000000, max_age_seconds = 45*60),
+              '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
 
 
 # General-purpose utilities used repeatedly.
@@ -79,6 +88,15 @@ def page(name, **kargs):
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user(person), feedback_url = _FEEDBACK_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
+
+
+def record_request(barcode):
+    '''Record requests for content related to barcode.'''
+    # The expiring dict takes care of everthing -- we just need to add entries.
+    _REQUESTS['15'][barcode] = _REQUESTS['15'].get(barcode, 0) + 1
+    _REQUESTS['30'][barcode] = _REQUESTS['30'].get(barcode, 0) + 1
+    _REQUESTS['45'][barcode] = _REQUESTS['45'].get(barcode, 0) + 1
+    _REQUESTS['60'][barcode] = _REQUESTS['60'].get(barcode, 0) + 1
 
 
 def time_now():
@@ -116,8 +134,9 @@ def expired_loans_removed(func):
             barcode = loan.item.barcode
             log(f'locking db to update loan state of {barcode} for {loan.user}')
             with database.atomic('immediate'):
+                next_time = loan.end_time + _RELOAN_WAIT_TIME
+                loan.reloan_time = round_minutes(next_time, 'down')
                 loan.state = 'recent'
-                loan.reloan_time = loan.end_time + _RELOAN_WAIT_TIME
                 loan.save(only = [Loan.state, Loan.reloan_time])
                 # We don't count staff users in loan stats, except in debug mode
                 if not staff_user(loan.user) or debug_mode():
@@ -370,6 +389,14 @@ def show_stats():
         barcode = item.barcode
         active = Loan.select().where(Loan.item == item, Loan.state == 'active').count()
         history = History.select().where(History.what == barcode, History.type == 'loan')
+        last_15min = _REQUESTS['15'].get(barcode, 0)
+        last_30min = _REQUESTS['30'].get(barcode, 0)
+        last_45min = _REQUESTS['45'].get(barcode, 0)
+        last_60min = _REQUESTS['60'].get(barcode, 0)
+        retrievals = [ last_15min ,
+                       max(0, last_30min - last_15min),
+                       max(0, last_45min - last_30min - last_15min),
+                       max(0, last_60min - last_45min - last_30min - last_15min) ]
         durations = [(loan.end_time - loan.start_time) for loan in history]
         if durations:
             avg_duration = sum(durations, delta()) // len(durations)
@@ -379,7 +406,7 @@ def show_stats():
                 avg_duration = naturaldelta(avg_duration)
         else:
             avg_duration = '(never borrowed)'
-        usage_data.append((item, active, len(durations), avg_duration))
+        usage_data.append((item, active, len(durations), avg_duration, retrievals))
     return page('stats', usage_data = usage_data)
 
 
@@ -546,10 +573,11 @@ def loan_item():
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
 
-        # OK, the user is allowed to loan out this item.
+        # OK, the user is allowed to loan out this item.  Round up the time to
+        # the next minute to avoid loan times ending in the middle of a minute.
         time = delta(minutes = 1) if debug_mode() else delta(hours = item.duration)
         start = time_now()
-        end = start + time
+        end = round_minutes(start + time, 'up')
         reloan = end + _RELOAN_WAIT_TIME
         log(f'creating new loan for {barcode} for {person.uname}')
         Loan.create(item = item, state = 'active', user = person.uname,
@@ -577,7 +605,7 @@ def end_loan():
             now = time_now()
             loan.state = 'recent'
             loan.end_time = now
-            loan.reloan_time = now + _RELOAN_WAIT_TIME
+            loan.reloan_time = round_minutes(now + _RELOAN_WAIT_TIME, 'down')
             loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
             if not staff_user(loan.user) or debug_mode():
                 # Don't count staff users in loan stats except in debug mode.
@@ -627,6 +655,7 @@ def return_iiif_manifest(barcode):
         if not exists(manifest_file):
             log(f'{manifest_file} does not exist')
             return
+        record_request(barcode)
         with open(join(_MANIFEST_DIR, f'{barcode}-manifest.json'), 'r') as mf:
             data = mf.read()
             # Change refs to the IIIF server to point to our DIBS route instead.
@@ -663,6 +692,7 @@ def return_iiif_content(barcode, rest):
         # UV uses ajax to get info.json files, which fails if we redirect the
         # requests to the IIIF server. Grab & serve the content ourselves.
         if url.endswith('json'):
+            record_request(barcode)
             response, error = net('get', url)
             with NamedTemporaryFile() as data_file:
                 data_file.write(response.content)
@@ -671,6 +701,7 @@ def return_iiif_content(barcode, rest):
                 return static_file(data_file.name, root = '/')
         else:
             log(f'redirecting to {url} for {barcode} for {person.uname}')
+            record_request(barcode)
             redirect(url)
     else:
         log(f'{person.uname} does not have {barcode} loaned out')

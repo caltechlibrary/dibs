@@ -1,6 +1,13 @@
 Change log for DIBS
 ===================
 
+Version (next)
+--------------
+
+* The `/stats` page now has shows symbols to indicate recent page retrieval activity, to help gauge how active a given item currently is.
+* End times and reloan times are now rounded to whole minutes. This is to help avoid confusing situations where loans seem to go past their allotted times.
+
+
 Version 0.1.1
 --------------
 
