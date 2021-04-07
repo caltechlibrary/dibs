@@ -6,6 +6,7 @@ Version (next)
 
 * The `/stats` page now has shows symbols to indicate recent page retrieval activity, to help gauge how active a given item currently is.
 * End times and reloan times are now rounded to whole minutes. This is to help avoid confusing situations where loans seem to go past their allotted times.
+* A small new program, `query-dibs`, is available at the top level to query the database from the command line. Currently it has only limited functionality but this will undoubtedly grow over time.
 
 
 Version 0.1.1
