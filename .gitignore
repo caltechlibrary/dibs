@@ -94,3 +94,5 @@ settings.ini
 .tern-port
 dibs.conf
 manifests/*-manifest.json
+htpasswd
+.htpasswd
