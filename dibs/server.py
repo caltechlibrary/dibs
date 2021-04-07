@@ -33,7 +33,7 @@ from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
 from .database import Item, Loan, History, database
-from .date_utils import human_datetime, round_minutes
+from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
 from .people import Person, person_from_environ, check_password
 from .roles import role_to_redirect, has_role, staff_user
@@ -97,11 +97,6 @@ def record_request(barcode):
     _REQUESTS['30'][barcode] = _REQUESTS['30'].get(barcode, 0) + 1
     _REQUESTS['45'][barcode] = _REQUESTS['45'].get(barcode, 0) + 1
     _REQUESTS['60'][barcode] = _REQUESTS['60'].get(barcode, 0) + 1
-
-
-def time_now():
-    '''Return datetime.utcnow() but with microseconds zeroed out.'''
-    return dt.utcnow().replace(microsecond = 0)
 
 
 def debug_mode():
