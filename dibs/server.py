@@ -33,7 +33,7 @@ from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
 from .database import Item, Loan, History, database
-from .date_utils import human_datetime
+from .date_utils import human_datetime, round_minutes
 from .email import send_email
 from .people import Person, person_from_environ, check_password
 from .roles import role_to_redirect, has_role, staff_user
@@ -61,7 +61,9 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-_RELOAN_WAIT_TIME = (delta(minutes = 1) if getattr(dibs, 'debug_mode', False)
+# Set it to 1 minute in debug mode. (Note: can't test dibs.debug_mode b/c when
+# this file is loaded, it's not set yet.  Test a Bottle variable instead.)
+_RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
                      else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
 
 # Where we send users to give feedback.
@@ -132,8 +134,9 @@ def expired_loans_removed(func):
             barcode = loan.item.barcode
             log(f'locking db to update loan state of {barcode} for {loan.user}')
             with database.atomic('immediate'):
+                next_time = loan.end_time + _RELOAN_WAIT_TIME
+                loan.reloan_time = round_minutes(next_time, 'down')
                 loan.state = 'recent'
-                loan.reloan_time = loan.end_time + _RELOAN_WAIT_TIME
                 loan.save(only = [Loan.state, Loan.reloan_time])
                 # We don't count staff users in loan stats, except in debug mode
                 if not staff_user(loan.user) or debug_mode():
@@ -570,10 +573,11 @@ def loan_item():
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
 
-        # OK, the user is allowed to loan out this item.
+        # OK, the user is allowed to loan out this item.  Round up the time to
+        # the next minute to avoid loan times ending in the middle of a minute.
         time = delta(minutes = 1) if debug_mode() else delta(hours = item.duration)
         start = time_now()
-        end = start + time
+        end = round_minutes(start + time, 'up')
         reloan = end + _RELOAN_WAIT_TIME
         log(f'creating new loan for {barcode} for {person.uname}')
         Loan.create(item = item, state = 'active', user = person.uname,
@@ -601,7 +605,7 @@ def end_loan():
             now = time_now()
             loan.state = 'recent'
             loan.end_time = now
-            loan.reloan_time = now + _RELOAN_WAIT_TIME
+            loan.reloan_time = round_minutes(now + _RELOAN_WAIT_TIME, 'down')
             loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
             if not staff_user(loan.user) or debug_mode():
                 # Don't count staff users in loan stats except in debug mode.
