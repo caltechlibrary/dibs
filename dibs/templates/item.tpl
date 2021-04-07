@@ -141,7 +141,8 @@ rendered start conditions and to limit calls to server */
             loanButton.classList.add('btn-secondary');
             notAvailableElement.innerHTML = 'not';
             explanationElement.innerHTML = explanation;
-            if (when_available != "None") {
+            console.log("when_available = ", when_available);
+            if (when_available && when_available != "None") {
               console.log('when_available');
               console.log(when_available);
                 whenElement.innerHTML = 
