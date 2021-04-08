@@ -28,7 +28,7 @@
     </script>
   </head>
   
-  <body onunload="">
+  <body>
     <div class="page-content">
       %include('common/navbar.tpl')
 
