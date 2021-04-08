@@ -587,7 +587,7 @@ def loan_item():
 @barcode_verified
 def end_loan():
     '''Handle http post request to return the given item early.'''
-    barcode = request.forms.get('barcode').strip()
+    barcode = request.POST.get('barcode').strip()
     person = person_from_environ(request.environ)
     log(f'get /return invoked on barcode {barcode} by {person.uname}')
 
