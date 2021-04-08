@@ -82,9 +82,12 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
 
 def page(name, **kargs):
     '''Create a page using template "name" with some standard variables set.'''
-    # Bottle is unusual in providing global objects like 'request'.
     person = person_from_environ(request.environ)
     logged_in = (person != None and person.uname != '')
+    if kargs.get('no_cache', False):
+        response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
+        response.add_header('Cache-Control',
+                            'private, no-store, max-age=0, no-cache, must-revalidate')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user(person), feedback_url = _FEEDBACK_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
@@ -204,7 +207,7 @@ def list_items():
     for item in Item.select():
         mf_exists = exists(join(_MANIFEST_DIR, f'{item.barcode}-manifest.json'))
         items.append((item, mf_exists))
-    return page('list', items = items)
+    return page('list', no_cache = True, items = items)
 
 
 @dibs.get('/manage')
@@ -216,7 +219,7 @@ def list_items():
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /manage invoked')
-    return page('manage', items = Item.select())
+    return page('manage', no_cache = True, items = Item.select())
 
 
 @dibs.get('/add')
@@ -402,7 +405,7 @@ def show_stats():
         else:
             avg_duration = '(never borrowed)'
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
-    return page('stats', usage_data = usage_data)
+    return page('stats', no_cache = True, usage_data = usage_data)
 
 
 # User endpoints.
@@ -516,12 +519,8 @@ def show_item_info(barcode):
         log(f'redirecting {person.uname} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
-    # One of several things we do to prevent browsers caching the page.
-    bottle.response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
-    bottle.response.add_header('Cache-Control',
-                               'private, no-store, max-age=0, no-cache, '
-                               + 'must-revalidate')
-    return page('item', item = item, available = (status == Status.AVAILABLE),
+    return page('item', no_cache = True, item = item,
+                available = (status == Status.AVAILABLE),
                 when_available = human_datetime(when_available),
                 explanation = explanation)
 
@@ -643,12 +642,7 @@ def send_item_to_viewer(barcode):
     if loan and loan.state == 'active':
         log(f'redirecting to viewer for {barcode} for {person.uname}')
         wait_time = _RELOAN_WAIT_TIME
-        # One of several things we do to prevent browsers caching the page.
-        bottle.response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
-        bottle.response.add_header('Cache-Control',
-                                   'private, no-store, max-age=0, no-cache, '
-                                   + 'must-revalidate')
-        return page('uv', barcode = barcode,
+        return page('uv', no_cache = True, barcode = barcode,
                     end_time = human_datetime(loan.end_time),
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
                     wait_time = naturaldelta(wait_time))
