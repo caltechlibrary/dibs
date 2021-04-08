@@ -110,6 +110,11 @@
             This site cannot function properly without JavaScript.
             Please enable JavaScript and reload this page.
           </p>
+          <p id="no-cookies" class="alert alert-danger mx-auto text-center w-75">
+            Note: web cookies are blocked by your browser.
+            The document viewer cannot function properly without cookies.
+            Please allow cookies from this site in your browser, and reload this page.
+          </p>
           <p class="mx-auto text-center w-50">
             Loan duration: {{item.duration}} hours
           </p>
@@ -135,12 +140,24 @@
                explanationElement = document.getElementById('explanation'),
                whenElement        = document.getElementById('when'),
                refreshTip         = document.getElementById('refresh-tip'),
-               noJSElement        = document.getElementById('no-javascript');
+               noJSElement        = document.getElementById('no-javascript'),
+               noCookiesElement   = document.getElementById('no-cookies');
            
            // Toggle the visibility of the loan button, expire times and
            // explanation depending on availability.
            function set_book_status(available, explanation, when_available) {
              noJSElement.classList.add('d-none');
+             if (navigator.cookieEnabled == 0) {
+               // Cookies not enabled. Leave the cookies message & quit.
+               noCookiesElement.classList.remove('d-none');
+               loanButton.classList.add('d-none');
+               availableElement.innerHTML = 'This item is currently not available '
+                                          + 'for a new digital loan.';
+               console.warn('Cookies are blocked by the browser -- stopping')
+               return;
+             } else {
+               noCookiesElement.classList.add('d-none');
+             };
              if (available == true) {
                console.info("Book {{item.barcode}} is available");
                loanButton.classList.remove('d-none');
