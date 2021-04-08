@@ -516,6 +516,11 @@ def show_item_info(barcode):
         log(f'redirecting {person.uname} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
+    # One of several things we do to prevent browsers caching the page.
+    bottle.response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
+    bottle.response.add_header('Cache-Control',
+                               'private, no-store, max-age=0, no-cache, '
+                               + 'must-revalidate')
     return page('item', item = item, available = (status == Status.AVAILABLE),
                 when_available = human_datetime(when_available),
                 explanation = explanation)
@@ -638,6 +643,11 @@ def send_item_to_viewer(barcode):
     if loan and loan.state == 'active':
         log(f'redirecting to viewer for {barcode} for {person.uname}')
         wait_time = _RELOAN_WAIT_TIME
+        # One of several things we do to prevent browsers caching the page.
+        bottle.response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
+        bottle.response.add_header('Cache-Control',
+                                   'private, no-store, max-age=0, no-cache, '
+                                   + 'must-revalidate')
         return page('uv', barcode = barcode,
                     end_time = human_datetime(loan.end_time),
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
