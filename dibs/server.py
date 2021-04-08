@@ -449,7 +449,7 @@ def loan_availability(user, barcode):
         if loan.state == 'active':
             log(f'{user} already has {barcode} on loan')
             status = Status.LOANED_BY_USER
-            explanation = 'This is currently on digital loan to you.'
+            explanation = 'This item is currently on digital loan to you.'
         else:
             log(f'{user} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
