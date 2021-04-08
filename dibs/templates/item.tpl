@@ -8,33 +8,44 @@
     <title>Description page for {{item.title}}</title>
 
     <script>
+     % setdefault('data', {})
+     % setdefault('explanation', '')
+     % setdefault('when_available', '')
+
      // Reload the page if the user got here by clicking the back button.
      // Solution from https://stackoverflow.com/a/43043658/743730
-     window.addEventListener( "pageshow", function ( event ) {
-       var historyTraversal =
-         event.persisted || (typeof window.performance != "undefined" && 
-                             window.performance.navigation.type === 2);
-       if (historyTraversal) {
-         window.location.reload();
-       }
+     window.addEventListener("pageshow", function (event) {
+         var historyTraversal = event.persisted ||
+                                (typeof window.performance != "undefined" && 
+                                 window.performance.navigation.type === 2);
+         if (historyTraversal) {
+             console.info("Back button history traversal -- reloading page");
+             window.location.reload(true);
+         } else {
+             var perfEntries = performance.getEntriesByType("navigation");
+             if (Array.isArray(perfEntries) && typeof(perfEntries[0]) !== "undefined"
+                 && perfEntries[0].type === "back_forward") {
+                 console.log("Back button navigation -- reloading page");
+                 window.location.reload(true);
+             }
+         }
      });
     </script>
   </head>
   
-  <body>
+  <body onunload="">
     <div class="page-content">
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-
         <table class="table table-borderless mt-4">
           <tbody>
             <tr>
               <td width="200px" style="border-top: none">
                 %if item.thumbnail != '':
-                <img class="img-thumbnail" src="{{item.thumbnail}}" style="width: 180px">
+                <img class="img-thumbnail" src="{{item.thumbnail}}">
                 %else:
-                <img class="img-thumbnail" src="{{base_url}}/static/missing-thumbnail.svg" style="width: 180px">
+                <img class="img-thumbnail" src="{{base_url}}/static/missing-thumbnail.svg">
                 %end
               </td>
               <td style="border-top: none">
@@ -81,7 +92,7 @@
             currently available to you for a digital loan.
             <span id="explanation">{{explanation}}</span>
             <span id="when">This item is scheduled to become available again
-              no later than {{when_available if when_available else 'unknown'}}.</span>
+              no later than {{when_available}}.</span>
           </p>
 
           <div class="col-md-3 mx-auto text-center">
@@ -111,8 +122,8 @@
 /* NOTE: these JavaScript functions are inlined to allow for template
 rendered start conditions and to limit calls to server */
 (function (document, window) {
-    const max_poll_count = 360, /* maximum number to times to poll /item-status */
-          wait_period = 10000; /* wait period between polling /item-status */
+    const max_poll_count = 360, /* max number to times to poll /item-status */
+          wait_period = 10000;  /* wait period between polling /item-status */
 
     /* Get handles to the elements we need to change on pages */
     let loanButton = document.getElementById('loan-button'),
@@ -125,7 +136,7 @@ rendered start conditions and to limit calls to server */
     // depending on availability.
     function set_book_status(available, explanation, when_available) {
         if (available == true) {
-            console.log("DEBUG book is available");
+            console.info("Book {{item.barcode}} is available");
             loanButton.removeAttribute('disabled');
             loanButton.setAttribute('value', 'Get loan');
             loanButton.classList.add('btn-primary');
@@ -134,22 +145,28 @@ rendered start conditions and to limit calls to server */
             explanationElement.innerHTML = '';
             whenElement.innerHTML = '';
         } else {
-            console.log("DEBUG book is NOT available");
+            console.info("Book {{item.barcode}} is NOT available");
             loanButton.setAttribute('disabled', true);
             loanButton.setAttribute('value', 'Not available');
             loanButton.classList.remove('btn-primary');
             loanButton.classList.add('btn-secondary');
             notAvailableElement.innerHTML = 'not';
-            explanationElement.innerHTML = explanation;
-            console.log("when_available = ", when_available);
-            if (when_available && when_available != "None") {
-              console.log('when_available');
-              console.log(when_available);
-                whenElement.innerHTML = 
-                   'This item will become available again by ' +
-                   '<nobr>{{when_available if when_available else "unknown"}}</nobr>.';
+            if (typeof explanation !== "undefined" && explanation !== null
+                && explanation !== "" && explanation != "None") {
+              explanationElement.innerHTML = explanation;
             } else {
-                whenElement.innerHTML = '';
+              console.warn('explanation is undefined');
+              explanationElement.innerHTML = "";
+            }
+            if (typeof when_available !== "undefined" && when_available !== null
+                && when_available !== "" && when_available != "None") {
+              console.info("when_available = ", when_available);
+              whenElement.innerHTML = 
+                'This item will become available again by <nobr>'
+                + when_available + '</nobr>.';
+            } else {
+              console.warn('when_available is undefined');
+              whenElement.innerHTML = '';
             }
         }
     }
@@ -159,7 +176,6 @@ rendered start conditions and to limit calls to server */
     } else {
         set_book_status(false, '{{explanation}}', '{{when_available}}');
     }
-
 
     /* This is a simple http GET function. It is based on examples
     at MDN Developer site and the satirical Vanilla JS framework site */
@@ -173,10 +189,11 @@ rendered start conditions and to limit calls to server */
                 if (xhr.status == 200) {
                     let data = xhr.responseText;
                     if (contentType === "application/json" && data !== "") {
-                        data = JSON.parse(xhr.responseText);
+                      data = JSON.parse(xhr.responseText);
                     }
                     callbackFn(data, "");
                 } else {
+                    console.warn('xhr status = ', xhr.status)
                     callbackFn("", xhr.status);
                 }
             }
@@ -201,7 +218,7 @@ rendered start conditions and to limit calls to server */
     httpGet('{{base_url}}/item-status/{{item.barcode}}', 'application/json',
         function(data, err) {
             if (poll_count >= max_poll_count) {
-                console.log("DEBUG reached max poll count");
+                console.warn("Reached max poll count");
                 refreshTip.innerHTML = 'Auto-refresh paused. Reload this browser window to see updates.';
                 refreshTip.classList.add('text-danger');
                 window.clearInterval(refresher);
@@ -213,12 +230,10 @@ rendered start conditions and to limit calls to server */
                  We want to use the handle to the specific
                  elements we want to update and update the page in place.
                 */
-                console.log("DEBUG update page here...");
-		console.log('DEBUG typeof ', typeof(data));
-                console.log('DEBUG data: ', data);
+                console.info("Updating status: data = ", data);
 		set_book_status(data.available, data.explanation, data.when_available);
             } else {
-                console.log("ERROR: " + err);
+                console.error("ERROR: " + err);
             }
         });
     }, wait_period);
