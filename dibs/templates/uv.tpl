@@ -3,7 +3,6 @@
   %include('common/banner.html')
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Pragma" content="no-cache">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
@@ -20,7 +19,7 @@
          var form = document.createElement('form');
          form.setAttribute('id', 'returnButton');
          form.setAttribute('method', 'post');
-         form.setAttribute('action', '{{base_url}}/return');
+         form.setAttribute('action', '{{base_url}}/return/{{barcode}}');
          form.style.display = 'hidden';
          document.body.appendChild(form)
 

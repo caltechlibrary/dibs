@@ -30,13 +30,13 @@ You started a digital loan through Caltech DIBS at {start}.
   Author: {item.author}
 
   The loan period ends at {end}
-  Web viewer: {viewer}
+  Link to web viewer: {viewer}
+
+Please note that DIBS only functions in web browsers that support JavaScript. DIBS is safe to use with JavaScript enabled in your browser and does not contain trackers or advertisements of any kind.
 
 Information about loan policies can be found at {info_page}
 
-Thank you for using Caltech DIBS. We hope the experience is a pleasant one.
-Please don't hesitate to send us feedback using our anonymous feedback form
-at {feedback}
+We hope your experience with DIBS is a pleasant one. Don't hesitate to send us feedback, and please report any problems. You can do it directly via email to helpdesk@library.caltech.edu or using our completely anonymous feedback form at {feedback}
 '''
 
 

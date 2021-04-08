@@ -33,7 +33,7 @@ from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
 from .database import Item, Loan, History, database
-from .date_utils import human_datetime, round_minutes
+from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
 from .people import Person, person_from_environ, check_password
 from .roles import role_to_redirect, has_role, staff_user
@@ -82,9 +82,12 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
 
 def page(name, **kargs):
     '''Create a page using template "name" with some standard variables set.'''
-    # Bottle is unusual in providing global objects like 'request'.
     person = person_from_environ(request.environ)
     logged_in = (person != None and person.uname != '')
+    if kargs.get('no_cache', False):
+        response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
+        response.add_header('Cache-Control',
+                            'private, no-store, max-age=0, no-cache, must-revalidate')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user(person), feedback_url = _FEEDBACK_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
@@ -97,11 +100,6 @@ def record_request(barcode):
     _REQUESTS['30'][barcode] = _REQUESTS['30'].get(barcode, 0) + 1
     _REQUESTS['45'][barcode] = _REQUESTS['45'].get(barcode, 0) + 1
     _REQUESTS['60'][barcode] = _REQUESTS['60'].get(barcode, 0) + 1
-
-
-def time_now():
-    '''Return datetime.utcnow() but with microseconds zeroed out.'''
-    return dt.utcnow().replace(microsecond = 0)
 
 
 def debug_mode():
@@ -209,7 +207,7 @@ def list_items():
     for item in Item.select():
         mf_exists = exists(join(_MANIFEST_DIR, f'{item.barcode}-manifest.json'))
         items.append((item, mf_exists))
-    return page('list', items = items)
+    return page('list', no_cache = True, items = items)
 
 
 @dibs.get('/manage')
@@ -221,7 +219,7 @@ def list_items():
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /manage invoked')
-    return page('manage', items = Item.select())
+    return page('manage', no_cache = True, items = Item.select())
 
 
 @dibs.get('/add')
@@ -407,7 +405,7 @@ def show_stats():
         else:
             avg_duration = '(never borrowed)'
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
-    return page('stats', usage_data = usage_data)
+    return page('stats', no_cache = True, usage_data = usage_data)
 
 
 # User endpoints.
@@ -451,7 +449,7 @@ def loan_availability(user, barcode):
         if loan.state == 'active':
             log(f'{user} already has {barcode} on loan')
             status = Status.LOANED_BY_USER
-            explanation = 'This is currently on digital loan to you.'
+            explanation = 'This item is currently on digital loan to you.'
         else:
             log(f'{user} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
@@ -461,11 +459,11 @@ def loan_availability(user, barcode):
         loan = Loan.get_or_none(Loan.user == user, Loan.state == 'active')
         if loan:
             other = loan.item
-            log(f'{user} has a loan on another item: {other.barcode}')
+            log(f'{user} has a loan on {other.barcode} that ends at {loan.end_time}')
             status = Status.USER_HAS_OTHER
             author = other.author[:50]+"..." if len(other.author) > 50 else other.author
             explanation = ('You have another item currently on loan'
-                           + f' ("{other.title}" by {author})')
+                           + f' ("{other.title}" by {author}).')
             when_available = loan.end_time
         else:
             # The user may be allowed to loan this, but are there any copies left?
@@ -521,7 +519,8 @@ def show_item_info(barcode):
         log(f'redirecting {person.uname} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
-    return page('item', item = item, available = (status == Status.AVAILABLE),
+    return page('item', no_cache = True, item = item,
+                available = (status == Status.AVAILABLE),
                 when_available = human_datetime(when_available),
                 explanation = explanation)
 
@@ -587,14 +586,26 @@ def loan_item():
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
-@dibs.post('/return')
+@dibs.post('/return/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-def end_loan():
+def end_loan(barcode):
     '''Handle http post request to return the given item early.'''
-    barcode = request.forms.get('barcode').strip()
     person = person_from_environ(request.environ)
-    log(f'get /return invoked on barcode {barcode} by {person.uname}')
+
+    # Sometimes, for unknown reasons, the end-loan button sends a post without
+    # the barcode data.  The following are compensatory mechanisms.
+    post_barcode = request.POST.get('barcode')
+    if not post_barcode:
+        log(f'missing post barcode in /return by {person.uname}')
+        if barcode:
+            log(f'using barcode {barcode} from post address instead')
+        else:
+            log(f'get /return invoked by {person.uname} but we have no barcode')
+            return
+    else:
+        barcode = post_barcode
+        log(f'post /return invoked on barcode {barcode} by {person.uname}')
 
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
@@ -631,7 +642,7 @@ def send_item_to_viewer(barcode):
     if loan and loan.state == 'active':
         log(f'redirecting to viewer for {barcode} for {person.uname}')
         wait_time = _RELOAN_WAIT_TIME
-        return page('uv', barcode = barcode,
+        return page('uv', no_cache = True, barcode = barcode,
                     end_time = human_datetime(loan.end_time),
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
                     wait_time = naturaldelta(wait_time))
