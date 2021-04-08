@@ -2,7 +2,6 @@
 <html lang="en">
   %include('common/banner.html')
   <head>
-    <meta http-equiv="Pragma" content="no-cache">
     %include('common/standard-inclusions.tpl')
 
     <title>List of items currently in Caltech DIBS</title>
