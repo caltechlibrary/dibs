@@ -456,11 +456,11 @@ def loan_availability(user, barcode):
         loan = Loan.get_or_none(Loan.user == user, Loan.state == 'active')
         if loan:
             other = loan.item
-            log(f'{user} has a loan on another item: {other.barcode}')
+            log(f'{user} has a loan on {other.barcode} that ends at {loan.end_time}')
             status = Status.USER_HAS_OTHER
             author = other.author[:50]+"..." if len(other.author) > 50 else other.author
             explanation = ('You have another item currently on loan'
-                           + f' ("{other.title}" by {author})')
+                           + f' ("{other.title}" by {author}).')
             when_available = loan.end_time
         else:
             # The user may be allowed to loan this, but are there any copies left?
@@ -582,14 +582,26 @@ def loan_item():
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
-@dibs.post('/return')
+@dibs.post('/return/<barcode:int>')
 @expired_loans_removed
 @barcode_verified
-def end_loan():
+def end_loan(barcode):
     '''Handle http post request to return the given item early.'''
-    barcode = request.POST.get('barcode').strip()
     person = person_from_environ(request.environ)
-    log(f'get /return invoked on barcode {barcode} by {person.uname}')
+
+    # Sometimes, for unknown reasons, the end-loan button sends a post without
+    # the barcode data.  The following are compensatory mechanisms.
+    post_barcode = request.POST.get('barcode')
+    if not post_barcode:
+        log(f'missing post barcode in /return by {person.uname}')
+        if barcode:
+            log(f'using barcode {barcode} from post address instead')
+        else:
+            log(f'get /return invoked by {person.uname} but we have no barcode')
+            return
+    else:
+        barcode = post_barcode
+        log(f'post /return invoked on barcode {barcode} by {person.uname}')
 
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)

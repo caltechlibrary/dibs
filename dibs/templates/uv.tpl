@@ -20,7 +20,7 @@
          var form = document.createElement('form');
          form.setAttribute('id', 'returnButton');
          form.setAttribute('method', 'post');
-         form.setAttribute('action', '{{base_url}}/return');
+         form.setAttribute('action', '{{base_url}}/return/{{barcode}}');
          form.style.display = 'hidden';
          document.body.appendChild(form)
 
