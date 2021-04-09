@@ -50,15 +50,22 @@ def update_htpasswd(uname, secret):
     if not secret:
         return False
     else:
-        cmd = [ 'htpasswd', '-c', 'htpasswd', uname, secret ]
+        cmd = [ 'htpasswd', '-b', 'htpasswd', uname, secret ]
         with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
-            out = proc.stdout.read()
+            print(proc.stdout.read())
             err = proc.stderr.read()
             if err:
                 print(f'ERROR: {err}')
-            else:
-                print(out);
         return True 
+
+def delete_htpasswd(uname):
+    cmd = [ 'htpasswd', '-D', 'htpasswd', uname ]
+    with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
+        print(proc.stdout.read())
+        err = proc.stderr.read()
+        if err:
+            print(f'ERROR: {err}')
+    return True 
 
 def check_password(src, secret):
     src = hashify(src)
