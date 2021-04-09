@@ -10,7 +10,7 @@ file "LICENSE" for more information.
 '''
 
 import arrow
-import datetime
+from   datetime import datetime as dt
 from   datetime import timedelta
 
 
@@ -29,5 +29,10 @@ def human_datetime(value, format = "%I:%M %p (%Z) on %Y-%m-%d"):
 def round_minutes(time, direction):
     '''Round the given time to the minute according in the desired direction.'''
     new_minute = (time.minute + (1 if direction == 'up' else 0))
-    new_time = time + datetime.timedelta(minutes = new_minute - time.minute)
+    new_time = time + timedelta(minutes = new_minute - time.minute)
     return new_time.replace(second = 0, microsecond = 0)
+
+
+def time_now():
+    '''Return datetime.utcnow() but with microseconds zeroed out.'''
+    return dt.utcnow().replace(microsecond = 0)
