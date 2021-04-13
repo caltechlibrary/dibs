@@ -17,6 +17,7 @@ file "LICENSE" for more information.
 '''
 
 from datetime import datetime
+from subprocess import Popen, PIPE
 
 from hashlib import blake2b
 from getpass import getpass
@@ -41,6 +42,30 @@ def update_password(secret):
         return None
     else:
         return hashify(secret)
+
+def update_htpasswd(uname, secret):
+    '''Update the password for user using htpasswd from Apache'''
+    if not secret:
+        secret = getpass(prompt='Password: ', stream = None)
+    if not secret:
+        return False
+    else:
+        cmd = [ 'htpasswd', '-b', 'htpasswd', uname, secret ]
+        with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
+            print(proc.stdout.read())
+            err = proc.stderr.read()
+            if err:
+                print(f'ERROR: {err}')
+        return True 
+
+def delete_htpasswd(uname):
+    cmd = [ 'htpasswd', '-D', 'htpasswd', uname ]
+    with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
+        print(proc.stdout.read())
+        err = proc.stderr.read()
+        if err:
+            print(f'ERROR: {err}')
+    return True 
 
 def check_password(src, secret):
     src = hashify(src)
