@@ -186,6 +186,7 @@ DIBS makes use of numerous open-source packages, without which it would have bee
 * [Boltons](https://github.com/mahmoud/boltons/) &ndash; package of miscellaneous Python utilities
 * [Bottle](https://bottlepy.org) &ndash; a lightweight WSGI micro web framework for Python
 * [CommonPy](https://github.com/caltechlibrary/commonpy) &ndash; a collection of commonly-useful Python functions
+* [expiringdict](https://pypi.org/project/expiringdict/) &ndash; an ordered dictionary class with auto-expiring values
 * [humanize](https://github.com/jmoiron/humanize) &ndash; make numbers more easily readable by humans
 * [ipdb](https://github.com/gotcha/ipdb) &ndash; the IPython debugger
 * [mod_wsgi](http://www.modwsgi.org) &ndash; an Apache module for hosting Python WSGI web applications
