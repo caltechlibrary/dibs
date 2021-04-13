@@ -197,7 +197,7 @@ def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'get /list invoked by non-library user')
+        log(f'get /list invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /list invoked')
@@ -215,7 +215,7 @@ def list_items():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'get /manage invoked by non-library user')
+        log(f'get /manage invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /manage invoked')
@@ -227,7 +227,7 @@ def add():
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'get /add invoked by non-library user')
+        log(f'get /add invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /add invoked')
@@ -240,7 +240,7 @@ def edit(barcode):
     '''Display the page to add new items.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'get /edit invoked by non-library user')
+        log(f'get /edit invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log(f'get /edit invoked on {barcode}')
@@ -254,7 +254,7 @@ def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'post /update invoked by non-library user')
+        log(f'post /update invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log(f'post {request.path} invoked')
@@ -320,7 +320,7 @@ def toggle_ready():
     '''Set the ready-to-loan field.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'post /ready invoked by non-library user')
+        log(f'post /ready invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     barcode = request.POST.barcode.strip()
@@ -350,7 +350,7 @@ def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'post /remove invoked by non-library user')
+        log(f'post /remove invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     barcode = request.POST.barcode.strip()
@@ -378,7 +378,7 @@ def show_stats():
     '''Display the list of known items.'''
     person = person_from_environ(request.environ)
     if not staff_user(person):
-        log(f'get /stats invoked by non-library user')
+        log(f'get /stats invoked by non-library user {person.uname}')
         redirect(f'{dibs.base_url}/notallowed')
         return
     log('get /stats invoked')
