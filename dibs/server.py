@@ -19,9 +19,12 @@ from   dateutil import tz
 from   decouple import config
 from   enum import Enum, auto
 from   expiringdict import ExpiringDict
+from   fdsend import send_file
 import functools
 from   humanize import naturaldelta
+from   io import BytesIO
 import json
+from   lru import LRU
 import os
 from   os.path import realpath, dirname, join, exists
 from   peewee import *
@@ -75,6 +78,9 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
               '30': ExpiringDict(max_len = 1000000, max_age_seconds = 30*60),
               '45': ExpiringDict(max_len = 1000000, max_age_seconds = 45*60),
               '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
+
+# IIIF page cache.
+_CACHE = LRU(5000)
 
 
 # General-purpose utilities used repeatedly.
@@ -696,24 +702,29 @@ def return_iiif_content(barcode, rest):
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
+        record_request(barcode)
         # Undo the temporary encoding done by return_iiif_manifest().
         corrected = rest.replace(f'{barcode}!', str(barcode) + r'%2F')
         url = _IIIF_BASE_URL + '/' + corrected
 
-        # UV uses ajax to get info.json files, which fails if we redirect the
-        # requests to the IIIF server. Grab & serve the content ourselves.
-        if url.endswith('json'):
-            record_request(barcode)
-            response, error = net('get', url)
-            with NamedTemporaryFile() as data_file:
-                data_file.write(response.content)
-                data_file.seek(0)
-                log(f'returning {len(response.content)} bytes for /iiif/{barcode}/{rest}')
-                return static_file(data_file.name, root = '/')
+        if url in _CACHE:
+            content, ctype = _CACHE[url]
+            data = BytesIO(content)
+            log(f'returning cached /iiif/{barcode}/{rest} for {person.uname}')
+            return send_file(data, ctype = ctype, size = len(content))
+
+        # Read the data from our IIIF server instance & send it to the client.
+        log(f'getting /iiif/{barcode}/{rest} from server')
+        response, error = net('get', url)
+        if not error:
+            ctype = 'application/json' if url.endswith('json') else 'image/jpeg'
+            _CACHE[url] = (response.content, ctype)
+            data = BytesIO(response.content)
+            log(f'returning content of /iiif/{barcode}/{rest} for {person.uname}')
+            return send_file(data, ctype = ctype, size = len(response.content))
         else:
-            log(f'redirecting to {url} for {barcode} for {person.uname}')
-            record_request(barcode)
-            redirect(url)
+            log(f'error {str(error)} accessing {url}')
+            return
     else:
         log(f'{person.uname} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
