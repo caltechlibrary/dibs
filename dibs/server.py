@@ -79,7 +79,7 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
               '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
 
 # IIIF page cache.  This is a dict where the keys will be IIIF page URLs.
-_CACHE = LRU(5000)
+_CACHE = LRU(50000)
 
 
 # General-purpose utilities used repeatedly.
