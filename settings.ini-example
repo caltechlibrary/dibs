@@ -12,6 +12,11 @@
 # =============================================================================
 
 [settings]
+# If You're using Apache Basic AUTH uncomment and update these lines.
+#
+#HTPASSWD = /usr/bin/htpasswd
+#PASSWORD_FILE = /path/to/dibs/here/password.txt
+
 # Path to the sqlite database, relative to here.
 DATABASE_FILE = dibs.db
 
