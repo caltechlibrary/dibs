@@ -32,7 +32,6 @@ import random
 from   sidetrack import log, logr
 import string
 import sys
-from   tempfile import NamedTemporaryFile
 from   topi import Tind
 
 from .database import Item, Loan, History, database
@@ -79,7 +78,7 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
               '45': ExpiringDict(max_len = 1000000, max_age_seconds = 45*60),
               '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
 
-# IIIF page cache.
+# IIIF page cache.  This is a dict where the keys will be IIIF page URLs.
 _CACHE = LRU(5000)
 
 
@@ -111,6 +110,22 @@ def record_request(barcode):
 def debug_mode():
     '''Return True if we're running Bottle's default server in debug mode.'''
     return getattr(dibs, 'debug_mode', False)
+
+
+def urls_rerouted(text, barcode):
+    '''Rewrite text to point IIIF URLs to our /iiif endpoint & fix some issues.'''
+    barcode = str(barcode)
+    rewritten = text.replace(_IIIF_BASE_URL, f'{dibs.base_url}/iiif/{barcode}')
+    # Change occurrences of %2F (slashes) in IIIF identifiers to '!' so
+    # Apache doesn't auto-convert %2F when UV fetches /iiif/...
+    return rewritten.replace(barcode + r'%2F', f'{barcode}!')
+
+
+def urls_restored(text, barcode):
+    '''Reverse the transformations made by urls_rerouted(...).'''
+    barcode = str(barcode)
+    rewritten = text.replace(f'{barcode}!', barcode + r'%2F')
+    return rewritten.replace(f'{dibs.base_url}/iiif/{barcode}', _IIIF_BASE_URL)
 
 
 # Decorators -- functions that are run selectively on certain routes.
@@ -673,18 +688,12 @@ def return_iiif_manifest(barcode):
             log(f'{manifest_file} does not exist')
             return
         record_request(barcode)
-        with open(join(_MANIFEST_DIR, f'{barcode}-manifest.json'), 'r') as mf:
-            data = mf.read()
-            # Change refs to the IIIF server to point to our DIBS route instead.
-            content = data.replace(_IIIF_BASE_URL, f'{dibs.base_url}/iiif/{barcode}')
-            # Change occurrences of %2F (slashes) in IIIF identifiers to '!' so
-            # Apache doesn't auto-convert %2F when UV fetches /iiif/...
-            content = content.replace(str(barcode) + r'%2F', f'{barcode}!')
-        with NamedTemporaryFile() as new_manifest:
-            new_manifest.write(content.encode())
-            new_manifest.seek(0)
+        with open(manifest_file, 'r') as mf:
+            adjusted_content = urls_rerouted(mf.read(), barcode)
+            data = BytesIO(adjusted_content.encode())
+            size = len(adjusted_content)
             log(f'returning manifest for {barcode} for {person.uname}')
-            return static_file(new_manifest.name, root = '/')
+            return send_file(data, ctype = 'application/json', size = size)
     else:
         log(f'{person.uname} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
@@ -703,10 +712,7 @@ def return_iiif_content(barcode, rest):
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
         record_request(barcode)
-        # Undo the temporary encoding done by return_iiif_manifest().
-        corrected = rest.replace(f'{barcode}!', str(barcode) + r'%2F')
-        url = _IIIF_BASE_URL + '/' + corrected
-
+        url = _IIIF_BASE_URL + '/' + urls_restored(rest, barcode)
         if url in _CACHE:
             content, ctype = _CACHE[url]
             data = BytesIO(content)
@@ -717,11 +723,17 @@ def return_iiif_content(barcode, rest):
         log(f'getting /iiif/{barcode}/{rest} from server')
         response, error = net('get', url)
         if not error:
-            ctype = 'application/json' if url.endswith('json') else 'image/jpeg'
-            _CACHE[url] = (response.content, ctype)
-            data = BytesIO(response.content)
+            if url.endswith('json'):
+                # Always rewrite URLs in any JSON files we send to the client.
+                content = urls_rerouted(response.text, barcode).encode()
+                ctype = 'application/json'
+            else:
+                content = response.content
+                ctype = 'image/jpeg'
+            _CACHE[url] = (content, ctype)
+            data = BytesIO(content)
             log(f'returning content of /iiif/{barcode}/{rest} for {person.uname}')
-            return send_file(data, ctype = ctype, size = len(response.content))
+            return send_file(data, ctype = ctype, size = len(content))
         else:
             log(f'error {str(error)} accessing {url}')
             return
