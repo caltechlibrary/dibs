@@ -85,9 +85,10 @@ def page(name, **kargs):
     person = person_from_environ(request.environ)
     logged_in = (person != None and person.uname != '')
     if kargs.get('no_cache', False):
-        response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
+        response.add_header('Expires', '0')
+        response.add_header('Pragma', 'no-cache')
         response.add_header('Cache-Control',
-                            'private, no-store, max-age=0, no-cache, must-revalidate')
+                            'no-store, max-age=0, no-cache, must-revalidate')
     return template(name, base_url = dibs.base_url, logged_in = logged_in,
                     staff_user = staff_user(person), feedback_url = _FEEDBACK_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
