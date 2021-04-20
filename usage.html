@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -307,10 +306,10 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  <section id="using-dibs">
+  
 <h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this headline">¶</a></h1>
 <p>This page describes how DIBS works from the users’ standpoint.  A separate section in this document describes the <a class="reference external" href="architecture.html#architecture--page-root">system architecture</a> that implements the functionality described here.</p>
-<section id="guiding-assumptions">
+
 <h2 id="guiding-assumptions">Guiding assumptions<a class="headerlink" href="#guiding-assumptions" title="Permalink to this headline">¶</a></h2>
 <p>The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:</p>
 <ol class="simple">
@@ -321,8 +320,8 @@
 <figure>
 <img src="_static/media/welcome-page.png"/>
 </figure>
-</section>
-<section id="the-patron-experience">
+
+
 <h2 id="the-patron-experience">The patron experience<a class="headerlink" href="#the-patron-experience" title="Permalink to this headline">¶</a></h2>
 <p>As mentioned above, patrons are presumed to be provided information about specific items available for loan.  The working assumption is that they will be given URLs that take them directly to item description pages in DIBS.  An example of an item description page is shown below:</p>
 <figure>
@@ -343,11 +342,11 @@
 <img src="_static/media/loan-ended.png"/>
 </figure>
 <p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user’s institutional SSO identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
-</section>
-<section id="the-staff-experience">
+
+
 <h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">¶</a></h2>
 <p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <a class="reference external" href="#the-patron-experience">patron experience</a> described in the previous section.)</p>
-<section id="logging-in">
+
 <h3 id="logging-in">Logging in<a class="headerlink" href="#logging-in" title="Permalink to this headline">¶</a></h3>
 <p>The current development version of DIBS does not yet integrate with Caltech’s SSO for authentication, and consequently, DIBS has its own login mechanism for demonstration purposes.  The login page is accessible from the drop-down menu in the upper right-hand corner of every page in DIBS:</p>
 <figure>
@@ -358,8 +357,8 @@
 <img src="_static/media/login-page.png"/>
 </figure>
 <p>Staff users can log in with their email address.</p>
-</section>
-<section id="the-list-page">
+
+
 <h3 id="the-list-page">The list page<a class="headerlink" href="#the-list-page" title="Permalink to this headline">¶</a></h3>
 <p>Once logged in, staff are redirected to the main entry point for staff, which is the list page located at <code class="docutils literal notranslate"><span class="pre">/list</span></code>:</p>
 <figure>
@@ -376,8 +375,8 @@
 <li><p><span class="button color-secondary">Copy link</span>: this copies to the user’s clipboard a link to the item loan page.  This is what should be communicated to course instructors, so that they can pass on the URLs to their students.</p></li>
 <li><p><span class="button color-info">Edit entry</span>: edit the entry. This brings up the same form as is used to add new entries, but with the values filled in, allowing the user to change the values and save the results.</p></li>
 </ul>
-</section>
-<section id="adding-new-items">
+
+
 <h3 id="adding-new-items">Adding new items<a class="headerlink" href="#adding-new-items" title="Permalink to this headline">¶</a></h3>
 <p>If the user clicks the <span class="button color-primary">Add a new item</span> button, they are presented with the following screen:</p>
 <figure>
@@ -389,9 +388,9 @@
 <img src="_static/media/manage-item-list-page.png"/>
 </figure>
 <p>In the current version of DIBS, this page only implements one action. Clicking the <span class="button color-danger">Delist</span> button removes the entry for the item in the DIBS database. (This does not remove the manifest, scans, or other files, only the database entry.) In future versions of DIBS, the management page may include additional operations.</p>
-</section>
-</section>
-</section>
+
+
+
 
 
           </article>
@@ -440,7 +439,7 @@
               
           </div>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.3.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.4.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
