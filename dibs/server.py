@@ -35,7 +35,7 @@ from   topi import Tind
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
-from .people import Person, person_from_environ, check_password
+from .people import Person, person_from_environ
 from .roles import role_to_redirect, has_role, staff_user
 
 

@@ -14,133 +14,92 @@ from hashlib import blake2b
 
 from decouple import config
 from peewee import SqliteDatabase
-from dibs.people import Person, update_password, update_htpasswd, delete_htpasswd
+from dibs.people import PersonManager, setup_person_table
 
-people_db = config('DATABASE_FILE', default='dibs.db')
+db_name = config('DATABASE_FILE', default='dibs.db')
+htpasswd = config('HTPASSWD', default = None)
+password_file = config('PASSWORD_FILE', default = None)
 
 def usage(app_name, exit_code):
     print(f'''
 USAGE: {app_name} VERB [KEY_VALUE_PAIRS]
 
-{app_name} lets us manage the contents of {people_db}
+{app_name} lets us manage the contents of {db_name}
 supporting the dibs web service.
 
 VERBS
+Verbs are actions you can perform on a peron's account or
+to show the version of the program or this help page.
 
     help       this help page.
     version    version of software
+    setup      setup {db_name} for the fist time
 
-    setup      setup {people_db} for the fist time
-    list       list users defined in {people_db}
-    add        add a user to {people_db}
-    update     set a value for user in {people_db}
-    remove     remove user from {people_db}
+    list       list users defined in {db_name}
+    add        add a user to {db_name}
+    update     set a value for user in {db_name}
+    remove     remove user from {db_name}
+
+Each account (person) has several fields associated with it.
+
+    uname          their login name like "ml@example.edu"
+    display_name   their human readable name, "Maxine L."
+    role           their application role, e.g. "library", "patron"
+    secret         if Apache Basic Auth is setup, their pass phrase
+
+Setting a field is expressed with a key/value pair separate by
+an equal sign (i.e. '='). There is no space between the key, the equal
+sign and the value (which can be in quotes). If no value is provided
+then you will be prompted to enter it. Pressing enter without setting
+the value will clear any existing value in the field.
+
+All verbs to manager accounts are add, update, remove and list.
+Adding an account creates a new record in {db_name}. Updates
+changes the values of fields in an existing account. Only the
+fields specified get changed.  Remove deletes an account from
+{db_name} and list lists all accounts. List will also list a
+specific account if you provide the value for the field "uname".
 
 EXAMPLES
 
-Managing users. the uname field is always required for "add",
+Add an account "rsdoiel" with a "display_name",
+"role".
 
-    {app_name} add uname=janedoe "display_name=Doe, Jane" secret
-    {app_name} update uname=janedoe display_name="Edoe, Jan"
-    {app_name} remove uname=janedoe
+   {app_name} add uname=rsdoiel display_name='R. S. Doiel' role=library
 
-This will create or update the record for "janedoe". If
-a fieldname doesn't supply a value (e.g. our secret field)
-then you will be prompted for that value. Add will warn you if 
-the username is already defined. Update will warn you if this 
-username is not found.
+Update "rsdoiel" to include a password (you'll be prompted
+for the password)..
 
-Fields: uname (manditory execpt for list), secret, 
-        display_name, role
+   {app_name} update uname=rsdoiel secret=
 
-List users:
+List the accounts.
 
-    {app_name} list
+   {app_name} list
 
-This lists a specific user:
+List "rsdoiel" account specifically.
 
-    {app_name} list "uname=janedoe"
+   {app_name} list uname=rsdoiel
+
+Remove "rsdoiel"
+
+   {app_name} remove uname=rsdoiel
+
+If you need to remove a value just use the `field_name=` notation. 
+It'll prompt you for the value, press enter and the value will 
+become an empty string. So removing my library role for "rsdoiel"
+looks like
+
+   {app_name} update uname=rsdoiel role=
+
+Then putting it back
+
+   {app_name} update uname=rsdoiel role=library
+
+Fields: uname (manditory except for list), 
+        display_name, role, and secret
 
 ''')
     sys.exit(exit_code)
-
-def setup_people(people_db):
-    '''setup a people SQLite3 database'''
-    db = SqliteDatabase(people_db)
-    if db.connect():
-        if db.table_exists('person'):
-            print(f'''WARNING: person already exists in {people_db}''')
-        else:
-            db.create_tables([Person])
-    else:
-        print(f'''ERROR: could not connect to {people_db}''')
-    
-def list_people(kv):
-    '''list people in the SQLite3 database table called person'''
-    if 'uname' in kv:
-        row = (Person.select().where(Person.uname == kv['uname']).get())
-        print(f'''
-    Username: {row.uname}
-Display Name: {row.display_name}
-        Role: {row.role}
-     Updated: {row.updated}
-''')
-    else:
-        print(f'''Username\tDisplay Name\tRole\tUpdated''')
-        query = (Person.select().order_by(Person.display_name))
-        for row in query:
-            print(f'''{row.uname}\t{row.display_name}\t{row.role}\t{row.updated}''')
-
-
-def add_people(kv):
-    if not 'uname' in kv:
-        print(f'''WARNING: uname is required''')
-        sys.exit(1)
-    if 'secret' in kv:
-        if os.path.exists('htpasswd') and ('uname' in kv):
-            # pass off to Apache htpasswd command for password file.
-            update_htpasswd(kv['uname'], kv['secret'])
-        else:
-            secret = update_password(kv['secret'])
-            if secret != None:
-                kv['secret'] = secret
-            else:
-                print(f'''WARNING: unable to set secret''')
-                sys.exit(1)
-    else:
-        kv['secret'] = '' 
-    for key in [ 'role', 'display_name' ]:
-        if not key in kv:
-            kv[key] = ''
-    user = Person(uname = kv['uname'], secret = kv['secret'],
-        role = kv['role'], display_name = kv['display_name'])
-    user.save()
-
-
-def update_people(kv):
-    user = Person.select().where(Person.uname == kv['uname']).get()
-    if 'secret' in kv:
-        secret = update_password(kv['secret'])
-        if secret != None:
-            user.secret = secret
-        else:
-            print(f'''WARNING: unable to set secret''')
-            sys.exit(1)
-    if 'display_name' in kv:
-        user.display_name = kv['display_name']
-    if 'role' in kv:
-        user.role = kv['role']
-    user.save()
-
-
-def remove_people(kv):
-    if not 'uname' in kv:
-        print(f'''WARNING: uname is required''')
-        sys.exit(1)
-    nrows = Person.delete().where(Person.uname == kv['uname']).execute()
-    if os.path.exists('htpasswd'):
-        delete_htpasswd(kv['uname'])
-    print(f'''{nrows} row deleted from person in {people_db}''')
 
 if __name__ == '__main__':
     app_name = os.path.basename(sys.argv[0])
@@ -157,16 +116,17 @@ if __name__ == '__main__':
                 if (not value) and not (key == 'secret'):
                     value = input(f'''Enter {key}: ''')
                 kv[key] = value
+    pm = PersonManager(db_name, htpasswd, password_file)
     if verb == 'setup':
-        setup_people(people_db)
+        setup_person_table(db_name)
     elif verb == 'list':
-        list_people(kv)
+        pm.list_people(kv)
     elif verb == 'add':
-        add_people(kv)
+        pm.add_people(kv)
     elif verb == 'update':
-        update_people(kv)
+        pm.update_people(kv)
     elif verb == 'remove':
-        remove_people(kv)
+        pm.remove_people(kv)
     elif verb in [ 'h', 'help', '-h', '--help', '-help']:
         usage(app_name, 0)
     else:
