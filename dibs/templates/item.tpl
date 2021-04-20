@@ -2,6 +2,9 @@
 <html lang="en">
   %include('common/banner.html')
   <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
     %include('common/standard-inclusions.tpl')
 
     <title>Description page for {{item.title}}</title>
