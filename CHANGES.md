@@ -1,6 +1,15 @@
 Change log for DIBS
 ===================
 
+Version 0.2.1
+--------------
+
+* Fix issue #45: path to `uv.js` file was not fully qualified.
+* Fix issue #43: `people-manager` could get incorrect paths to `htpasswd` and the password file
+* Fix issue #42: browsers were still using cached copies of `/item` page; new code tries to do a beter job of preventing that
+* Fix issue #41: need expire loans before printing them
+
+
 Version 0.2.0
 --------------
 
