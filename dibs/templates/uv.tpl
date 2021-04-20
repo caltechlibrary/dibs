@@ -49,8 +49,17 @@
 <body>
     
   <div class="container-fluid h-100 w-100 text-center">
-
-    <div class="row bg-light" style="margin: auto 0px">
+    <p id="no-javascript" class="alert alert-danger mx-auto text-center w-75 mt-4">
+      Note: JavaScript is disabled in your browser.
+      This site cannot function properly without JavaScript.
+      Please enable JavaScript and reload this page.
+    </p>
+    <p id="no-cookies" class="d-none alert alert-danger mx-auto text-center w-75 mt-4">
+      Note: web cookies are blocked by your browser.
+      The document viewer cannot function properly without cookies.
+      Please allow cookies from this site in your browser, and reload this page.
+    </p>
+    <div id="loan-info" class="d-none row bg-light" style="margin: auto 0px">
       <div class="col-6">
         <div class="float-left my-1"><p>Loan expires at {{end_time}}.</p></div>
       </div>
@@ -68,17 +77,23 @@
   </div>
 
   <script>
+   let noJSElement      = document.getElementById('no-javascript'),
+       noCookiesElement = document.getElementById('no-cookies'),
+       loanInfoElement  = document.getElementById('loan-info');
+
    var myUV;
 
    window.addEventListener('uvLoaded', function (e) {
+     console.info('(DIBS) uvLoaded listener called');
+
      myUV = createUV('#uv', {
        iiifResourceUri: '{{base_url}}/manifests/{{barcode}}',
        configUri: '{{base_url}}/static/uv-config.json'
      }, new UV.URLDataProvider());
 
      myUV.on("created", function(obj) {
-       console.log('parsed metadata', myUV.extension.helper.manifest.getMetadata());
-       console.log('raw jsonld', myUV.extension.helper.manifest.__jsonld);
+       console.log('(DIBS) parsed metadata', myUV.extension.helper.manifest.getMetadata());
+       console.log('(DIBS) raw jsonld', myUV.extension.helper.manifest.__jsonld);
      });
 
      // Calculate the delay to exiration (in msec) and force a reload then.
@@ -86,14 +101,27 @@
      var end = new Date("{{js_end_time}}").getTime();
      var timeout = (end - now) + 1000;
      setTimeout(() => { window.location.reload(); }, timeout);
-
    }, false);
 
    window.onpageshow = function (event) {
+     // If we can run this, we have JS, so turn off the warning.
+     noJSElement.classList.add('d-none');
+     // If cookies are not enabled, leave the cookies message & quit.
+     if (navigator.cookieEnabled == 0) {
+       noCookiesElement.classList.remove('d-none');
+       loanInfoElement.classList.add('d-none');
+       console.warn('(DIBS) cookies are blocked by the browser -- stopping')
+       return;
+     } else {
+       noCookiesElement.classList.add('d-none');
+       loanInfoElement.classList.remove('d-none');
+     };
+
      // If this page was loaded from cache, force a reload.
      if (event.persisted) {
+       console.info('(DIBS) forcing page reload')
        window.location.reload();
-     }
+     };
    };
   </script>
 
