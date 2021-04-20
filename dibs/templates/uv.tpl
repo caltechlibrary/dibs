@@ -93,7 +93,6 @@
 
      myUV.on("created", function(obj) {
        console.log('(DIBS) parsed metadata', myUV.extension.helper.manifest.getMetadata());
-       console.log('(DIBS) raw jsonld', myUV.extension.helper.manifest.__jsonld);
      });
 
      // Calculate the delay to exiration (in msec) and force a reload then.
