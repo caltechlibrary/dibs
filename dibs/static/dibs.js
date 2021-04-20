@@ -31,7 +31,7 @@ function copyToClipboard(button, text) {
 }
 
 
-// Bootstrap Table utilities
+// Bootstrap Table utilities.
 // ............................................................................
 
 // This next function was inspired in part by the posting by user "Undry"
@@ -59,3 +59,24 @@ function linkedTextSort(a, b) {
     if (a > b) return 1;
     return 0;
 }
+
+
+// Debugging utilities.
+// ............................................................................
+
+// This defines a function log(...) that can be used anywhere inour code to
+// print message to the console if the variable "debug_mode" is true.
+//
+// Usage: execute set_debug(true) in the console to activate it.
+
+function set_debug(enabled) {
+    sessionStorage.setItem('debug_mode', enabled ? 'true' : 'false');
+    return enabled;
+}
+
+function logFunction() {
+    var debugging = sessionStorage.getItem('debug_mode');
+    return debugging ? console.log.bind(window.console, '(DIBS)') : function(){};
+}
+
+Object.defineProperty(this, "log", {get: logFunction});
