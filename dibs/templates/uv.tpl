@@ -29,7 +29,7 @@
          input.setAttribute('value', '{{barcode}}');
          document.getElementById('returnButton').appendChild(input);
 
-         log('user ended loan explicitly');
+         log('User ended loan explicitly');
          form.submit();
        } else {
          return false;
@@ -78,9 +78,31 @@
   </div>
 
   <script>
-   let noJSElement      = document.getElementById('no-javascript'),
-       noCookiesElement = document.getElementById('no-cookies'),
-       loanInfoElement  = document.getElementById('loan-info');
+   const wait_period = 15000;  // wait bet. polls of /item-status
+   let   poll_count  = 0;
+   let   refresher;
+
+   function loanCheck() {
+     httpGet('{{base_url}}/item-status/{{barcode}}',
+             'application/json',
+             function(status, error) {
+               if (error) {
+                 console.error("ERROR: " + error);
+                 return;
+               };
+
+               log('Loan status for {{barcode}} = ', status);
+               if (! status.loaned_by_user) {
+                 log('{{barcode}} is no longer available to this user');
+                 window.location.reload();
+               };
+               poll_count++;
+             });
+   };
+
+   let noJSElement      = document.getElementById('no-javascript');
+   let noCookiesElement = document.getElementById('no-cookies');
+   let loanInfoElement  = document.getElementById('loan-info');
 
    var myUV;
 
@@ -93,7 +115,7 @@
      }, new UV.URLDataProvider());
 
      myUV.on("created", function(obj) {
-       log('parsed metadata', myUV.extension.helper.manifest.getMetadata());
+       log('Parsed metadata', myUV.extension.helper.manifest.getMetadata());
      });
 
      // Calculate the delay to exiration (in msec) and force a reload then.
@@ -110,19 +132,22 @@
      if (navigator.cookieEnabled == 0) {
        noCookiesElement.classList.remove('d-none');
        loanInfoElement.classList.add('d-none');
-       log('cookies are blocked by the browser -- stopping');
+       log('Cookies are blocked by the browser -- stopping');
        return;
      } else {
        noCookiesElement.classList.add('d-none');
        loanInfoElement.classList.remove('d-none');
+       log('Starting loan checker');
+       refresher = setInterval(loanCheck, wait_period);
      };
 
      // If this page was loaded from cache, force a reload.
      if (event.persisted) {
-       log('forcing page reload');
+       log('Forcing page reload');
        window.location.reload();
      };
    };
+
   </script>
 
   <script src="{{base_url}}/viewer/uv/uv.js"></script>
