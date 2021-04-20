@@ -454,7 +454,8 @@ def loan_availability(user, barcode):
         else:
             log(f'{user} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
-            explanation = 'It is too soon after the last time you borrowed it.'
+            explanation = ('Your loan period has ended and it is too soon '
+                           'after the last time you borrowed it.')
             when_available = loan.reloan_time
     else:
         loan = Loan.get_or_none(Loan.user == user, Loan.state == 'active')
@@ -503,6 +504,7 @@ def item_status(barcode):
 
     item, status, explanation, when_available = loan_availability(person.uname, barcode)
     return json.dumps({'available'     : (status == Status.AVAILABLE),
+                       'loaned_by_user': (status == Status.LOANED_BY_USER),
                        'explanation'   : explanation,
                        'when_available': human_datetime(when_available)})
 
