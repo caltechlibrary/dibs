@@ -80,3 +80,37 @@ function logFunction() {
 }
 
 Object.defineProperty(this, "log", {get: logFunction});
+
+
+// HTTP GET function for data polling.
+// ............................................................................
+// This is a simple http GET function. It is based on examples at MDN
+// Developer site and the satirical Vanilla JS framework site.
+
+function httpGet(url, contentType, callbackFn) {
+    let xhr      = new XMLHttpRequest();
+    let page_url = new URL(window.location.href);
+
+    xhr.onreadystatechange = function () {
+        // Process the response.
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status == 200) {
+                let data = xhr.responseText;
+                if (contentType === "application/json" && data !== "") {
+                    data = JSON.parse(xhr.responseText);
+                }
+                callbackFn(data, "");
+            } else {
+                log('xhr status = ', xhr.status);
+                callbackFn("", xhr.status);
+            }
+        }
+    };
+
+    // We always want JSON data.
+    xhr.open('GET', url, true);
+    if (contentType !== "") {
+        xhr.setRequestHeader('Content-Type', contentType);
+    }
+    xhr.send();
+};
