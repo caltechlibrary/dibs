@@ -97,7 +97,7 @@
    };
   </script>
 
-  <script src="uv/uv.js"></script>
+  <script src="{{base_url}}/viewer/uv/uv.js"></script>
 
 </body>
 </html>
