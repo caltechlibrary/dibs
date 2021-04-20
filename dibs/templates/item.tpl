@@ -17,13 +17,13 @@
                               (typeof window.performance != "undefined" && 
                                window.performance.navigation.type === 2);
        if (historyTraversal) {
-         console.info("Back button history traversal -- reloading page");
+         log("Back button history traversal -- reloading page");
          window.location.reload(true);
        } else {
          var perfEntries = performance.getEntriesByType("navigation");
          if (Array.isArray(perfEntries) && typeof(perfEntries[0]) !== "undefined"
              && perfEntries[0].type === "back_forward") {
-           console.log("Back button navigation -- reloading page");
+           log("Back button navigation -- reloading page");
            window.location.reload(true);
          }
        }
@@ -156,13 +156,13 @@
                loanButton.classList.add('d-none');
                availableElement.innerHTML = 'This item is currently not available '
                                           + 'for a new digital loan.';
-               console.warn('Cookies are blocked by the browser -- stopping')
+               log('Cookies are blocked by the browser -- stopping')
                return;
              } else {
                noCookiesElement.classList.add('d-none');
              };
              if (available == true) {
-               console.info("Book {{item.barcode}} is available");
+               log("Book {{item.barcode}} is available");
                loanButton.classList.remove('d-none');
                loanButton.removeAttribute('disabled');
                loanButton.setAttribute('value', 'Get loan');
@@ -173,7 +173,7 @@
                explanationElement.innerHTML = '';
                whenElement.innerHTML = '';
              } else {
-               console.info("Book {{item.barcode}} is NOT available");
+               log("Book {{item.barcode}} is NOT available");
                loanButton.classList.remove('d-none');
                loanButton.setAttribute('disabled', true);
                loanButton.setAttribute('value', 'Not available');
@@ -185,17 +185,17 @@
                    && explanation !== "" && explanation != "None") {
                  explanationElement.innerHTML = explanation;
                } else {
-                 console.warn('explanation is undefined');
+                 log('explanation is undefined');
                  explanationElement.innerHTML = "";
                }
                if (typeof when_available !== "undefined" && when_available !== null
                    && when_available !== "" && when_available != "None") {
-                 console.info("when_available = ", when_available);
+                 log("when_available = ", when_available);
                  whenElement.innerHTML =
                    'This item is scheduled to become available again '
                    + 'no later than <nobr>' + when_available + '</nobr>.';
                } else {
-                 console.warn('when_available is undefined');
+                 log('when_available is undefined');
                  whenElement.innerHTML = '';
                }
              }
@@ -223,7 +223,7 @@
                    }
                    callbackFn(data, "");
                  } else {
-                   console.warn('xhr status = ', xhr.status)
+                   log('xhr status = ', xhr.status)
                    callbackFn("", xhr.status);
                  }
                }
@@ -248,7 +248,7 @@
              httpGet('{{base_url}}/item-status/{{item.barcode}}', 'application/json',
                      function(data, err) {
                        if (poll_count >= max_poll_count) {
-                         console.warn("Reached max poll count");
+                         log("Reached max poll count");
                          refreshTip.innerHTML = 'Auto-refresh paused. Reload this '
                                               + 'browser window to see updates.';
                          refreshTip.classList.add('text-danger');
@@ -263,7 +263,7 @@
                             We want to use the handle to the specific
                             elements we want to update and update the page in place.
                           */
-                         console.info("Updating status: data = ", data);
+                         log("Updating status: data = ", data);
 		         set_book_status(data.available, data.explanation, data.when_available);
                        } else {
                          console.error("ERROR: " + err);

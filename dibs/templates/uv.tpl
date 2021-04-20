@@ -29,6 +29,7 @@
          input.setAttribute('value', '{{barcode}}');
          document.getElementById('returnButton').appendChild(input);
 
+         log('user ended loan explicitly');
          form.submit();
        } else {
          return false;
@@ -84,7 +85,7 @@
    var myUV;
 
    window.addEventListener('uvLoaded', function (e) {
-     console.info('(DIBS) uvLoaded listener called');
+     log('uvLoaded listener called');
 
      myUV = createUV('#uv', {
        iiifResourceUri: '{{base_url}}/manifests/{{barcode}}',
@@ -92,7 +93,7 @@
      }, new UV.URLDataProvider());
 
      myUV.on("created", function(obj) {
-       console.log('(DIBS) parsed metadata', myUV.extension.helper.manifest.getMetadata());
+       log('parsed metadata', myUV.extension.helper.manifest.getMetadata());
      });
 
      // Calculate the delay to exiration (in msec) and force a reload then.
@@ -109,7 +110,7 @@
      if (navigator.cookieEnabled == 0) {
        noCookiesElement.classList.remove('d-none');
        loanInfoElement.classList.add('d-none');
-       console.warn('(DIBS) cookies are blocked by the browser -- stopping')
+       log('cookies are blocked by the browser -- stopping');
        return;
      } else {
        noCookiesElement.classList.add('d-none');
@@ -118,7 +119,7 @@
 
      // If this page was loaded from cache, force a reload.
      if (event.persisted) {
-       console.info('(DIBS) forcing page reload')
+       log('forcing page reload');
        window.location.reload();
      };
    };
@@ -128,3 +129,9 @@
 
 </body>
 </html>
+
+<!--
+Local Variables:
+js-indent-level: 2
+End:
+-->
