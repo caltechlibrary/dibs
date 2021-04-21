@@ -5,6 +5,7 @@ Version 0.2.1
 --------------
 
 * Fix issue #48: use a more systematic approach to printing log statements in the JavaScript console, allow printing to be turned on/off, and leave it off by default for production.
+* Fix issue #46: if the user ended a loan through one browser window while having a second browser window open on the same item, the second window would not close the viewer and instead would just show spinning squares for the content.  Now the viewer window actively checks the current loan status.
 * Fix issue #45: path to `uv.js` file was not fully qualified.
 * Fix issue #43: `people-manager` could get incorrect paths to `htpasswd` and the password file
 * Fix issue #42: browsers were still using cached copies of `/item` page; new code tries to do a beter job of preventing that
