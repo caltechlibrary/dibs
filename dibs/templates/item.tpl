@@ -207,36 +207,6 @@
              set_book_status(false, '{{explanation}}', '{{when_available}}');
            }
 
-           /* This is a simple http GET function. It is based on examples
-              at MDN Developer site and the satirical Vanilla JS framework site */
-           httpGet = function (url, contentType, callbackFn) {
-             let self = this,
-                 xhr = new XMLHttpRequest(),
-                 page_url = new URL(window.location.href);
-             xhr.onreadystatechange = function () {
-               /* process response */
-               if (xhr.readyState === XMLHttpRequest.DONE) {
-                 if (xhr.status == 200) {
-                   let data = xhr.responseText;
-                   if (contentType === "application/json" && data !== "") {
-                     data = JSON.parse(xhr.responseText);
-                   }
-                   callbackFn(data, "");
-                 } else {
-                   log('xhr status = ', xhr.status)
-                   callbackFn("", xhr.status);
-                 }
-               }
-             };
-
-             /* we always want JSON data */
-             xhr.open('GET', url, true);
-             if (contentType !== "" ) {
-               xhr.setRequestHeader('Content-Type', contentType);
-             }
-             xhr.send();
-           };
-
            /* NOTE: This is our refresher service (for book status updates). 
               The service is created with setIneterval and will run
               max_poll_count times at an interval set by wait_period.
