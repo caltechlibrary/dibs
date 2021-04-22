@@ -226,7 +226,6 @@ dibs.install(LoanExpirer())
 
 class AddPersonArgument(BottlePluginBase):
     '''Inject a 'person' keyword to the arguments of a route function.'''
-
     def apply(self, callback, route):
         def person_plugin_wrapper(*args, **kwargs):
             person = person_from_environ(request.environ)
@@ -237,18 +236,14 @@ class AddPersonArgument(BottlePluginBase):
             if 'person' in inspect.getfullargspec(route.callback)[0]:
                 kwargs['person'] = person
             return callback(*args, **kwargs)
-
         return person_plugin_wrapper
 
 
-class AddStaffPersonArgument(BottlePluginBase):
-    '''Inject a 'person' keyword to the arguments of a route function.
-    If the person's role is not staff, this redirects to /notallowed.'''
-
+class VerifyStaffUser(BottlePluginBase):
+    '''Redirect to an error page if the user lacks sufficient priviledges.'''
     def apply(self, callback, route):
         def staff_person_plugin_wrapper(*args, **kwargs):
             person = person_from_environ(request.environ)
-            log(f'person = {person}')
             if person is None:
                 log(f'person is None')
                 return page('error', summary = 'authentication failure',
@@ -257,10 +252,7 @@ class AddStaffPersonArgument(BottlePluginBase):
                 log(f'{request.path} invoked by non-staff user {person.uname}')
                 redirect(f'{dibs.base_url}/notallowed')
                 return
-            if 'person' in inspect.getfullargspec(route.callback)[0]:
-                kwargs['person'] = person
             return callback(*args, **kwargs)
-
         return staff_person_plugin_wrapper
 
 
@@ -285,7 +277,7 @@ def logout():
         redirect('/')
 
 
-@dibs.get('/list', apply = AddStaffPersonArgument())
+@dibs.get('/list', apply = VerifyStaffUser())
 def list_items():
     '''Display the list of known items.'''
     log('get /list invoked')
@@ -298,29 +290,29 @@ def list_items():
     return page('list', no_cache = True, items = items)
 
 
-@dibs.get('/manage', apply = AddStaffPersonArgument())
+@dibs.get('/manage', apply = VerifyStaffUser())
 def list_items():
     '''Display the list of known items.'''
     log('get /manage invoked')
     return page('manage', no_cache = True, items = Item.select())
 
 
-@dibs.get('/add', apply = AddStaffPersonArgument())
+@dibs.get('/add', apply = VerifyStaffUser())
 def add():
     '''Display the page to add new items.'''
     log('get /add invoked')
     return page('edit', action = 'add', item = None)
 
 
-@dibs.get('/edit/<barcode:int>', apply = AddStaffPersonArgument())
+@dibs.get('/edit/<barcode:int>', apply = VerifyStaffUser())
 def edit(barcode):
     '''Display the page to add new items.'''
     log(f'get /edit invoked on {barcode}')
     return page('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
 
 
-@dibs.post('/update/add', apply = AddStaffPersonArgument())
-@dibs.post('/update/edit', apply = AddStaffPersonArgument())
+@dibs.post('/update/add', apply = VerifyStaffUser())
+@dibs.post('/update/edit', apply = VerifyStaffUser())
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     log(f'post {request.path} invoked')
@@ -380,7 +372,7 @@ def update_item():
     redirect(f'{dibs.base_url}/list')
 
 
-@dibs.post('/ready', apply = AddStaffPersonArgument())
+@dibs.post('/ready', apply = VerifyStaffUser())
 def toggle_ready():
     '''Set the ready-to-loan field.'''
     barcode = request.POST.barcode.strip()
@@ -404,7 +396,7 @@ def toggle_ready():
     redirect(f'{dibs.base_url}/list')
 
 
-@dibs.post('/remove', apply = AddStaffPersonArgument())
+@dibs.post('/remove', apply = VerifyStaffUser())
 def remove_item():
     '''Handle http post request to remove an item from the list page.'''
     barcode = request.POST.barcode.strip()
@@ -426,8 +418,8 @@ def remove_item():
     redirect(f'{dibs.base_url}/manage')
 
 
-@dibs.get('/stats', apply = AddStaffPersonArgument())
-@dibs.get('/status', apply = AddStaffPersonArgument())
+@dibs.get('/stats', apply = VerifyStaffUser())
+@dibs.get('/status', apply = VerifyStaffUser())
 def show_stats():
     '''Display the list of known items.'''
     log('get /stats invoked')
