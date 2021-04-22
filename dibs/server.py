@@ -291,8 +291,8 @@ def list_items():
 
 
 @dibs.get('/manage', apply = VerifyStaffUser())
-def list_items():
-    '''Display the list of known items.'''
+def manage_items():
+    '''Manage the list of known items.'''
     log('get /manage invoked')
     return page('manage', no_cache = True, items = Item.select())
 
@@ -757,9 +757,8 @@ def serve_uv_files(filepath):
     return static_file(filepath, root = 'viewer/uv')
 
 
-# The uv subdirectory contains generic html and css. Serve as static files.
 @dibs.route('/viewer/<filepath:path>')
-def serve_uv_files(filepath):
+def serve_viewer_files(filepath):
     log(f'serving static uv file /viewer/{filepath}')
     return static_file(filepath, root = 'viewer')
 
