@@ -64,19 +64,27 @@ function linkedTextSort(a, b) {
 // Debugging utilities.
 // ............................................................................
 
-// This defines a function log(...) that can be used anywhere inour code to
+// This defines a function log(...) that can be used anywhere in our code to
 // print message to the console if the variable "debug_mode" is true.
 //
 // Usage: execute set_debug(true) in the console to activate it.
 
-function set_debug(enabled) {
-    sessionStorage.setItem('debug_mode', enabled ? 'true' : 'false');
-    return enabled;
+function logFunction() {
+    var debug = (sessionStorage != null &&
+                 sessionStorage.getItem('debug_mode') == 'true');
+    return debug ? console.log.bind(window.console, '(DIBS)') : function(){};
 }
 
-function logFunction() {
-    var debugging = sessionStorage.getItem('debug_mode');
-    return debugging ? console.log.bind(window.console, '(DIBS)') : function(){};
+function set_debug(enabled) {
+    // This only works if DOM storage is available in the browser.
+    if (sessionStorage == null) {
+        console.warn("can't set debug mode: browser DOM storage unavailable");
+        return false;
+    }
+    console.info('(DIBS)', 'debug_mode =', enabled);
+    sessionStorage.setItem('debug_mode', enabled ? 'true' : 'false');
+    Object.defineProperty(this, "log", {get: logFunction});
+    return enabled;
 }
 
 Object.defineProperty(this, "log", {get: logFunction});
