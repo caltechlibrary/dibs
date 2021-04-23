@@ -15,6 +15,9 @@
         <h1 class="mx-auto text-center pt-3 caltech-color">
           About DIBS
         </h1>
+        <h3 class="mx-auto text-center">
+          <small class="text-muted font-italic font-weight-light">Version {{version}}</small>
+        </h3>
         <p class="my-3"><strong>Caltech DIBS</strong> (<em><strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem</em>) is an implementation of <a target="_blank" href="https://controlleddigitallending.org">Controlled Digital Lending</a>, allowing members of Caltech to borrow materials that are not otherwise available in e-book or other electronic formats. The system was implemented in the year 2021 to help Caltech students and faculty during the global <a target="_blank" href="https://www.who.int/emergencies/diseases/novel-coronavirus-2019">COVID-19 pandemic</a>.</p>
 
         <p align="center"><i class="fas fa-question-circle fa-2x" style="vertical-align: middle"></i> <span style="vertical-align: middle">Visit the is <a target="_blank" href="https://caltechlibrary.github.io/dibs/">online help documentation</a> to learn more about how to use DIBS.</span></p>

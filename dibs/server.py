@@ -35,6 +35,7 @@ import string
 import sys
 from   topi import Tind
 
+from . import __version__
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
@@ -98,7 +99,7 @@ def page(name, **kargs):
         response.add_header('Pragma', 'no-cache')
         response.add_header('Cache-Control',
                             'no-store, max-age=0, no-cache, must-revalidate')
-    return template(name, base_url = dibs.base_url,
+    return template(name, base_url = dibs.base_url, version = __version__,
                     logged_in = logged_in, staff_user = staff_user(person),
                     feedback_url = _FEEDBACK_URL, help_url = _HELP_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
