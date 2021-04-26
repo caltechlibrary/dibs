@@ -41,6 +41,9 @@ RELOAN_WAIT_TIME = 30
 # Feedback form URL.
 FEEDBACK_URL = https://some.forms.server/your/feedback/form
 
+# Help page URL.
+HELP_URL = https://caltechlibrary.github.io/dibs/usage.html
+
 # The following run mode options are recognized:
 #   "normal":  use adapter.wsgi without special options
 #   "verbose": use adapter.wsgi with verbose logging options

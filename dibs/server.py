@@ -35,6 +35,7 @@ import string
 import sys
 from   topi import Tind
 
+from . import __version__
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
@@ -72,6 +73,9 @@ _RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
+# Where we send users for help.
+_HELP_URL = config('HELP_URL', default = 'https://caltechlibrary.github.io/dibs')
+
 # Remember the most recent accesses so we can provide stats on recent activity.
 # This is a dictionary whose elements are dictionaries.
 _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
@@ -95,8 +99,9 @@ def page(name, **kargs):
         response.add_header('Pragma', 'no-cache')
         response.add_header('Cache-Control',
                             'no-store, max-age=0, no-cache, must-revalidate')
-    return template(name, base_url = dibs.base_url, logged_in = logged_in,
-                    staff_user = staff_user(person), feedback_url = _FEEDBACK_URL,
+    return template(name, base_url = dibs.base_url, version = __version__,
+                    logged_in = logged_in, staff_user = staff_user(person),
+                    feedback_url = _FEEDBACK_URL, help_url = _HELP_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
 
 
@@ -291,8 +296,8 @@ def list_items():
 
 
 @dibs.get('/manage', apply = VerifyStaffUser())
-def list_items():
-    '''Display the list of known items.'''
+def manage_items():
+    '''Manage the list of known items.'''
     log('get /manage invoked')
     return page('manage', no_cache = True, items = Item.select())
 
@@ -757,9 +762,8 @@ def serve_uv_files(filepath):
     return static_file(filepath, root = 'viewer/uv')
 
 
-# The uv subdirectory contains generic html and css. Serve as static files.
 @dibs.route('/viewer/<filepath:path>')
-def serve_uv_files(filepath):
+def serve_viewer_files(filepath):
     log(f'serving static uv file /viewer/{filepath}')
     return static_file(filepath, root = 'viewer')
 
