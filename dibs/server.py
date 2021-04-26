@@ -168,24 +168,25 @@ class LoanExpirer(BottlePluginBase):
         def loan_expiration_wrapper(*args, **kwargs):
             now = time_now()
             # Delete expired loan recency records.
-            loans = Loan.select().where(Loan.state == 'recent', now >= Loan.reloan_time)
-            for loan in loans:
-                log(f'locking db to expire {loan.user} loan on {loan.item.barcode}')
-                with database.atomic('immediate'):
-                    loan.delete_instance()
+            n = Loan.delete().where(Loan.state == 'recent', now >= Loan.reloan_time).execute()
+            if n > 0:
+                log(f'deleted {n} recent loans that reached their reloan times')
             # Change the state of active loans that are past due.
             loans = Loan.select().where(Loan.state == 'active', now >= Loan.end_time)
-            for loan in loans:
-                barcode = loan.item.barcode
-                log(f'locking db to update loan state of {barcode} for {loan.user}')
+            if len(loans) > 0:
+                log(f'locking db to update loan states')
                 with database.atomic('immediate'):
-                    next_time = loan.end_time + _RELOAN_WAIT_TIME
-                    loan.reloan_time = round_minutes(next_time, 'down')
-                    loan.state = 'recent'
-                    loan.save(only = [Loan.state, Loan.reloan_time])
-                    # Don't count staff users in loan stats except in debug mode
-                    if not staff_user(loan.user) or debug_mode():
-                        History.create(type = 'loan', what = loan.item.barcode,
+                    for loan in loans:
+                        barcode = loan.item.barcode
+                        log(f'updating loan state of {barcode} for {loan.user}')
+                        next_time = loan.end_time + _RELOAN_WAIT_TIME
+                        loan.reloan_time = round_minutes(next_time, 'down')
+                        loan.state = 'recent'
+                        loan.save(only = [Loan.state, Loan.reloan_time])
+                        # Don't count staff users in stats except in debug mode
+                        if staff_user(loan.user) and not debug_mode():
+                            continue
+                        History.create(type = 'loan', what = barcode,
                                        start_time = loan.start_time,
                                        end_time = loan.end_time)
             return callback(*args, **kwargs)
@@ -356,24 +357,20 @@ def update_item():
             log(f'could not find {barcode} in TIND')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        log(f'locking db to add {barcode}, title {rec.title}')
-        with database.atomic():
-            Item.create(barcode = barcode, title = rec.title, author = rec.author,
-                        tind_id = rec.tind_id, year = rec.year,
-                        edition = rec.edition, thumbnail = rec.thumbnail_url,
-                        num_copies = num_copies, duration = duration)
+        Item.create(barcode = barcode, title = rec.title, author = rec.author,
+                    tind_id = rec.tind_id, year = rec.year,
+                    edition = rec.edition, thumbnail = rec.thumbnail_url,
+                    num_copies = num_copies, duration = duration)
     else: # The operation is /update/edit.
         if not item:
             log(f'there is no item with barcode {barcode}')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        log(f'locking db to save changes to {barcode}')
-        with database.atomic():
-            item.barcode    = barcode
-            item.duration   = duration
-            item.num_copies = num_copies
-            item.save(only = [Item.barcode, Item.num_copies, Item.duration])
-            # FIXME if we reduced the number of copies, we need to check loans.
+        item.barcode    = barcode
+        item.duration   = duration
+        item.num_copies = num_copies
+        item.save(only = [Item.barcode, Item.num_copies, Item.duration])
+        # FIXME if we reduced the number of copies, we need to check loans.
     redirect(f'{dibs.base_url}/list')
 
 
@@ -385,40 +382,35 @@ def toggle_ready():
     item = Item.get(Item.barcode == barcode)
     item.ready = not item.ready
     log(f'locking db to change {barcode} ready to {item.ready}')
-    with database.atomic('exclusive'):
+    with database.atomic('immediate'):
         item.save(only = [Item.ready])
         # If we are removing readiness, we may have to close outstanding
         # loans.  Doesn't matter if these are active or recent loans.
         if not item.ready:
             for loan in Loan.select().where(Loan.item == item):
-                if not staff_user(loan.user) or debug_mode():
-                    # Don't count staff users in loan stats except in debug mode
-                    History.create(type = 'loan', what = loan.item.barcode,
-                                   start_time = loan.start_time,
-                                   end_time = loan.end_time)
-                log(f'deleting {loan.state} loan for {barcode}')
-                loan.delete_instance()
+                # Don't count staff users in loan stats except in debug mode.
+                if staff_user(loan.user) and not debug_mode():
+                    continue
+                History.create(type = 'loan', what = barcode,
+                               start_time = loan.start_time,
+                               end_time = loan.end_time)
+            n = Loan.delete().where(Loan.item == item).execute()
+            if n > 0:
+                log(f'deleted {n} loans for {barcode}')
     redirect(f'{dibs.base_url}/list')
 
 
 @dibs.post('/remove', apply = VerifyStaffUser())
 def remove_item():
-    '''Handle http post request to remove an item from the list page.'''
+    '''Handle http post request to remove an item from the database.'''
     barcode = request.POST.barcode.strip()
     item = Item.get(Item.barcode == barcode)
     log(f'locking db to remove {barcode}')
-    with database.atomic('exclusive'):
+    with database.atomic('immediate'):
         item.ready = False
         item.save(only = [Item.ready])
-        # First clean up loans while we still have the item object.
-        for loan in Loan.select().where(Loan.item == item):
-            log(f'deleting {loan.state} loan for {barcode}')
-            if not staff_user(loan.user) or debug_mode():
-                # Don't count staff users in loan stats except in debug mode
-                History.create(type = 'loan', what = loan.item.barcode,
-                               start_time = loan.start_time,
-                               end_time = loan.end_time)
-            loan.delete_instance()
+        Loan.delete().where(Loan.item == item).execute()
+        # Note we don't create History for items that will no longer exist.
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
 
@@ -577,7 +569,7 @@ def loan_item(person):
     # Checking if the item is available requires steps, and we have to be sure
     # that two users don't do them concurrently, or else we might make 2 loans.
     log(f'locking db')
-    with database.atomic('exclusive'):
+    with database.atomic('immediate'):
         item, status, explanation, when_available = loan_availability(person.uname, barcode)
         if status == Status.NOT_READY:
             # Normally we shouldn't see a loan request through this form if the
