@@ -357,6 +357,7 @@ def update_item():
             log(f'could not find {barcode} in TIND')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
+        log(f'adding item entry {barcode} for {title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
                     edition = rec.edition, thumbnail = rec.thumbnail_url,
@@ -369,6 +370,7 @@ def update_item():
         item.barcode    = barcode
         item.duration   = duration
         item.num_copies = num_copies
+        log(f'saving changes to {barcode}')
         item.save(only = [Item.barcode, Item.num_copies, Item.duration])
         # FIXME if we reduced the number of copies, we need to check loans.
     redirect(f'{dibs.base_url}/list')
