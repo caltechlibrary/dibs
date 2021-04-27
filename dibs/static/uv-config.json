@@ -1,11 +1,31 @@
 {
     "options": {
+        "useArrowKeysToNavigate": true
     },
     "modules": {
+        "contentLeftPanel": {
+            "options": {
+                "galleryThumbWidth": 250,
+                "panelExpandedWidth": 150,
+                "thumbsImageFadeInDuration": 10,
+                "twoColThumbHeight": 300,
+                "twoColThumbWidth": 200,
+                "oneColThumbHeight": 300,
+                "oneColThumbWidth": 200
+            }
+        },
         "footerPanel": {
-            "options":{
+            "options": {
+                "fullscreenEnabled": true,
                 "downloadEnabled": false,
-                "shareEnabled": false
+                "shareEnabled": false,
+                "bookmarkEnabled": true,
+                "embedEnabled": true,
+                "feedbackEnabled": false,
+                "minimiseButtons": true,
+                "openEnabled": true,
+                "shareEnabled": false,
+                "printEnabled": false
             }
         }
     }

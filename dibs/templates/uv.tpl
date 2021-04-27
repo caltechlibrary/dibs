@@ -7,11 +7,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     %include('common/standard-inclusions.tpl')
-    <link href="{{base_url}}/viewer/uv/uv.css" rel="stylesheet" type="text/css">
+    <link href="{{base_url}}/viewer/uv.css" rel="stylesheet" type="text/css">
 
-    <script src="{{base_url}}/viewer/uv/lib/offline.js"></script>
-    <script src="{{base_url}}/viewer/uv/helpers.js"></script>
-    <script>
+    <script type="text/javascript" src="{{base_url}}/viewer/lib/offline.js"></script>
+    <script type="text/javascript" src="{{base_url}}/viewer/helpers.js"></script>
+    <script type="text/javascript">
      function maybeEndLoan() {
        if (confirm('This will end your loan immediately. You will need to wait '
                  + '{{wait_time}} before borrowing this item again.')) {
@@ -43,6 +43,10 @@
        min-width: 600px;
        min-height: 600px;
      }
+     body {
+       margin: 0;
+       padding: 0;
+     }
     </style>
 
     <title>Caltech DIBS</title>
@@ -72,12 +76,12 @@
     </div>
 
     <div class="row h-100">
-      <div id="uv" class="col-12 mb-2"></div>
+      <div id="uv"></div>
     </div>
 
   </div>
 
-  <script>
+  <script type="text/javascript">
    const wait_period = 15000;  // wait bet. polls of /item-status
    let   poll_count  = 0;
    let   refresher;
@@ -104,18 +108,41 @@
    let noCookiesElement = document.getElementById('no-cookies');
    let loanInfoElement  = document.getElementById('loan-info');
 
-   var myUV;
+   var dibsUV;
 
    window.addEventListener('uvLoaded', function (e) {
      log('uvLoaded listener called');
 
-     myUV = createUV('#uv', {
-       iiifResourceUri: '{{base_url}}/manifests/{{barcode}}',
-       configUri: '{{base_url}}/static/uv-config.json'
-     }, new UV.URLDataProvider());
+     urlDataProvider = new UV.URLDataProvider(true);
+     var formattedLocales;
+     var locales = urlDataProvider.get('locales', '');
 
-     myUV.on("created", function(obj) {
-       log('Parsed metadata', myUV.extension.helper.manifest.getMetadata());
+     if (locales) {
+       var names = locales.split(',');
+       formattedLocales = [];
+       for (var i in names) {
+         var nameparts = String(names[i]).split(':');
+         formattedLocales[i] = {name: nameparts[0], label: nameparts[1]};
+       }
+     } else {
+       formattedLocales = [{ name: 'en-GB' }];
+     }
+
+     dibsUV = createUV('#uv', {
+       root            : '.',
+       iiifResourceUri : '{{base_url}}/manifests/{{barcode}}',
+       configUri       : '{{base_url}}/static/uv-config.json',
+       collectionIndex : Number(urlDataProvider.get('c', 0)),
+       sequenceIndex   : Number(urlDataProvider.get('s', 0)),
+       canvasIndex     : Number(urlDataProvider.get('cv', 0)),
+       rangeId         : urlDataProvider.get('rid', 0),
+       rotation        : Number(urlDataProvider.get('r', 0)),
+       xywh            : urlDataProvider.get('xywh', ''),
+       locales         : formattedLocales
+     }, urlDataProvider);
+
+     dibsUV.on("created", function(obj) {
+       log('Parsed metadata', dibsUV.extension.helper.manifest.getMetadata());
      });
 
      // Calculate the delay to exiration (in msec) and force a reload then.
@@ -148,9 +175,25 @@
      };
    };
 
+   $(function() {
+     var $UV = $('#uv');
+
+     function resize() {
+       var windowWidth = window.innerWidth;
+       var windowHeight = window.innerHeight;
+       $UV.width(windowWidth);
+       $UV.height(windowHeight);
+     }
+
+     $(window).on('resize', function() {
+       resize();
+     });
+     
+     resize();
+   });
   </script>
 
-  <script src="{{base_url}}/viewer/uv/uv.js"></script>
+  <script type="text/javascript" src="{{base_url}}/viewer/uv.js"></script>
 
 </body>
 </html>

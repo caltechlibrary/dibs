@@ -756,6 +756,27 @@ def serve_uv_files(filepath):
     return static_file(filepath, root = 'viewer/uv')
 
 
+@dibs.route('/view/img/<filepath:path>')
+@dibs.route('/viewer/img/<filepath:path>')
+def serve_uv_img_files(filepath):
+    log(f'serving static uv file /viewer/img/{filepath}')
+    return static_file(filepath, root = 'viewer/img')
+
+
+@dibs.route('/view/lib/<filepath:path>')
+@dibs.route('/viewer/lib/<filepath:path>')
+def serve_uv_lib_files(filepath):
+    log(f'serving static uv file /viewer/lib/{filepath}')
+    return static_file(filepath, root = 'viewer/lib')
+
+
+@dibs.route('/view/themes/<filepath:path>')
+@dibs.route('/viewer/themes/<filepath:path>')
+def serve_uv_themes_files(filepath):
+    log(f'serving static uv file /viewer/themes/{filepath}')
+    return static_file(filepath, root = 'viewer/themes')
+
+
 @dibs.route('/viewer/<filepath:path>')
 def serve_viewer_files(filepath):
     log(f'serving static uv file /viewer/{filepath}')
