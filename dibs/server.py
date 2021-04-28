@@ -33,6 +33,7 @@ import random
 from   sidetrack import log, logr
 import string
 import sys
+from   textwrap import shorten
 from   topi import Tind
 
 from . import __version__
@@ -502,7 +503,7 @@ def loan_availability(user, barcode):
             other = loan.item
             log(f'{user} has a loan on {other.barcode} that ends at {loan.end_time}')
             status = Status.USER_HAS_OTHER
-            author = other.author[:50]+"..." if len(other.author) > 50 else other.author
+            author = shorten(other.author, width = 50, placeholder = ' …')
             explanation = ('You have another item currently on loan'
                            + f' ("{other.title}" by {author}).')
             when_available = loan.end_time
@@ -671,7 +672,8 @@ def send_item_to_viewer(barcode, person):
         log(f'redirecting to viewer for {barcode} for {person.uname}')
         wait_time = _RELOAN_WAIT_TIME
         return page('uv', no_cache = True, barcode = barcode,
-                    end_time = human_datetime(loan.end_time),
+                    title = shorten(item.title, width = 100, placeholder = ' …'),
+                    end_time = human_datetime(loan.end_time, '%I:%M %p (%b %d, %Z)'),
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
                     wait_time = naturaldelta(wait_time))
     else:
@@ -754,6 +756,27 @@ def return_iiif_content(barcode, rest, person):
 def serve_uv_files(filepath):
     log(f'serving static uv file /viewer/uv/{filepath}')
     return static_file(filepath, root = 'viewer/uv')
+
+
+@dibs.route('/view/img/<filepath:path>')
+@dibs.route('/viewer/img/<filepath:path>')
+def serve_uv_img_files(filepath):
+    log(f'serving static uv file /viewer/img/{filepath}')
+    return static_file(filepath, root = 'viewer/img')
+
+
+@dibs.route('/view/lib/<filepath:path>')
+@dibs.route('/viewer/lib/<filepath:path>')
+def serve_uv_lib_files(filepath):
+    log(f'serving static uv file /viewer/lib/{filepath}')
+    return static_file(filepath, root = 'viewer/lib')
+
+
+@dibs.route('/view/themes/<filepath:path>')
+@dibs.route('/viewer/themes/<filepath:path>')
+def serve_uv_themes_files(filepath):
+    log(f'serving static uv file /viewer/themes/{filepath}')
+    return static_file(filepath, root = 'viewer/themes')
 
 
 @dibs.route('/viewer/<filepath:path>')

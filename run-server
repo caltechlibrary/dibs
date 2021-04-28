@@ -51,11 +51,6 @@ if not exists(join(here, 'settings.ini')):
     print(f'‼️  Please create one starting with file "settings.ini-example".')
     exit(1)
 
-if not exists(join(here, 'viewer', 'node_modules')):
-    print(f'‼️  Node modules appear to be missing from {here}/viewer.')
-    print(f'‼️  Please cd to {here}/viewer and run "npm install".')
-    exit(1)
-
 
 # Global defaults.
 # .............................................................................
