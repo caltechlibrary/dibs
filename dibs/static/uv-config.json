@@ -5,8 +5,8 @@
     "modules": {
         "contentLeftPanel": {
             "options": {
-                "galleryThumbWidth": 250,
-                "panelExpandedWidth": 150,
+                "galleryThumbWidth": 150,
+                "panelExpandedWidth": 160,
                 "thumbsImageFadeInDuration": 10,
                 "twoColThumbHeight": 300,
                 "twoColThumbWidth": 200,
@@ -20,7 +20,7 @@
                 "downloadEnabled": false,
                 "shareEnabled": false,
                 "bookmarkEnabled": true,
-                "embedEnabled": true,
+                "embedEnabled": false,
                 "feedbackEnabled": false,
                 "minimiseButtons": true,
                 "openEnabled": true,
