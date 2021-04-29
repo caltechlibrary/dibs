@@ -439,12 +439,8 @@ def show_stats():
         durations = [(loan.end_time - loan.start_time) for loan in history]
         if durations:
             avg_duration = sum(durations, delta()) // len(durations)
-            if avg_duration < delta(seconds = 30):
-                avg_duration = '< 30 seconds'
-            else:
-                avg_duration = naturaldelta(avg_duration)
         else:
-            avg_duration = '(never borrowed)'
+            avg_duration = delta(seconds = 0)
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
     return page('stats', no_cache = True, usage_data = usage_data)
 
