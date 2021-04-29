@@ -36,9 +36,9 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-        <div class="row pt-3 item-info-row">
+        <div class="row pt-3 mx-auto item-info-row">
 
-          <div class="col-sm-10 col-xs-12 item-info my-auto">
+          <div class="col-sm-9 col-xs-12 item-info my-auto">
             <table class="item-info-table table table-sm">
               <tbody>
                 <tr>
@@ -119,10 +119,10 @@
             The document viewer cannot function properly without cookies.
             Please allow cookies from this site in your browser, and reload this page.
           </p>
-          <p class="mx-auto text-center w-50">
+          <p class="mx-auto text-center w-75">
             Loan duration: {{item.duration}} hours
           </p>
-          <p id="refresh-tip" class="d-none mx-auto text-center w-50 text-info">
+          <p id="refresh-tip" class="d-none mx-auto text-center w-75 text-info">
             This page will refresh automatically.
           </p>
         </div>

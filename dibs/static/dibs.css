@@ -117,7 +117,7 @@ a {
 }
 
 #loan-button {
-  width: 120px;
+  width: 140px;
 }
 
 /* Used to make <input> and <button> look like links instead of buttons,
@@ -175,6 +175,7 @@ th.item-info-label {
 img.thumbnail {
   width: auto;
   height: 178px;
+  margin-right: 2em;
 }
 
 .loan-info {
@@ -247,7 +248,7 @@ screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
   }
 
   .item-info {
-    margin-bottom: 2em !important;
+    margin-bottom: 4em !important;
     max-width: 100%;
     flex: 0 0 100%;
   }
@@ -258,7 +259,7 @@ screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
     margin-left: 0;
     margin-left: -40px !important;
     font-size: 120%;
-    width: 220px;
+    width: 240px;
   }
 
   .footer-text {
