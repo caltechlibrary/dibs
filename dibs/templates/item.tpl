@@ -56,7 +56,7 @@
                 </tr>
                 <tr>
                   <th>Author(s)</th>
-                  <td class="item-info-value">{{item.author.split(',')[0] + ' et al.' if item.author.count(',') > 3 else item.author}}</td>
+                  <td class="item-info-value">{{item.author.split(',')[0] + ' et al.' if item.author.count(',') > 2 else item.author}}</td>
                 </tr>
                 %if item.edition != '':
                 <tr>

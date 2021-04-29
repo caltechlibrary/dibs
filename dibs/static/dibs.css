@@ -256,10 +256,9 @@ screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
   #loan-button {
     margin-top: 1em;
     margin-bottom: 1em !important;
-    margin-left: 0;
-    margin-left: -50px !important;
+    margin-left: -90px !important;
     font-size: 120%;
-    width: 260px;
+    width: 320px;
   }
 
   .footer-text {
