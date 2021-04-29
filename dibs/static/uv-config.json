@@ -19,7 +19,7 @@
                 "fullscreenEnabled": true,
                 "downloadEnabled": false,
                 "shareEnabled": false,
-                "bookmarkEnabled": true,
+                "bookmarkEnabled": false,
                 "embedEnabled": false,
                 "feedbackEnabled": false,
                 "minimiseButtons": true,
