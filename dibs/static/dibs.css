@@ -125,7 +125,18 @@ img.svg-megaphone {
 }
 
 .delayed {
-  transition-delay: 3s;
+    opacity: 0;
+    animation: appear 0s;
+    animation-delay: 4s;
+    -webkit-animation-fill-mode: forwards;
+    -moz-animation-fill-mode: forwards;
+    -ms-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
+}
+
+@keyframes appear {
+    from { opacity: 0; }
+    to { opacity: 1;}
 }
 
 /* Used to make <input> and <button> look like links instead of buttons,
