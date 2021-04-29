@@ -109,12 +109,12 @@
             </form>
           </div>
 
-          <p id="no-javascript" class="alert alert-danger mx-auto text-center w-75">
+          <p id="no-javascript" class="delayed alert alert-danger mx-auto text-center w-75">
             Note: JavaScript is disabled in your browser.
             This site cannot function properly without JavaScript.
             Please enable JavaScript and reload this page.
           </p>
-          <p id="no-cookies" class="d-none alert alert-danger mx-auto text-center w-75">
+          <p id="no-cookies" class="d-none delayed alert alert-danger mx-auto text-center w-75">
             Note: web cookies are blocked by your browser.
             The document viewer cannot function properly without cookies.
             Please allow cookies from this site in your browser, and reload this page.

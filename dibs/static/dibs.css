@@ -124,6 +124,10 @@ img.svg-megaphone {
   width: 140px;
 }
 
+.delayed {
+  transition-delay: 3s;
+}
+
 /* Used to make <input> and <button> look like links instead of buttons,
 used in situations where we need to make a link perform a POST request. */
 .link-not-button {
@@ -255,6 +259,10 @@ screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
     margin-bottom: 4em !important;
     max-width: 100%;
     flex: 0 0 100%;
+  }
+
+  #no-javascript, #no-cookies {
+    font-size: 1.2rem;    
   }
 
   #loan-button {
