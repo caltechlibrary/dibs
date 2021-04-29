@@ -36,56 +36,58 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-        <table class="table table-borderless mt-4">
-          <tbody>
-            <tr>
-              <td width="200px" style="border-top: none">
-                %if item.thumbnail != '':
-                <img class="img-thumbnail" src="{{item.thumbnail}}">
-                %else:
-                <img class="img-thumbnail" src="{{base_url}}/static/missing-thumbnail.svg">
-                %end
-              </td>
-              <td style="border-top: none">
-                <table class="table table-sm">
-                  <tbody>
-                    <tr>
-                      <th width="120em">Title</th>
-                      <td>
-                        <strong>
-                          %if item.tind_id != '':
-                          <a target="_blank"
-                             href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
-                          %else:
-                          {{item.title}}
-                          %end
-                        </strong>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Author(s)</th>
-                      <td>{{item.author}}</td>
-                    </tr>
-                    <tr>
-                      <th>Year</th>
-                      <td>{{item.year}}</td>
-                    </tr>
-                    %if item.edition != '':
-                    <tr>
-                      <th>Edition</th>
-                      <td>{{item.edition}}</td>
-                    </tr>
-                    %end
-                    <tr><td></td><td></td></tr>
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="row pt-3 item-info-row">
 
-        <div>
-          <p class="mx-auto text-center w-75">
+          <div class="col-sm-10 col-xs-12 item-info my-auto">
+            <table class="item-info-table table table-sm">
+              <tbody>
+                <tr>
+                  <th class="item-info-label">Title</th>
+                  <td class="item-info-value">
+                    <strong>
+                      %if item.tind_id != '':
+                      <a target="_blank"
+                         href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                      %else:
+                      {{item.title}}
+                      %end
+                    </strong>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Author(s)</th>
+                  <td class="item-info-value">{{item.author.split(',')[0] + ' et al.' if item.author.count(',') > 3 else item.author}}</td>
+                </tr>
+                %if item.edition != '':
+                <tr>
+                %else:
+                <tr class="last">
+                %end
+                  <th>Year</th>
+                  <td class="item-info-value">{{item.year}}</td>
+                </tr>
+                %if item.edition != '':
+                <tr class="last">
+                  <th>Edition</th>
+                  <td class="item-info-value">{{item.edition}}</td>
+                </tr>
+                %end
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col-sm-2 col-xs-0 item-thumbnail">
+            %if item.thumbnail != '':
+            <img class="thumbnail img-responsive" src="{{item.thumbnail}}">
+            %else:
+            <img class="thumbnail img-responsive" src="{{base_url}}/static/missing-thumbnail.svg">
+            %end
+          </div>
+
+        </div>
+
+        <div class="loan-info">
+          <p class="mx-auto text-center w-75 mt-2">
             <span id="available">This item is currently not available
               to you for a digital loan.</span>
             <span id="explanation"></span>
@@ -103,8 +105,7 @@
                                            + 'devices during the loan period.');">
               <input type="hidden" name="barcode" value="{{item.barcode}}"/>
               <input id="loan-button" class="d-none btn btn-block mx-auto mb-3"
-                     style="width: 120px" type="submit"
-                     value="Not Available" disabled />
+                     type="submit" value="Not Available" disabled />
             </form>
           </div>
 
