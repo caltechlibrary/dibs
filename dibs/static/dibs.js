@@ -60,6 +60,13 @@ function linkedTextSort(a, b) {
     return 0;
 }
 
+function dataValueSort(a, b) {
+    var aa = +(($(a).attr('data-value') + ''));
+    var bb = +(($(b).attr('data-value') + ''));
+    if (aa < bb) return -1;
+    if (aa > bb) return 1;
+    return 0;
+}
 
 // Debugging utilities.
 // ............................................................................
