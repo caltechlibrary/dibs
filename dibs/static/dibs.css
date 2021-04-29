@@ -116,6 +116,10 @@ a {
   top: 0.5rem
 }
 
+img.svg-megaphone {
+  height: 2rem !important;
+}
+
 #loan-button {
   width: 140px;
 }
