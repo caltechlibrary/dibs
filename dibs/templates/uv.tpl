@@ -90,9 +90,9 @@
      return infoElement;
    }
 
-   function endLoanButton () {
+   function endLoanButton (id) {
      const buttonElement = document.createElement('div');
-     buttonElement.setAttribute('id', 'end-loan-button');
+     buttonElement.setAttribute('id', id);
      const html = '<button type="button" class="end-loan-button btn-danger"'
                 + ' onclick="maybeEndLoan();">End loan</button>';
      buttonElement.innerHTML = html;
@@ -139,7 +139,10 @@
 
        let rightOptions = document.getElementsByClassName('rightOptions');
        let rightDiv = rightOptions[0];
-       rightDiv.insertBefore(endLoanButton(), rightDiv.firstChild);
+       rightDiv.insertBefore(endLoanButton('options-bar-loan-button'), rightDiv.firstChild);
+
+       let uvTitle = document.getElementsByClassName('uv');
+       uvTitle[0].after(endLoanButton('mobile-loan-button'));
 
        // Write some info useful when debugging.
        log('parsed metadata', dibsUV.extension.helper.manifest.getMetadata());

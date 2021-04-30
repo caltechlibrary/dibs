@@ -52,7 +52,7 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 }
 
 .uv .btn {
-  padding: 5px !important;
+  padding: 6px !important;
 }
 
 .uv .headerPanel .options .rightOptions {
@@ -65,12 +65,17 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 
 .uv .headerPanel .options .rightOptions .btn {
   padding-right: 0px !important;
-  margin-right: 0px !important;
+  margin-right: 0px6px !important;
 }
 
 /* Additional elements ..................................................... */
 
-.expiration-info {
+.uv .centerPanel .title {
+  display: inline-block;
+  height: 35px;
+}
+
+#expiration-info {
   float: left;
   display: inline;
   font-size: 11pt;
@@ -103,4 +108,53 @@ huge (~200 KB) and I don't have the time to figure them out.  */
   border-image-width: unset;
   border-image-unset: unset;
   border-image-repeat: unset;
+}
+
+#options-bar-loan-button {
+  display: inline;
+  margin-right: 1em;
+}
+
+#mobile-loan-button {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0;
+}
+
+/* This handles most small devices, including iPhones & small tablets. */
+@media screen and (max-width: 767.98px) {
+  #expiration-info {
+    display: none;
+  }
+  #options-bar-loan-button {
+    display: none;
+  }
+  #mobile-loan-button {
+    display: inline-block;
+  }
+}
+
+/* The next one is for various other small devices with high pixel ratios.
+- Pixel 2L
+- Galaxy S3, S5
+- Moto G4
+*/
+
+@media
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 2),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 2.6),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3.5),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
+  #expiration-info {
+    display: none;
+  }
+  #options-bar-loan-button {
+    display: none;
+  }
+  #mobile-loan-button {
+    display: inline-block;
+  }
 }
