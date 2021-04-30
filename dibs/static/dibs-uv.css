@@ -92,10 +92,10 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 }
 
 .end-loan-button {
-  margin: 0.5em 1.1em auto 1em !important;
+  margin: 0.45em 1.1em auto 1em !important;
   vertical-align: center;
   font-size: 10pt !important;
-  padding: 3pt 5pt !important;
+  padding: 4pt 5pt !important;
   border-color: unset;
   border-top-width: unset;
   border-right-width: unset;
