@@ -27,7 +27,7 @@
       The document viewer cannot function properly without cookies.
       Please allow cookies from this site in your browser, and reload this page.
     </p>
-    <div class="row h-100">
+    <div class="uv-div row h-100">
       <div id="uv"></div>
     </div>
   </div>
@@ -141,8 +141,9 @@
        let rightDiv = rightOptions[0];
        rightDiv.insertBefore(endLoanButton('options-bar-loan-button'), rightDiv.firstChild);
 
-       let uvTitle = document.getElementsByClassName('uv');
-       uvTitle[0].after(endLoanButton('mobile-loan-button'));
+       let uv = document.getElementsByClassName('uv-div');
+       let uvDiv = uv[0];
+       uvDiv.insertBefore(endLoanButton('mobile-loan-button'), uvDiv.firstChild);
 
        // Write some info useful when debugging.
        log('parsed metadata', dibsUV.extension.helper.manifest.getMetadata());
