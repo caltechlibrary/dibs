@@ -187,5 +187,10 @@ screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
   }
   #mobile-loan-button {
     display: block;
+    top: 5px;
+    right: 1px;
+  }
+  .end-loan-button {
+    padding: 2pt 4pt !important;    
   }
 }
