@@ -16,7 +16,7 @@
 </head>
 <body>
     
-  <div class="container-fluid h-100 w-100 text-center" style="padding: 0 5px; overflow-x: hidden;">
+  <div id="uv-container" class="container-fluid h-100 w-100 text-center">
     <p id="no-javascript" class="delayed alert alert-danger mx-auto text-center w-75 mt-4">
       Note: JavaScript is disabled in your browser.
       This site cannot function properly without JavaScript.

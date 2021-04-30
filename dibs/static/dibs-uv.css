@@ -23,6 +23,12 @@ body {
   height: 100%;
 }
 
+#uv-container {
+  padding: 0 5px;
+  overflow-x: hidden;
+  position: relative;
+}
+
 /* The next couple are to get rid of the labels in the left-hand thumbnail
 panel, because they're confusing and needless for our purposes. */
 
@@ -172,5 +178,7 @@ screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
   }
   #mobile-loan-button {
     display: inline-block;
+    top: -18px;
+    right: -9px;
   }
 }
