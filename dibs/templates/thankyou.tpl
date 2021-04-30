@@ -17,7 +17,7 @@
         <p class="mx-auto col-6 my-5 text-center text-info font-italic">
           If you have any comments or suggestions, please don't hesitate
           to let us know by using our <a href="{{feedback_url}}">
-          anonymous&nbsp;feedback&nbsp;form</a>.
+          anonymous feedback form</a>.
         </p>
       </div>
 
