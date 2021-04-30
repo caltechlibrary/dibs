@@ -16,7 +16,7 @@
 </head>
 <body>
     
-  <div class="container-fluid h-100 w-100 text-center">
+  <div id="uv-container" class="container-fluid h-100 w-100 text-center">
     <p id="no-javascript" class="delayed alert alert-danger mx-auto text-center w-75 mt-4">
       Note: JavaScript is disabled in your browser.
       This site cannot function properly without JavaScript.
@@ -27,7 +27,7 @@
       The document viewer cannot function properly without cookies.
       Please allow cookies from this site in your browser, and reload this page.
     </p>
-    <div class="row h-100">
+    <div class="uv-div row h-100">
       <div id="uv"></div>
     </div>
   </div>
@@ -90,9 +90,9 @@
      return infoElement;
    }
 
-   function endLoanButton () {
+   function endLoanButton (id) {
      const buttonElement = document.createElement('div');
-     buttonElement.setAttribute('id', 'end-loan-button');
+     buttonElement.setAttribute('id', id);
      const html = '<button type="button" class="end-loan-button btn-danger"'
                 + ' onclick="maybeEndLoan();">End loan</button>';
      buttonElement.innerHTML = html;
@@ -139,7 +139,11 @@
 
        let rightOptions = document.getElementsByClassName('rightOptions');
        let rightDiv = rightOptions[0];
-       rightDiv.insertBefore(endLoanButton(), rightDiv.firstChild);
+       rightDiv.insertBefore(endLoanButton('options-bar-loan-button'), rightDiv.firstChild);
+
+       let uv = document.getElementsByClassName('uv-div');
+       let uvDiv = uv[0];
+       uvDiv.insertBefore(endLoanButton('mobile-loan-button'), uvDiv.firstChild);
 
        // Write some info useful when debugging.
        log('parsed metadata', dibsUV.extension.helper.manifest.getMetadata());

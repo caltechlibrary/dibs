@@ -10,7 +10,7 @@
 /* Adjustments to UV elements on the viewer page ........................... */
 
 html, body {
-  height: 100%
+  height: 100%;
 }
       
 body {
@@ -21,6 +21,16 @@ body {
 #uv {
   width: 100%;
   height: 100%;
+}
+
+#uv-container {
+  padding: 0 5px;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.uv-div {
+  position: relative;
 }
 
 /* The next couple are to get rid of the labels in the left-hand thumbnail
@@ -52,7 +62,7 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 }
 
 .uv .btn {
-  padding: 5px !important;
+  padding: 6px !important;
 }
 
 .uv .headerPanel .options .rightOptions {
@@ -65,26 +75,31 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 
 .uv .headerPanel .options .rightOptions .btn {
   padding-right: 0px !important;
-  margin-right: 0px !important;
+  margin-right: 0px6px !important;
 }
 
 /* Additional elements ..................................................... */
 
-.expiration-info {
+.uv .centerPanel .title {
+  display: inline-block;
+  height: 35px;
+}
+
+#expiration-info {
   float: left;
   display: inline;
-  font-size: 11pt;
-  margin-left: 1em;
+  font-size: 10pt;
+  margin-left: 1.3em;
   margin-top: 0.75em;
   vertical-align: center;
   color: #FF6C0C;
 }
 
 .end-loan-button {
-  margin: 0.4em 8px auto 1em !important;
+  margin: 0.45em 1.1em auto 1em !important;
   vertical-align: center;
-  font-size: 11pt !important;
-  padding: 3pt 5pt !important;
+  font-size: 10pt !important;
+  padding: 4pt 5pt !important;
   border-color: unset;
   border-top-width: unset;
   border-right-width: unset;
@@ -103,4 +118,79 @@ huge (~200 KB) and I don't have the time to figure them out.  */
   border-image-width: unset;
   border-image-unset: unset;
   border-image-repeat: unset;
+}
+
+#options-bar-loan-button {
+  display: inline;
+  margin-right: 0.5em;
+}
+
+#mobile-loan-button {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0;
+  z-index: 1000;
+}
+
+/* UV's CSS themes have a transition at 800px.  When you hit 800px, it removes
+the top bar and left panel, but leaves the right panel bar.  This is the
+point at which we switch our layout to show the second end-loan button, but
+between 800 and 780px (see below), we have to make room for the right panel. */
+@media screen and (max-width: 799px) {
+  #expiration-info {
+    display: none;
+  }
+  #options-bar-loan-button {
+    display: none;
+  }
+  #mobile-loan-button {
+    display: inline-block;
+    margin-right: 1.5em;
+    top: 1px;
+  }
+}
+
+/* The next UV transition is at 780px, when the right panel disappears too.
+We have to adjust our loan button again. */
+@media screen and (max-width: 779px) {
+  #mobile-loan-button {
+    margin-right: 0em;
+    right: 0px;
+    top: 0px;
+  }
+}
+
+/* The next one is for various other small devices with high pixel ratios.
+- Pixel 2L
+- Galaxy S3, S5
+- Moto G4
+*/
+
+@media
+screen and (max-device-width: 415px),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 2.6),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3.5),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
+  html, body {
+    /* Undo a setting in our dibs.css that causes Safari on mobile to
+    change spacing of elements differently from Chrome. */
+    font-size: 1rem;
+  }
+  #expiration-info {
+    display: none;
+  }
+  #options-bar-loan-button {
+    display: none;
+  }
+  #mobile-loan-button {
+    display: block;
+    top: 5px;
+    right: 1px;
+  }
+  .end-loan-button {
+    padding: 2pt 4pt !important;    
+  }
 }
