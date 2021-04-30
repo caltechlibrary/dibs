@@ -78,17 +78,17 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 #expiration-info {
   float: left;
   display: inline;
-  font-size: 11pt;
-  margin-left: 1em;
+  font-size: 10pt;
+  margin-left: 1.3em;
   margin-top: 0.75em;
   vertical-align: center;
   color: #FF6C0C;
 }
 
 .end-loan-button {
-  margin: 0.4em 8px auto 1em !important;
+  margin: 0.5em 1.1em auto 1em !important;
   vertical-align: center;
-  font-size: 11pt !important;
+  font-size: 10pt !important;
   padding: 3pt 5pt !important;
   border-color: unset;
   border-top-width: unset;
@@ -112,7 +112,7 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 
 #options-bar-loan-button {
   display: inline;
-  margin-right: 1em;
+  margin-right: 0.5em;
 }
 
 #mobile-loan-button {
@@ -121,10 +121,14 @@ huge (~200 KB) and I don't have the time to figure them out.  */
   top: 0;
   right: 0;
   padding: 0;
+  z-index: 1000;
 }
 
-/* This handles most small devices, including iPhones & small tablets. */
-@media screen and (max-width: 767.98px) {
+/* UV's CSS themes have a transition at 800px.  When you hit 800px, it removes
+the top bar and left panel, but leaves the right panel bar.  This is the
+point at which we switch our layout to show the second end-loan button, but
+between 800 and 780px (see below), we have to make room for the right panel. */
+@media screen and (max-width: 799px) {
   #expiration-info {
     display: none;
   }
@@ -133,6 +137,18 @@ huge (~200 KB) and I don't have the time to figure them out.  */
   }
   #mobile-loan-button {
     display: inline-block;
+    margin-right: 1.5em;
+    top: 1px;
+  }
+}
+
+/* The next UV transition is at 780px, when the right panel disappears too.
+We have to adjust our loan button again. */
+@media screen and (max-width: 779px) {
+  #mobile-loan-button {
+    margin-right: 0em;
+    right: 0px;
+    top: 0px;
   }
 }
 
@@ -143,7 +159,7 @@ huge (~200 KB) and I don't have the time to figure them out.  */
 */
 
 @media
-screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 2),
+screen and (max-device-width: 415px),
 screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 2.6),
 screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3),
 screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3.5),

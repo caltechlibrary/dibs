@@ -221,7 +221,7 @@ To prevent that, we hide the footer text part altogether. */
 }
 
 /* This handles most small devices, including iPhones & small tablets. */
-@media screen and (max-width: 767.98px) {
+@media screen and (max-width: 768px) {
   html, body {
     font-size: 1.1rem;
   }
