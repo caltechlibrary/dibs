@@ -1,6 +1,23 @@
 Change log for DIBS
 ===================
 
+Version 0.3.0
+--------------
+
+This release features the use of an updated version of the Universal Viewer as well as a new viewer page layout.  We removed the extra HTML around DIB's previous Universal Viewer page and inserted the expiration message and the "end loan" button directly into the Universal Viewer frame, solving several usability issues at once.
+
+Specific issues closed and other changes include the following:
+* Fix issues #60, #65: several fixes to the layout of pages and the Universal Viewer on small window sizes and mobile viewers.
+* Fix issue #63: avoid briefly showing a "javascript is not enabled" message while the UV page is loading.
+* Fix issues #62, #61: fix sorting by the average duration column and handle auto-refresh in such a way that it can be disabled when sorting is in effect.
+* Fix issue #55: reduce the number of unnecessary calls to Peewee's `atomic()` handler to avoid needlessly locking the database.
+* Fix issue #54: update and bundle a copy of the latest release of the Universal Viewer.
+* Fix issue #39: add DIBS version info to the "About" page.
+* Fix issue #34: address problems on mobile devices.
+* Fix issue #5: move timer display into UV instead of having it in the HTML page outside the viewer.
+* Turn off nonfunctional Universal Viewer bookmark icon in the bottom of the frame.
+
+
 Version 0.2.1
 --------------
 
