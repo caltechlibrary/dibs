@@ -10,7 +10,7 @@ The current design of DIBS is focused on helping instructors and students enroll
 1. We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of "all things available for digital loan via DIBS"; in part, this is because such a list was not considered to be useful for DIBS's use-cases, and in part because in the future we expect to add links directly to Caltech's TIND database.
 2. We expect that library staff need to interact with the system in a quite different way: to add new items to the database of digitized works and control loan parameters.  Thus, staff _do_ see a list of all items available through the system, but access to this list is limited to Library staff.
 
-These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of items.  In normal use, we expect that users will usually go straight to either the pages describing individual items or the staff entry point.  The front page acts mainly as an information page that describes the purpose of the system and the policies:
+These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of items.  This is because in normal use, we expect that users will go straight either to a page describing an individual item or to the staff entry point.  The front page acts mainly as an information page that describes the purpose of the system and the loan policies:
 
 <figure>
     <img src="_static/media/welcome-page.png">
@@ -25,7 +25,7 @@ As mentioned above, patrons are presumed to be provided information about specif
     <img src="_static/media/item-page.png">
 </figure>
 
-The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech's TIND server based on the barcode used by Library staff when they add the item to DIBS. 
+The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech's [TIND](https://info.tind.io/ILS) server based on the barcode used by Library staff when they add the item to DIBS. 
 
 The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-not-available">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:
 
