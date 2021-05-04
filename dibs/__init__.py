@@ -17,10 +17,10 @@ file "LICENSE" for more information.
 #  |    by the Makefile. Manual changes to these values will be lost.      |
 #  ╰────────────────────── Notice ── Notice ── Notice ─────────────────────╯
 
-__version__     = '0.2.0'
-__description__ = 'Caltech Digital Borrowing System'
+__version__     = '0.3.0'
+__description__ = 'An implementation of Controlled Digital Lending'
 __url__         = 'https://github.com/caltechlibrary/dibs'
-__author__      = 'Caltech Digital Library Development Team'
+__author__      = 'Michael Hucka, Robert S. Doiel, Tommy Keswick, Stephen Davison'
 __email__       = 'helpdesk@library.caltech.edu'
 __license__     = 'BSD 3-clause'
 

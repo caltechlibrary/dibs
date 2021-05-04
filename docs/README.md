@@ -1,8 +1,8 @@
-About the docs
-==============
+# About the DIBS docs
 
-Building the docs locally
--------------------------
+This page describes how to (re)create the formatted DIBS documentation.
+
+## Building the docs locally
 
 First, install [MyST](https://myst-parser.readthedocs.io/en/latest/index.html) and [Sphinx](https://www.sphinx-doc.org):
 
@@ -25,7 +25,6 @@ sphinx-autobuild . _build/html
 ```
 
 
-Writing documentation
----------------------
+## Writing documentation
 
 This documentation is written in [MyST-flavored Markdown](https://myst-parser.readthedocs.io/en/latest/) and the [Napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) extension to Sphinx.  What this means is that the documentation is written in Markdown instead of reStructuredText, with essentially all the features of Sphinx and reStructuredText having MyST equivalents and some additional features beyond _that_ &ndash; things like [pandoc](https://pandoc.org)-style footnotes, LaTeX math, and more.

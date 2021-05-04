@@ -21,8 +21,8 @@ import sys
 from   sys import exit
 
 from   dibs.database import Item, Loan, History, database
-from   dibs.date_utils import human_datetime
-from   dibs.people import Person, person_from_environ, check_password
+from   dibs.date_utils import human_datetime, time_now
+from   dibs.people import Person, person_from_environ
 from   dibs.roles import role_to_redirect, has_role, staff_user
 
 
@@ -50,6 +50,7 @@ def main(list_loans = False, version = False):
         exit(0)
 
     if list_loans:
+        expire_loans()
         active = list(Loan.select().where(Loan.state == 'active'))
         recent = list(Loan.select().where(Loan.state == 'recent'))
         total = len(active) + len(recent)
@@ -66,6 +67,14 @@ def main(list_loans = False, version = False):
 
 # Miscellaneous utilities.
 # .............................................................................
+
+def expire_loans():
+    now = time_now()
+    # Delete expired loan recency records.
+    for loan in Loan.select().where(Loan.state == 'recent', now >= Loan.reloan_time):
+        with database.atomic():
+            loan.delete_instance()
+
 
 def loans_table(category, loans, color):
     table = Table(title = f'[{color}]{category.title()}[/] loans: [{color}]{len(loans)}[/]',

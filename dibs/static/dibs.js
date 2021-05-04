@@ -31,7 +31,7 @@ function copyToClipboard(button, text) {
 }
 
 
-// Bootstrap Table utilities
+// Bootstrap Table utilities.
 // ............................................................................
 
 // This next function was inspired in part by the posting by user "Undry"
@@ -59,3 +59,73 @@ function linkedTextSort(a, b) {
     if (a > b) return 1;
     return 0;
 }
+
+function dataValueSort(a, b) {
+    var aa = +(($(a).attr('data-value') + ''));
+    var bb = +(($(b).attr('data-value') + ''));
+    if (aa < bb) return -1;
+    if (aa > bb) return 1;
+    return 0;
+}
+
+// Debugging utilities.
+// ............................................................................
+
+// This defines a function log(...) that can be used anywhere in our code to
+// print message to the console if the variable "debug_mode" is true.
+//
+// Usage: execute set_debug(true) in the console to activate it.
+
+function logFunction() {
+    var debug = (sessionStorage != null &&
+                 sessionStorage.getItem('debug_mode') == 'true');
+    return debug ? console.log.bind(window.console, '(DIBS)') : function(){};
+}
+
+function set_debug(enabled) {
+    // This only works if DOM storage is available in the browser.
+    if (sessionStorage == null) {
+        console.warn("can't set debug mode: browser DOM storage unavailable");
+        return false;
+    }
+    console.info('(DIBS)', 'debug_mode =', enabled);
+    sessionStorage.setItem('debug_mode', enabled ? 'true' : 'false');
+    Object.defineProperty(this, "log", {get: logFunction});
+    return enabled;
+}
+
+Object.defineProperty(this, "log", {get: logFunction});
+
+
+// HTTP GET function for data polling.
+// ............................................................................
+// This is a simple http GET function. It is based on examples at MDN
+// Developer site and the satirical Vanilla JS framework site.
+
+function httpGet(url, contentType, callbackFn) {
+    let xhr      = new XMLHttpRequest();
+    let page_url = new URL(window.location.href);
+
+    xhr.onreadystatechange = function () {
+        // Process the response.
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status == 200) {
+                let data = xhr.responseText;
+                if (contentType === "application/json" && data !== "") {
+                    data = JSON.parse(xhr.responseText);
+                }
+                callbackFn(data, "");
+            } else {
+                log('xhr status = ', xhr.status);
+                callbackFn("", xhr.status);
+            }
+        }
+    };
+
+    // We always want JSON data.
+    xhr.open('GET', url, true);
+    if (contentType !== "") {
+        xhr.setRequestHeader('Content-Type', contentType);
+    }
+    xhr.send();
+};
