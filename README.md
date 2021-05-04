@@ -100,7 +100,7 @@ The program [`people-manager`](people-manager) is an interface for adding user a
 ```
 
 
-### ⓸ _Start the DIBS server_
+### ⓸ _Start a local DIBS server_ for testing
 
 For local experimentation and development, the script [`run-server`](run-server) can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
@@ -115,6 +115,8 @@ In a real installation, DIBS needs a single-signon system such as [Shibboleth](h
 ```
 
 By default it starts the server on `localhost` port 8080.  Using the `debug` run mode flag changes the behavior in various useful ways, such as to reload the source files automatically if any of them are edited, and to run `pdb` upon any exceptions.  (These would not be enabled in a production server.)
+
+Note that `run-server` is **not intended for use in production servers**. For actual use, you must configure a web server such as [Apache](https://httpd.apache.org) to host the system. DIBS comes with an [`adapter.wsgi`](adapter.wsgi) and an example [Apache conf file](dibs.conf-example) for this purpose to help you get started.
 
 
 ## General information
