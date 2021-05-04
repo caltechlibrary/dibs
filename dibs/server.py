@@ -19,9 +19,13 @@ from   dateutil import tz
 from   decouple import config
 from   enum import Enum, auto
 from   expiringdict import ExpiringDict
+from   fdsend import send_file
 import functools
 from   humanize import naturaldelta
+import inspect
+from   io import BytesIO
 import json
+from   lru import LRU
 import os
 from   os.path import realpath, dirname, join, exists
 from   peewee import *
@@ -29,13 +33,14 @@ import random
 from   sidetrack import log, logr
 import string
 import sys
-from   tempfile import NamedTemporaryFile
+from   textwrap import shorten
 from   topi import Tind
 
+from . import __version__
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
-from .people import Person, person_from_environ, check_password
+from .people import Person, person_from_environ
 from .roles import role_to_redirect, has_role, staff_user
 
 
@@ -69,12 +74,18 @@ _RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
+# Where we send users for help.
+_HELP_URL = config('HELP_URL', default = 'https://caltechlibrary.github.io/dibs')
+
 # Remember the most recent accesses so we can provide stats on recent activity.
 # This is a dictionary whose elements are dictionaries.
 _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
               '30': ExpiringDict(max_len = 1000000, max_age_seconds = 30*60),
               '45': ExpiringDict(max_len = 1000000, max_age_seconds = 45*60),
               '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
+
+# IIIF page cache.  This is a dict where the keys will be IIIF page URLs.
+_CACHE = LRU(50000)
 
 
 # General-purpose utilities used repeatedly.
@@ -85,11 +96,13 @@ def page(name, **kargs):
     person = person_from_environ(request.environ)
     logged_in = (person != None and person.uname != '')
     if kargs.get('no_cache', False):
-        response.add_header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT')
+        response.add_header('Expires', '0')
+        response.add_header('Pragma', 'no-cache')
         response.add_header('Cache-Control',
-                            'private, no-store, max-age=0, no-cache, must-revalidate')
-    return template(name, base_url = dibs.base_url, logged_in = logged_in,
-                    staff_user = staff_user(person), feedback_url = _FEEDBACK_URL,
+                            'no-store, max-age=0, no-cache, must-revalidate')
+    return template(name, base_url = dibs.base_url, version = __version__,
+                    logged_in = logged_in, staff_user = staff_user(person),
+                    feedback_url = _FEEDBACK_URL, help_url = _HELP_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
 
 
@@ -106,68 +119,148 @@ def debug_mode():
     '''Return True if we're running Bottle's default server in debug mode.'''
     return getattr(dibs, 'debug_mode', False)
 
+
+def urls_rerouted(text, barcode):
+    '''Rewrite text to point IIIF URLs to our /iiif endpoint & fix some issues.'''
+    barcode = str(barcode)
+    rewritten = text.replace(_IIIF_BASE_URL, f'{dibs.base_url}/iiif/{barcode}')
+    # Change occurrences of %2F (slashes) in IIIF identifiers to '!' so
+    # Apache doesn't auto-convert %2F when UV fetches /iiif/...
+    return rewritten.replace(barcode + r'%2F', f'{barcode}!')
+
+
+def urls_restored(text, barcode):
+    '''Reverse the transformations made by urls_rerouted(...).'''
+    barcode = str(barcode)
+    rewritten = text.replace(f'{barcode}!', barcode + r'%2F')
+    return rewritten.replace(f'{dibs.base_url}/iiif/{barcode}', _IIIF_BASE_URL)
+
 
-# Decorators -- functions that are run selectively on certain routes.
+# Bespoke, locally-sourced, artisanal Bottle plugins.
 # .............................................................................
+# Bottle's "plugins" are basically like Python decorators.  They're most
+# useful when you have a decorator that you would otherwise want to put on
+# every route (and which would therefore clutter your source code with a lot
+# of repetitive calls to @foo decorators).  Bottle calls the plugins in the
+# Bottle @get/@post/@route functions, and like Python decorators, a given
+# plugin is only applied once to a given route (because what a plugin does is
+# wrap a function with another function).  Tip: if you also have decorators
+# that you want be added to a route, put the decorators highest, above the
+# call to @dibs.get/@dibs.post.
 
-# Expiring loans this way is inefficient, but that's mitigated by the fact
-# that we won't have a lot of loans at any given time.  This approach does
-# have an advantage of simplicity in a multi-process Apache server config.
-# The alternative would be to implement a separate reaper process of some
-# kind, complicating things significantly.  (If we only had to worry about
-# multiple threads, it would be easier, but our httpd runs processes.)
-
-def expired_loans_removed(func):
-    '''Clean up expired loans.'''
-    @functools.wraps(func)
-    def expired_loan_removing_wrapper(*args, **kwargs):
-        now = time_now()
-        # Delete expired loan recency records.
-        for loan in Loan.select().where(Loan.state == 'recent', now >= Loan.reloan_time):
-            log(f'locking db to expire loan by {loan.user} on {loan.item.barcode}')
-            with database.atomic('immediate'):
-                loan.delete_instance()
-        # Change the state of active loans that are past due.
-        for loan in Loan.select().where(Loan.state == 'active', now >= Loan.end_time):
-            barcode = loan.item.barcode
-            log(f'locking db to update loan state of {barcode} for {loan.user}')
-            with database.atomic('immediate'):
-                next_time = loan.end_time + _RELOAN_WAIT_TIME
-                loan.reloan_time = round_minutes(next_time, 'down')
-                loan.state = 'recent'
-                loan.save(only = [Loan.state, Loan.reloan_time])
-                # We don't count staff users in loan stats, except in debug mode
-                if not staff_user(loan.user) or debug_mode():
-                    History.create(type = 'loan', what = loan.item.barcode,
-                                   start_time = loan.start_time,
-                                   end_time = loan.end_time)
-        return func(*args, **kwargs)
-    return expired_loan_removing_wrapper
+class BottlePluginBase(object):
+    '''Base class for Bottle plugins for DIBS.'''
+    # This sets the Bottle API version. It defaults to v.1. See
+    # https://bottlepy.org/docs/dev/plugindev.html#plugin-api-changes
+    api = 2
 
 
-def barcode_verified(func):
-    '''Check if the given barcode (passed as keyword argument) exists.'''
-    @functools.wraps(func)
-    def barcode_verification_wrapper(*args, **kwargs):
-        # We always call the barcode variable "barcode" in our forms and pages
-        # so it's possible to use this annotation on any route if needed.  This
-        # function handles both GET & POST requests.  In the case of HTTP GET,
-        # there will be an argument to the function called "barcode"; in the
-        # case of HTTP POST, there will be a form variable called "barcode".
-        barcode = None
-        if 'barcode' in kwargs:
-            barcode = kwargs['barcode']
-        elif 'barcode' in request.POST:
-            barcode = request.POST.barcode.strip()
-        elif request.forms.get('barcode', None):
-            barcode = request.forms.get('barcode').strip()
-        if barcode: log(f'verifying barcode {barcode}')
-        if barcode and not Item.get_or_none(Item.barcode == barcode):
-            log(f'there is no item with barcode {barcode}')
-            return page('error', summary = 'no such barcode',
-                        message = f'There is no item with barcode {barcode}.')
-        return func(*args, **kwargs)
-    return barcode_verification_wrapper
+class LoanExpirer(BottlePluginBase):
+    '''Wrap every route function with code that expires loans as needed.'''
+
+    # Expiring loans every time any route is invoked is inefficient, but
+    # we won't have a lot of loans at any given time.  This approach has the
+    # advantage of simplicity in a multi-process Apache server config.  The
+    # alternative would be to implement a separate reaper process of some
+    # kind, complicating things significantly.  (If we only had to worry about
+    # multiple threads, it would be easier, but our httpd runs processes.)
+
+    def __call__(self, callback):
+        def loan_expiration_wrapper(*args, **kwargs):
+            now = time_now()
+            # Delete expired loan recency records.
+            n = Loan.delete().where(Loan.state == 'recent', now >= Loan.reloan_time).execute()
+            if n > 0:
+                log(f'deleted {n} recent loans that reached their reloan times')
+            # Change the state of active loans that are past due.
+            loans = Loan.select().where(Loan.state == 'active', now >= Loan.end_time)
+            if len(loans) > 0:
+                log(f'locking db to update loan states')
+                with database.atomic('immediate'):
+                    for loan in loans:
+                        barcode = loan.item.barcode
+                        log(f'updating loan state of {barcode} for {loan.user}')
+                        next_time = loan.end_time + _RELOAN_WAIT_TIME
+                        loan.reloan_time = round_minutes(next_time, 'down')
+                        loan.state = 'recent'
+                        loan.save(only = [Loan.state, Loan.reloan_time])
+                        # Don't count staff users in stats except in debug mode
+                        if staff_user(loan.user) and not debug_mode():
+                            continue
+                        History.create(type = 'loan', what = barcode,
+                                       start_time = loan.start_time,
+                                       end_time = loan.end_time)
+            return callback(*args, **kwargs)
+
+        return loan_expiration_wrapper
+
+
+class BarcodeVerifier(BottlePluginBase):
+    '''Check barcode validity in routes that have a "barcode" parameter.'''
+
+    def apply(self, callback, route):
+        args = inspect.getfullargspec(route.callback)[0]
+        if 'barcode' not in args:
+            return callback
+
+        def barcode_plugin_wrapper(*args, **kwargs):
+            # This handles both HTTP GET & POST requests.  In the case of GET,
+            # there will be an argument to the function called "barcode"; in
+            # the case of POST, there will be a form variable called "barcode".
+            barcode = None
+            if 'barcode' in kwargs:
+                barcode = kwargs['barcode']
+            elif 'barcode' in request.POST:
+                barcode = request.POST.barcode.strip()
+            elif request.forms.get('barcode', None):
+                barcode = request.forms.get('barcode').strip()
+            if barcode and not Item.get_or_none(Item.barcode == barcode):
+                log(f'there is no item with barcode {barcode}')
+                return page('error', summary = 'no such barcode',
+                            message = f'There is no item with barcode {barcode}.')
+            return callback(*args, **kwargs)
+
+        return barcode_plugin_wrapper
+
+
+# Hook in the plugins above into all routes.
+
+dibs.install(BarcodeVerifier())
+dibs.install(LoanExpirer())
+
+# The remaining plugins below are applied selectively to specific routes only.
+
+
+class AddPersonArgument(BottlePluginBase):
+    '''Inject a 'person' keyword to the arguments of a route function.'''
+    def apply(self, callback, route):
+        def person_plugin_wrapper(*args, **kwargs):
+            person = person_from_environ(request.environ)
+            if person is None:
+                log(f'person is None')
+                return page('error', summary = 'authentication failure',
+                            message = f'Unrecognized user identity.')
+            if 'person' in inspect.getfullargspec(route.callback)[0]:
+                kwargs['person'] = person
+            return callback(*args, **kwargs)
+        return person_plugin_wrapper
+
+
+class VerifyStaffUser(BottlePluginBase):
+    '''Redirect to an error page if the user lacks sufficient priviledges.'''
+    def apply(self, callback, route):
+        def staff_person_plugin_wrapper(*args, **kwargs):
+            person = person_from_environ(request.environ)
+            if person is None:
+                log(f'person is None')
+                return page('error', summary = 'authentication failure',
+                            message = f'Unrecognized user identity.')
+            if not staff_user(person):
+                log(f'{request.path} invoked by non-staff user {person.uname}')
+                redirect(f'{dibs.base_url}/notallowed')
+                return
+            return callback(*args, **kwargs)
+        return staff_person_plugin_wrapper
 
 
 # Administrative interface endpoints.
@@ -191,15 +284,9 @@ def logout():
         redirect('/')
 
 
-@dibs.get('/list')
-@expired_loans_removed
+@dibs.get('/list', apply = VerifyStaffUser())
 def list_items():
     '''Display the list of known items.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'get /list invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
     log('get /list invoked')
     # Test for presence of manifest files for each item, and create a tuple
     # of the form (Item, bool), where the boolean is True if a manifest exists.
@@ -210,53 +297,31 @@ def list_items():
     return page('list', no_cache = True, items = items)
 
 
-@dibs.get('/manage')
-def list_items():
-    '''Display the list of known items.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'get /manage invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
+@dibs.get('/manage', apply = VerifyStaffUser())
+def manage_items():
+    '''Manage the list of known items.'''
     log('get /manage invoked')
     return page('manage', no_cache = True, items = Item.select())
 
 
-@dibs.get('/add')
+@dibs.get('/add', apply = VerifyStaffUser())
 def add():
     '''Display the page to add new items.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'get /add invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
     log('get /add invoked')
     return page('edit', action = 'add', item = None)
 
 
-@dibs.get('/edit/<barcode:int>')
-@barcode_verified
+@dibs.get('/edit/<barcode:int>', apply = VerifyStaffUser())
 def edit(barcode):
     '''Display the page to add new items.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'get /edit invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
     log(f'get /edit invoked on {barcode}')
     return page('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
 
 
-@dibs.post('/update/add')
-@dibs.post('/update/edit')
-@expired_loans_removed
+@dibs.post('/update/add', apply = VerifyStaffUser())
+@dibs.post('/update/edit', apply = VerifyStaffUser())
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'post /update invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
     log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         log(f'user clicked Cancel button')
@@ -293,94 +358,70 @@ def update_item():
             log(f'could not find {barcode} in TIND')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        log(f'locking db to add {barcode}, title {rec.title}')
-        with database.atomic():
-            Item.create(barcode = barcode, title = rec.title, author = rec.author,
-                        tind_id = rec.tind_id, year = rec.year,
-                        edition = rec.edition, thumbnail = rec.thumbnail_url,
-                        num_copies = num_copies, duration = duration)
+        log(f'adding item entry {barcode} for {title}')
+        Item.create(barcode = barcode, title = rec.title, author = rec.author,
+                    tind_id = rec.tind_id, year = rec.year,
+                    edition = rec.edition, thumbnail = rec.thumbnail_url,
+                    num_copies = num_copies, duration = duration)
     else: # The operation is /update/edit.
         if not item:
             log(f'there is no item with barcode {barcode}')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        log(f'locking db to save changes to {barcode}')
-        with database.atomic():
-            item.barcode    = barcode
-            item.duration   = duration
-            item.num_copies = num_copies
-            item.save(only = [Item.barcode, Item.num_copies, Item.duration])
-            # FIXME if we reduced the number of copies, we need to check loans.
+        item.barcode    = barcode
+        item.duration   = duration
+        item.num_copies = num_copies
+        log(f'saving changes to {barcode}')
+        item.save(only = [Item.barcode, Item.num_copies, Item.duration])
+        # FIXME if we reduced the number of copies, we need to check loans.
     redirect(f'{dibs.base_url}/list')
 
 
-@dibs.post('/ready')
-@barcode_verified
+@dibs.post('/ready', apply = VerifyStaffUser())
 def toggle_ready():
     '''Set the ready-to-loan field.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'post /ready invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
     barcode = request.POST.barcode.strip()
     log(f'post /ready invoked on barcode {barcode}')
     item = Item.get(Item.barcode == barcode)
     item.ready = not item.ready
     log(f'locking db to change {barcode} ready to {item.ready}')
-    with database.atomic('exclusive'):
+    with database.atomic('immediate'):
         item.save(only = [Item.ready])
         # If we are removing readiness, we may have to close outstanding
         # loans.  Doesn't matter if these are active or recent loans.
         if not item.ready:
             for loan in Loan.select().where(Loan.item == item):
-                if not staff_user(loan.user) or debug_mode():
-                    # Don't count staff users in loan stats except in debug mode
-                    History.create(type = 'loan', what = loan.item.barcode,
-                                   start_time = loan.start_time,
-                                   end_time = loan.end_time)
-                log(f'deleting {loan.state} loan for {barcode}')
-                loan.delete_instance()
+                # Don't count staff users in loan stats except in debug mode.
+                if staff_user(loan.user) and not debug_mode():
+                    continue
+                History.create(type = 'loan', what = barcode,
+                               start_time = loan.start_time,
+                               end_time = loan.end_time)
+            n = Loan.delete().where(Loan.item == item).execute()
+            if n > 0:
+                log(f'deleted {n} loans for {barcode}')
     redirect(f'{dibs.base_url}/list')
 
 
-@dibs.post('/remove')
-@barcode_verified
+@dibs.post('/remove', apply = VerifyStaffUser())
 def remove_item():
-    '''Handle http post request to remove an item from the list page.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'post /remove invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
+    '''Handle http post request to remove an item from the database.'''
     barcode = request.POST.barcode.strip()
     item = Item.get(Item.barcode == barcode)
     log(f'locking db to remove {barcode}')
-    with database.atomic('exclusive'):
+    with database.atomic('immediate'):
         item.ready = False
         item.save(only = [Item.ready])
-        # First clean up loans while we still have the item object.
-        for loan in Loan.select().where(Loan.item == item):
-            log(f'deleting {loan.state} loan for {barcode}')
-            if not staff_user(loan.user) or debug_mode():
-                # Don't count staff users in loan stats except in debug mode
-                History.create(type = 'loan', what = loan.item.barcode,
-                               start_time = loan.start_time,
-                               end_time = loan.end_time)
-            loan.delete_instance()
+        Loan.delete().where(Loan.item == item).execute()
+        # Note we don't create History for items that will no longer exist.
         Item.delete().where(Item.barcode == barcode).execute()
     redirect(f'{dibs.base_url}/manage')
 
 
-@dibs.get('/stats')
-@dibs.get('/status')
+@dibs.get('/stats', apply = VerifyStaffUser())
+@dibs.get('/status', apply = VerifyStaffUser())
 def show_stats():
     '''Display the list of known items.'''
-    person = person_from_environ(request.environ)
-    if not staff_user(person):
-        log(f'get /stats invoked by non-library user')
-        redirect(f'{dibs.base_url}/notallowed')
-        return
     log('get /stats invoked')
     usage_data = []
     for item in Item.select():
@@ -398,12 +439,8 @@ def show_stats():
         durations = [(loan.end_time - loan.start_time) for loan in history]
         if durations:
             avg_duration = sum(durations, delta()) // len(durations)
-            if avg_duration < delta(seconds = 30):
-                avg_duration = '< 30 seconds'
-            else:
-                avg_duration = naturaldelta(avg_duration)
         else:
-            avg_duration = '(never borrowed)'
+            avg_duration = delta(seconds = 0)
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
     return page('stats', no_cache = True, usage_data = usage_data)
 
@@ -453,7 +490,8 @@ def loan_availability(user, barcode):
         else:
             log(f'{user} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
-            explanation = 'It is too soon after the last time you borrowed it.'
+            explanation = ('Your loan period has ended and it is too soon '
+                           'after the last time you borrowed it.')
             when_available = loan.reloan_time
     else:
         loan = Loan.get_or_none(Loan.user == user, Loan.state == 'active')
@@ -461,7 +499,7 @@ def loan_availability(user, barcode):
             other = loan.item
             log(f'{user} has a loan on {other.barcode} that ends at {loan.end_time}')
             status = Status.USER_HAS_OTHER
-            author = other.author[:50]+"..." if len(other.author) > 50 else other.author
+            author = shorten(other.author, width = 50, placeholder = ' …')
             explanation = ('You have another item currently on loan'
                            + f' ("{other.title}" by {author}).')
             when_available = loan.end_time
@@ -493,25 +531,21 @@ def general_page(name = '/'):
 
 # Next one is used by the item page to update itself w/o reloading whole page.
 
-@dibs.get('/item-status/<barcode:int>')
-@expired_loans_removed
-def item_status(barcode):
+@dibs.get('/item-status/<barcode:int>', apply = AddPersonArgument())
+def item_status(barcode, person):
     '''Returns an item summary status as a JSON string'''
-    person = person_from_environ(request.environ)
     log(f'get /item-status invoked on barcode {barcode} and {person.uname}')
 
     item, status, explanation, when_available = loan_availability(person.uname, barcode)
     return json.dumps({'available'     : (status == Status.AVAILABLE),
+                       'loaned_by_user': (status == Status.LOANED_BY_USER),
                        'explanation'   : explanation,
                        'when_available': human_datetime(when_available)})
 
 
-@dibs.get('/item/<barcode:int>')
-@expired_loans_removed
-@barcode_verified
-def show_item_info(barcode):
+@dibs.get('/item/<barcode:int>', apply = AddPersonArgument())
+def show_item_info(barcode, person):
     '''Display information about the given item.'''
-    person = person_from_environ(request.environ)
     log(f'get /item invoked on barcode {barcode} by {person.uname}')
 
     item, status, explanation, when_available = loan_availability(person.uname, barcode)
@@ -525,19 +559,16 @@ def show_item_info(barcode):
                 explanation = explanation)
 
 
-@dibs.post('/loan')
-@expired_loans_removed
-@barcode_verified
-def loan_item():
+@dibs.post('/loan', apply = AddPersonArgument())
+def loan_item(person):
     '''Handle http post request to loan out an item, from the item info page.'''
-    person = person_from_environ(request.environ)
     barcode = request.POST.barcode.strip()
     log(f'post /loan invoked on barcode {barcode} by {person.uname}')
 
     # Checking if the item is available requires steps, and we have to be sure
     # that two users don't do them concurrently, or else we might make 2 loans.
     log(f'locking db')
-    with database.atomic('exclusive'):
+    with database.atomic('immediate'):
         item, status, explanation, when_available = loan_availability(person.uname, barcode)
         if status == Status.NOT_READY:
             # Normally we shouldn't see a loan request through this form if the
@@ -586,12 +617,9 @@ def loan_item():
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
-@dibs.post('/return/<barcode:int>')
-@expired_loans_removed
-@barcode_verified
-def end_loan(barcode):
+@dibs.post('/return/<barcode:int>', apply = AddPersonArgument())
+def end_loan(barcode, person):
     '''Handle http post request to return the given item early.'''
-    person = person_from_environ(request.environ)
 
     # Sometimes, for unknown reasons, the end-loan button sends a post without
     # the barcode data.  The following are compensatory mechanisms.
@@ -629,12 +657,9 @@ def end_loan(barcode):
         redirect(f'{dibs.base_url}/item/{barcode}')
 
 
-@dibs.get('/view/<barcode:int>')
-@expired_loans_removed
-@barcode_verified
-def send_item_to_viewer(barcode):
+@dibs.get('/view/<barcode:int>', apply = AddPersonArgument())
+def send_item_to_viewer(barcode, person):
     '''Redirect to the viewer.'''
-    person = person_from_environ(request.environ)
     log(f'get /view invoked on barcode {barcode} by {person.uname}')
 
     item = Item.get(Item.barcode == barcode)
@@ -643,7 +668,8 @@ def send_item_to_viewer(barcode):
         log(f'redirecting to viewer for {barcode} for {person.uname}')
         wait_time = _RELOAN_WAIT_TIME
         return page('uv', no_cache = True, barcode = barcode,
-                    end_time = human_datetime(loan.end_time),
+                    title = shorten(item.title, width = 100, placeholder = ' …'),
+                    end_time = human_datetime(loan.end_time, '%I:%M %p (%b %d, %Z)'),
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
                     wait_time = naturaldelta(wait_time))
     else:
@@ -651,12 +677,9 @@ def send_item_to_viewer(barcode):
         redirect(f'{dibs.base_url}/item/{barcode}')
 
 
-@dibs.get('/manifests/<barcode:int>')
-@expired_loans_removed
-@barcode_verified
-def return_iiif_manifest(barcode):
+@dibs.get('/manifests/<barcode:int>', apply = AddPersonArgument())
+def return_iiif_manifest(barcode, person):
     '''Return the manifest file for a given item.'''
-    person = person_from_environ(request.environ)
     log(f'get /manifests/{barcode} invoked by {person.uname}')
 
     item = Item.get(Item.barcode == barcode)
@@ -667,53 +690,52 @@ def return_iiif_manifest(barcode):
             log(f'{manifest_file} does not exist')
             return
         record_request(barcode)
-        with open(join(_MANIFEST_DIR, f'{barcode}-manifest.json'), 'r') as mf:
-            data = mf.read()
-            # Change refs to the IIIF server to point to our DIBS route instead.
-            content = data.replace(_IIIF_BASE_URL, f'{dibs.base_url}/iiif/{barcode}')
-            # Change occurrences of %2F (slashes) in IIIF identifiers to '!' so
-            # Apache doesn't auto-convert %2F when UV fetches /iiif/...
-            content = content.replace(str(barcode) + r'%2F', f'{barcode}!')
-        with NamedTemporaryFile() as new_manifest:
-            new_manifest.write(content.encode())
-            new_manifest.seek(0)
+        with open(manifest_file, 'r') as mf:
+            adjusted_content = urls_rerouted(mf.read(), barcode)
+            data = BytesIO(adjusted_content.encode())
+            size = len(adjusted_content)
             log(f'returning manifest for {barcode} for {person.uname}')
-            return static_file(new_manifest.name, root = '/')
+            return send_file(data, ctype = 'application/json', size = size)
     else:
         log(f'{person.uname} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
         return
 
 
-@dibs.get('/iiif/<barcode>/<rest:re:.+>')
-@expired_loans_removed
-@barcode_verified
-def return_iiif_content(barcode, rest):
+@dibs.get('/iiif/<barcode>/<rest:re:.+>', apply = AddPersonArgument())
+def return_iiif_content(barcode, rest, person):
     '''Return the manifest file for a given item.'''
-    person = person_from_environ(request.environ)
     log(f'get /iiif/{barcode}/{rest} invoked by {person.uname}')
 
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
-        # Undo the temporary encoding done by return_iiif_manifest().
-        corrected = rest.replace(f'{barcode}!', str(barcode) + r'%2F')
-        url = _IIIF_BASE_URL + '/' + corrected
+        record_request(barcode)
+        url = _IIIF_BASE_URL + '/' + urls_restored(rest, barcode)
+        if url in _CACHE:
+            content, ctype = _CACHE[url]
+            data = BytesIO(content)
+            log(f'returning cached /iiif/{barcode}/{rest} for {person.uname}')
+            return send_file(data, ctype = ctype, size = len(content))
 
-        # UV uses ajax to get info.json files, which fails if we redirect the
-        # requests to the IIIF server. Grab & serve the content ourselves.
-        if url.endswith('json'):
-            record_request(barcode)
-            response, error = net('get', url)
-            with NamedTemporaryFile() as data_file:
-                data_file.write(response.content)
-                data_file.seek(0)
-                log(f'returning {len(response.content)} bytes for /iiif/{barcode}/{rest}')
-                return static_file(data_file.name, root = '/')
+        # Read the data from our IIIF server instance & send it to the client.
+        log(f'getting /iiif/{barcode}/{rest} from server')
+        response, error = net('get', url)
+        if not error:
+            if url.endswith('json'):
+                # Always rewrite URLs in any JSON files we send to the client.
+                content = urls_rerouted(response.text, barcode).encode()
+                ctype = 'application/json'
+            else:
+                content = response.content
+                ctype = 'image/jpeg'
+            _CACHE[url] = (content, ctype)
+            data = BytesIO(content)
+            log(f'returning content of /iiif/{barcode}/{rest} for {person.uname}')
+            return send_file(data, ctype = ctype, size = len(content))
         else:
-            log(f'redirecting to {url} for {barcode} for {person.uname}')
-            record_request(barcode)
-            redirect(url)
+            log(f'error {str(error)} accessing {url}')
+            return
     else:
         log(f'{person.uname} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
@@ -732,9 +754,29 @@ def serve_uv_files(filepath):
     return static_file(filepath, root = 'viewer/uv')
 
 
-# The uv subdirectory contains generic html and css. Serve as static files.
+@dibs.route('/view/img/<filepath:path>')
+@dibs.route('/viewer/img/<filepath:path>')
+def serve_uv_img_files(filepath):
+    log(f'serving static uv file /viewer/img/{filepath}')
+    return static_file(filepath, root = 'viewer/img')
+
+
+@dibs.route('/view/lib/<filepath:path>')
+@dibs.route('/viewer/lib/<filepath:path>')
+def serve_uv_lib_files(filepath):
+    log(f'serving static uv file /viewer/lib/{filepath}')
+    return static_file(filepath, root = 'viewer/lib')
+
+
+@dibs.route('/view/themes/<filepath:path>')
+@dibs.route('/viewer/themes/<filepath:path>')
+def serve_uv_themes_files(filepath):
+    log(f'serving static uv file /viewer/themes/{filepath}')
+    return static_file(filepath, root = 'viewer/themes')
+
+
 @dibs.route('/viewer/<filepath:path>')
-def serve_uv_files(filepath):
+def serve_viewer_files(filepath):
     log(f'serving static uv file /viewer/{filepath}')
     return static_file(filepath, root = 'viewer')
 

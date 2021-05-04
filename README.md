@@ -6,7 +6,7 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.8+-brightgreen.svg?style=flat-square)](https://www.python.org/downloads/release/python-380/)
 [![Latest release](https://img.shields.io/github/v/release/caltechlibrary/dibs.svg?style=flat-square&color=b44e88)](https://github.com/caltechlibrary/dibs/releases)
-
+[![DOI](https://img.shields.io/badge/dynamic/json.svg?label=DOI&style=flat-square&color=lightgray&query=$.metadata.doi&uri=https://data.caltech.edu/api/record/1959)](https://data.caltech.edu/records/1959)
 
 Table of contents
 -----------------
@@ -39,24 +39,21 @@ Access to materials in Caltech DIBS is limited to current Caltech faculty, stude
 Requirements
 -----------
 
-DIBS is written in Python 3 and depends on additional software to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  In summary, in addition to a number of Python packages, DIBS also needs: the [Universal Viewer](http://universalviewer.io), used to display content; [Node](https://nodejs.dev) modules used by the Universal Viewer; and [SQLite3](https://www.sqlite.org/), used as the main database for DIBS data.  Finally, authentication is assumed to be handled by a single-signon system (in Caltech's case,  [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture)) that is external to DIBS.
+DIBS is written in Python 3 and depends on additional software to work.  The [installation instructions](#installation) below describe how to install all of the dependencies.  Separately, DIBS also assumes that authentication is handled by a single-signon system (in Caltech's case, [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture)) that is external to DIBS.  The installation and configuration of the single-signon system depends on the specifics of a given institution, and are not described here.
 
 
 Installation
 ------------
 
+The current version of DIBS does not have a separate installation process; using DIBS currently means having to get the source code from this repository and running it from the source directory.
+
+
 ### ⓵ _Get the DIBS source code_
 
-To install and run DIBS locally, you will need to clone not just the main repo contents but also submodules.  The minimum command for this involves using the `--recursive` option to `git clone`:
+You can use `git` to clone this repository:
 
 ```sh
-git clone --recursive https://github.com/caltechlibrary/dibs
-```
-
-If you want to get the `develop` branch as well, the easiest approach may be instead to use the script [`git-clone-complete`](https://github.com/mhucka/small-scripts/blob/main/git-scripts/git-clone-complete) for doing deep clones of GitHub repositories:
-
-```sh
-git-clone-complete https://github.com/caltechlibrary/dibs
+git clone https://github.com/caltechlibrary/dibs
 ```
 
 This will create a `dibs` subdirectory in your current directory.
@@ -69,15 +66,6 @@ Next, install the Python dependencies on your system or your virtual environment
 ```sh
 cd dibs
 python3 -m pip install -r requirements.txt --upgrade
-```
-
-### ⓷ _Install Node dependencies_
-
-Change into to the [`viewer`](viewer) subdirectory, and run the following command to install the Node dependencies for the Universal Viewer:
-
-```sh
-cd viewer
-npm install
 ```
 
 
@@ -109,7 +97,7 @@ python3 load-mock-data.py
 
 ### ⓷ _Load a sample user into DIBS_
 
-The program [`people-manager`](people-manager) is an interface to adding and manipulating user data.  To log into the demo DIBS configuration, create at least one user with a role of "library".  Suppose you want to name your sample user "dibsuser", then you could run the following command:
+The program [`people-manager`](people-manager) is an interface for adding user and role information.  To log into the demo DIBS configuration, create at least one user with a role of "library".  Suppose you want to name your sample user "dibsuser", then you could run the following command:
 
 ```sh
 ./people-manager add role="library" uname=dibsuser
@@ -124,7 +112,7 @@ For local experimentation and development, the script [`run-server`](run-server)
 ./run-server -h
 ```
 
-In a real installation, DIBS needs a single-signon system on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
+In a real installation, DIBS needs a single-signon system such as Shibboleth on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
 
 ```
 ./run-server -m debug -u dibsuser
@@ -162,9 +150,9 @@ We would be happy to receive your help and participation with enhancing DIBS!  P
 License
 -------
 
-Software produced by the Caltech Library is Copyright (C) 2021, Caltech.  This software is freely distributed under a BSD/MIT type license.  Please see the [LICENSE](LICENSE) file for more information.
+Software produced by the Caltech Library is Copyright (C) 2021, Caltech.  This software is freely distributed under a BSD-type license.  Please see the [LICENSE](LICENSE) file for more information.
 
-This repository includes other software as submodules.  They have their own software licenses.
+This software repository includes a copy of the [Universal Viewer](http://universalviewer.io) version 3.1.1, obtained from the [GitHub repository](https://github.com/UniversalViewer/universalviewer/releases/tag/v3.1.1) as it existed on 2021-04-27.  The Universal Viewer is released under the MIT license.   Please see the Universal Viewer website and documentation for more information about any applicable copyrights or licensing terms.
 
 
 Authors and history
@@ -186,6 +174,7 @@ DIBS makes use of numerous open-source packages, without which it would have bee
 * [Boltons](https://github.com/mahmoud/boltons/) &ndash; package of miscellaneous Python utilities
 * [Bottle](https://bottlepy.org) &ndash; a lightweight WSGI micro web framework for Python
 * [CommonPy](https://github.com/caltechlibrary/commonpy) &ndash; a collection of commonly-useful Python functions
+* [expiringdict](https://pypi.org/project/expiringdict/) &ndash; an ordered dictionary class with auto-expiring values
 * [humanize](https://github.com/jmoiron/humanize) &ndash; make numbers more easily readable by humans
 * [ipdb](https://github.com/gotcha/ipdb) &ndash; the IPython debugger
 * [mod_wsgi](http://www.modwsgi.org) &ndash; an Apache module for hosting Python WSGI web applications
@@ -195,9 +184,7 @@ DIBS makes use of numerous open-source packages, without which it would have bee
 * [Rich](https://rich.readthedocs.io/en/latest/) &ndash; library for writing styled text to the terminal
 * [Sidetrack](https://github.com/caltechlibrary/sidetrack) &ndash; simple debug logging/tracing package
 * [Topi](https://github.com/caltechlibrary/topi) &ndash; a simple package for getting data from a TIND.io ILS instance
-* [Yurl](https://github.com/homm/yurl/) &ndash; an alternative to urlparse for parsing URLs in Python
-* [Werkzeug](https://pypi.org/project/Werkzeug/) &ndash; a WSGI application library
-
+* [Universal Viewer](https://github.com/UniversalViewer/universalviewer) &ndash; a browser-based viewer for content in [IIIF](https://iiif.io) format
 
 <div align="center">
   <br>

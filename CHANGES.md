@@ -1,7 +1,38 @@
 Change log for DIBS
 ===================
 
-Version (next)
+Version 0.3.0
+--------------
+
+This release features the use of an updated version of the Universal Viewer as well as a new viewer page layout.  We removed the extra HTML around DIB's previous Universal Viewer page and inserted the expiration message and the "end loan" button directly into the Universal Viewer frame, solving several usability issues at once.
+
+Specific issues closed and other changes include the following:
+* Fix issues #60, #65: several fixes to the layout of pages and the Universal Viewer on small window sizes and mobile viewers.
+* Fix issue #63: avoid briefly showing a "javascript is not enabled" message while the UV page is loading.
+* Fix issues #62, #61: fix sorting by the average duration column and handle auto-refresh in such a way that it can be disabled when sorting is in effect.
+* Fix issue #55: reduce the number of unnecessary calls to Peewee's `atomic()` handler to avoid needlessly locking the database.
+* Fix issue #54: update and bundle a copy of the latest release of the Universal Viewer.
+* Fix issue #39: add DIBS version info to the "About" page.
+* Fix issue #34: address problems on mobile devices.
+* Fix issue #5: move timer display into UV instead of having it in the HTML page outside the viewer.
+* Turn off nonfunctional Universal Viewer bookmark icon in the bottom of the frame.
+
+
+Version 0.2.1
+--------------
+
+* Fix issue #51: use a variable to define the help page URL.
+* Fix issue #48: use a more systematic approach to printing log statements in the JavaScript console, allow printing to be turned on/off, and leave it off by default for production.
+* Fix issue #46: if the user ended a loan through one browser window while having a second browser window open on the same item, the second window would not close the viewer and instead would just show spinning squares for the content.  Now the viewer window actively checks the current loan status.
+* Fix issue #45: path to `uv.js` file was not fully qualified.
+* Fix issue #43: `people-manager` could get incorrect paths to `htpasswd` and the password file.
+* Fix issue #42: browsers were still using cached copies of `/item` page; new code tries to do a beter job of preventing that.
+* Fix issue #41: need expire loans before printing them.
+* Fix issue #36: null users are not checked for.
+* Miscellaneous internal fixes to various parts of the code.
+
+
+Version 0.2.0
 --------------
 
 * The `/stats` page now has shows symbols to indicate recent page retrieval activity, to help gauge how active a given item currently is.

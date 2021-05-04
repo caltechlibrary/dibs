@@ -1,12 +1,14 @@
 '''
-people.py provides authorization for a person based on their statues
-in the person table.
+people.py provides account profiles for a persons based on their fields
+in the person table in an SQLite3 database.
 
-It requires an SQLite3 database called people.db for managing user
-information used to staff as well as last login time to expire
-logins and force a re-authorization. In development the "secret" field
-is used for authentication but in a production setting OAuth2+OpenID
-is used to authentication and retrieving the userid.
+It does not provide suppport for authentication, that needs to be
+provided by your front end web server such as Apache 2. If you
+have Apache2's Basic Auth the PersonManager class will attempt
+to store/update/remove passwords (aka secrets) via the
+Apache htpasswd program. 
+
+No password are stored in the SQLite3 person table.
 
 Copyright
 ---------
@@ -17,8 +19,8 @@ file "LICENSE" for more information.
 '''
 
 from datetime import datetime
+from subprocess import Popen, PIPE
 
-from hashlib import blake2b
 from getpass import getpass
 
 from decouple import config
@@ -27,37 +29,26 @@ from peewee import AutoField, CharField, TimestampField
 
 import os
 
-
-def hashify(s):
-    '''Return retring as blake2b has digest'''
-    h = blake2b()
-    h.update(str.encode(s))
-    return h.hexdigest()
-
-def update_password(secret):
-    if not secret:
-        secret = getpass(prompt='Password: ', stream = None)
-    if not secret:
-        return None
-    else:
-        return hashify(secret)
-
-def check_password(src, secret):
-    src = hashify(src)
-    if src == secret:
-        return True
-    return False
-
 # Figure out how are authentication and authorization is configured.
 _db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
 
+def setup_person_table(db_name):
+    '''setup a people SQLite3 database'''
+    db = SqliteDatabase(db_name)
+    if db.connect():
+        if db.table_exists('person'):
+            print(f'''WARNING: person already exists in {db_name}''')
+        else:
+            db.create_tables([Person])
+    else:
+        print(f'''ERROR: could not connect to {db_name}''')
+        
 
 # Person is for development, it uses a SQLite3 DB to user
 # connection validation data.
 class Person(Model):
     uname = CharField()  # user name, e.g. janedoe
-    secret = CharField() # password
-    role = CharField()   # role is empty or "staff"
+    role = CharField()   # role is usually empty or "library"
     display_name = CharField() # display_name, optional
     updated = TimestampField() # last successful login timestamp
 
@@ -97,3 +88,118 @@ def person_from_environ(environ):
         return person
     else:
         return None
+
+def normalize_str(s):
+    if isinstance(s, bytes):
+        return s.decode('utf-8')
+    return s
+
+#
+# NOTE: The following are used by people-manager and are not expected
+# to be used in the web UI.
+#
+class PersonManager:
+    '''PersonManager provides a class to build a CLI person manager'''
+    def __init__(self, db_name, htpasswd = None, password_file = None):
+        self.htpasswd = htpasswd
+        self.password_file = password_file
+        self.db_name = db_name
+        
+    def _update_htpasswd(self, uname, secret):
+        '''Update the password for user using htpasswd from Apache'''
+        if (self.htpasswd == None) or (self.password_file == None):
+            print(f'ERROR: not setup for Apache htpasswd support')
+            sys.exit(1)
+        if not os.path.exists(self.password_file):
+            print(f'ERROR: password file {self.password_file} does not exist')
+            sys.exit(1)
+        if not secret:
+            secret = getpass(prompt='Password: ', stream = None)
+        if not secret:
+            return False
+        cmd = [ self.htpasswd, '-b', self.password_file, uname, secret ]
+        with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
+            out = normalize_str(proc.stdout.read())
+            err = normalize_str(proc.stderr.read())
+            if out:
+                print(out)
+            if err:
+                print(err)
+        return True 
+    
+    def _delete_htpasswd(self, uname):
+        if (self.htpasswd == None) or (self.password_file == None):
+            print(f'ERROR: not setup for Apache htpasswd support')
+            sys.exit(1)
+        if not os.path.exists(self.password_file):
+            print(f'ERROR: password file {self.password_file} does not exist')
+            sys.exit(1)
+        cmd = [ self.htpasswd, '-D', self.password_file, uname ]
+        with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
+            out = normalize_str(proc.stdout.read())
+            err = normalize_str(proc.stderr.read())
+            if out:
+                print(out)
+            if err:
+                print(err)
+        return True 
+    
+    def list_people(self, kv):
+        '''list people in the SQLite3 database table called person'''
+        if 'uname' in kv:
+            row = (Person.select().where(Person.uname == kv['uname']).get())
+            if row == None:
+                print(f'''Cannot find person {kv["uname"]}''')
+            else:
+                print(f'''
+        Username: {row.uname}
+    Display Name: {row.display_name}
+            Role: {row.role}
+         Updated: {row.updated}
+    ''')
+        else:
+            print(f'''Username\tDisplay Name\tRole\tUpdated''')
+            query = (Person.select().order_by(Person.display_name))
+            for row in query:
+                print(f'''{row.uname}\t{row.display_name}\t{row.role}\t{row.updated}''')
+    
+    def add_people(self, kv):
+        if not 'uname' in kv:
+            print(f'''ERROR: uname is required''')
+            sys.exit(1)
+        if ('secret' in kv):
+            if self.htpasswd != None:
+                self._update_htpasswd(kv['uname'], kv['secret'])
+            else:
+                print(f'WARNING: secrets not supported')
+        for key in [ 'role', 'display_name' ]:
+            if not key in kv:
+                kv[key] = ''
+        user = Person(uname = kv['uname'], role = kv['role'], display_name = kv['display_name'])
+        user.save()
+    
+    def update_people(self, kv):
+        user = Person.select().where(Person.uname == kv['uname']).get()
+        if user == None:
+            print(f'ERROR {kv["uname"]} does not exist')
+            sys.exit(1)
+        if ('secret' in kv):
+            if self.htpasswd != None:
+                self._update_htpasswd(user.uname, kv['secret'])
+            else:
+                print(f'WARNING: secrets not supported')
+        if 'display_name' in kv:
+            user.display_name = kv['display_name']
+        if 'role' in kv:
+            user.role = kv['role']
+        user.save()
+    
+    def remove_people(self, kv):
+        if not 'uname' in kv:
+            print(f'''WARNING: uname is required''')
+            sys.exit(1)
+        nrows = Person.delete().where(Person.uname == kv['uname']).execute()
+        if self.htpasswd != None:
+            self._delete_htpasswd(kv['uname'])
+        print(f'''{nrows} row deleted from person in {self.db_name}''')
+    

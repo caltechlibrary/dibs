@@ -77,8 +77,23 @@ body {
 
 .footer-text {
   display: inline-block;
+  display: inline-block;
 }
 
+.footer-logo {
+  margin-left: 2em;
+  display: inline-block;
+}
+
+img.footer-logo {
+  height: 40px;
+}
+
+.footer-feedback {
+  margin: auto 1em;
+  display: inline-block;
+  margin-right: 2em;
+}
 
 /* Miscellaneous DIBS look & feel customizations ........................... */
 
@@ -101,6 +116,29 @@ a {
   top: 0.5rem
 }
 
+img.svg-megaphone {
+  height: 2rem !important;
+}
+
+#loan-button {
+  width: 140px;
+}
+
+.delayed {
+    opacity: 0;
+    animation: appear 0s;
+    animation-delay: 4s;
+    -webkit-animation-fill-mode: forwards;
+    -moz-animation-fill-mode: forwards;
+    -ms-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
+}
+
+@keyframes appear {
+    from { opacity: 0; }
+    to { opacity: 1;}
+}
+
 /* Used to make <input> and <button> look like links instead of buttons,
 used in situations where we need to make a link perform a POST request. */
 .link-not-button {
@@ -109,4 +147,159 @@ used in situations where we need to make a link perform a POST request. */
   padding: 0!important;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.item-info-row {
+
+}
+
+.item-info {
+  display: inline;
+  vertical-align: middle;
+  float: left;
+  height: 180px;
+}
+
+.item-thumbnail {
+  display: inline;
+  float: right;
+}
+
+.item-info-table {
+  margin-right: 2em;
+  margin-bottom: 0;
+  height: 100%;
+  border-collapse: unset;
+}
+
+.item-info-table tr.last th,
+.item-info-table tr.last td {
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+.item-info-table td,
+.item-info-table th {
+  vertical-align: middle;
+}
+
+th.item-info-label {
+  width: 7rem;
+}
+
+.item-info-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+img.thumbnail {
+  width: auto;
+  height: 178px;
+  margin-right: 2em;
+}
+
+.loan-info {
+  display: block;
+  margin-top: 3rem;
+}
+
+/* Adjustments for different screen sizes .................................. */
+
+/* Special case for the footer, which starts to wrap around 820 pixels.
+To prevent that, we hide the footer text part altogether. */
+@media screen and (max-width: 834px) {
+  .footer-text {
+    display: none;
+  }
+
+  .footer-logo {
+    float: left;
+  }
+
+  .footer-feedback {
+    float: right;
+  }
+}
+
+/* This handles most small devices, including iPhones & small tablets. */
+@media screen and (max-width: 768px) {
+  html, body {
+    font-size: 1.1rem;
+  }
+
+  .item-thumbnail {
+    display: none;
+    width: 0;
+  }
+
+  .item-info {
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .footer-logo {
+    margin-left: 1em;
+  }
+
+  .footer-feedback {
+    margin-right: 1em;
+  }
+}
+
+/* The next one is for various other small devices with high pixel ratios.
+- Pixel 2L
+- Galaxy S3, S5
+- Moto G4
+*/
+
+@media
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 2),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 2.6),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 3.5),
+screen and (max-device-width: 415px) and (-webkit-device-pixel-ratio: 4) {
+  html, body {
+    font-size: 1.6rem;
+  }
+
+  .item-thumbnail {
+    display: none;
+    width: 0;
+  }
+
+  .item-info {
+    margin-bottom: 4em !important;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  #no-javascript, #no-cookies {
+    font-size: 1.2rem;    
+  }
+
+  #loan-button {
+    margin-top: 1em;
+    margin-bottom: 1em !important;
+    margin-left: -90px !important;
+    font-size: 120%;
+    width: 320px;
+  }
+
+  .footer-text {
+    display: none;
+  }
+
+  .footer-logo {
+    float: left;
+    margin-left: 1em;
+  }
+
+  img.footer-logo {
+    height: 60px;
+  }
+
+  .footer-feedback {
+    float: right;
+    font-size: 1.2rem;
+    margin-right: 1em;
+  }
 }

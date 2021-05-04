@@ -2,6 +2,9 @@
 <html lang="en">
   %include('common/banner.html')
   <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
     %include('common/standard-inclusions.tpl')
 
     <title>Description page for {{item.title}}</title>
@@ -14,13 +17,13 @@
                               (typeof window.performance != "undefined" && 
                                window.performance.navigation.type === 2);
        if (historyTraversal) {
-         console.info("Back button history traversal -- reloading page");
+         log("Back button history traversal -- reloading page");
          window.location.reload(true);
        } else {
          var perfEntries = performance.getEntriesByType("navigation");
          if (Array.isArray(perfEntries) && typeof(perfEntries[0]) !== "undefined"
              && perfEntries[0].type === "back_forward") {
-           console.log("Back button navigation -- reloading page");
+           log("Back button navigation -- reloading page");
            window.location.reload(true);
          }
        }
@@ -33,56 +36,58 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-        <table class="table table-borderless mt-4">
-          <tbody>
-            <tr>
-              <td width="200px" style="border-top: none">
-                %if item.thumbnail != '':
-                <img class="img-thumbnail" src="{{item.thumbnail}}">
-                %else:
-                <img class="img-thumbnail" src="{{base_url}}/static/missing-thumbnail.svg">
-                %end
-              </td>
-              <td style="border-top: none">
-                <table class="table table-sm">
-                  <tbody>
-                    <tr>
-                      <th width="120em">Title</th>
-                      <td>
-                        <strong>
-                          %if item.tind_id != '':
-                          <a target="_blank"
-                             href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
-                          %else:
-                          {{item.title}}
-                          %end
-                        </strong>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Author(s)</th>
-                      <td>{{item.author}}</td>
-                    </tr>
-                    <tr>
-                      <th>Year</th>
-                      <td>{{item.year}}</td>
-                    </tr>
-                    %if item.edition != '':
-                    <tr>
-                      <th>Edition</th>
-                      <td>{{item.edition}}</td>
-                    </tr>
-                    %end
-                    <tr><td></td><td></td></tr>
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="row pt-3 mx-auto item-info-row">
 
-        <div>
-          <p class="mx-auto text-center w-75">
+          <div class="col-sm-9 col-xs-12 item-info my-auto">
+            <table class="item-info-table table table-sm">
+              <tbody>
+                <tr>
+                  <th class="item-info-label">Title</th>
+                  <td class="item-info-value">
+                    <strong>
+                      %if item.tind_id != '':
+                      <a target="_blank"
+                         href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                      %else:
+                      {{item.title}}
+                      %end
+                    </strong>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Author(s)</th>
+                  <td class="item-info-value">{{item.author.split(',')[0] + ' et al.' if item.author.count(',') > 2 else item.author}}</td>
+                </tr>
+                %if item.edition != '':
+                <tr>
+                %else:
+                <tr class="last">
+                %end
+                  <th>Year</th>
+                  <td class="item-info-value">{{item.year}}</td>
+                </tr>
+                %if item.edition != '':
+                <tr class="last">
+                  <th>Edition</th>
+                  <td class="item-info-value">{{item.edition}}</td>
+                </tr>
+                %end
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col-sm-2 col-xs-0 item-thumbnail">
+            %if item.thumbnail != '':
+            <img class="thumbnail img-responsive" src="{{item.thumbnail}}">
+            %else:
+            <img class="thumbnail img-responsive" src="{{base_url}}/static/missing-thumbnail.svg">
+            %end
+          </div>
+
+        </div>
+
+        <div class="loan-info">
+          <p class="mx-auto text-center w-75 mt-2">
             <span id="available">This item is currently not available
               to you for a digital loan.</span>
             <span id="explanation"></span>
@@ -95,30 +100,29 @@
                                            + 'hour loan period immediately. Proceed?'
                                            + '\n\nReminder: closing the viewer window '
                                            + 'will not end the loan  – please use the '
-                                           + 'End Loan Now button when you are ready. '
+                                           + 'End Loan button when you are ready. '
                                            + 'You may also open the viewer in other '
                                            + 'devices during the loan period.');">
               <input type="hidden" name="barcode" value="{{item.barcode}}"/>
               <input id="loan-button" class="d-none btn btn-block mx-auto mb-3"
-                     style="width: 120px" type="submit"
-                     value="Not Available" disabled />
+                     type="submit" value="Not Available" disabled />
             </form>
           </div>
 
-          <p id="no-javascript" class="alert alert-danger mx-auto text-center w-75">
+          <p id="no-javascript" class="delayed alert alert-danger mx-auto text-center w-75">
             Note: JavaScript is disabled in your browser.
             This site cannot function properly without JavaScript.
             Please enable JavaScript and reload this page.
           </p>
-          <p id="no-cookies" class="d-none alert alert-danger mx-auto text-center w-75">
+          <p id="no-cookies" class="d-none delayed alert alert-danger mx-auto text-center w-75">
             Note: web cookies are blocked by your browser.
             The document viewer cannot function properly without cookies.
             Please allow cookies from this site in your browser, and reload this page.
           </p>
-          <p class="mx-auto text-center w-50">
+          <p class="mx-auto text-center w-75">
             Loan duration: {{item.duration}} hours
           </p>
-          <p id="refresh-tip" class="d-none mx-auto text-center w-50 text-info">
+          <p id="refresh-tip" class="d-none mx-auto text-center w-75 text-info">
             This page will refresh automatically.
           </p>
         </div>
@@ -153,13 +157,13 @@
                loanButton.classList.add('d-none');
                availableElement.innerHTML = 'This item is currently not available '
                                           + 'for a new digital loan.';
-               console.warn('Cookies are blocked by the browser -- stopping')
+               log('Cookies are blocked by the browser -- stopping')
                return;
              } else {
                noCookiesElement.classList.add('d-none');
              };
              if (available == true) {
-               console.info("Book {{item.barcode}} is available");
+               log("Book {{item.barcode}} is available");
                loanButton.classList.remove('d-none');
                loanButton.removeAttribute('disabled');
                loanButton.setAttribute('value', 'Get loan');
@@ -170,7 +174,7 @@
                explanationElement.innerHTML = '';
                whenElement.innerHTML = '';
              } else {
-               console.info("Book {{item.barcode}} is NOT available");
+               log("Book {{item.barcode}} is NOT available");
                loanButton.classList.remove('d-none');
                loanButton.setAttribute('disabled', true);
                loanButton.setAttribute('value', 'Not available');
@@ -182,17 +186,17 @@
                    && explanation !== "" && explanation != "None") {
                  explanationElement.innerHTML = explanation;
                } else {
-                 console.warn('explanation is undefined');
+                 log('explanation is undefined');
                  explanationElement.innerHTML = "";
                }
                if (typeof when_available !== "undefined" && when_available !== null
                    && when_available !== "" && when_available != "None") {
-                 console.info("when_available = ", when_available);
+                 log("when_available = ", when_available);
                  whenElement.innerHTML =
                    'This item is scheduled to become available again '
                    + 'no later than <nobr>' + when_available + '</nobr>.';
                } else {
-                 console.warn('when_available is undefined');
+                 log('when_available is undefined');
                  whenElement.innerHTML = '';
                }
              }
@@ -203,36 +207,6 @@
            } else {
              set_book_status(false, '{{explanation}}', '{{when_available}}');
            }
-
-           /* This is a simple http GET function. It is based on examples
-              at MDN Developer site and the satirical Vanilla JS framework site */
-           httpGet = function (url, contentType, callbackFn) {
-             let self = this,
-                 xhr = new XMLHttpRequest(),
-                 page_url = new URL(window.location.href);
-             xhr.onreadystatechange = function () {
-               /* process response */
-               if (xhr.readyState === XMLHttpRequest.DONE) {
-                 if (xhr.status == 200) {
-                   let data = xhr.responseText;
-                   if (contentType === "application/json" && data !== "") {
-                     data = JSON.parse(xhr.responseText);
-                   }
-                   callbackFn(data, "");
-                 } else {
-                   console.warn('xhr status = ', xhr.status)
-                   callbackFn("", xhr.status);
-                 }
-               }
-             };
-
-             /* we always want JSON data */
-             xhr.open('GET', url, true);
-             if (contentType !== "" ) {
-               xhr.setRequestHeader('Content-Type', contentType);
-             }
-             xhr.send();
-           };
 
            /* NOTE: This is our refresher service (for book status updates). 
               The service is created with setIneterval and will run
@@ -245,7 +219,7 @@
              httpGet('{{base_url}}/item-status/{{item.barcode}}', 'application/json',
                      function(data, err) {
                        if (poll_count >= max_poll_count) {
-                         console.warn("Reached max poll count");
+                         log("Reached max poll count");
                          refreshTip.innerHTML = 'Auto-refresh paused. Reload this '
                                               + 'browser window to see updates.';
                          refreshTip.classList.add('text-danger');
@@ -260,7 +234,7 @@
                             We want to use the handle to the specific
                             elements we want to update and update the page in place.
                           */
-                         console.info("Updating status: data = ", data);
+                         log("Updating status: data = ", data);
 		         set_book_status(data.available, data.explanation, data.when_available);
                        } else {
                          console.error("ERROR: " + err);
