@@ -17,7 +17,7 @@ maxdepth: 2
 usage.md
 architecture.md
 installation.md
-references.md
 history.md
+references.md
 ```
 

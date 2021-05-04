@@ -1,4 +1,4 @@
-# More information about CDL
+# References and resources
 
 The following are some additional resources about Controlled Digital Lending:
 
