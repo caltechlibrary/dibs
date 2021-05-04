@@ -215,7 +215,14 @@
     <li class="md-nav__item">
     
     
-      <a href="#guiding-assumptions" class="md-nav__link">Guiding assumptions</a>
+      <a href="#authentication" class="md-nav__link">Authentication</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="#top-level" class="md-nav__link">Top level</a>
       
     
     </li>
@@ -280,6 +287,13 @@
     <li class="md-nav__item">
     
     
+      <a href="installation.html" class="md-nav__link">Installation and configuration</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
       <a href="history.html" class="md-nav__link">History</a>
       
     
@@ -310,13 +324,21 @@
 <h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this headline">¶</a></h1>
 <p>This page describes how DIBS works from the users’ standpoint.  A separate section in this document describes the <a class="reference external" href="architecture.html#architecture--page-root">system architecture</a> that implements the functionality described here.</p>
 
-<h2 id="guiding-assumptions">Guiding assumptions<a class="headerlink" href="#guiding-assumptions" title="Permalink to this headline">¶</a></h2>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<p>Authentication is assumed to be handled by the system hosting DIBS. In Caltech’s case, we use <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a>, an institute-wide, single-signon system for authentication. This means is that a sign-in page is presented before users ever reach DIBS, by an authentication layer implemented by the web server. The screenshot below shows an example of this:</p>
+<figure>
+<img src="_static/media/sso.png"/>
+</figure>
+<p>DIBS itself does not do anything beyond distinguishing between regular users and those who have staff priviledges (discussed below).</p>
+
+
+<h2 id="top-level">Top level<a class="headerlink" href="#top-level" title="Permalink to this headline">¶</a></h2>
 <p>The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:</p>
 <ol class="simple">
 <li><p>We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of “all things available for digital loan via DIBS”; in part, this is because such a list was not considered to be useful for DIBS’s use-cases, and in part because in the future we expect to add links directly to Caltech’s TIND database.</p></li>
 <li><p>We expect that library staff need to interact with the system in a quite different way: to add new items to the database of digitized works and control loan parameters.  Thus, staff <em>do</em> see a list of all items available through the system, but access to this list is limited to Library staff.</p></li>
 </ol>
-<p>These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login interface or a list of items.  In normal use, we expect that users will usually go straight to either the pages describing individual items or the staff entry point.  The front page acts mainly as an information page that describes the purpose of the system and the policies:</p>
+<p>These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login/sign-in interface or a list of items.  This is because in normal use, we expect that users will go straight either to a page describing an individual item or to the staff entry point.  The front page acts mainly as an information page that describes the purpose of the system and the loan policies:</p>
 <figure>
 <img src="_static/media/welcome-page.png"/>
 </figure>
@@ -327,7 +349,7 @@
 <figure>
 <img src="_static/media/item-page.png"/>
 </figure>
-<p>The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech’s TIND server based on the barcode used by Library staff when they add the item to DIBS.</p>
+<p>The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech’s <a class="reference external" href="https://info.tind.io/ILS">TIND</a> server based on the barcode used by Library staff when they add the item to DIBS.</p>
 <p>The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-not-available">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:</p>
 <figure>
 <img src="_static/media/item-not-available.png"/>
@@ -341,26 +363,28 @@
 <figure>
 <img src="_static/media/loan-ended.png"/>
 </figure>
-<p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user’s institutional SSO identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
+<p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user’s institutional single-signon (SSO) identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
 
 
 <h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">¶</a></h2>
 <p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <a class="reference external" href="#the-patron-experience">patron experience</a> described in the previous section.)</p>
 
-<h3 id="logging-in">Logging in<a class="headerlink" href="#logging-in" title="Permalink to this headline">¶</a></h3>
-<p>The current development version of DIBS does not yet integrate with Caltech’s SSO for authentication, and consequently, DIBS has its own login mechanism for demonstration purposes.  The login page is accessible from the drop-down menu in the upper right-hand corner of every page in DIBS:</p>
+<h3 id="how-users-are-identified-as-staff-users">How users are identified as staff users<a class="headerlink" href="#how-users-are-identified-as-staff-users" title="Permalink to this headline">¶</a></h3>
+<p>As mentioned at the beginning of this page, users are authenticated by a separate software layer before they can access DIBS, which simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have basic priviledges, so all that is needed is to tell DIBS which users should have staff priviledges. DIBS comes with a command-line utility program called <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> for that purpose.  For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./people-manager add <span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@caltech.edu"</span> <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
+</pre></div>
+</div>
+
+
+<h3 id="additional-pages-available-to-staff-users">Additional pages available to staff users<a class="headerlink" href="#additional-pages-available-to-staff-users" title="Permalink to this headline">¶</a></h3>
+<p>Users with staff priviledges see additional links in the upper-right hand corner menu on every page presented by DIBS. In particular, the menu provides access to the content list and statistics pages, as shown in the screenshot below:</p>
 <figure>
-<img src="_static/media/dropdown-menu-login.png"/>
+<img src="_static/media/dropdown-menu.png"/>
 </figure>
-<p>Selecting the <strong>Staff login</strong> option from the menu redirects the user to the login page:</p>
-<figure>
-<img src="_static/media/login-page.png"/>
-</figure>
-<p>Staff users can log in with their email address.</p>
 
 
 <h3 id="the-list-page">The list page<a class="headerlink" href="#the-list-page" title="Permalink to this headline">¶</a></h3>
-<p>Once logged in, staff are redirected to the main entry point for staff, which is the list page located at <code class="docutils literal notranslate"><span class="pre">/list</span></code>:</p>
+<p>Staff are redirected to the main entry point for staff, which is the list page located at <code class="docutils literal notranslate"><span class="pre">/list</span></code>:</p>
 <figure>
 <img src="_static/media/list-page.png"/>
 </figure>
@@ -378,11 +402,18 @@
 
 
 <h3 id="adding-new-items">Adding new items<a class="headerlink" href="#adding-new-items" title="Permalink to this headline">¶</a></h3>
-<p>If the user clicks the <span class="button color-primary">Add a new item</span> button, they are presented with the following screen:</p>
+<p>At the bottom of the list page, there are two buttons named <span class="button color-primary">Add new item</span> and  <span class="button color-danger">Manage item list</span>.</p>
+<figure>
+<img src="_static/media/bottom-of-list-page.png"/>
+</figure>
+<p>If the user clicks the <span class="button color-primary">Add new item</span> button, they are presented with the following screen:</p>
 <figure>
 <img src="_static/media/add-item-page.png"/>
 </figure>
 <p>Here, information can be entered to describe a new item being made available for digital loans.  All of the information about a given item is based on the barcode; this barcode is used to look up the item in Caltech’s TIND server, and the information extracted from TIND is used to populate the item view page discussed in the previous section.</p>
+
+
+<h3 id="managing-items">Managing items<a class="headerlink" href="#managing-items" title="Permalink to this headline">¶</a></h3>
 <p>If the user clicks the <span class="button color-danger">Manage item list</span> button, they are presented with the following screen:</p>
 <figure>
 <img src="_static/media/manage-item-list-page.png"/>
