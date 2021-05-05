@@ -37,7 +37,7 @@ Access to materials in Caltech DIBS is limited to current Caltech faculty, stude
 
 DIBS is written in [Python 3](https://www.python.org) and makes use of additional, third-party software to run.  The [installation instructions](#installation) below describe how to install the additional software packages it needs.
 
-Separately, DIBS also assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and does not need to do anything beyond distinguishing between regular users and those who have staff priviledges. (The latter are allowed to manage the content served by DIBS; the former can only view it.) In Caltech's case, we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single-signon system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single-signon system depends on the specifics of a given institution, and are not described here.
+Separately, DIBS also assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and does not need to do anything beyond distinguishing between regular users and those who have staff privileges. (The latter are allowed to manage the content served by DIBS; the former can only view it.) In Caltech's case, we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
 
 
 ## Installation
@@ -102,13 +102,13 @@ The program [`people-manager`](people-manager) is an interface for adding user a
 
 ### ⓸ _Start a local DIBS server_ for testing
 
-For local experimentation and development, the script [`run-server`](run-server) can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
+For local experimentation and development only, the script [`run-server`](run-server) can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
 ```sh
 ./run-server -h
 ```
 
-In a real installation, DIBS needs a single-signon system such as [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
+In a real installation, DIBS needs a single sign-on system such as [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
 
 ```
 ./run-server -m debug -u dibsuser
