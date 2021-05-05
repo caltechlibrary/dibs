@@ -19,5 +19,6 @@ architecture.md
 installation.md
 history.md
 references.md
+colophon.md
 ```
 
