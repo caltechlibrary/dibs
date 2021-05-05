@@ -288,13 +288,62 @@
     
     
       <a href="installation.html" class="md-nav__link">Installation and configuration</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="installation.html#requirements" class="md-nav__link">Requirements</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="history.html" class="md-nav__link">History</a>
+      <a href="installation.html#installation" class="md-nav__link">Installation</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="installation.html#configuration" class="md-nav__link">Configuration</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="installation.html#operation" class="md-nav__link">Operation</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="history.html" class="md-nav__link">DIBS history</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="history.html#origin-story" class="md-nav__link">Origin story</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="history.html#version-history" class="md-nav__link">Version history</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="references.html" class="md-nav__link">References and resources</a>
       
     
     </li>
@@ -358,7 +407,7 @@
 <figure>
 <img src="_static/media/loan-in-viewer.png"/>
 </figure>
-<p>DIBS uses <a class="reference external" href="https://universalviewer.io">Universal Viewer</a> for this purpose; UV is an open-source browser-based media viewer that works with content described in <a class="reference external" href="https://iiif.io/community/faq/">IIIF</a> format.  The loan has a limited time duration; the end time is shown in the upper left portion of the viewer screen.</p>
+<p>DIBS uses the <a class="reference external" href="https://universalviewer.io">Universal Viewer (UV)</a>, an open-source browser-based media viewer that works with content described in <a class="reference external" href="https://iiif.io/community/faq/">IIIF</a> format.  The loan has a limited time duration, and  the end time is shown in the upper left portion of the viewer screen. (The information about the loan duration and the URL for the viewer page are also sent separately via email to the patron, in case they lose it or want to view the content from a different device.)</p>
 <p>The patron can elect to end the loan early.  If they do, the viewer will close and they will be presented with a thank-you page that also includes a link to a feedback page:</p>
 <figure>
 <img src="_static/media/loan-ended.png"/>
@@ -419,6 +468,19 @@
 <img src="_static/media/manage-item-list-page.png"/>
 </figure>
 <p>In the current version of DIBS, this page only implements one action. Clicking the <span class="button color-danger">Delist</span> button removes the entry for the item in the DIBS database. (This does not remove the manifest, scans, or other files, only the database entry.) In future versions of DIBS, the management page may include additional operations.</p>
+
+
+<h3 id="the-stats-page">The stats page<a class="headerlink" href="#the-stats-page" title="Permalink to this headline">¶</a></h3>
+<p>DIBS offers some basic statistics on the <em>stats</em> page:</p>
+<figure>
+<img src="_static/media/stats-page.png"/>
+</figure>
+<p>Any items currently on loan will be shown in bold face in the list. In addition, the page reports three statistics in the last three columns of the table.</p>
+<ul class="simple">
+<li><p><em>Total loans to date</em>: this is a straight count of the number of times the item has been loaned and returned. (Currently on-loan items are not added to the count until they are returned.)</p></li>
+<li><p><em>Average loan duration</em>: the mean duration of all loans for the item. If the item has never been borrowed, it is reported as “(never borrowed)”, otherwise a duration is given in general human-understandable terms.</p></li>
+<li><p><em>Content retrievals</em>: this column contains a small bar graph for each item, expressing the number of page retrievals for that item within the past 15, 30, 45 and 60 minutes.  The counts change over time in a rolling fashion and are recomputed relative to the present time everytime the page is refreshed. The values are intended to give a rough sense of the reader activity over the past hour for a given item.</p></li>
+</ul>
 
 
 
