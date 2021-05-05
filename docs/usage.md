@@ -5,23 +5,24 @@ This page describes how DIBS works from the users' standpoint.  A separate secti
 
 ## Authentication
 
-Authentication is assumed to be handled by the system hosting DIBS. In Caltech's case, we use [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture), an institute-wide, single-signon system for authentication. This means is that a sign-in page is presented before users ever reach DIBS, by an authentication layer implemented by the web server. The screenshot below shows an example of this:
+Authentication is assumed to be handled by the system hosting DIBS. In Caltech's case, we use [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture), an institute-wide, single sign-on system for authentication. This means is that a sign-in page is presented before users ever reach DIBS, by an authentication layer implemented by the web server. The screenshot below shows an example of this:
 
 <figure>
     <img src="_static/media/sso.png">
 </figure>
 
-DIBS itself does not do anything beyond distinguishing between regular users and those who have staff priviledges (discussed below).
+DIBS itself does not do anything beyond distinguishing between regular users and those who have staff privileges (discussed below).
 
 
-## Top level
+## Front page
 
 The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:
 
-1. We expect that patrons looking for materials to borrow will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of "all things available for digital loan via DIBS"; in part, this is because such a list was not considered to be useful for DIBS's use-cases, and in part because in the future we expect to add links directly to Caltech's TIND database.
-2. We expect that library staff need to interact with the system in a quite different way: to add new items to the database of digitized works and control loan parameters.  Thus, staff _do_ see a list of all items available through the system, but access to this list is limited to Library staff.
+1. We expect that patrons will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of "all things available for digital loan". In part, this is because we expect patrons will be directly informed about the pages describing individual items, and in part because we anticipate that in the future we will add DIBS links directly to Caltech's [TIND](https://info.tind.io/ils)-based catalog.
 
-These considerations explain the front page of DIBS, which (perhaps contrary to expectations), lacks a login/sign-in interface or a list of items.  This is because in normal use, we expect that users will go straight either to a page describing an individual item or to the staff entry point.  The front page acts mainly as an information page that describes the purpose of the system and the loan policies:
+2. We expect that library staff need to interact with the system in a substantially _different_ way: not to read the materials, but to manage the items in the database of digitized works and control loan parameters.  Thus, staff _do_ see a list of all items available through the system, but access to this list is limited to Library staff.
+
+These considerations explain the front page of DIBS, which (perhaps contrary to expectations) lacks a login/sign-in interface or a list of items.  This is because in normal use, we expect that users will go straight either to a page describing an individual item or to a DIBS management page.  The front page acts mainly as an information page that describes the purpose of the system and the loan policies:
 
 <figure>
     <img src="_static/media/welcome-page.png">
@@ -30,7 +31,7 @@ These considerations explain the front page of DIBS, which (perhaps contrary to 
 
 ## The patron experience
 
-As mentioned above, patrons are presumed to be provided information about specific items available for loan.  The working assumption is that they will be given URLs that take them directly to item description pages in DIBS.  An example of an item description page is shown below:
+As mentioned above, patrons are assumed to be provided information about specific items available for loan.  The working assumption is that they will be given URLs that take them directly to item description pages in DIBS.  An example of such an item description page is shown below:
 
 <figure>
     <img src="_static/media/item-page.png">
@@ -50,7 +51,7 @@ If the item is available to the user, and they click the <span class="button col
     <img src="_static/media/loan-in-viewer.png">
 </figure>
 
-DIBS uses the [Universal Viewer (UV)](https://universalviewer.io), an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.  The loan has a limited time duration, and  the end time is shown in the upper left portion of the viewer screen. (The information about the loan duration and the URL for the viewer page are also sent separately via email to the patron, in case they lose it or want to view the content from a different device.)
+DIBS uses the [Universal Viewer (UV)](https://universalviewer.io), an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.  The loan is issued for a limited time, and the end time is shown in the upper left portion of the viewer screen. (The information about the loan duration and the URL for the viewer page are also sent separately via email to the patron, in case they lose it or want to view the content from a different device.)
 
 The patron can elect to end the loan early.  If they do, the viewer will close and they will be presented with a thank-you page that also includes a link to a feedback page:
 
@@ -58,7 +59,7 @@ The patron can elect to end the loan early.  If they do, the viewer will close a
     <img src="_static/media/loan-ended.png">
 </figure>
 
-In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user's institutional single-signon (SSO) identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.
+In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user's institutional single sign-on (SSO) identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.
 
 
 ## The staff experience
@@ -68,7 +69,7 @@ Overall, the workflow to add new items to DIBS is simple: staff scan books and s
 
 ### How users are identified as staff users
 
-As mentioned at the beginning of this page, users are authenticated by a separate software layer before they can access DIBS, which simplifies DIBS's implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have basic priviledges, so all that is needed is to tell DIBS which users should have staff priviledges. DIBS comes with a command-line utility program called [`people-manager`](../people-manager) for that purpose.  For example, to add a user with identity `fakeuser2021@caltech.edu` as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:
+As mentioned at the beginning of this page, users are authenticated by a separate software layer before they can access DIBS, which simplifies DIBS's implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have basic privileges, so all that is needed is to tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called [`people-manager`](../people-manager) for that purpose.  For example, to add a user with identity `fakeuser2021@caltech.edu` as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:
 
 ```sh
 ./people-manager add uname="fakeuser2021@caltech.edu" role="library"
@@ -77,7 +78,7 @@ As mentioned at the beginning of this page, users are authenticated by a separat
 
 ### Additional pages available to staff users
 
-Users with staff priviledges see additional links in the upper-right hand corner menu on every page presented by DIBS. In particular, the menu provides access to the content list and statistics pages, as shown in the screenshot below:
+Users with staff privileges see additional links in the upper-right hand corner menu on every page presented by DIBS. In particular, the menu provides access to the content list and statistics pages, as shown in the screenshot below:
 
 <figure>
     <img src="_static/media/dropdown-menu.png">
@@ -146,4 +147,4 @@ Any items currently on loan will be shown in bold face in the list. In addition,
 
 * _Average loan duration_: the mean duration of all loans for the item. If the item has never been borrowed, it is reported as "(never borrowed)", otherwise a duration is given in general human-understandable terms.
 
-* _Content retrievals_: this column contains a small bar graph for each item, expressing the number of page retrievals for that item within the past 15, 30, 45 and 60 minutes.  The counts change over time in a rolling fashion and are recomputed relative to the present time everytime the page is refreshed. The values are intended to give a rough sense of the reader activity over the past hour for a given item.
+* _Content retrievals_: this column contains a small bar graph for each item, expressing the number of page retrievals for that item within the past 15, 30, 45 and 60 minutes.  The counts change over time in a rolling fashion and are recomputed relative to the present time every time the page is refreshed. The values are intended to give a rough sense of the reader activity over the past hour for a given item.

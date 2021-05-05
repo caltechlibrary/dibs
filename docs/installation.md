@@ -1,13 +1,12 @@
 # Installation and configuration
 
-DIBS is a web-based system.
-
-
 ## Requirements
 
-DIBS is written in [Python 3](https://www.python.org) and makes use of additional, third-party software to run.  The [installation instructions](#installation) below describe how to install the additional software packages it needs.
+The core DIBS server is written in [Python 3](https://www.python.org) and makes use of some additional Python software libraries that are installed automatically during the [installation step](#installation) described below.
 
-Separately, DIBS also assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and does not need to do anything beyond distinguishing between regular users and those who have staff priviledges. (The latter are allowed to manage the content served by DIBS; the former can only view it.) In Caltech's case, we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single-signon system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single-signon system depends on the specifics of a given institution, and are not described here.
+Separately, DIBS also relies on the existence of a IIIF image server (and some content to serve). At Caltech, we use a serverless component running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). For exploration and demonstration purposes, you could reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) as an example of that.
+
+To deploy DIBS for production use, two more things are needed: a web server to host the system, and an authentication layer.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and only needs to recognize users who are allowed to access restricted pages. In Caltech's case, we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
 
 ## Installation
 
@@ -33,6 +32,8 @@ Next, install the Python dependencies on your system or your virtual environment
 cd dibs
 python3 -m pip install -r requirements.txt --upgrade
 ```
+
+That is all you should need to run a demo of DIBS on a Linux or macOS system.  As mentioned above, if you plan on deploying DIBS, you will also need to install and configure Apache, and an authentication system running in conjunction with the Apache server. Instructions for doing this vary too widely based on individual site requirements, and are outside the scope of this document.
 
 
 ## Configuration
@@ -71,16 +72,13 @@ The program [`people-manager`](people-manager) is an interface for adding user a
 
 ## Operation
 
-
-### ⓸ _Start a local DIBS server_ for testing
-
 For local experimentation and development only, the script [`run-server`](run-server) can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
 
 ```sh
 ./run-server -h
 ```
 
-In a real installation, DIBS needs a single-signon system such as [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
+As mentioned above, in a real installation, DIBS needs a single sign-on system such as [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
 
 ```
 ./run-server -m debug -u dibsuser
