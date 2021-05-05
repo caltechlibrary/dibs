@@ -50,7 +50,7 @@ If the item is available to the user, and they click the <span class="button col
     <img src="_static/media/loan-in-viewer.png">
 </figure>
 
-DIBS uses [Universal Viewer](https://universalviewer.io) for this purpose; UV is an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.  The loan has a limited time duration; the end time is shown in the upper left portion of the viewer screen.  
+DIBS uses the [Universal Viewer (UV)](https://universalviewer.io), an open-source browser-based media viewer that works with content described in [IIIF](https://iiif.io/community/faq/) format.  The loan has a limited time duration, and  the end time is shown in the upper left portion of the viewer screen. (The information about the loan duration and the URL for the viewer page are also sent separately via email to the patron, in case they lose it or want to view the content from a different device.)
 
 The patron can elect to end the loan early.  If they do, the viewer will close and they will be presented with a thank-you page that also includes a link to a feedback page:
 
@@ -130,3 +130,20 @@ If the user clicks the <span class="button color-danger">Manage item list</span>
 </figure>
 
 In the current version of DIBS, this page only implements one action. Clicking the <span class="button color-danger">Delist</span> button removes the entry for the item in the DIBS database. (This does not remove the manifest, scans, or other files, only the database entry.) In future versions of DIBS, the management page may include additional operations.
+
+
+### The stats page
+
+DIBS offers some basic statistics on the _stats_ page:
+
+<figure>
+    <img src="_static/media/stats-page.png">
+</figure>
+
+Any items currently on loan will be shown in bold face in the list. In addition, the page reports three statistics in the last three columns of the table.
+
+* _Total loans to date_: this is a straight count of the number of times the item has been loaned and returned. (Currently on-loan items are not added to the count until they are returned.)
+
+* _Average loan duration_: the mean duration of all loans for the item. If the item has never been borrowed, it is reported as "(never borrowed)", otherwise a duration is given in general human-understandable terms.
+
+* _Content retrievals_: this column contains a small bar graph for each item, expressing the number of page retrievals for that item within the past 15, 30, 45 and 60 minutes.  The counts change over time in a rolling fashion and are recomputed relative to the present time everytime the page is refreshed. The values are intended to give a rough sense of the reader activity over the past hour for a given item.
