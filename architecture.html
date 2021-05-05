@@ -213,7 +213,7 @@
     <li class="md-nav__item">
     
     
-      <a href="usage.html#top-level" class="md-nav__link">Top level</a>
+      <a href="usage.html#front-page" class="md-nav__link">Front page</a>
       
     
     </li>
@@ -250,35 +250,14 @@
     <li class="md-nav__item">
     
     
-      <a href="#configuration" class="md-nav__link">Configuration</a>
+      <a href="#design-goals" class="md-nav__link">Design goals</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="#database" class="md-nav__link">Database</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="#server" class="md-nav__link">Server</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="#endpoints" class="md-nav__link">Endpoints</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="#architectural-notes" class="md-nav__link">Architectural notes</a>
+      <a href="#basic-workflow" class="md-nav__link">Basic workflow</a>
       
     
     </li></ul>
@@ -378,139 +357,91 @@
             
   
 <h1 id="architecture--page-root">System architecture<a class="headerlink" href="#architecture--page-root" title="Permalink to this headline">¶</a></h1>
-<p>The architecture of DIBS consists of a server written in Python, using the <a class="reference external" href="https://bottlepy.org">Bottle</a> framework for template-driven web pages, an SQLite database for tracking items and loans, SSO authentication, and a configuration of the JavaScript-based Universal Viewer for displaying materials. For any given item made available via DIBS, the scanned pages of the original are stored on an internal shared file system and identified by a barcode. A workflow written in Python is used to create a <a class="reference external" href="https://iiif.io">IIIF</a> manifest; this manifest is added to the system, which then makes the scanned contents available via a data endpoint served by DIBS. This allows DIBS to implement the digital loan policies developed by our institution, such as that patrons can only borrow one item at a time.</p>
-<p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) title they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
+<p>This page describes the goals, design, and operation of DIBS.</p>
 
-<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
-<p>Settings are stored in the file <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">settings.ini</span></code></span>.  This file is read at run time by the server and database components.</p>
-
-
-<h2 id="database">Database<a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h2>
-<p>The definition of the database is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/database.py</span></code></span>.  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
-<p>Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee <code class="docutils literal notranslate"><span class="pre">ModelSelector</span></code>, and not a single result or a list of results:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Item</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Item</span><span class="o">.</span><span class="n">barcode</span> <span class="o">==</span> <span class="n">barcode</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>and you can’t call something like Python’s <code class="docutils literal notranslate"><span class="pre">next(...)</span></code> on this because it’s an iterator and not a generator.  You have to either use a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it’s not a concern currently.</p>
+<h2 id="design-goals">Design goals<a class="headerlink" href="#design-goals" title="Permalink to this headline">¶</a></h2>
+<p>DIBS (“<em><strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem</em>”) is intended to be a <em>basic</em> controlled digital lending system with the following goals:</p>
+<ul class="simple">
+<li><p><em>Simplicity</em>. the core server logic for serving loans and other DIBS web pages is less than 800 lines of Python. It should be possible for anyone interested to inspect the code, understand it, and fix or extend it as needed.</p></li>
+<li><p><em>Patron privacy</em>. In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) barcode they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on user identities.</p></li>
+<li><p><em>Independence</em>. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech’s TIND ILS is limited to one part of one Python function in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too – no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.</p></li>
+<li><p><em>Easy installation</em>. DIBS is written entirely in Python, and comes bundled with a copy of the JavaScript-based Universal Viewer. The only external things it needs are a WSGI-compliant web server such as Apache, a IIIF image server running under your control, and a single sign-on (SSO) system. Not only does this limited dependence on other software simplify maintenance, but it also should make migration to new servers easier.</p></li>
+<li><p><em>Use of IIIF</em>. We chose IIIF because it is a highly flexible, widely-used, open standard for serving content, and there are many free and excellent resources for working with it (including servers and alternative viewers).</p></li>
+</ul>
 
 
-<h2 id="server">Server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
+<h2 id="basic-workflow">Basic workflow<a class="headerlink" href="#basic-workflow" title="Permalink to this headline">¶</a></h2>
+<p>For any given item made available via DIBS, the scanned pages of the original are stored on an internal shared file system and identified by a barcode. A workflow written in Python is used to create a <a class="reference external" href="https://iiif.io">IIIF</a> manifest; this manifest is added to the system, which then makes the scanned contents available via a data endpoint served by DIBS. This allows DIBS to implement the digital loan policies developed by our institution, such as that patrons can only borrow one item at a time.</p>
+<!--
+## Database
+
+The definition of the database is in [`dibs/database.py`](../dibs/database.py).  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is [Peewee](http://docs.peewee-orm.com/en/latest/).
+
+Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee `ModelSelector`, and not a single result or a list of results:
+
+```python
+Item.select().where(Item.barcode == barcode)
+```
+
+and you can't call something like Python's `next(...)` on this because it's an iterator and not a generator.  You have to either use a `for` loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it's not a concern currently.
 
 
-<h2 id="endpoints">Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">¶</a></h2>
-<p>The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.  The endpoints are implemented using <a class="reference external" href="https://bottlepy.org">Bottle</a>.  Here is a summary of the endpoints implemented by the system:</p>
-<table>
-<thead>
-<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
-<th class="head"><p>Type</p></th>
-<th class="head"><p>Purpose</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>General information page about the system</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/info</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Same as <code class="docutils literal notranslate"><span class="pre">/</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/login</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Shows the login page</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/login</span></code></p></td>
-<td><p>POST</p></td>
-<td><p>Accepts form from login page</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/logout</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Logs out current user</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/list</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Show what’s available for loan</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/add</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Show the page to add an item</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/edit/&lt;barcode&gt;</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Show the page to edit an item</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/update/add</span></code></p></td>
-<td><p>POST</p></td>
-<td><p>Accepts form input from add-item page</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/update/edit</span></code></p></td>
-<td><p>POST</p></td>
-<td><p>Accepts form input from edit-item page</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/ready</span></code></p></td>
-<td><p>POST</p></td>
-<td><p>Handles checkbox in <code class="docutils literal notranslate"><span class="pre">list</span></code> page to make an item ready to loan</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/remove</span></code></p></td>
-<td><p>POST</p></td>
-<td><p>Handles button in <code class="docutils literal notranslate"><span class="pre">list</span></code> page to remove an item</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/item/&lt;barcode&gt;</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Shows item information page for a given item</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/loan</span></code></p></td>
-<td><p>POST</p></td>
-<td><p>Handles Loan button from <code class="docutils literal notranslate"><span class="pre">/item</span></code> page</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/view/&lt;barcode&gt;</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Show the item in the viewer page</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/return/&lt;barcode&gt;</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Handles Return button from viewer page</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/manifests/&lt;barcode&gt;</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Sends manifest to viewer</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/thankyou</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Destination after user uses Return button</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/notauthenticated</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Error page for unathenticated users</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/nonexistent</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Error page for nonexistent items</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/nonexistent/&lt;barcode&gt;</span></code></p></td>
-<td><p>GET</p></td>
-<td><p>Error page for nonexistent items</p></td>
-</tr>
-</tbody>
-</table>
+## Server
+
+## Endpoints
+
+The definition of the service endpoints and the behaviors is in [`dibs/server.py`](../dibs/server.py).  The endpoints are implemented using [Bottle](https://bottlepy.org).  Here is a summary of the endpoints implemented by the system:
+
+| Endpoint                 | Type | Purpose              |
+|--------------------------|------|----------------------|
+| `/`                      | GET  | General information page about the system |
+| `/info`                  | GET  | Same as `/` |
+| `/login`                 | GET  | Shows the login page |
+| `/login`                 | POST | Accepts form from login page |
+| `/logout`                | GET  | Logs out current user |
+| `/list`                  | GET  | Show what's available for loan |
+| `/add`                   | GET  | Show the page to add an item |
+| `/edit/<barcode>`        | GET  | Show the page to edit an item |
+| `/update/add`            | POST | Accepts form input from add-item page |
+| `/update/edit`           | POST | Accepts form input from edit-item page | 
+| `/ready`                 | POST | Handles checkbox in `list` page to make an item ready to loan |
+| `/remove`                | POST | Handles button in `list` page to remove an item |
+| `/item/<barcode>`        | GET  | Shows item information page for a given item |
+| `/loan`                  | POST | Handles Loan button from `/item` page |
+| `/view/<barcode>`        | GET  | Show the item in the viewer page |
+| `/return/<barcode>`      | GET  | Handles Return button from viewer page |
+| `/manifests/<barcode>`   | GET  | Sends manifest to viewer |
+| `/thankyou`              | GET  | Destination after user uses Return button |
+| `/notauthenticated`      | GET  | Error page for unathenticated users |
+| `/nonexistent`           | GET  | Error page for nonexistent items |
+| `/nonexistent/<barcode>` | GET  | Error page for nonexistent items |
 
 
-<h2 id="architectural-notes">Architectural notes<a class="headerlink" href="#architectural-notes" title="Permalink to this headline">¶</a></h2>
 
-<h3 id="about-peewee"><em>About Peewee</em><a class="headerlink" href="#about-peewee" title="Permalink to this headline">¶</a></h3>
-<p>The definition of the database is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/database.py</span></code></span>.  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
-<p>Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee <code class="docutils literal notranslate"><span class="pre">ModelSelector</span></code>, and not a single result or a list of results:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Item</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Item</span><span class="o">.</span><span class="n">barcode</span> <span class="o">==</span> <span class="n">barcode</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>and you can’t call something like Python’s <code class="docutils literal notranslate"><span class="pre">next(...)</span></code> on this because it’s an iterator and not a generator.  You have to either use a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it’s not a concern currently.</p>
+## Architectural notes
+
+### _About Peewee_
+
+The definition of the database is in [`dibs/database.py`](dibs/database.py).  The interface is defined in terms of high-level objects that are backed by an SQLite database back-end.  The ORM used is [Peewee](http://docs.peewee-orm.com/en/latest/).
+
+Worth knowing: Peewee queries are lazy-executed: they return iterators that must be accessed before the query is actually executed.  Thus, when selecting items, the following returns a Peewee `ModelSelector`, and not a single result or a list of results:
+
+```python
+Item.select().where(Item.barcode == barcode)
+```
+
+and you can't call something like Python's `next(...)` on this because it's an iterator and not a generator.  You have to either use a `for` loop, or create a list from the above before you can do much with it.  Creating lists in these cases would be inefficient, but we have so few items to deal with that it's not a concern currently.
 
 
-<h3 id="about-bottle"><em>About Bottle</em><a class="headerlink" href="#about-bottle" title="Permalink to this headline">¶</a></h3>
-<p>The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.  The endpoints are implemented using <a class="reference external" href="https://bottlepy.org">Bottle</a>.</p>
-<p>The web server used at the moment is the development server provided by Bottle.  It has live reload built-in, meaning that changes to the <code class="docutils literal notranslate"><span class="pre">.py</span></code> files are picked up automatically and the server updates its behavior on the fly.</p>
-<p>See <a class="reference external" href="http://bottlepy.org/docs/dev/tutorial.html#auto-reloading">http://bottlepy.org/docs/dev/tutorial.html#auto-reloading</a> for an important note about Bottle: when it’s running in auto-reload mode, <em>“the main process will not start a server, but spawn a new child process using the same command line arguments used to start the main process. All module-level code is executed at least twice”</em>.  This means some care is needed in how the top-level code is written.  Useful to know is that code can distinguish whether it’s in the parent or child process by looking for the presence of the environment variable <code class="docutils literal notranslate"><span class="pre">'BOTTLE_CHILD'</span></code> set by Bottle in the child process.</p>
+### _About Bottle_
 
+The definition of the service endpoints and the behaviors is in [`dibs/server.py`](dibs/server.py).  The endpoints are implemented using [Bottle](https://bottlepy.org).
+
+The web server used at the moment is the development server provided by Bottle.  It has live reload built-in, meaning that changes to the `.py` files are picked up automatically and the server updates its behavior on the fly.
+
+See http://bottlepy.org/docs/dev/tutorial.html#auto-reloading for an important note about Bottle: when it's running in auto-reload mode, _"the main process will not start a server, but spawn a new child process using the same command line arguments used to start the main process. All module-level code is executed at least twice"_.  This means some care is needed in how the top-level code is written.  Useful to know is that code can distinguish whether it's in the parent or child process by looking for the presence of the environment variable `'BOTTLE_CHILD'` set by Bottle in the child process.
+
+-->
 
 
 

@@ -213,7 +213,7 @@
     <li class="md-nav__item">
     
     
-      <a href="usage.html#top-level" class="md-nav__link">Top level</a>
+      <a href="usage.html#front-page" class="md-nav__link">Front page</a>
       
     
     </li>
@@ -241,35 +241,14 @@
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#configuration" class="md-nav__link">Configuration</a>
+      <a href="architecture.html#design-goals" class="md-nav__link">Design goals</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#database" class="md-nav__link">Database</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="architecture.html#server" class="md-nav__link">Server</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="architecture.html#endpoints" class="md-nav__link">Endpoints</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="architecture.html#architectural-notes" class="md-nav__link">Architectural notes</a>
+      <a href="architecture.html#basic-workflow" class="md-nav__link">Basic workflow</a>
       
     
     </li></ul>
@@ -378,11 +357,11 @@
             
   
 <h1 id="installation--page-root">Installation and configuration<a class="headerlink" href="#installation--page-root" title="Permalink to this headline">¶</a></h1>
-<p>DIBS is a web-based system.</p>
 
 <h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>DIBS is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of additional, third-party software to run.  The <a class="reference external" href="#installation">installation instructions</a> below describe how to install the additional software packages it needs.</p>
-<p>Separately, DIBS also assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and does not need to do anything beyond distinguishing between regular users and those who have staff priviledges. (The latter are allowed to manage the content served by DIBS; the former can only view it.) In Caltech’s case, we use the <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> single-signon system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single-signon system depends on the specifics of a given institution, and are not described here.</p>
+<p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <a class="reference external" href="#installation">installation step</a> described below.</p>
+<p>Separately, DIBS also relies on the existence of a IIIF image server (and some content to serve). At Caltech, we use a serverless component running on an Amazon cloud instance, but <a class="reference external" href="https://github.com/IIIF/awesome-iiif#image-servers">many other IIIF server options exist</a>. For exploration and demonstration purposes, you could reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of that.</p>
+<p>To deploy DIBS for production use, two more things are needed: a web server to host the system, and an authentication layer.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and only needs to recognize users who are allowed to access restricted pages. In Caltech’s case, we use the <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> single sign-on system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.</p>
 
 
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
@@ -402,6 +381,7 @@
 python3 -m pip install -r requirements.txt --upgrade
 </pre></div>
 </div>
+<p>That is all you should need to run a demo of DIBS on a Linux or macOS system.  As mentioned above, if you plan on deploying DIBS, you will also need to install and configure Apache, and an authentication system running in conjunction with the Apache server. Instructions for doing this vary too widely based on individual site requirements, and are outside the scope of this document.</p>
 
 
 
@@ -432,19 +412,16 @@ python3 -m pip install -r requirements.txt --upgrade
 
 
 <h2 id="operation">Operation<a class="headerlink" href="#operation" title="Permalink to this headline">¶</a></h2>
-
-<h3 id="start-a-local-dibs-server-for-testing">⓸ <em>Start a local DIBS server</em> for testing<a class="headerlink" href="#start-a-local-dibs-server-for-testing" title="Permalink to this headline">¶</a></h3>
 <p>For local experimentation and development only, the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./run-server -h
 </pre></div>
 </div>
-<p>In a real installation, DIBS needs a single-signon system such as <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the <code class="docutils literal notranslate"><span class="pre">run-server</span></code> command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:</p>
+<p>As mentioned above, in a real installation, DIBS needs a single sign-on system such as <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the <code class="docutils literal notranslate"><span class="pre">run-server</span></code> command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">run</span><span class="o">-</span><span class="n">server</span> <span class="o">-</span><span class="n">m</span> <span class="n">debug</span> <span class="o">-</span><span class="n">u</span> <span class="n">dibsuser</span>
 </pre></div>
 </div>
 <p>By default it starts the server on <code class="docutils literal notranslate"><span class="pre">localhost</span></code> port 8080.  Using the <code class="docutils literal notranslate"><span class="pre">debug</span></code> run mode flag changes the behavior in various useful ways, such as to reload the source files automatically if any of them are edited, and to run <code class="docutils literal notranslate"><span class="pre">pdb</span></code> upon any exceptions.  (These would not be enabled in a production server.)</p>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">run-server</span></code> is <strong>not intended for use in production servers</strong>. For actual use, you must configure a web server such as <a class="reference external" href="https://httpd.apache.org">Apache</a> to host the system. DIBS comes with an <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code></span> and an example <span class="xref myst">Apache conf file</span> for this purpose to help you get started.</p>
-
 
 
 
