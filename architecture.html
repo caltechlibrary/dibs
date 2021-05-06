@@ -257,6 +257,13 @@
     <li class="md-nav__item">
     
     
+      <a href="#architectural-overview" class="md-nav__link">Architectural overview</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
       <a href="#basic-workflow" class="md-nav__link">Basic workflow</a>
       
     
@@ -362,12 +369,19 @@
 <h2 id="design-goals">Design goals<a class="headerlink" href="#design-goals" title="Permalink to this headline">¶</a></h2>
 <p>DIBS (“<em><strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem</em>”) is intended to be a <em>basic</em> controlled digital lending system with the following goals:</p>
 <ul class="simple">
-<li><p><em>Simplicity</em>. the core server logic for serving loans and other DIBS web pages is less than 800 lines of Python. It should be possible for anyone interested to inspect the code, understand it, and fix or extend it as needed.</p></li>
+<li><p><em>Simplicity</em>. The core server logic for serving loans and other DIBS web pages is less than 800 lines of Python. It should be possible for anyone interested to inspect the code, understand it, and fix or extend it as needed.</p></li>
 <li><p><em>Patron privacy</em>. In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) barcode they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on user identities.</p></li>
-<li><p><em>Independence</em>. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech’s TIND ILS is limited to one part of one Python function in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too – no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.</p></li>
-<li><p><em>Easy installation</em>. DIBS is written entirely in Python, and comes bundled with a copy of the JavaScript-based Universal Viewer. The only external things it needs are a WSGI-compliant web server such as Apache, a IIIF image server running under your control, and a single sign-on (SSO) system. Not only does this limited dependence on other software simplify maintenance, but it also should make migration to new servers easier.</p></li>
+<li><p><em>Single sign-on integration</em>. DIBS doesn’t implement logins, and instead relies on an institutional single sign-on system to provide authentication. This simultaneously avoids having to implement user account logins and other complex, error-prone elements in DIBS itself, and makes the user experience consistent with other institutional software systems.</p></li>
+<li><p><em>Independence</em>. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech’s TIND ILS is limited to a very small section of code in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too – no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.</p></li>
 <li><p><em>Use of IIIF</em>. We chose IIIF because it is a highly flexible, widely-used, open standard for serving content, and there are many free and excellent resources for working with it (including servers and alternative viewers).</p></li>
 </ul>
+
+
+<h2 id="architectural-overview">Architectural overview<a class="headerlink" href="#architectural-overview" title="Permalink to this headline">¶</a></h2>
+<p>The following diagram illustrates the components of a complete CDL system using DIBS.</p>
+<figure>
+<img src="_static/media/architecture-diagram.svg"/>
+</figure>
 
 
 <h2 id="basic-workflow">Basic workflow<a class="headerlink" href="#basic-workflow" title="Permalink to this headline">¶</a></h2>
