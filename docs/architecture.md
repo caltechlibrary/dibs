@@ -6,11 +6,20 @@ This page describes the goals, design, and operation of DIBS.
 
 DIBS ("_**Di**gital **B**orrowing **S**ystem_") is intended to be a _basic_ controlled digital lending system with the following goals:
 
-* _Simplicity_. the core server logic for serving loans and other DIBS web pages is less than 800 lines of Python. It should be possible for anyone interested to inspect the code, understand it, and fix or extend it as needed.
+* _Simplicity_. The core server logic for serving loans and other DIBS web pages is less than 800 lines of Python. It should be possible for anyone interested to inspect the code, understand it, and fix or extend it as needed.
 * _Patron privacy_. In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user's institutional SSO identity combined with the (single) barcode they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on user identities.
-* _Independence_. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech's TIND ILS is limited to one part of one Python function in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too &ndash; no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.
-*  _Easy installation_. DIBS is written entirely in Python, and comes bundled with a copy of the JavaScript-based Universal Viewer. The only external things it needs are a WSGI-compliant web server such as Apache, a IIIF image server running under your control, and a single sign-on (SSO) system. Not only does this limited dependence on other software simplify maintenance, but it also should make migration to new servers easier.
+* _Single sign-on integration_. DIBS doesn't implement logins, and instead relies on an institutional single sign-on system to provide authentication. This simultaneously avoids having to implement user account logins and other complex, error-prone elements in DIBS itself, and makes the user experience consistent with other institutional software systems.
+* _Independence_. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech's TIND ILS is limited to a very small section of code in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too &ndash; no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.
 * _Use of IIIF_. We chose IIIF because it is a highly flexible, widely-used, open standard for serving content, and there are many free and excellent resources for working with it (including servers and alternative viewers).
+
+
+## Architectural overview
+
+The following diagram illustrates the components of a complete CDL system using DIBS.
+
+<figure>
+    <img src="_static/media/architecture-diagram.svg">
+</figure>
 
 
 ## Basic workflow

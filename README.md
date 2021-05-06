@@ -24,11 +24,11 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 
 ## Introduction
 
-The Caltech Library's DIBS implements a web service that enables members of Caltech to borrow materials (e.g., older books) that are not otherwise available in e-book or other electronic formats.  The system was developed in the year 2021 to help Caltech students and faculty continue their studies and work during the global [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019).
+DIBS is a web-based system that enables members of Caltech to borrow materials that are not otherwise available in e-book or other electronic formats.  The system was developed in the year 2021 to help Caltech students and faculty continue their studies and work during the global [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019). Access to content in Caltech's live DIBS server is limited to members of Caltech, but the software for DIBS itself is open-sourced under a BSD type license.
 
-The concept of [controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) (CDL) is to allow libraries to loan items to digital patrons in a "lend like print" fashion.  The number of digital copies of an item allowed to be loaned at any given time is strictly controlled to match the number of physical print copies taken off the shelves, to ensure an exact "owned-to-loaned" ratio.  DIBS provides two main components of a CDL system: a loan tracking system, and an integrated digital content viewing interface.  DIBS makes use of the [Universal Viewer](http://universalviewer.io) to display materials that comply with the [International Image Interoperability Framework](https://iiif.io) (IIIF).
+The concept of [controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) (CDL) is to allow libraries to loan items to digital patrons in a "lend like print" fashion.  It is the digital equivalent of traditional library lending. Libraries digitize a physical item from their collection, then lend out a secured digital version to one user at a time while the original, printed copy is simultaneously marked as unavailable. The number of digital copies of an item allowed to be loaned at any given time is strictly controlled to match the number of physical print copies taken off the shelves, to ensure an exact "owned-to-loaned" ratio.
 
-Access to materials in Caltech DIBS is limited to current Caltech faculty, students and staff, but the software for DIBS itself is open-sourced under a BSD type license.
+DIBS provides two main components of a CDL system: a loan tracking system, and an integrated digital content viewing interface.  DIBS embeds the [Universal Viewer](http://universalviewer.io) to display materials that comply with the [International Image Interoperability Framework](https://iiif.io) (IIIF). To use DIBS as part of a complete CDL system at another institution, you only need to set up a IIIF server and a web server that implements user authentication.
 
 <p align="center"><img width="60%" src=".graphics/status-warning.svg"></p>
 
@@ -37,9 +37,9 @@ Access to materials in Caltech DIBS is limited to current Caltech faculty, stude
 
 The core DIBS server is written in [Python 3](https://www.python.org) and makes use of some additional Python software libraries that are installed automatically during the [installation step](#installation) described below.
 
-Separately, DIBS also relies on the existence of a IIIF image server (and some content to serve). At Caltech, we use a serverless component running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). For exploration and demonstration purposes, you could reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) as an example of that.
+Separately, DIBS also relies on the existence of a IIIF image server (and some content to serve). At Caltech, we use a serverless component running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). For initial exploration and demonstration purposes, you could reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) as an example of that.
 
-To deploy DIBS for production use, two more things are needed: a web server to host the system, and an authentication layer.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and only needs to recognize users who are allowed to access restricted pages. In Caltech's case, we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
+To deploy DIBS for production use, two more things are needed: a web server to host the system, and an authentication layer.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach the DIBS pages are allowed to view content. DIBS only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
 
 
 ## Installation
@@ -49,14 +49,15 @@ The current version of DIBS does not have a separate installation process; using
 
 ### ⓵ _Get the DIBS source code_
 
-You can use `git` to clone this repository:
+There are several ways of getting the latest release of the DIBS source code. Here is one of the simplest:
 
-```sh
-git clone https://github.com/caltechlibrary/dibs
-```
+1. Go to the [releases page](https://github.com/caltechlibrary/dibs/releases) in the GitHub repository for DIBS.
+2. Find the latest release there (normally the first one on the page). <img align="right" width="225px" src="https://github.com/caltechlibrary/dibs/raw/main/.graphics/assets.png"/>
+3. Find the **Assets** section of the release.
+4. Click on the link titled **Source code** (zip); it will be downloaded.
+5. Unzip the file
 
-This will create a `dibs` subdirectory in your current directory.
-
+The result will be a subdirectory named `dibs`, which contains the source code.
 
 ### ⓶ _Install Python dependencies_
 
@@ -70,7 +71,7 @@ python3 -m pip install -r requirements.txt --upgrade
 That is all you should need to run a demo of DIBS on a Linux or macOS system.  As mentioned above, if you plan on deploying DIBS, you will also need to install and configure Apache, and an authentication system running in conjunction with the Apache server. Instructions for doing this vary too widely based on individual site requirements, and are outside the scope of this document.
 
 
-## Usage: running the server locally
+## Usage: running a server locally for demo/development
 
 For demonstration purposes as well as development, it's convenient to run DIBS on your local machine.  The following instructions describe the process, assuming that DIBS has never been configured or run on your system.
 
