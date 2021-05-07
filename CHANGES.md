@@ -1,8 +1,13 @@
-Change log for DIBS
-===================
+#  Change log for DIBS
 
-Version 0.3.0
---------------
+## Version (next)
+
+This version features updated documentation (including an updated [usage guide](https://caltechlibrary.github.io/dibs/) and updated installation instructions) , and the following minor fixes:
+
+* Update the versions of some packages referenced in `requirements.txt`.
+
+
+## Version 0.3.0
 
 This release features the use of an updated version of the Universal Viewer as well as a new viewer page layout.  We removed the extra HTML around DIB's previous Universal Viewer page and inserted the expiration message and the "end loan" button directly into the Universal Viewer frame, solving several usability issues at once.
 
@@ -18,8 +23,7 @@ Specific issues closed and other changes include the following:
 * Turn off nonfunctional Universal Viewer bookmark icon in the bottom of the frame.
 
 
-Version 0.2.1
---------------
+## Version 0.2.1
 
 * Fix issue #51: use a variable to define the help page URL.
 * Fix issue #48: use a more systematic approach to printing log statements in the JavaScript console, allow printing to be turned on/off, and leave it off by default for production.
@@ -32,16 +36,14 @@ Version 0.2.1
 * Miscellaneous internal fixes to various parts of the code.
 
 
-Version 0.2.0
---------------
+## Version 0.2.0
 
 * The `/stats` page now has shows symbols to indicate recent page retrieval activity, to help gauge how active a given item currently is.
 * End times and reloan times are now rounded to whole minutes. This is to help avoid confusing situations where loans seem to go past their allotted times.
 * A small new program, `query-dibs`, is available at the top level to query the database from the command line. Currently it has only limited functionality but this will undoubtedly grow over time.
 
 
-Version 0.1.1
---------------
+## Version 0.1.1
 
 * When running in debug mode, loan durations and reloan waits are set to 1 minute.
 * When _not_ running in debug, loans by staff/library users are not counted in the histories, to avoid skewing the loan statistics.
@@ -50,8 +52,7 @@ Version 0.1.1
 * The `/item` pages should have disabled to the page cache to prevent stale data from being shown to users.
 
 
-Version 0.1.0
--------------
+## Version 0.1.0
 
 * Now assumes authentication via Shibboleth or similar scheme is handled by the server. Along with this, it no longer uses sessions.
 * Manifest URL rewriting now includes the IIIF version number as part of the base URL pattern that it substitutes. 
@@ -63,8 +64,7 @@ Version 0.1.0
 * Various problems and bugs have been fixed.
 
 
-Version 0.0.4
--------------
+## Version 0.0.4
 
 * Rewrite manifests to make image accesses go through a new endpoint, `/iiif`, to enable us to better implement access policies.
 * Include the time zone in the data/time values we print to the user.
