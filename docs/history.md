@@ -16,7 +16,16 @@ DIBS is <a href="https://en.wikipedia.org/wiki/Open-source_software">open-source
 
 The following subsections summarize the major released versions of DIBS.
 
-### Version 0.3.0
+### Version 0.3.0 (April 30, 2021)
 
-[Release 0.3.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.3.0) of DIBS polishes the user interface and, uses the latest official release of the Universal Viewer (version 3.1.1), and fixes some user interface glitches. As of May 20201, the California Institute of Technology Library is running this version as its live DIBS service for the Caltech community. We believe the software to be stable enough for others to try to use it; however, there remain hard-coded references to Caltech in the HTML files and these would need to be edited manually to modify the system for use in other institutions.
+[Release 0.3.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.3.0) of DIBS polishes the user interface, uses the latest official release of the Universal Viewer (version 3.1.1), and fixes some user interface glitches. DIBS has been running at Caltech for a month; with this release, we believe the software to be stable enough for others to try to use it. (However, there remain hard-coded references to Caltech in the HTML files and these would need to be edited manually to modify the system for use in other institutions.)
 
+
+### Version 0.2.0 (April 13, 2021)
+
+[Release 0.2.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.2.0) enhanced a number of pages, added functionality to the `/stats` page, fixed internal issues, and generally improved DIBS overall.
+
+
+### Version 0.1.0 (March 29, 2021)
+
+[Release 0.1.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.1.0) corresponds to the version that has been made live to the Caltech community on 2021-03-29. It features the use of Shibboleth for authentication, the removal of the use of sessions, the addition of a `/stats` page, plus numerous other changes large and small.
