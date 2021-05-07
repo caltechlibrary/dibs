@@ -264,7 +264,7 @@
     <li class="md-nav__item">
     
     
-      <a href="#basic-workflow" class="md-nav__link">Basic workflow</a>
+      <a href="#basic-workflow-for-adding-items" class="md-nav__link">Basic workflow for adding items</a>
       
     
     </li></ul>
@@ -367,10 +367,10 @@
 <p>This page describes the goals, design, and operation of DIBS.</p>
 
 <h2 id="design-goals">Design goals<a class="headerlink" href="#design-goals" title="Permalink to this headline">¶</a></h2>
-<p>DIBS (“<em><strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem</em>”) is intended to be a <em>basic</em> controlled digital lending system with the following goals:</p>
+<p>DIBS (“<em><strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem</em>”) is intended to be a basic, standalone, <a class="reference external" href="https://controlleddigitallending.org">controlled digital lending</a> system with the following goals:</p>
 <ul class="simple">
-<li><p><em>Simplicity</em>. The core server logic for serving loans and other DIBS web pages is less than 800 lines of Python. It should be possible for anyone interested to inspect the code, understand it, and fix or extend it as needed.</p></li>
-<li><p><em>Patron privacy</em>. In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not in effect, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) barcode they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on user identities.</p></li>
+<li><p><em>Simplicity</em>. We wanted to keep everything as simple as we could – simple user interfaces, simple internal logic, simple installation. This supported rapid development and deployment, and going forward, it will help continued maintenance and evolution.</p></li>
+<li><p><em>Patron privacy</em>. In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not active, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) barcode they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on user identities.</p></li>
 <li><p><em>Single sign-on integration</em>. DIBS doesn’t implement logins, and instead relies on an institutional single sign-on system to provide authentication. This simultaneously avoids having to implement user account logins and other complex, error-prone elements in DIBS itself, and makes the user experience consistent with other institutional software systems.</p></li>
 <li><p><em>Independence</em>. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech’s TIND ILS is limited to a very small section of code in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too – no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.</p></li>
 <li><p><em>Use of IIIF</em>. We chose IIIF because it is a highly flexible, widely-used, open standard for serving content, and there are many free and excellent resources for working with it (including servers and alternative viewers).</p></li>
@@ -378,14 +378,15 @@
 
 
 <h2 id="architectural-overview">Architectural overview<a class="headerlink" href="#architectural-overview" title="Permalink to this headline">¶</a></h2>
-<p>The following diagram illustrates the components of a complete CDL system using DIBS.</p>
+<p>The following diagram illustrates the components of a complete CDL system using DIBS, as it is deployed at Caltech.</p>
 <figure>
 <img src="_static/media/architecture-diagram.svg"/>
 </figure>
 
 
-<h2 id="basic-workflow">Basic workflow<a class="headerlink" href="#basic-workflow" title="Permalink to this headline">¶</a></h2>
-<p>For any given item made available via DIBS, the scanned pages of the original are stored on an internal shared file system and identified by a barcode. A workflow written in Python is used to create a <a class="reference external" href="https://iiif.io">IIIF</a> manifest; this manifest is added to the system, which then makes the scanned contents available via a data endpoint served by DIBS. This allows DIBS to implement the digital loan policies developed by our institution, such as that patrons can only borrow one item at a time.</p>
+<h2 id="basic-workflow-for-adding-items">Basic workflow for adding items<a class="headerlink" href="#basic-workflow-for-adding-items" title="Permalink to this headline">¶</a></h2>
+<p>DIBS does not rely on any particular workflow or system to create IIIF-compliant materials.  It only needs a IIIF manifest for each item that is to be made available for digital loans, and a IIIF server endpoint.  Nevertheless, to help understand the overall system, here is a summary of the process used by the Caltech Library.</p>
+<p>For any given item made available via DIBS, Library staff first scan the pages of the item and store the images on an internal file server at Caltech.  The pages are stored in a directory named after the item’s barcode.  Once all the pages have been scanned, the staff doing the scanning notify the maintainers of DIBS, who then run a <a class="reference external" href="https://github.com/caltechlibrary/dibs-scripts">script written in Python</a>. This script converts the scanned document images into a IIIF-compliant format, and also creates a <a class="reference external" href="https://iiif.io">IIIF</a> manifest.  The script copies the IIIF images to a location where our IIIF server will find them (at the time of this writing, an Amazon S3 bucket), and also copies the manifest to a directory on the server running DIBS. The manifest is given a file name with the pattern <i><code>barcode</code></i><code>-manifest.json</code>, where <i><code>barcode</code></i> is the item’s barcode. Thereafter, DIBS knows how to serve the content for the item identified by that barcode.</p>
 <!--
 ## Database
 
