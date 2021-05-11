@@ -33,7 +33,7 @@ The following summarizes the components depicted above:
 The current implementation has some obvious bottlenecks, notably in the use of a single server for handling requests from users. Based on experience we gain from the currently-running pilot deployment at Caltech (in early 2021), we may revise some elements in the future to scale them up as needed.
 
 
-## DIBS server in more detail
+## The DIBS server in more detail
 
 DIBS is implemented on top of [Bottle](https://bottlepy.org), a lightweight WSGI micro web-framework for Python. The definition of the service endpoints and the behaviors is in [`dibs/server.py`](../dibs/server.py).   Here is a summary of the endpoints implemented by the system:
 
@@ -67,7 +67,11 @@ DIBS is implemented on top of [Bottle](https://bottlepy.org), a lightweight WSGI
 | `/viewer/<args>`         | GET  | Any    | Handles requests for components of the viewer page |
 
 
-
-## DIBS database in more detail
+## The DIBS database in more detail
 
 As mentioned above, DIBS maintains an internal database of item description and loan status.  The interface is defined in terms of high-level objects that are backed by an [SQLite](https://www.sqlite.org/index.html) database back-end.  The ORM used is [Peewee](http://docs.peewee-orm.com/en/latest/).
+
+
+## The IIIF server in more detail
+
+... _Forthcoming_ ...

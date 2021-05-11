@@ -264,14 +264,21 @@
     <li class="md-nav__item">
     
     
-      <a href="#dibs-server-in-more-detail" class="md-nav__link">DIBS server in more detail</a>
+      <a href="#the-dibs-server-in-more-detail" class="md-nav__link">The DIBS server in more detail</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="#dibs-database-in-more-detail" class="md-nav__link">DIBS database in more detail</a>
+      <a href="#the-dibs-database-in-more-detail" class="md-nav__link">The DIBS database in more detail</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="#the-iiif-server-in-more-detail" class="md-nav__link">The IIIF server in more detail</a>
       
     
     </li></ul>
@@ -402,7 +409,7 @@
 <p>The current implementation has some obvious bottlenecks, notably in the use of a single server for handling requests from users. Based on experience we gain from the currently-running pilot deployment at Caltech (in early 2021), we may revise some elements in the future to scale them up as needed.</p>
 
 
-<h2 id="dibs-server-in-more-detail">DIBS server in more detail<a class="headerlink" href="#dibs-server-in-more-detail" title="Permalink to this headline">¶</a></h2>
+<h2 id="the-dibs-server-in-more-detail">The DIBS server in more detail<a class="headerlink" href="#the-dibs-server-in-more-detail" title="Permalink to this headline">¶</a></h2>
 <p>DIBS is implemented on top of <a class="reference external" href="https://bottlepy.org">Bottle</a>, a lightweight WSGI micro web-framework for Python. The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.   Here is a summary of the endpoints implemented by the system:</p>
 <table>
 <thead>
@@ -547,8 +554,12 @@
 </table>
 
 
-<h2 id="dibs-database-in-more-detail">DIBS database in more detail<a class="headerlink" href="#dibs-database-in-more-detail" title="Permalink to this headline">¶</a></h2>
+<h2 id="the-dibs-database-in-more-detail">The DIBS database in more detail<a class="headerlink" href="#the-dibs-database-in-more-detail" title="Permalink to this headline">¶</a></h2>
 <p>As mentioned above, DIBS maintains an internal database of item description and loan status.  The interface is defined in terms of high-level objects that are backed by an <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a> database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
+
+
+<h2 id="the-iiif-server-in-more-detail">The IIIF server in more detail<a class="headerlink" href="#the-iiif-server-in-more-detail" title="Permalink to this headline">¶</a></h2>
+<p>… <em>Forthcoming</em> …</p>
 
 
 
