@@ -31,6 +31,10 @@ from   sys import exit
 # Sanity-check the run-time environment before attempting anything else.
 # .............................................................................
 
+if sys.version_info.major < 3 or sys.version_info.minor < 8:
+    print('‼️  DIBS requires Python version 3.8 or higher')
+    exit(1)
+
 here  = dirname(sys.argv[0])
 where = 'the current directory' if here == '.' else here
 
