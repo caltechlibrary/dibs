@@ -17,7 +17,7 @@ file "LICENSE" for more information.
 #  |    by the Makefile. Manual changes to these values will be lost.      |
 #  ╰────────────────────── Notice ── Notice ── Notice ─────────────────────╯
 
-__version__     = '0.3.0'
+__version__     = '0.3.1'
 __description__ = 'An implementation of Controlled Digital Lending'
 __url__         = 'https://github.com/caltechlibrary/dibs'
 __author__      = 'Michael Hucka, Robert S. Doiel, Tommy Keswick, Stephen Davison'
