@@ -5,6 +5,8 @@
 This version features updated documentation (including an updated [usage guide](https://caltechlibrary.github.io/dibs/) and updated installation instructions) , and the following minor fixes:
 
 * Update the versions of some packages referenced in `requirements.txt`.
+* Fix issue #66: missing import in `dibs/people.py`.
+* Fix issue #67: `run-server` should check Python version.
 
 
 ## Version 0.3.0
