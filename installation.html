@@ -313,6 +313,13 @@
     <li class="md-nav__item">
     
     
+      <a href="#management-of-staff-roles" class="md-nav__link">Management of staff roles</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
       <a href="#operation" class="md-nav__link">Operation</a>
       
     
@@ -389,17 +396,21 @@
 <p>The current version of DIBS does not have a separate installation process; using DIBS currently means having to get the source code from this repository and running it from the source directory.</p>
 
 <h3 id="get-the-dibs-source-code">⓵ <em>Get the DIBS source code</em><a class="headerlink" href="#get-the-dibs-source-code" title="Permalink to this headline">¶</a></h3>
-<p>You can use <code class="docutils literal notranslate"><span class="pre">git</span></code> to clone this repository:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/caltechlibrary/dibs
-</pre></div>
-</div>
-<p>This will create a <code class="docutils literal notranslate"><span class="pre">dibs</span></code> subdirectory in your current directory.</p>
+<p>There are several ways of getting the latest release of the DIBS source code. Here is one of the simplest:</p>
+<ol class="simple">
+<li><p>Go to the <a class="reference external" href="https://github.com/caltechlibrary/dibs/releases">releases page</a> in the GitHub repository for DIBS.</p></li>
+<li><p>Find the latest release there (normally the first one on the page). <a class="reference internal" href="https://github.com/caltechlibrary/dibs/raw/main/.graphics/assets.png"><img alt="https://github.com/caltechlibrary/dibs/raw/main/.graphics/assets.png" class="align-right" src="https://github.com/caltechlibrary/dibs/raw/main/.graphics/assets.png" style="width: 200px;"/></a></p></li>
+<li><p>Find the <strong>Assets</strong> section of the release.</p></li>
+<li><p>Click on the link titled <strong>Source code</strong> (zip); it will be downloaded.</p></li>
+<li><p>Unzip the file.</p></li>
+</ol>
+<p>The result will be a subdirectory named <code class="docutils literal notranslate"><span class="pre">dibs</span></code>, which contains the source code.</p>
 
 
 <h3 id="install-python-dependencies">⓶ <em>Install Python dependencies</em><a class="headerlink" href="#install-python-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>Next, install the Python dependencies on your system or your virtual environment:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> dibs
-python3 -m pip install -r requirements.txt --upgrade
+python3 -m pip install -r requirements.txt
 </pre></div>
 </div>
 <p>That is all you should need to run a demo of DIBS on a Linux or macOS system.  As mentioned above, if you plan on deploying DIBS, you will also need to install and configure Apache, and an authentication system running in conjunction with the Apache server. Instructions for doing this vary too widely based on individual site requirements, and are outside the scope of this document.</p>
@@ -407,42 +418,52 @@ python3 -m pip install -r requirements.txt --upgrade
 
 
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
-<p>For demonstration purposes as well as development, it’s convenient to run DIBS on your local machine.  The following instructions describe the process, assuming that DIBS has never been configured or run on your system.</p>
-
-<h3 id="copy-the-sample-settings-ini-configuration-file">⓵ <em>Copy the sample <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> configuration file</em><a class="headerlink" href="#copy-the-sample-settings-ini-configuration-file" title="Permalink to this headline">¶</a></h3>
-<p>The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file for DIBS.  Copy the file to <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>,</p>
+<p>Certain characteristics of DIBS are configured using a file named <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>, which DIBS looks for in the <code class="docutils literal notranslate"><span class="pre">dibs</span></code> directory. The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file for DIBS.  Copy the file to <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
 </pre></div>
 </div>
-<p>and edit its contents in a text editor to suit your local installation.</p>
+<p>and edit its contents in a text editor to suit your local installation. The comments explain what each of the variables does, but we elaborate on some of the variables below.</p>
+
+<h3 id="manifest-dir"><code class="docutils literal notranslate"><span class="pre">MANIFEST_DIR</span></code><a class="headerlink" href="#manifest-dir" title="Permalink to this headline">¶</a></h3>
+<p>This variable sets the path to the directory where DIBS looks for manifest files.  Each file name should follow the pattern <i><code>N</code></i><code>-manifest.json</code>, where <i><code>N</code></i> is the item barcode.  The source distribution of DIBS comes with a sample manifest for illustration purposes.</p>
 
 
-<h3 id="load-a-sample-book-into-dibs">⓶ <em>Load a sample book into DIBS</em><a class="headerlink" href="#load-a-sample-book-into-dibs" title="Permalink to this headline">¶</a></h3>
-<p>Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">load-mock-data.py</span></code></span>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3 load-mock-data.py
+<h3 id="iiif-base-url"><code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code><a class="headerlink" href="#iiif-base-url" title="Permalink to this headline">¶</a></h3>
+<p>The value of this variable should have the form <code class="docutils literal notranslate"><span class="pre">https://youriiifserver.com/iiif/2</span></code>, and it should be the common base for IIIF URLs served by your IIIF server. (This means that the value should appear throughout your manifest files, as the common root of all page images.) This URL will not be shared with clients.  <strong>You should protect this URL from becoming public</strong> if you are making copyrighted works available via DIBS, because knowledge of this URL would allow anyone with familiarity with IIIF to bypass restrictions in DIBS and access your IIIF content directly.</p>
+<p>When DIBS reads a manifest, it replaces all instances of the value of <code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code> with a URL rooted at the DIBS server’s address, and this modified manifest is what it serves to clients. When a client requests page images via the translated URL, DIBS reverses the transformation to construct the IIIF URL from where it can get the page image, and then returns that data back to the client. The client never sees the real URL of the IIIF server or the images. The <em>controlled digital lending</em> aspect of DIBS is that it also refuses to return IIIF content unless the client has been authenticated and the user has borrowed the item through DIBS’ loan system.</p>
+
+
+
+<h2 id="management-of-staff-roles">Management of staff roles<a class="headerlink" href="#management-of-staff-roles" title="Permalink to this headline">¶</a></h2>
+<p>As mentioned above, DIBS assumes that another mechanism in the web server handles authentication of users. However, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and other users. DIBS employs a simple “people” table in its database, and a program, <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span>, that provides an interface for adding user role information to this table.</p>
+<p>To be able to manage DIBS content, you must create at least one user with a role of “library”. As an example, suppose you want to name your sample user <code class="docutils literal notranslate"><span class="pre">dibsuser</span></code>, then you could run the following command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span><span class="s2">"dibsuser"</span>
 </pre></div>
 </div>
-
-
-<h3 id="load-a-sample-user-into-dibs">⓷ <em>Load a sample user into DIBS</em><a class="headerlink" href="#load-a-sample-user-into-dibs" title="Permalink to this headline">¶</a></h3>
-<p>The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of “library”.  Suppose you want to name your sample user “dibsuser”, then you could run the following command:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span>dibsuser
-</pre></div>
-</div>
-
 
 
 <h2 id="operation">Operation<a class="headerlink" href="#operation" title="Permalink to this headline">¶</a></h2>
+
+<h3 id="running-dibs-locally-for-demonstration-and-development">Running DIBS locally for demonstration and development<a class="headerlink" href="#running-dibs-locally-for-demonstration-and-development" title="Permalink to this headline">¶</a></h3>
+<p>For demonstration purposes as well as development, it’s convenient to run DIBS on your local machine.  The following instructions describes how you can do this. Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">load-mock-data.py</span></code></span>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3 load-mock-data.py
+</pre></div>
+</div>
 <p>For local experimentation and development only, the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./run-server -h
 </pre></div>
 </div>
 <p>As mentioned above, in a real installation, DIBS needs a single sign-on system such as <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> on the server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the <code class="docutils literal notranslate"><span class="pre">run-server</span></code> command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">run</span><span class="o">-</span><span class="n">server</span> <span class="o">-</span><span class="n">m</span> <span class="n">debug</span> <span class="o">-</span><span class="n">u</span> <span class="n">dibsuser</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./run-server -m debug -u dibsuser
 </pre></div>
 </div>
 <p>By default it starts the server on <code class="docutils literal notranslate"><span class="pre">localhost</span></code> port 8080.  Using the <code class="docutils literal notranslate"><span class="pre">debug</span></code> run mode flag changes the behavior in various useful ways, such as to reload the source files automatically if any of them are edited, and to run <code class="docutils literal notranslate"><span class="pre">pdb</span></code> upon any exceptions.  (These would not be enabled in a production server.)</p>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">run-server</span></code> is <strong>not intended for use in production servers</strong>. For actual use, you must configure a web server such as <a class="reference external" href="https://httpd.apache.org">Apache</a> to host the system. DIBS comes with an <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code></span> and an example <span class="xref myst">Apache conf file</span> for this purpose to help you get started.</p>
+
+
+<h3 id="running-dibs-in-production">Running DIBS in production<a class="headerlink" href="#running-dibs-in-production" title="Permalink to this headline">¶</a></h3>
+<p>DIBS comes with a sample Apache configuration file in <code class="docutils literal notranslate"><span class="pre">dibs.conf-example</span></code>. This file configures the web server and tells it to use <code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code> (also provided with DIBS) to define a WSGI application for DIBS.</p>
+
 
 
 
