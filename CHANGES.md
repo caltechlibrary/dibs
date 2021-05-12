@@ -1,6 +1,6 @@
 #  Change log for DIBS
 
-## Version (next)
+## Version 0.3.1
 
 This version features updated documentation (including an updated [usage guide](https://caltechlibrary.github.io/dibs/) and updated installation instructions) , and the following minor fixes:
 
