@@ -12,3 +12,9 @@ The system overview diagram in [dibs-architecture.graffle](dibs-architecture.gra
     java -jar svg-buddy.jar dibs-architecture.svg
     ```
 
+The architecture diagram contains, embedded within it, icons obtained from the Noun Project.  All are licensed under the Creative Commons [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/) license. Here are acknowledgments for the original artwork:
+
+* [Book icon](https://thenounproject.com/search/?q=book&i=2289902) by [vigorn](https://thenounproject.com/vigorn/)
+* [Book scanner icon](https://thenounproject.com/search/?q=book+scanner&i=3635943) by [Oleksandr Panasovskyi](https://thenounproject.com/a.panasovsky/)
+* [Laptop icon](https://thenounproject.com/search/?q=laptop&i=3563257) by [Hey Rabbit](https://thenounproject.com/heyrabbit/)
+* [Tablet icon](https://thenounproject.com/search/?q=tablet&i=205015) by [Emel Çelik](https://thenounproject.com/iconmood/)
