@@ -47,9 +47,8 @@ from .roles import role_to_redirect, has_role, staff_user
 # General configuration and initialization.
 # .............................................................................
 
-# Begin by creating a Bottle object on which we will define routes.  At the end
-# of this file we will redefine this object by wrapping it with middleware, but
-# first we will define routes and other behaviors on the basic Bottle instance.
+# Begin by creating a Bottle object on which we will define routes and other
+# behaviors in the rest of this file.
 dibs = Bottle()
 
 # Tell Bottle where to find templates.  This is necessary for both the Bottle
@@ -66,8 +65,8 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
-# Set it to 1 minute in debug mode. (Note: can't test dibs.debug_mode b/c when
-# this file is loaded, it's not set yet.  Test a Bottle variable instead.)
+# Set it to 1 minute in debug mode. (Note: can't check dibs.debug_mode here b/c
+# when this file is loaded, it's not yet set.  Test a Bottle variable instead.)
 _RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
                      else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
 
@@ -158,15 +157,14 @@ class BottlePluginBase(object):
 class LoanExpirer(BottlePluginBase):
     '''Wrap every route function with code that expires loans as needed.'''
 
-    # Expiring loans every time any route is invoked is inefficient, but
-    # we won't have a lot of loans at any given time.  This approach has the
-    # advantage of simplicity in a multi-process Apache server config.  The
-    # alternative would be to implement a separate reaper process of some
-    # kind, complicating things significantly.  (If we only had to worry about
+    # Expiring loans every time any route is invoked is inefficient, but this
+    # approach has the advantage of simplicity in a multi-process Apache server
+    # config.  The alternative would be to implement a separate reaper process,
+    # complicating things significantly.  (If we only had to worry about
     # multiple threads, it would be easier, but our httpd runs processes.)
 
     def __call__(self, callback):
-        def loan_expiration_wrapper(*args, **kwargs):
+        def loan_expirer(*args, **kwargs):
             now = time_now()
             # Delete expired loan recency records.
             n = Loan.delete().where(Loan.state == 'recent', now >= Loan.reloan_time).execute()
@@ -192,7 +190,7 @@ class LoanExpirer(BottlePluginBase):
                                        end_time = loan.end_time)
             return callback(*args, **kwargs)
 
-        return loan_expiration_wrapper
+        return loan_expirer
 
 
 class BarcodeVerifier(BottlePluginBase):
@@ -203,7 +201,7 @@ class BarcodeVerifier(BottlePluginBase):
         if 'barcode' not in args:
             return callback
 
-        def barcode_plugin_wrapper(*args, **kwargs):
+        def barcode_verifier(*args, **kwargs):
             # This handles both HTTP GET & POST requests.  In the case of GET,
             # there will be an argument to the function called "barcode"; in
             # the case of POST, there will be a form variable called "barcode".
@@ -220,13 +218,35 @@ class BarcodeVerifier(BottlePluginBase):
                             message = f'There is no item with barcode {barcode}.')
             return callback(*args, **kwargs)
 
-        return barcode_plugin_wrapper
+        return barcode_verifier
+
+
+class RouteTracer(BottlePluginBase):
+    '''Write a log entry for this route invocation.'''
+
+    def apply(self, callback, route):
+        def route_tracer(*args, **kwargs):
+            barcode = None
+            if 'barcode' in kwargs:
+                barcode = kwargs['barcode']
+            elif 'barcode' in request.POST:
+                barcode = request.POST.barcode.strip()
+            elif request.forms.get('barcode', None):
+                barcode = request.forms.get('barcode').strip()
+            person = person_from_environ(request.environ)
+            log(f'{route.method} {route.rule} invoked'
+                + (f' by {person.uname}' if person else '')
+                + (f' for {barcode}' if barcode else ''))
+            return callback(*args, **kwargs)
+
+        return route_tracer
 
 
 # Hook in the plugins above into all routes.
 
 dibs.install(BarcodeVerifier())
 dibs.install(LoanExpirer())
+dibs.install(RouteTracer())
 
 # The remaining plugins below are applied selectively to specific routes only.
 
@@ -287,7 +307,6 @@ def logout():
 @dibs.get('/list', apply = VerifyStaffUser())
 def list_items():
     '''Display the list of known items.'''
-    log('get /list invoked')
     # Test for presence of manifest files for each item, and create a tuple
     # of the form (Item, bool), where the boolean is True if a manifest exists.
     items = []
@@ -300,21 +319,18 @@ def list_items():
 @dibs.get('/manage', apply = VerifyStaffUser())
 def manage_items():
     '''Manage the list of known items.'''
-    log('get /manage invoked')
     return page('manage', no_cache = True, items = Item.select())
 
 
 @dibs.get('/add', apply = VerifyStaffUser())
 def add():
     '''Display the page to add new items.'''
-    log('get /add invoked')
     return page('edit', action = 'add', item = None)
 
 
 @dibs.get('/edit/<barcode:int>', apply = VerifyStaffUser())
 def edit(barcode):
     '''Display the page to add new items.'''
-    log(f'get /edit invoked on {barcode}')
     return page('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
 
 
@@ -322,7 +338,6 @@ def edit(barcode):
 @dibs.post('/update/edit', apply = VerifyStaffUser())
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
-    log(f'post {request.path} invoked')
     if 'cancel' in request.POST:
         log(f'user clicked Cancel button')
         redirect(f'{dibs.base_url}/list')
@@ -381,7 +396,6 @@ def update_item():
 def toggle_ready():
     '''Set the ready-to-loan field.'''
     barcode = request.POST.barcode.strip()
-    log(f'post /ready invoked on barcode {barcode}')
     item = Item.get(Item.barcode == barcode)
     item.ready = not item.ready
     log(f'locking db to change {barcode} ready to {item.ready}')
@@ -422,7 +436,6 @@ def remove_item():
 @dibs.get('/status', apply = VerifyStaffUser())
 def show_stats():
     '''Display the list of known items.'''
-    log('get /stats invoked')
     usage_data = []
     for item in Item.select():
         barcode = item.barcode
@@ -522,7 +535,6 @@ def loan_availability(user, barcode):
 @dibs.get('/<name:re:(info|about|thankyou)>')
 def general_page(name = '/'):
     '''Display the welcome page.'''
-    log(f'get /{"" if name == "/" else name} invoked')
     if name and name in ['info', 'about', 'thankyou']:
         return page(f'{name}')
     else:
@@ -534,8 +546,6 @@ def general_page(name = '/'):
 @dibs.get('/item-status/<barcode:int>', apply = AddPersonArgument())
 def item_status(barcode, person):
     '''Returns an item summary status as a JSON string'''
-    log(f'get /item-status invoked on barcode {barcode} and {person.uname}')
-
     item, status, explanation, when_available = loan_availability(person.uname, barcode)
     return json.dumps({'available'     : (status == Status.AVAILABLE),
                        'loaned_by_user': (status == Status.LOANED_BY_USER),
@@ -546,8 +556,6 @@ def item_status(barcode, person):
 @dibs.get('/item/<barcode:int>', apply = AddPersonArgument())
 def show_item_info(barcode, person):
     '''Display information about the given item.'''
-    log(f'get /item invoked on barcode {barcode} by {person.uname}')
-
     item, status, explanation, when_available = loan_availability(person.uname, barcode)
     if status == Status.LOANED_BY_USER:
         log(f'redirecting {person.uname} to uv for {barcode}')
@@ -563,8 +571,6 @@ def show_item_info(barcode, person):
 def loan_item(person):
     '''Handle http post request to loan out an item, from the item info page.'''
     barcode = request.POST.barcode.strip()
-    log(f'post /loan invoked on barcode {barcode} by {person.uname}')
-
     # Checking if the item is available requires steps, and we have to be sure
     # that two users don't do them concurrently, or else we might make 2 loans.
     log(f'locking db')
@@ -633,7 +639,6 @@ def end_loan(barcode, person):
             return
     else:
         barcode = post_barcode
-        log(f'post /return invoked on barcode {barcode} by {person.uname}')
 
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
@@ -660,8 +665,6 @@ def end_loan(barcode, person):
 @dibs.get('/view/<barcode:int>', apply = AddPersonArgument())
 def send_item_to_viewer(barcode, person):
     '''Redirect to the viewer.'''
-    log(f'get /view invoked on barcode {barcode} by {person.uname}')
-
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
@@ -680,8 +683,6 @@ def send_item_to_viewer(barcode, person):
 @dibs.get('/manifests/<barcode:int>', apply = AddPersonArgument())
 def return_iiif_manifest(barcode, person):
     '''Return the manifest file for a given item.'''
-    log(f'get /manifests/{barcode} invoked by {person.uname}')
-
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
@@ -705,8 +706,6 @@ def return_iiif_manifest(barcode, person):
 @dibs.get('/iiif/<barcode>/<rest:re:.+>', apply = AddPersonArgument())
 def return_iiif_content(barcode, rest, person):
     '''Return the manifest file for a given item.'''
-    log(f'get /iiif/{barcode}/{rest} invoked by {person.uname}')
-
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
@@ -788,7 +787,6 @@ def serve_viewer_files(filepath):
 @dibs.get('/notallowed')
 @dibs.post('/notallowed')
 def not_allowed():
-    log(f'serving /notallowed')
     return page('error', summary = 'access error',
                 message = ('The requested page does not exist or you do not '
                            'not have permission to access the requested item.'))
@@ -813,7 +811,6 @@ def error405(error):
 @dibs.get('/favicon.ico')
 def favicon():
     '''Return the favicon.'''
-    log(f'returning favicon')
     return static_file('favicon.ico', root = 'dibs/static')
 
 
