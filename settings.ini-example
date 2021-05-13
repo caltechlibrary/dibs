@@ -12,8 +12,11 @@
 # =============================================================================
 
 [settings]
-# If You're using Apache Basic AUTH uncomment and update these lines.
-#
+# For production use, we highly recommend that DIBS be placed behind a single
+# sign-on authentication system such as Shibboleth.  For testing & development,
+# or internal use behind a firewall, you could also use Apache's Basic AuthType
+# scheme.  If you do, unset the following variables and match the location of
+# the password file to wherever you configured it in your Apache config file.
 #HTPASSWD = /usr/bin/htpasswd
 #PASSWORD_FILE = /path/to/dibs/here/password.txt
 
@@ -26,10 +29,23 @@ DATABASE_FILE = dibs.db
 # but the path can be changed if you put your manifests elsewhere.
 MANIFEST_DIR = manifests
 
+# Directory containing status files for items being processed.  Our workflow
+# involves some automated conversion of scans to a format suitable for IIIF,
+# and this process is initiated by staff users.  While processing is happening,
+# DIBS looks in this directory for files that indicate the current status.
+STATUS_FILES_DIR = manifests
+
 # IIIF server base path.  Include the protocol version.
 IIIF_BASE_URL = https://yourserver.com/iiif/2
 
-# Email details. The user has to be an account authenticated to the server.
+# DIBS caches pages it fetches from the IIIF server.  This sets the size of
+# the least-recently used cache to the given number of images.
+IIIF_CACHE_SIZE = 50000
+
+# DIBS sends the patron email after they borrow an item.  The destination
+# address is the sign-on received from the authentication layer.  The
+# following variables set the mail server details.  Note that for this to
+# work, the account owning the web server process must be able to send email.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25
 MAIL_SENDER = helpdesk@library.caltech.edu
@@ -38,10 +54,12 @@ MAIL_SENDER = helpdesk@library.caltech.edu
 # loan it out again (in minutes).
 RELOAN_WAIT_TIME = 30
 
-# Feedback form URL.
+# Feedback form URL.  This is used on the thank-you page and in the hamburger
+# menu in the upper right of every page (it's link for "Give feedback").
 FEEDBACK_URL = https://some.forms.server/your/feedback/form
 
-# Help page URL.
+# Help page URL.  This is used in the hamburger menu in the upper right of
+# every page (it's link for "Help").
 HELP_URL = https://caltechlibrary.github.io/dibs/usage.html
 
 # The following run mode options are recognized:

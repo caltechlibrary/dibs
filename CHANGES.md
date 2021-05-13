@@ -1,5 +1,11 @@
 #  Change log for DIBS
 
+## Version (next)
+
+* The size of the LRU cache for IIIF images is configurable using variable in `settings.ini`.
+* Refactor some internal code to further simplify the logic.
+
+
 ## Version 0.3.1
 
 This version features updated documentation (including an updated [usage guide](https://caltechlibrary.github.io/dibs/) and updated installation instructions) , and the following minor fixes:
