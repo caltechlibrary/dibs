@@ -84,7 +84,7 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
               '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
 
 # IIIF page cache.  This is a dict where the keys will be IIIF page URLs.
-_CACHE = LRU(50000)
+_IIIF_CACHE = LRU(50000)
 
 
 # General-purpose utilities used repeatedly.
@@ -94,7 +94,7 @@ def page(name, **kargs):
     '''Create a page using template "name" with some standard variables set.'''
     person = person_from_environ(request.environ)
     logged_in = (person != None and person.uname != '')
-    if kargs.get('no_cache', False):
+    if kargs.get('browser_no_cache', False):
         response.add_header('Expires', '0')
         response.add_header('Pragma', 'no-cache')
         response.add_header('Cache-Control',
@@ -313,13 +313,13 @@ def list_items():
     for item in Item.select():
         mf_exists = exists(join(_MANIFEST_DIR, f'{item.barcode}-manifest.json'))
         items.append((item, mf_exists))
-    return page('list', no_cache = True, items = items)
+    return page('list', browser_no_cache = True, items = items)
 
 
 @dibs.get('/manage', apply = VerifyStaffUser())
 def manage_items():
     '''Manage the list of known items.'''
-    return page('manage', no_cache = True, items = Item.select())
+    return page('manage', browser_no_cache = True, items = Item.select())
 
 
 @dibs.get('/add', apply = VerifyStaffUser())
@@ -455,7 +455,7 @@ def show_stats():
         else:
             avg_duration = delta(seconds = 0)
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
-    return page('stats', no_cache = True, usage_data = usage_data)
+    return page('stats', browser_no_cache = True, usage_data = usage_data)
 
 
 # User endpoints.
@@ -561,7 +561,7 @@ def show_item_info(barcode, person):
         log(f'redirecting {person.uname} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
-    return page('item', no_cache = True, item = item,
+    return page('item', browser_no_cache = True, item = item,
                 available = (status == Status.AVAILABLE),
                 when_available = human_datetime(when_available),
                 explanation = explanation)
@@ -670,7 +670,7 @@ def send_item_to_viewer(barcode, person):
     if loan and loan.state == 'active':
         log(f'redirecting to viewer for {barcode} for {person.uname}')
         wait_time = _RELOAN_WAIT_TIME
-        return page('uv', no_cache = True, barcode = barcode,
+        return page('uv', browser_no_cache = True, barcode = barcode,
                     title = shorten(item.title, width = 100, placeholder = ' …'),
                     end_time = human_datetime(loan.end_time, '%I:%M %p (%b %d, %Z)'),
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
@@ -711,8 +711,8 @@ def return_iiif_content(barcode, rest, person):
     if loan and loan.state == 'active':
         record_request(barcode)
         url = _IIIF_BASE_URL + '/' + urls_restored(rest, barcode)
-        if url in _CACHE:
-            content, ctype = _CACHE[url]
+        if url in _IIIF_CACHE:
+            content, ctype = _IIIF_CACHE[url]
             data = BytesIO(content)
             log(f'returning cached /iiif/{barcode}/{rest} for {person.uname}')
             return send_file(data, ctype = ctype, size = len(content))
@@ -728,7 +728,7 @@ def return_iiif_content(barcode, rest, person):
             else:
                 content = response.content
                 ctype = 'image/jpeg'
-            _CACHE[url] = (content, ctype)
+            _IIIF_CACHE[url] = (content, ctype)
             data = BytesIO(content)
             log(f'returning content of /iiif/{barcode}/{rest} for {person.uname}')
             return send_file(data, ctype = ctype, size = len(content))
