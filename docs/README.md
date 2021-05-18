@@ -18,10 +18,10 @@ After that, rebuilding the docs is simply a matter of running `make html` in the
 make html
 ```
 
-The output will be put in [`_build/html`](_build/html).  Instead of running `make` deliberately, you can also get auto-rebuilds and live preview using `sphinx-autobuild` by running the following command in the current directory (preferably in a new terminal window):
+The output will be put in [`_build/html`](_build/html).  Instead of running `make` deliberately, you can also get auto-rebuilds and live preview using `sphinx-autobuild` by running the following command in the current directory (preferably in a new terminal window, because it will generate continuous output):
 
 ```sh
-sphinx-autobuild . _build/html
+make auto
 ```
 
 

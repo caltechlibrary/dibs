@@ -58,6 +58,10 @@ body {
   padding: 0;
 }
 
+.checkbox {
+  font-size: larger;
+}
+
 .page-content {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -114,6 +118,10 @@ a {
   width: 1.5rem;
   height: 1.5rem;
   top: 0.5rem
+}
+
+.btn:disabled {
+  opacity: 0.35;
 }
 
 img.svg-megaphone {

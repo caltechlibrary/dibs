@@ -24,7 +24,7 @@ _EMAIL = '''From: {sender}
 To: {user}
 Subject: {subject}
 
-You started a digital loan through Caltech DIBS at {start}.
+You started a digital loan through DIBS at {start}.
 
   Title: {item.title}
   Author: {item.author}
@@ -36,7 +36,7 @@ Please note that DIBS only functions in web browsers that support JavaScript. DI
 
 Information about loan policies can be found at {info_page}
 
-We hope your experience with DIBS is a pleasant one. Don't hesitate to send us feedback, and please report any problems. You can do it directly via email to helpdesk@library.caltech.edu or using our completely anonymous feedback form at {feedback}
+We hope your experience with DIBS is a pleasant one. Don't hesitate to send us feedback, and please report any problems. You can do it directly via email to {sender} or using our completely anonymous feedback form at {feedback}
 '''
 
 
@@ -45,7 +45,7 @@ We hope your experience with DIBS is a pleasant one. Don't hesitate to send us f
 
 def send_email(user, item, start, end, base_url):
    try:
-       subject = f'Caltech DIBS loan for "{item.title}"'
+       subject = f'DIBS loan for "{item.title}"'
        viewer = f'{base_url}/view/{item.barcode}'
        info_page = f'{base_url}/info'
        body = _EMAIL.format(item      = item,

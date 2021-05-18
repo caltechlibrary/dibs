@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-  %include('common/banner.html')
+  % include('common/banner.html')
   <head>
     <meta http-equiv="Pragma" content="no-cache">
-    %include('common/standard-inclusions.tpl')
+    % include('common/standard-inclusions.tpl')
 
     <title>List of items currently in Caltech DIBS</title>
 
@@ -15,7 +15,8 @@
 
   <body>
     <div class="page-content">
-      %include('common/navbar.tpl')
+      % include('common/navbar.tpl')
+      % from os.path import join, exists
 
       <div class="container-fluid main-container">
         <h2 class="mx-auto text-center pb-2 mt-4">
@@ -56,14 +57,14 @@
                 </tr>
               </thead>
               <tbody>
-                %for item, manifest_exists in items:
+                % for item in items:
                 <tr scope="row">
                   <td>
-                    %if item.tind_id != '':
+                    % if item.tind_id != '':
                     <a href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.barcode}}</a>
-                    %else:
+                    % else:
                     {{item.barcode}}
-                    %end
+                    % end
                   </td>
 
                   <td>
@@ -75,20 +76,43 @@
                   </td>
 
                   <td class="text-center">
+                    %# Explanation of the logic governing the code below:
+                    %#    if there's a manifest
+                    %#       show the availability checkbox
+                    %#    else, if there's a *-processing or *-initiated file
+                    %#       show the icon for processing
+                    %#    else, if there's a *-problem file
+                    %#       show the icon for a problem
+                    %#    else
+                    %#       show the button to start processing
+
+                    % bc              = item.barcode
+                    % manifest_exists = exists(join(manifest_dir, bc + "-manifest.json"))
+                    % initiated       = exists(join(process_dir, bc + "-initiated"))
+                    % processing      = exists(join(process_dir, bc + "-processing"))
+                    % problem_exists  = exists(join(process_dir, bc + "-problem"))
+                    % if manifest_exists:
                     <form action="{{base_url}}/ready" method="POST">
-                      %if not manifest_exists:
-                      <i title="The manifest for this item is missing."
-                         style="margin-left: -2.6ex; margin-right: 2pt; filter:drop-shadow(2px 2px 2px #eee)"
-                         class="fas fa-exclamation-triangle text-warning"></i>
-                      %end
                       <input type="hidden" name="barcode" value="{{item.barcode}}">
                       <input type="checkbox" class="checkbox"
-                             %if not manifest_exists:
-                             disabled
-                             %end
                              onChange="this.form.submit()"
                              {{'checked="checked"' if item.ready else ''}}/>
                     </form>
+                    % elif initiated or processing:
+                    <i title="Item is being processed."
+                       style="filter:drop-shadow(2px 2px 2px #eee); font-size: larger"
+                       class="fas fa-hourglass-half text-secondary"></i>
+                    % elif problem_exists:
+                    <i title="A problem occurred with image processing. DLD has been notified."
+                       style="filter:drop-shadow(2px 2px 2px #eee); font-size: larger"
+                       class="fas fa-exclamation-circle text-danger"></i>
+                    % else:
+                    <form action="{{base_url}}/start-processing" method="POST">
+                      <input type="hidden" name="barcode" value="{{item.barcode}}"/>
+                      <input type="submit" name="process" value="Process"
+                             class="btn btn-primary btn-sm"/>
+                    </form>
+                    % end
                   </td>
 
                   <td class="text-center">
@@ -101,7 +125,11 @@
 
                   <td>
                     <button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
+                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');"
+                            % if not manifest_exists:
+                            disabled
+                            % end
+                            >
                       Copy&nbsp;link</button>
                   </td>
 
@@ -113,7 +141,7 @@
                     </form>
                   </td>
                 </tr>
-                %end
+                % end
               </tbody>
             </table>
           </div>
@@ -132,7 +160,7 @@
         </div>
       </div>
 
-      %include('common/footer.tpl')
+      % include('common/footer.tpl')
     </div>
   </body>
 </html>
