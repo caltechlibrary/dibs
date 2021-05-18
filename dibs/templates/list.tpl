@@ -125,7 +125,11 @@
 
                   <td>
                     <button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
-                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');">
+                            onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');"
+                            % if not manifest_exists:
+                            disabled
+                            % end
+                            >
                       Copy&nbsp;link</button>
                   </td>
 
