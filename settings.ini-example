@@ -17,6 +17,7 @@
 # or internal use behind a firewall, you could also use Apache's Basic AuthType
 # scheme.  If you do, unset the following variables and match the location of
 # the password file to wherever you configured it in your Apache config file.
+#
 #HTPASSWD = /usr/bin/htpasswd
 #PASSWORD_FILE = /path/to/dibs/here/password.txt
 
@@ -30,16 +31,19 @@ DATABASE_FILE = dibs.db
 MANIFEST_DIR = manifests
 
 # Directory containing status files for items being processed.  Our workflow
-# involves some automated conversion of scans to a format suitable for IIIF,
-# and this process is initiated by staff users.  While processing is happening,
-# DIBS looks in this directory for files that indicate the current status.
-STATUS_FILES_DIR = manifests
+# involves automated conversion of scans to a format suitable for IIIF, and
+# this process is initiated by staff users.  While processing is happening,
+# DIBS reads and writes files in this directory to initiate processing and
+# find out the current status.
+PROCESS_DIR = processing
 
-# IIIF server base path.  Include the protocol version.
+# IIIF image service API base path.  Include the protocol version at the end.
 IIIF_BASE_URL = https://yourserver.com/iiif/2
 
 # DIBS caches pages it fetches from the IIIF server.  This sets the size of
-# the least-recently used cache to the given number of images.
+# the least-recently used cache to the given number of images.  Bear in mind
+# that in IIIF, each document page is tiled, which means a single document
+# page equates to many (possibly hundreds) of (usually small) image tiles.
 IIIF_CACHE_SIZE = 50000
 
 # DIBS sends the patron email after they borrow an item.  The destination
