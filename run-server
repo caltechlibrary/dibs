@@ -242,6 +242,8 @@ Command-line arguments summary
 
     if mode != 'debug':
         print_safety_warning()
+    elif not child:
+        print_geeky_logo()
 
     # Do the real work --------------------------------------------------------
 
@@ -302,7 +304,7 @@ def start_bottle_server(scheme, host, port, extra_path, debug_user):
     dibs.debug_mode = True
 
     # Set our special "base_url" attribute on our dibs application object.
-    # Note: Bottle doesn't have a way to pass extra_path, so it's ignored.
+    # Note: Bottle doesn't have a way to pass extra_path, so it's ignored here.
     dibs.base_url = f'{scheme}://{host}'
     if port not in ['80', '443']:
         dibs.base_url = f'{dibs.base_url}:{port}'
@@ -343,6 +345,14 @@ def print_settings(mode, adapter_file = None):
                 + f'    MANIFEST_DIR:  {config("MANIFEST_DIR")}\n'
                 + f'    IIIF_BASE_URL: {config("IIIF_BASE_URL")}')
     log(settings)
+
+def print_geeky_logo():
+    text = '''
+ ______  _____ ______  _______
+ |     \   |   |_____] |______
+ |_____/ __|__ |_____] ______|
+'''
+    Console().print(text, style='dark_orange')
 
 
 # Main invocation.
