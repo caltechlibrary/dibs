@@ -31,6 +31,7 @@ from   os.path import realpath, dirname, join, exists, isabs
 from   peewee import *
 import random
 from   sidetrack import log, logr
+from   str2bool import str2bool
 import string
 import sys
 from   textwrap import shorten
@@ -573,7 +574,10 @@ def item_status(barcode, person):
 def show_item_info(barcode, person):
     '''Display information about the given item.'''
     item, status, explanation, when_available = loan_availability(person.uname, barcode)
-    if status == Status.LOANED_BY_USER:
+    # Users can put ?viewer=0 to avoid being sent to the viewer if they have
+    # the item on loan.  This is useful mainly for developers and staff.
+    show_viewer = str2bool(request.query.get('viewer', '1'))
+    if status == Status.LOANED_BY_USER and show_viewer:
         log(f'redirecting {person.uname} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
