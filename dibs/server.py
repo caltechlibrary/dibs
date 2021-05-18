@@ -376,7 +376,7 @@ def update_item():
             log(f'could not find {barcode} in TIND')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
-        log(f'adding item entry {barcode} for {title}')
+        log(f'adding item entry {barcode} for {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     tind_id = rec.tind_id, year = rec.year,
                     edition = rec.edition, thumbnail = rec.thumbnail_url,
