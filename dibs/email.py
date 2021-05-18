@@ -24,7 +24,7 @@ _EMAIL = '''From: {sender}
 To: {user}
 Subject: {subject}
 
-You started a digital loan through Caltech DIBS at {start}.
+You started a digital loan through DIBS at {start}.
 
   Title: {item.title}
   Author: {item.author}
@@ -45,7 +45,7 @@ We hope your experience with DIBS is a pleasant one. Don't hesitate to send us f
 
 def send_email(user, item, start, end, base_url):
    try:
-       subject = f'Caltech DIBS loan for "{item.title}"'
+       subject = f'DIBS loan for "{item.title}"'
        viewer = f'{base_url}/view/{item.barcode}'
        info_page = f'{base_url}/info'
        body = _EMAIL.format(item      = item,
