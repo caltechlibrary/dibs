@@ -27,7 +27,7 @@ from   io import BytesIO
 import json
 from   lru import LRU
 import os
-from   os.path import realpath, dirname, join, exists
+from   os.path import realpath, dirname, join, exists, isabs
 from   peewee import *
 import random
 from   sidetrack import log, logr
@@ -51,14 +51,22 @@ from .roles import role_to_redirect, has_role, staff_user
 # behaviors in the rest of this file.
 dibs = Bottle()
 
+# Construct the path to the server root, which we use to construct other paths.
+_SERVER_ROOT = realpath(join(dirname(__file__), os.pardir))
+
 # Tell Bottle where to find templates.  This is necessary for both the Bottle
 # template() command to work and also to get %include to work inside our .tpl
 # template files.  Rather surprisingly, the only way to tell Bottle where to
 # find the templates is to set this Bottle package-level variable.
-bottle.TEMPLATE_PATH.append(join(realpath(dirname(__file__)), 'templates'))
+bottle.TEMPLATE_PATH.append(join(_SERVER_ROOT, 'dibs', 'templates'))
 
 # Directory containing IIIF manifest files.
 _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
+if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
+
+# Directory containing workflow processing status files.
+_PROCESS_DIR = config('PROCESS_DIR', default = 'manifests')
+if not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
 
 # The base URL of the IIIF server endpoint. Note: there is no reasonable
 # default value for this one, so we fail if this is not set.
@@ -307,13 +315,8 @@ def logout():
 @dibs.get('/list', apply = VerifyStaffUser())
 def list_items():
     '''Display the list of known items.'''
-    # Test for presence of manifest files for each item, and create a tuple
-    # of the form (Item, bool), where the boolean is True if a manifest exists.
-    items = []
-    for item in Item.select():
-        mf_exists = exists(join(_MANIFEST_DIR, f'{item.barcode}-manifest.json'))
-        items.append((item, mf_exists))
-    return page('list', browser_no_cache = True, items = items)
+    return page('list', browser_no_cache = True, items = Item.select(),
+                manifest_dir = _MANIFEST_DIR, process_dir = _PROCESS_DIR)
 
 
 @dibs.get('/manage', apply = VerifyStaffUser())
@@ -389,6 +392,19 @@ def update_item():
         log(f'saving changes to {barcode}')
         item.save(only = [Item.barcode, Item.num_copies, Item.duration])
         # FIXME if we reduced the number of copies, we need to check loans.
+    redirect(f'{dibs.base_url}/list')
+
+
+@dibs.post('/start-processing', apply = VerifyStaffUser())
+def start_processing():
+    '''Handle http post request to start the processing workflow.'''
+    barcode = request.POST.barcode.strip()
+    init_file = join(_PROCESS_DIR, f'{barcode}-initiated')
+    try:
+        log(f'creating {init_file}')
+        os.close(os.open(init_file, os.O_CREAT))
+    except Exception as ex:
+        log(f'problem creating {init_file}: str(ex)')
     redirect(f'{dibs.base_url}/list')
 
 
