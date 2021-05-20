@@ -3,7 +3,11 @@
 ## Version (next)
 
 * The size of the LRU cache for IIIF images is configurable using variable in `settings.ini`.
+* Fix issue #71: add interface to trigger IIIF processing workflow.
+* Tweak some user interface elements.
+* Take out "Caltech" from email template, to make it more generic.
 * Refactor some internal code to further simplify the logic.
+* Do some housekeeping on files.
 
 
 ## Version 0.3.1
