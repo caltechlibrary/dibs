@@ -266,7 +266,7 @@ class AddPersonArgument(BottlePluginBase):
     def apply(self, callback, route):
         def person_plugin_wrapper(*args, **kwargs):
             person = person_from_environ(request.environ)
-            if person is None:
+            if person is None or person.uname is None:
                 log(f'person is None')
                 return page('error', summary = 'authentication failure',
                             message = f'Unrecognized user identity.')
