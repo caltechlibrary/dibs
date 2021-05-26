@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 # =============================================================================
-# @file    run-server
-# @brief   Wrapper around mod_wsgi-express to start DIBS server for testing
+# @file    requirements.txt
+# @brief   Python dependencies for DIBS
 # @created 2021-01-12
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/dibs
@@ -30,6 +29,7 @@ python-decouple >= 3.4
 rich            >= 9.2.0
 sidetrack       >= 1.4.0
 str2bool        >= 1.1
+trinomial       >= 0.0.2
 topi            >= 1.0.1
 yurl            >= 1.0.0
 werkzeug        >= 1.0.1

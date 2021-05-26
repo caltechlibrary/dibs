@@ -12,6 +12,7 @@ file "LICENSE" for more information.
 from   decouple import config
 from   sidetrack import log
 import smtplib
+from   trinomial import anon
 
 from .date_utils import human_datetime
 
@@ -57,7 +58,7 @@ def send_email(user, item, start, end, base_url):
                             subject   = subject,
                             sender    = config('MAIL_SENDER'),
                             feedback  = config('FEEDBACK_URL'))
-       log(f'sending mail to {user} about loan of {item.barcode}')
+       log(f'sending mail to {anon(user)} about loan of {item.barcode}')
        mailer  = smtplib.SMTP(config('MAIL_HOST'))
        mailer.sendmail(config('MAIL_SENDER'), [user], body)
    except Exception as ex:

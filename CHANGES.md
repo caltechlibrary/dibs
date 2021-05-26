@@ -1,9 +1,20 @@
 #  Change log for DIBS
 
-## Version (next)
+## Version 0.4.0
 
+This version implements an interface for starting the IIIF image processing workflow. This is implemented in the `dibs/templates/list.tpl` template file, with an an addition to `settings.ini`. It interacts with the "available" column in the `/list` page.
+
+Other changes and issues fixed:
+
+* Fix issue #81: anonymize user names in trace/debug logs.
+* Fix issue #75: allow force-viewing item pages; this uses a query parameter to the item page URL.
+* Fix issue #71: add interface to trigger IIIF processing workflow.
 * The size of the LRU cache for IIIF images is configurable using variable in `settings.ini`.
+* Tweak some user interface elements.
+* Take out "Caltech" from email template, to make it more generic.
 * Refactor some internal code to further simplify the logic.
+* Fix more miscellaneous bugs.
+* Do some housekeeping on files.
 
 
 ## Version 0.3.1
