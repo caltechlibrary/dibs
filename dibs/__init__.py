@@ -12,12 +12,17 @@ file "LICENSE" for more information.
 
 # Package metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
+# This is set of variables is to identify the Python software package.  These
+# values are _not_ presented in the user interface of DIBS, except for the
+# version number.  The information presented to DIBS users, like the contact
+# email address, are set elsewhere, not here.
+#
 #  ╭────────────────────── Notice ── Notice ── Notice ─────────────────────╮
 #  |    The following values are automatically updated at every release    |
 #  |    by the Makefile. Manual changes to these values will be lost.      |
 #  ╰────────────────────── Notice ── Notice ── Notice ─────────────────────╯
 
-__version__     = '0.3.0'
+__version__     = '0.4.0'
 __description__ = 'An implementation of Controlled Digital Lending'
 __url__         = 'https://github.com/caltechlibrary/dibs'
 __author__      = 'Michael Hucka, Robert S. Doiel, Tommy Keswick, Stephen Davison'

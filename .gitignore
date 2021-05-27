@@ -97,3 +97,4 @@ manifests/*-manifest.json
 htpasswd
 .htpasswd
 .README.md.tmp
+*.bak
