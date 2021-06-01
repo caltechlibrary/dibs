@@ -406,7 +406,7 @@ def start_processing():
         log(f'creating {init_file}')
         os.close(os.open(init_file, os.O_CREAT))
     except Exception as ex:
-        log(f'problem creating {init_file}: str(ex)')
+        log(f'problem creating {init_file}: {str(ex)}')
     redirect(f'{dibs.base_url}/list')
 
 
