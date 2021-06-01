@@ -2,11 +2,23 @@
 
 ## Requirements
 
-The core DIBS server is written in [Python 3](https://www.python.org) and makes use of some additional Python software libraries that are installed automatically during the [installation step](#installation) described below.
+The core DIBS server is written in [Python 3](https://www.python.org) and makes use of some additional Python software libraries that are installed automatically during the [installation step](#installation) steps.
 
-Separately, DIBS also relies on the existence of a IIIF image server (and some content to serve). At Caltech, we use a serverless component running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). For exploration and demonstration purposes, you could reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) as an example of that.
+### _Requirements to run a demo_
 
-To deploy DIBS for production use, two more things are needed: a web server to host the system, and an authentication layer.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and only needs to recognize users who are allowed to access restricted pages. In Caltech's case, we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
+Although DIBS relies on the existence of a IIIF image server (and content to serve), for initial exploration and demonstration purposes, you don't need to set up an IIIF server; you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) as an example of that.  Beyond this, you shouldn't need anything else to run the DIBS demo. (If that's not the case, please [report the problem](https://github.com/caltechlibrary/dibs/issues).)
+
+
+### _Requirements to use DIBS for real use at another institution_
+
+In order to use DIBS at another institution (other than [Caltech](https://www.caltech.edu)), certain additional things are needed. 
+
+1. A **IIIF server**. At Caltech, we use a serverless component running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). If you're looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.
+2. A **web server** to host DIBS.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). DIBS comes with a WSGI adapter file and sample config file for Apache, but it should be possible to run DIBS in other WSGI-compliant servers.
+3. An **authentication layer**. For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach the DIBS pages are allowed to view content. DIBS only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
+4. Modification to the metadata retrieval code. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item's barcode, and lacking a universal scheme or ILS interface to do that, we had to hard code the access. Thankfully, this is limited to just a few lines in  [`server.py`](dibs/server.py). We currently use TIND at Caltech, so unless you also use TIND, you will need to modify the TIND-specific lines in that file.
+5. Modification to the HTML templates to change the branding. The template files in [`dibs/templates`](dibs/templates) are specific to Caltech, and will need to be edited to suit another installation. (We are open to making the branding customization easier and would welcome a [pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) for suitable changes!)
+
 
 ## Installation
 
