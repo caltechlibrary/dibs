@@ -67,6 +67,9 @@ html_sidebars = {
     "**": ["globaltoc.html", "searchbox.html"]
 }
 
+# Show the last updated date in the footer using the default format.
+html_last_updated_fmt = ""
+
 
 # -- Options for the Material theme ---------------------------------------------
 # C.f. https://github.com/bashtage/sphinx-material/blob/master/docs/conf.py
