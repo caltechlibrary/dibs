@@ -513,13 +513,14 @@ def loan_availability(user, barcode):
     explanation = ''
     when_available = None
     loan = Loan.get_or_none(Loan.user == user, Loan.item == item)
+    who = anon(user)
     if loan:
         if loan.state == 'active':
-            log(f'{user} already has {barcode} on loan')
+            log(f'{who} already has {barcode} on loan')
             status = Status.LOANED_BY_USER
             explanation = 'This item is currently on digital loan to you.'
         else:
-            log(f'{user} had a loan on {barcode} too recently')
+            log(f'{who} had a loan on {barcode} too recently')
             status = Status.TOO_SOON
             explanation = ('Your loan period has ended and it is too soon '
                            'after the last time you borrowed it.')
@@ -528,7 +529,7 @@ def loan_availability(user, barcode):
         loan = Loan.get_or_none(Loan.user == user, Loan.state == 'active')
         if loan:
             other = loan.item
-            log(f'{user} has a loan on {other.barcode} that ends at {loan.end_time}')
+            log(f'{who} has a loan on {other.barcode} that ends at {loan.end_time}')
             status = Status.USER_HAS_OTHER
             author = shorten(other.author, width = 50, placeholder = ' …')
             explanation = ('You have another item currently on loan'
@@ -543,7 +544,7 @@ def loan_availability(user, barcode):
                 explanation = 'All available copies are currently on loan.'
                 when_available = min(loan.end_time for loan in loans)
             else:
-                log(f'{user} is allowed to borrow {barcode}')
+                log(f'{who} is allowed to borrow {barcode}')
                 status = Status.AVAILABLE
 
     return item, status, explanation, when_available
