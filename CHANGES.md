@@ -1,5 +1,10 @@
 #  Change log for DIBS
 
+## Version 0.4.1
+
+* Fix issue #85: remove email address from server log message printed during status checks
+
+
 ## Version 0.4.0
 
 This version implements an interface for starting the IIIF image processing workflow. This is implemented in the `dibs/templates/list.tpl` template file, with an an addition to `settings.ini`. It interacts with the "available" column in the `/list` page.

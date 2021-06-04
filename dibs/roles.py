@@ -25,7 +25,8 @@ def has_role(person, role):
 
 
 def role_to_redirect(role):
-    '''given a user role (including an empty string) return the target path for a redirect'''
+    '''Given a user role (including an empty string), return the target
+    path for a redirect.'''
     if role in _role_table:
         return _role_table[role]
     else:
