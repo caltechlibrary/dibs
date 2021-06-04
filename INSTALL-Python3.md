@@ -53,14 +53,3 @@ brew install python3
 ```
 
 HomeBrew's Python 3 package installs `pip3` by default.  Unless you configured your copy of HomeBrew to install it elsewhere, programs should end up in `/usr/local/bin` on your computer.  Look for `pip3` there (e.g., by running the command `ls /usr/local/bin/pip*` to see what gets listed).
-
-
-## Installing Python modules
-
-Often you'll need some additional modules to be installed in your Python development environment, so that you can refer to them in your Python programs using the `import` statement. To make sure you get the desired Python and `pip`, you can use the `-m` interpreter option to install the desired module using a command with the following form:
-
-```shell
-python3 -m pip install MODULENAME
-```
-
-where `MODULENAME` is the name of the module you need to install.
