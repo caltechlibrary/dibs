@@ -394,9 +394,22 @@
 <h1 id="installation--page-root">Installation and configuration<a class="headerlink" href="#installation--page-root" title="Permalink to this headline">¶</a></h1>
 
 <h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <a class="reference external" href="#installation">installation step</a> described below.</p>
-<p>Separately, DIBS also relies on the existence of a IIIF image server (and some content to serve). At Caltech, we use a serverless component running on an Amazon cloud instance, but <a class="reference external" href="https://github.com/IIIF/awesome-iiif#image-servers">many other IIIF server options exist</a>. For exploration and demonstration purposes, you could reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of that.</p>
-<p>To deploy DIBS for production use, two more things are needed: a web server to host the system, and an authentication layer.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and only needs to recognize users who are allowed to access restricted pages. In Caltech’s case, we use the <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> single sign-on system for the authentication layer, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.</p>
+<p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <a class="reference external" href="#installation">installation step</a> steps.</p>
+
+<h3 id="requirements-to-run-a-demo"><em>Requirements to run a demo</em><a class="headerlink" href="#requirements-to-run-a-demo" title="Permalink to this headline">¶</a></h3>
+<p>Although DIBS relies on the existence of a IIIF image server (and content to serve), for initial exploration and demonstration purposes, you don’t need to set up an IIIF server; you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of that.  Beyond this, you shouldn’t need anything else to run the DIBS demo. (If that’s not the case, please <a class="reference external" href="https://github.com/caltechlibrary/dibs/issues">report the problem</a>.)</p>
+
+
+<h3 id="requirements-to-use-dibs-for-real-use-at-another-institution"><em>Requirements to use DIBS for real use at another institution</em><a class="headerlink" href="#requirements-to-use-dibs-for-real-use-at-another-institution" title="Permalink to this headline">¶</a></h3>
+<p>In order to use DIBS at another institution (other than <a class="reference external" href="https://www.caltech.edu">Caltech</a>), certain additional things are needed.</p>
+<ol class="simple">
+<li><p>A <strong>IIIF server</strong>. At Caltech, we use a serverless component running on an Amazon cloud instance, but <a class="reference external" href="https://github.com/IIIF/awesome-iiif#image-servers">many other IIIF server options exist</a>. If you’re looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.</p></li>
+<li><p>A <strong>web server</strong> to host DIBS.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). DIBS comes with a WSGI adapter file and sample config file for Apache, but it should be possible to run DIBS in other WSGI-compliant servers.</p></li>
+<li><p>An <strong>authentication layer</strong>. For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach the DIBS pages are allowed to view content. DIBS only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> single sign-on system, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.</p></li>
+<li><p>Modification to the metadata retrieval code. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item’s barcode, and lacking a universal scheme or ILS interface to do that, we had to hard code the access. Thankfully, this is limited to just a few lines in  <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">server.py</span></code></span>. We currently use TIND at Caltech, so unless you also use TIND, you will need to modify the TIND-specific lines in that file.</p></li>
+<li><p>Modification to the HTML templates to change the branding. The template files in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/templates</span></code></span> are specific to Caltech, and will need to be edited to suit another installation. (We are open to making the branding customization easier and would welcome a <a class="reference external" href="https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">pull request</a> for suitable changes!)</p></li>
+</ol>
+
 
 
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
@@ -520,6 +533,9 @@ python3 -m pip install -r requirements.txt
               &#169; Copyright 2021, Caltech Library.
               
           </div>
+            Last updated on
+              Jun 02, 2021.
+            <br/>
             Created using
             <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.4.
              and
