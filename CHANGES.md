@@ -3,6 +3,8 @@
 ## Version 0.4.1
 
 * Fix issue #85: remove email address from server log message printed during status checks
+* Expand explanations (in the README and the docs) of what you need to run DIBS at another institution.
+* Updated system diagram in the documentation.
 
 
 ## Version 0.4.0
