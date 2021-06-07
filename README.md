@@ -178,15 +178,21 @@ The [vector artwork](https://thenounproject.com/term/book-waiting/1531542/) of a
 DIBS makes use of numerous open-source packages, without which it would have been effectively impossible to develop DIBS with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
 
 * [Arrow](https://pypi.org/project/arrow/) &ndash; a library for creating & manipulating dates
+* [Bootstrap](https://getbootstrap.com) &ndash; CSS framework for developing responsive websites
+* [Bootstrap Table](https://bootstrap-table.com) &ndash; extended table framework for Bootstrap
 * [Boltons](https://github.com/mahmoud/boltons/) &ndash; package of miscellaneous Python utilities
 * [Bottle](https://bottlepy.org) &ndash; a lightweight WSGI micro web framework for Python
+* [Clipboard.js](https://clipboardjs.com) &ndash; JavaScript library for copying text to the clipboard
 * [CommonPy](https://github.com/caltechlibrary/commonpy) &ndash; a collection of commonly-useful Python functions
 * [expiringdict](https://pypi.org/project/expiringdict/) &ndash; an ordered dictionary class with auto-expiring values
+* [Font Awesome](https://fontawesome.com) &ndash; scalable vector icons for web design
 * [humanize](https://github.com/jmoiron/humanize) &ndash; make numbers more easily readable by humans
 * [ipdb](https://github.com/gotcha/ipdb) &ndash; the IPython debugger
+* [jQuery](https://jquery.com) &ndash; JavaScript library of common functions
 * [mod_wsgi](http://www.modwsgi.org) &ndash; an Apache module for hosting Python WSGI web applications
 * [Peewee](http://docs.peewee-orm.com/en/latest/) &ndash; a simple ORM for Python
 * [Plac](https://github.com/ialbert/plac) &ndash; a command line argument parser
+* [Popper.js](https://popper.js.org) &ndash; web page tooltip engine
 * [Python Decouple](https://github.com/henriquebastos/python-decouple/) &ndash; a high-level configuration file interface
 * [Rich](https://rich.readthedocs.io/en/latest/) &ndash; library for writing styled text to the terminal
 * [Sidetrack](https://github.com/caltechlibrary/sidetrack) &ndash; simple debug logging/tracing package
