@@ -16,6 +16,11 @@ DIBS is <a href="https://en.wikipedia.org/wiki/Open-source_software">open-source
 
 The following subsections summarize the major released versions of DIBS.
 
+### Version 0.4.0 (May 28, 2021)
+
+[Release 0.4.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.4.0) adds an interface to the `/list` page for starting an external workflow for scan/image conversion. More documentation is needed on this facility, but the basic idea is to write a file to a designation location that will then trigger some external action. In addition, the new release anonymizes user identities in log messages printed when verbose mode is turned on; this uses the Python module [Trinomial](https://github.com/caltechlibrary/trinomial) to replace user email addresses with a pseudorandom hex string. Finally, this release addresses some additional issues, removes some small bugs, and refactors some code to simplify internal logic.
+
+
 ### Version 0.3.0 (April 30, 2021)
 
 [Release 0.3.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.3.0) of DIBS polishes the user interface, uses the latest official release of the Universal Viewer (version 3.1.1), and fixes some user interface glitches. DIBS has been running at Caltech for a month; with this release, we believe the software to be stable enough for others to try to use it. (However, there remain hard-coded references to Caltech in the HTML files and these would need to be edited manually to modify the system for use in other institutions.)
