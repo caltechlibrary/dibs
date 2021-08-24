@@ -14,8 +14,8 @@
 [settings]
 # For production use, we highly recommend that DIBS be placed behind a single
 # sign-on authentication system such as Shibboleth.  For testing & development,
-# or internal use behind a firewall, you could also use Apache's Basic AuthType
-# scheme.  If you do, unset the following variables and match the location of
+# or internal use behind a firewall, you could use Apache's Basic AuthType.
+# If you do the latter, unset the following variables and match the location of
 # the password file to wherever you configured it in your Apache config file.
 #
 #HTPASSWD = /usr/bin/htpasswd
@@ -52,10 +52,10 @@ IIIF_CACHE_SIZE = 50000
 # work, the account owning the web server process must be able to send email.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25
-MAIL_SENDER = helpdesk@library.caltech.edu
+MAIL_SENDER = helpdesk@library.yourinstitution.edu
 
-# Time a user must wait between when they return a title and when they can
-# loan it out again (in minutes).
+# Set the cooling off period: the time a user must wait between when they
+# return a title and when they can loan it out again (in minutes).
 RELOAN_WAIT_TIME = 30
 
 # Feedback form URL.  This is used on the thank-you page and in the hamburger
