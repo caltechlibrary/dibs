@@ -23,12 +23,14 @@ from subprocess import Popen, PIPE
 
 from getpass import getpass
 
-from decouple import config
 from peewee import SqliteDatabase, Model
 from peewee import AutoField, CharField, TimestampField
 
 import os
 import sys
+
+from .settings import config
+
 
 # Figure out how are authentication and authorization is configured.
 _db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))

@@ -9,7 +9,6 @@
 # Initial imports. More things are imported later below.
 
 import bottle
-from   decouple import config
 from   os import chdir
 from   os.path import realpath, dirname
 from   sidetrack import log, set_debug
@@ -28,6 +27,7 @@ chdir(app_directory)
 # Now we can import our code.
 
 from dibs import dibs
+from dibs.settings import config
 
 # Notes:
 #
