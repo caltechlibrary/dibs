@@ -22,9 +22,9 @@ db.create_tables([Item, Loan, History, Person])
 # This next one is a demo item.  We provide a manifest in ./manifests/ and
 # it references an open copy of the book at the Wellcome Collection in the UK.
 Item.create(barcode    = '350470000363458',
+            item_id    = '514607',
             title      = 'The Biocrats',
             author     = 'Gerald Leach',
-            tind_id    = '514607',
             year       = '1970',
             edition    = 'First',
             thumbnail  = 'https://dlcs.io/thumbs/wellcome/5/b18035978_0001.JP2/full/69,100/0/default.jpg',
