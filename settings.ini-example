@@ -11,7 +11,7 @@
 #
 # =============================================================================
 
-[settings]
+[dibs]
 # For production use, we highly recommend that DIBS be placed behind a single
 # sign-on authentication system such as Shibboleth.  For testing & development,
 # or internal use behind a firewall, you could use Apache's Basic AuthType.
@@ -23,6 +23,11 @@
 
 # Path to the sqlite database, relative to here.
 DATABASE_FILE = dibs.db
+
+# Set this to either "folio" or "tind", depending on which LSP you are using,
+# and then uncomment and set the relevant variables later in this file to
+# configure your particular LSP.
+LSP_TYPE = 
 
 # Directory containing IIIF manifest files.  Each file name should follow the
 # pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
@@ -72,3 +77,29 @@ HELP_URL = https://caltechlibrary.github.io/dibs/usage.html
 # When started using the program run-server included with DIBS, this value
 # maybe overriden by command-line options given to run-server.
 RUN_MODE = normal
+
+
+# ~~~ LSP interface configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# In what follows, uncomment the section relevant to the LSP you use.  DIBS
+# currently has interface code for Folio and TIND.
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[tind]
+# Set this to the base URL of your hosted TIND server.  For example, when
+# Caltech was using TIND, this was https://caltech.tind.io
+#
+#TIND_SERVER_URL = 
+
+
+[folio]
+# Set the URL to the URL for your FOLIO API (which is known as "Okapi") server.
+# FOLIO/Okapi access also requires a token you must generate once and then
+# can reuse for every call.  As of 2021-08-23, there is some sample code in
+# https://github.com/FOLIO-FSE/tech-partner-demo for generating a token in
+# various ways, such as using a shell script.
+#
+#FOLIO_OKAPI_URL = 
+#FOLIO_OKAPI_TENANT_ID = 
+#FOLIO_OKAPI_TOKEN = 
