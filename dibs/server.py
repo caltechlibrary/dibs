@@ -16,7 +16,6 @@ from   commonpy.network_utils import net
 from   datetime import datetime as dt
 from   datetime import timedelta as delta
 from   dateutil import tz
-from   decouple import config
 from   enum import Enum, auto
 from   expiringdict import ExpiringDict
 from   fdsend import send_file
@@ -30,20 +29,21 @@ import os
 from   os.path import realpath, dirname, join, exists, isabs
 from   peewee import *
 import random
-from   sidetrack import log, logr
+from   sidetrack import log
 from   str2bool import str2bool
 import string
 import sys
 from   textwrap import shorten
-from   topi import Tind
 from   trinomial import anon
 
 from . import __version__
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
+from .lsp import LSP
 from .people import Person, person_from_environ
 from .roles import role_to_redirect, has_role, staff_user
+from .settings import config
 
 
 # General configuration and initialization.
@@ -83,7 +83,8 @@ _RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
 # Where we send users to give feedback.
 _FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
 
-# Where we send users for help.
+# Where we send users for help.  The default is the DIBS software documentation
+# page, which is assumed to exist even if individual sites don't provide docs.
 _HELP_URL = config('HELP_URL', default = 'https://caltechlibrary.github.io/dibs')
 
 # Remember the most recent accesses so we can provide stats on recent activity.
@@ -369,18 +370,16 @@ def update_item():
             log(f'{barcode} already exists in the database')
             return page('error', summary = 'duplicate entry',
                         message = f'An item with barcode {barcode} already exists.')
-        # Our current approach only uses items with barcodes that exist in
-        # TIND.  If that ever changes, the following needs to change too.
-        tind = Tind('https://caltech.tind.io')
+        lsp = LSP()
         try:
-            rec = tind.item(barcode = barcode).parent
+            rec = lsp.record(barcode = barcode)
         except:
-            log(f'could not find {barcode} in TIND')
+            log(f'could not find {barcode} in LSP')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
         log(f'adding item entry {barcode} for {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
-                    tind_id = rec.tind_id, year = rec.year,
+                    item_id = rec.item_id, year = rec.year,
                     edition = rec.edition, thumbnail = rec.thumbnail_url,
                     num_copies = num_copies, duration = duration)
     else: # The operation is /update/edit.
