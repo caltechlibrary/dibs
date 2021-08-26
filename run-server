@@ -255,7 +255,7 @@ Command-line arguments summary
         if mode == 'debug':
             start_bottle_server(scheme, host, port, extra_path, debug_user)
         else:
-            start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode)
+            start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode, debug_user)
     except Exception as ex:
         exception = sys.exc_info()
         msg = antiformat(exception[1])
@@ -270,11 +270,13 @@ Command-line arguments summary
         log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
 
 
-def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode):
+def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode, debug_user):
     # mod_wsgi-express doesn't have a direct way to set parameters; you have
     # to construct a command line parsed by mod_wsgi_start(...).  Oh well.
     args = [adapter_file, '--host', host, '--port', port,
             '--setenv', 'RUN_MODE', mode]
+    if debug_user:
+        args += ['--setenv', 'REMOTE_USER', debug_user]
     if extra_path:
         args += ['--mount-point', extra_path]
     if mode == 'verbose':
@@ -284,6 +286,8 @@ def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode):
         args += ['--error-log-format', '[%{%H:%M:%S}t] %M']
         args += ['--access-log-format', '[%{%a %b %0e %H:%M:%S %Y}t] %h \"%r\" %>s']
         print_settings(mode, adapter_file)
+    if debug_user:
+        print_debug_user_warning()
 
     log(f'starting mod_wsgi with arguments: {" ".join(args)}')
     mod_wsgi_start(args)
@@ -332,7 +336,19 @@ def print_safety_warning():
     panel_width = 55 if terminal_width > 55 else terminal_width
     padding = min(abs(panel_width - len(text) - 2) // 2, 2)
     Console().print(Panel(text, width = panel_width, padding = (0, padding),
-                          style = 'orange_red1'))
+                          style = 'orange3'))
+
+
+def print_debug_user_warning():
+    text = ("⚠️  [bold]DANGER: YOU HAVE DISABLED AUTHENTICATION.[/] ⚠️\n"
+            + 'Running with --debug-user means that all visitors\n'
+            + 'are considered pre-authenticated. Do [bold]not[/] run in\n'
+            + 'this mode on a production or public server.')
+    terminal_width = get_terminal_size().columns
+    panel_width = 55 if terminal_width > 55 else terminal_width
+    padding = min(abs(panel_width - len(text) - 2) // 2, 2)
+    Console().print(Panel(text, width = panel_width, padding = (0, padding),
+                          style = 'red'))
 
 
 def print_settings(mode, adapter_file = None):
