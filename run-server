@@ -75,7 +75,6 @@ from   bottle import request
 from   commonpy.data_utils import timestamp
 from   commonpy.file_utils import readable
 from   commonpy.string_utils import antiformat
-from   decouple import config
 from   mod_wsgi.server import cmd_start_server as mod_wsgi_start
 import os
 import plac
@@ -84,10 +83,11 @@ from   rich.box import DOUBLE_EDGE
 from   rich.console import Console
 from   rich.panel import Panel
 from   shutil import get_terminal_size
-from   sidetrack import set_debug, log, logr
+from   sidetrack import set_debug, log
 from   yurl import URL
 
 from   dibs import dibs, print_version
+from   dibs.settings import config
 
 
 @plac.annotations(
@@ -285,7 +285,7 @@ def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode):
         args += ['--access-log-format', '[%{%a %b %0e %H:%M:%S %Y}t] %h \"%r\" %>s']
         print_settings(mode, adapter_file)
 
-    logr(f'starting mod_wsgi with arguments: {" ".join(args)}')
+    log(f'starting mod_wsgi with arguments: {" ".join(args)}')
     mod_wsgi_start(args)
 
 
