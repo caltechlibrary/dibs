@@ -9,8 +9,12 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from decouple import config, AutoConfig
-from decouple import RepositoryIni, RepositoryEnv, DEFAULT_ENCODING
+from   collections import OrderedDict
+from   configparser import ConfigParser
+from   decouple import config, AutoConfig
+from   decouple import RepositoryIni, RepositoryEnv, DEFAULT_ENCODING
+import os
+from   sidetrack import log
 
 
 class DIBSRepositoryIni(RepositoryIni):
@@ -20,6 +24,7 @@ class DIBSRepositoryIni(RepositoryIni):
         super().__init__(source, encoding)
         self.section = section
         self.parser = ConfigParser()
+        log(f'reading ini file {source}')
         with open(source, encoding = encoding) as file_:
             self.parser.readfp(file_)
 
@@ -42,6 +47,7 @@ class DIBSConfig(AutoConfig):
 
 
     def __init__(self, search_path = None):
+        log(f'initializing DIBSConfig with search_path = {search_path}')
         super().__init__(search_path)
 
 
