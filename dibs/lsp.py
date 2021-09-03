@@ -75,7 +75,7 @@ class TindInterface(LSPInterface):
             title = rec.title
             if rec.subtitle:
                 title += ': ' + rec.subtitle
-            log(f'record for {barcode} has id {rec.id} in {self.url}')
+            log(f'record for {barcode} has id {rec.tind_id} in {self.url}')
             return LSPRecord(id            = rec.tind_id,
                              url           = rec.tind_url,
                              title         = rec.title,
