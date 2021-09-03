@@ -60,8 +60,8 @@
                 % for item in items:
                 <tr scope="row">
                   <td>
-                    % if item.tind_id != '':
-                    <a href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.barcode}}</a>
+                      %if item.item_page != '':
+                      <a target="_blank" href="{{item.item_page}}">{{item.barcode}}</a>
                     % else:
                     {{item.barcode}}
                     % end

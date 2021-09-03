@@ -45,9 +45,8 @@
                   <th class="item-info-label">Title</th>
                   <td class="item-info-value">
                     <strong>
-                      %if item.tind_id != '':
-                      <a target="_blank"
-                         href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                      %if item.item_page != '':
+                      <a target="_blank" href="{{item.item_page}}">{{item.title}}</a>
                       %else:
                       {{item.title}}
                       %end
