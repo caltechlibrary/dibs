@@ -379,7 +379,7 @@ def update_item():
                         message = f'There is no item with barcode {barcode}.')
         log(f'adding item entry {barcode} for {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
-                    item_id = rec.item_id, year = rec.year,
+                    item_id = rec.id, year = rec.year,
                     edition = rec.edition, thumbnail = rec.thumbnail_url,
                     num_copies = num_copies, duration = duration)
     else: # The operation is /update/edit.
