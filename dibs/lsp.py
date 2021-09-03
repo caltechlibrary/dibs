@@ -25,7 +25,7 @@ from .settings import config
 class LSPRecord():
     '''Common abstraction for records returned by different LSP's.'''
     id            : str
-    details_page  : str
+    url           : str
     title         : str
     author        : str
     publisher     : str
@@ -77,7 +77,7 @@ class TindInterface(LSPInterface):
                 title += ': ' + rec.subtitle
             log(f'record for {barcode} has id {rec.id} in {self.url}')
             return LSPRecord(id            = rec.tind_id,
-                             details_page  = rec.tind_url,
+                             url           = rec.tind_url,
                              title         = rec.title,
                              author        = rec.author,
                              publisher     = rec.publisher,
@@ -109,7 +109,7 @@ class FolioInterface(LSPInterface):
             rec = self._folio.record(barcode = barcode)
             log(f'record for {barcode} has id {rec.id} in {self.url}')
             return LSPRecord(id            = rec.id,
-                             details_page  = rec.details_page,
+                             url           = rec.details_page,
                              title         = rec.title,
                              author        = rec.author,
                              publisher     = rec.publisher,
@@ -139,7 +139,6 @@ class LSP(LSPInterface):
         # Select the appropriate interface type and create the object.
         lsp_type = config('LSP_TYPE').lower()
         if lsp_type == 'folio':
-            log(f'type: {type(config)}')
             url       = config('FOLIO_OKAPI_URL',       section = 'folio')
             token     = config('FOLIO_OKAPI_TOKEN',     section = 'folio')
             tenant_id = config('FOLIO_OKAPI_TENANT_ID', section = 'folio')
