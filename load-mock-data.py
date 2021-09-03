@@ -23,6 +23,7 @@ db.create_tables([Item, Loan, History, Person])
 # it references an open copy of the book at the Wellcome Collection in the UK.
 Item.create(barcode    = '350470000363458',
             item_id    = '514607',
+            item_page  = 'https://caltech.tind.io/record/514607',
             title      = 'The Biocrats',
             author     = 'Gerald Leach',
             year       = '1970',
