@@ -13,10 +13,11 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from decouple import config
 from peewee import SqliteDatabase, Model
 from peewee import CharField, TextField, IntegerField, SmallIntegerField
 from peewee import ForeignKeyField, AutoField, DateTimeField, BooleanField
+
+from .settings import config
 
 
 # Database connection.
@@ -51,12 +52,29 @@ class Item(BaseModel):
     strictly necessary for loan purposes. They are here to cache the values
     so that they don't have to be looked up when generating the /item page.
     FIXME: keeping this data introduces an opportunity for inconsistencies,
-    if the source data (currently in TIND) gets changed.
+    if the source data in the LSP gets changed.
     '''
 
-    itemid     = AutoField()            # Auto-increment primary key.
-    barcode    = CharField(unique = True)
-    tind_id    = CharField()
+    # Explanation of the rationale for the barcode and item_id fields:
+    #
+    # 1. All LSPs used so far assign id values to item records.  We need to
+    #    store this id.
+    #
+    # 2. Peewee automatically defines a field/database column called "id" on
+    #    every object, but it manages that field specially and although you
+    #    can avoid having it create "id" altogether, you cannot *both* avoid
+    #    Peewee creating *and* create your own field named "id" for a
+    #    different purpose.  If you create your own field named "id", the
+    #    schema definition works but things break at run time.
+    #
+    # 3. We override Peewee's default primary key field name (id) to use the
+    #    barcode as the primary key, because we also need to store the LSP's
+    #    "id" value, and it's too confusing to have two fields named "id" and
+    #    "item_id" on Item objects.  Point #2 above explains why we can't name
+    #    our LSP id as "id" and have to use something else like "item_id".
+
+    barcode    = CharField(primary_key = True, unique = True)
+    item_id    = CharField()            # The LSP's own id for this item.
     title      = TextField()
     author     = TextField()
     year       = CharField()
@@ -95,8 +113,7 @@ class Loan(BaseModel):
     # datetime.now(tz = tz.tzlocal()) you will get string values. So, we store
     # all values as UTC and then convert to/from local time zone as needed.
 
-    loanid      = AutoField()
-    item        = ForeignKeyField(Item, column_name = 'itemid', backref = 'loanref')
+    item        = ForeignKeyField(Item, column_name = 'barcode', backref = 'loanref')
     state       = CharField()           # String, either 'active' or 'recent'
     user        = TextField()           # Login, probably someone@caltech.edu
     start_time  = DateTimeField()       # When did the patron start the loan?
@@ -122,7 +139,6 @@ class History(BaseModel):
       stop:   when did the event stop
     '''
 
-    historyid  = AutoField()
     type       = CharField()            # String describing the event
     what       = CharField()            # What is this about? (e.g. a barcode)
     start_time = DateTimeField()        # When did the event start?
