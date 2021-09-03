@@ -67,7 +67,7 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
 
 # Directory containing workflow processing status files.
-_PROCESS_DIR = config('PROCESS_DIR', default = 'manifests')
+_PROCESS_DIR = config('PROCESS_DIR', default = 'processing')
 if not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
 
 # The base URL of the IIIF server endpoint. Note: there is no reasonable
