@@ -10,6 +10,7 @@ file "LICENSE" for more information.
 '''
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pokapi import Folio
 from sidetrack import log
 from topi import Tind
@@ -20,8 +21,22 @@ from .settings import config
 # Classes implementing interface to specific LSPs.
 # .............................................................................
 
+@dataclass
+class LSPRecord():
+    '''Common abstraction for records returned by different LSP's.'''
+    id            : str
+    details_page  : str
+    title         : str
+    author        : str
+    publisher     : str
+    edition       : str
+    year          : str
+    isbn_issn     : str
+    thumbnail_url : str
+
+
 class LSPInterface(ABC):
-    '''Abstract interface class for getting data from an LSP.'''
+    '''Abstract interface class for getting a record from an LSP.'''
 
     # The name of this type of LSP.  Used for printing messages.
     name = ''
@@ -54,7 +69,19 @@ class TindInterface(LSPInterface):
 
     def record(self, barcode = None):
         try:
-            return self._tind.item(barcode = barcode).parent
+            rec = self._tind.item(barcode = barcode).parent
+            title = rec.title
+            if rec.subtitle:
+                title += ': ' + rec.subtitle
+            return LSPRecord(id            = rec.tind_id,
+                             details_page  = rec.tind_url,
+                             title         = rec.title,
+                             author        = rec.author,
+                             publisher     = rec.publisher,
+                             year          = rec.year,
+                             edition       = rec.edition,
+                             isbn_issn     = rec.isbn_issn,
+                             thumbnail_url = rec.thumbnail_url)
         except:
             log(f'could not find {barcode} in TIND')
             raise ValueError('No such barcode {barcode} in {self._url}')
@@ -74,7 +101,16 @@ class FolioInterface(LSPInterface):
 
     def record(self, barcode = None):
         try:
-            return self._folio.record(barcode = barcode)
+            rec = self._folio.record(barcode = barcode)
+            return LSPRecord(id            = rec.id,
+                             details_page  = rec.details_page,
+                             title         = rec.title,
+                             author        = rec.author,
+                             publisher     = rec.publisher,
+                             year          = rec.year,
+                             edition       = rec.edition,
+                             isbn_issn     = rec.isbn_issn,
+                             thumbnail_url = rec.thumbnail_url)
         except:
             log(f'could not find {barcode} in Folio')
             raise ValueError('No such barcode {barcode} in {self._url}')
@@ -97,6 +133,7 @@ class LSP(LSPInterface):
         # Select the appropriate interface type and create the object.
         lsp_type = config('LSP_TYPE').lower()
         if lsp_type == 'folio':
+            log(f'type: {type(config)}')
             url       = config('FOLIO_OKAPI_URL',       section = 'folio')
             token     = config('FOLIO_OKAPI_TOKEN',     section = 'folio')
             tenant_id = config('FOLIO_OKAPI_TENANT_ID', section = 'folio')
