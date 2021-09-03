@@ -98,3 +98,4 @@ htpasswd
 .htpasswd
 .README.md.tmp
 *.bak
+processing/*
