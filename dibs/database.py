@@ -75,6 +75,7 @@ class Item(BaseModel):
 
     barcode    = CharField(primary_key = True, unique = True)
     item_id    = CharField()            # The LSP's own id for this item.
+    item_page  = TextField()            # URL for item's page in LSP.
     title      = TextField()
     author     = TextField()
     year       = CharField()
