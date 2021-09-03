@@ -1,5 +1,16 @@
 #  Change log for DIBS
 
+## Version 0.5.0
+
+This version brings significant changes and new features.
+
+* Now supports FOLIO in addition to TIND LSP. Along with this, the configuration file `settings.ini-example` has had a number of changes for people's `settings.ini` files.
+* `run-server` allows the use of the `--debug-user` flag in all modes, for more debugging capabilities.
+* Updated dependency versions and changed `requirements.txt` to pin the version numbers.
+* Added [Pokapi](https://github.com/caltechlibrary/pokapi) as new dependency for FOLIO interface.
+* Fixed issue #88: wrong default set for the item processing directory by `server.py`.
+
+
 ## Version 0.4.1
 
 * Fix issue #85: remove email address from server log message printed during status checks
