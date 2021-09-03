@@ -36,21 +36,21 @@ class LSPRecord():
 
 
 class LSPInterface(ABC):
-    '''Abstract interface class for getting a record from an LSP.'''
+    '''Abstract interface class for getting a record from an LSP.
 
-    # The name of this type of LSP.  Used for printing messages.
-    name = ''
+    All concrete implementations of this class are assumed to have at least
+    a URL for the API of the server, and may have additional parameters on
+    a per-class basis.
+    '''
 
-    def __init__(self):
-        pass
-
-
-    def __str__(self):
-        return self.name
+    def __init__(self, url = None):
+        '''Create an interface for the server at "url".'''
+        self.url = url
 
 
     def __repr__(self):
-        return self.name
+        '''Return a string representing this interface object.'''
+        return "<{} for {}>".format(self.__class__.__name__, self.url)
 
 
     @abstractmethod
@@ -60,19 +60,22 @@ class LSPInterface(ABC):
 
 
 class TindInterface(LSPInterface):
-    name = 'TIND'
+    '''Interface layer for TIND hosted LSP servers.'''
 
     def __init__(self, url = None):
-        self._url = url
+        '''Create an interface for the server at "url".'''
+        self.url = url
         self._tind = Tind(url)
 
 
     def record(self, barcode = None):
+        '''Return a record for the item identified by the "barcode".'''
         try:
             rec = self._tind.item(barcode = barcode).parent
             title = rec.title
             if rec.subtitle:
                 title += ': ' + rec.subtitle
+            log(f'record for {barcode} has id {rec.id} in {self.url}')
             return LSPRecord(id            = rec.tind_id,
                              details_page  = rec.tind_url,
                              title         = rec.title,
@@ -84,15 +87,16 @@ class TindInterface(LSPInterface):
                              thumbnail_url = rec.thumbnail_url)
         except:
             log(f'could not find {barcode} in TIND')
-            raise ValueError('No such barcode {barcode} in {self._url}')
+            raise ValueError('No such barcode {barcode} in {self.url}')
 
 
 
 class FolioInterface(LSPInterface):
-    name = 'FOLIO'
+    '''Interface layer for FOLIO hosted LSP servers.'''
 
     def __init__(self, url = None, token = None, tenant_id = None):
-        self._url = url
+        '''Create an interface for the server at "url".'''
+        self.url = url
         self._token = token
         self._tenant_id = tenant_id
         self._folio = Folio(okapi_url = url, okapi_token = token,
@@ -100,8 +104,10 @@ class FolioInterface(LSPInterface):
 
 
     def record(self, barcode = None):
+        '''Return a record for the item identified by the "barcode".'''
         try:
             rec = self._folio.record(barcode = barcode)
+            log(f'record for {barcode} has id {rec.id} in {self.url}')
             return LSPRecord(id            = rec.id,
                              details_page  = rec.details_page,
                              title         = rec.title,
@@ -112,8 +118,8 @@ class FolioInterface(LSPInterface):
                              isbn_issn     = rec.isbn_issn,
                              thumbnail_url = rec.thumbnail_url)
         except:
-            log(f'could not find {barcode} in Folio')
-            raise ValueError('No such barcode {barcode} in {self._url}')
+            log(f'could not find {barcode} in FOLIO')
+            raise ValueError('No such barcode {barcode} in {self.url}')
 
 
 # Primary exported class.
