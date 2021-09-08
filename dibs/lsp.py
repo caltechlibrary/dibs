@@ -94,13 +94,17 @@ class TindInterface(LSPInterface):
 class FolioInterface(LSPInterface):
     '''Interface layer for FOLIO hosted LSP servers.'''
 
-    def __init__(self, url = None, token = None, tenant_id = None):
+    def __init__(self, url = None, token = None, tenant_id = None,
+                 an_prefix = None, page_template = None):
         '''Create an interface for the server at "url".'''
         self.url = url
         self._token = token
         self._tenant_id = tenant_id
+        self._an_prefix = an_prefix
+        self._page_template = page_template
         self._folio = Folio(okapi_url = url, okapi_token = token,
-                            tenant_id = tenant_id)
+                            tenant_id = tenant_id, an_prefix = an_prefix,
+                            page_template = page_template)
 
 
     def record(self, barcode = None):
@@ -139,11 +143,15 @@ class LSP(LSPInterface):
         # Select the appropriate interface type and create the object.
         lsp_type = config('LSP_TYPE').lower()
         if lsp_type == 'folio':
-            url       = config('FOLIO_OKAPI_URL',       section = 'folio')
-            token     = config('FOLIO_OKAPI_TOKEN',     section = 'folio')
-            tenant_id = config('FOLIO_OKAPI_TENANT_ID', section = 'folio')
+            url           = config('FOLIO_OKAPI_URL',       section = 'folio')
+            token         = config('FOLIO_OKAPI_TOKEN',     section = 'folio')
+            tenant_id     = config('FOLIO_OKAPI_TENANT_ID', section = 'folio')
+            an_prefix     = config('EDS_ACCESSION_PREFIX',  section = 'folio')
+            page_template = config('EDS_PAGE_TEMPLATE',     section = 'folio')
             log(f'Using FOLIO URL {url} with tenant id {tenant_id}')
-            lsp = FolioInterface(url = url, token = token, tenant_id = tenant_id)
+            lsp = FolioInterface(url = url, token = token,
+                                 tenant_id = tenant_id, an_prefix = an_prefix,
+                                 page_template = page_template)
         elif lsp_type == 'tind':
             url = config('TIND_SERVER_URL', section = 'tind')
             log(f'Using TIND URL {url}')
