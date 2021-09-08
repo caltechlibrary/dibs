@@ -28,7 +28,6 @@ Item.create(barcode    = '350470000363458',
             author     = 'Gerald Leach',
             year       = '1970',
             edition    = 'First',
-            thumbnail  = 'https://dlcs.io/thumbs/wellcome/5/b18035978_0001.JP2/full/69,100/0/default.jpg',
             num_copies = 1,
             duration   = 6,
             ready      = True

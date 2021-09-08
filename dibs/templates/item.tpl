@@ -34,6 +34,7 @@
   <body>
     <div class="page-content">
       %include('common/navbar.tpl')
+      %from os.path import join, exists
 
       <div class="container main-container">
         <div class="row pt-3 mx-auto item-info-row">
@@ -76,8 +77,9 @@
           </div>
 
           <div class="col-sm-2 col-xs-0 item-thumbnail">
-            %if item.thumbnail != '':
-            <img class="thumbnail img-responsive" src="{{item.thumbnail}}">
+            %thumbnail_file = join(thumbnails_dir, item.barcode + ".jpg")
+            %if exists(thumbnail_file):
+            <img class="thumbnail img-responsive" src="{{base_url}}/thumbnails/{{item.barcode}}.jpg">
             %else:
             <img class="thumbnail img-responsive" src="{{base_url}}/static/missing-thumbnail.svg">
             %end

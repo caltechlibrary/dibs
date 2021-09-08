@@ -63,15 +63,15 @@ class Item(BaseModel):
     # 2. Peewee automatically defines a field/database column called "id" on
     #    every object, but it manages that field specially and although you
     #    can avoid having it create "id" altogether, you cannot *both* avoid
-    #    Peewee creating *and* create your own field named "id" for a
+    #    Peewee creating id *and* defining your own field named "id" for a
     #    different purpose.  If you create your own field named "id", the
     #    schema definition works but things break at run time.
     #
     # 3. We override Peewee's default primary key field name (id) to use the
     #    barcode as the primary key, because we also need to store the LSP's
-    #    "id" value, and it's too confusing to have two fields named "id" and
-    #    "item_id" on Item objects.  Point #2 above explains why we can't name
-    #    our LSP id as "id" and have to use something else like "item_id".
+    #    "id" value, and it's too confusing to have separate fields named "id"
+    #    & "item_id" on Item objects.  Point #2 above explains why we must use
+    #    something other than "id" for our LSP id field.  Thus: "item_id".
 
     barcode    = CharField(primary_key = True, unique = True)
     item_id    = CharField()            # The LSP's own id for this item.
@@ -80,7 +80,6 @@ class Item(BaseModel):
     author     = TextField()
     year       = CharField()
     edition    = CharField()
-    thumbnail  = TextField()            # URL to an image.
     num_copies = SmallIntegerField()
     duration   = SmallIntegerField()    # Assumed to be hours.
     ready      = BooleanField(default = False)

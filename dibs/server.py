@@ -70,6 +70,10 @@ if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
 _PROCESS_DIR = config('PROCESS_DIR', default = 'processing')
 if not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
 
+# Directory containing thumbnail images of item covers/jackets.
+_THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'thumbnails')
+if not isabs(_THUMBNAILS_DIR): _THUMBNAILS_DIR = join(_SERVER_ROOT, _THUMBNAILS_DIR)
+
 # The base URL of the IIIF server endpoint. Note: there is no reasonable
 # default value for this one, so we fail if this is not set.
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
@@ -380,8 +384,8 @@ def update_item():
         log(f'adding item entry {barcode} for {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     item_id = rec.id, item_page = rec.url, year = rec.year,
-                    edition = rec.edition, thumbnail = rec.thumbnail_url,
-                    num_copies = num_copies, duration = duration)
+                    edition = rec.edition, num_copies = num_copies,
+                    duration = duration)
     else: # The operation is /update/edit.
         if not item:
             log(f'there is no item with barcode {barcode}')
@@ -585,7 +589,7 @@ def show_item_info(barcode, person):
     return page('item', browser_no_cache = True, item = item,
                 available = (status == Status.AVAILABLE),
                 when_available = human_datetime(when_available),
-                explanation = explanation)
+                explanation = explanation, thumbnails_dir = _THUMBNAILS_DIR)
 
 
 @dibs.post('/loan', apply = AddPersonArgument())
@@ -826,7 +830,7 @@ def error405(error):
                            'not have permission to perform the action.'))
 
 
-# Miscellaneous static pages.
+# Miscellaneous static pages and files.
 # .............................................................................
 
 @dibs.get('/favicon.ico')
@@ -840,3 +844,10 @@ def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = 'dibs/static')
+
+
+@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>')
+def included_file(filename):
+    '''Return a static file used with %include in a template.'''
+    log(f'returning included file {filename}')
+    return static_file(filename, root = 'thumbnails')

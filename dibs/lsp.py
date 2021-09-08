@@ -9,13 +9,16 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from pokapi import Folio
-from sidetrack import log
-from topi import Tind
+from   abc import ABC, abstractmethod
+from   dataclasses import dataclass
+import os
+from   os.path import realpath, dirname, join, exists, isabs
+from   pokapi import Folio
+from   sidetrack import log
+from   topi import Tind
 
 from .settings import config
+from .thumbnail import save_thumbnail
 
 
 # Classes implementing interface to specific LSPs.
@@ -32,7 +35,6 @@ class LSPRecord():
     edition       : str
     year          : str
     isbn_issn     : str
-    thumbnail_url : str
 
 
 class LSPInterface(ABC):
@@ -62,9 +64,10 @@ class LSPInterface(ABC):
 class TindInterface(LSPInterface):
     '''Interface layer for TIND hosted LSP servers.'''
 
-    def __init__(self, url = None):
+    def __init__(self, url = None, thumbnails_dir = None):
         '''Create an interface for the server at "url".'''
         self.url = url
+        self._thumbnails_dir = thumbnails_dir
         self._tind = Tind(url)
 
 
@@ -76,6 +79,13 @@ class TindInterface(LSPInterface):
             if rec.subtitle:
                 title += ': ' + rec.subtitle
             log(f'record for {barcode} has id {rec.tind_id} in {self.url}')
+            thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
+            if rec.thumbnail_url:
+                save_thumbnail(thumbnail_file, url = rec.thumbnail_url)
+            elif rec.isbn_issn:
+                save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
+            else:
+                log(f"{barcode} lacks ISBN and thumbnail URL => no thumbnail")
             return LSPRecord(id            = rec.tind_id,
                              url           = rec.tind_url,
                              title         = rec.title,
@@ -83,8 +93,7 @@ class TindInterface(LSPInterface):
                              publisher     = rec.publisher,
                              year          = rec.year,
                              edition       = rec.edition,
-                             isbn_issn     = rec.isbn_issn,
-                             thumbnail_url = rec.thumbnail_url)
+                             isbn_issn     = rec.isbn_issn)
         except:
             log(f'could not find {barcode} in TIND')
             raise ValueError('No such barcode {barcode} in {self.url}')
@@ -95,15 +104,18 @@ class FolioInterface(LSPInterface):
     '''Interface layer for FOLIO hosted LSP servers.'''
 
     def __init__(self, url = None, token = None, tenant_id = None,
-                 an_prefix = None, page_template = None):
+                 an_prefix = None, page_template = None, thumbnails_dir = None):
         '''Create an interface for the server at "url".'''
         self.url = url
         self._token = token
         self._tenant_id = tenant_id
         self._an_prefix = an_prefix
         self._page_template = page_template
-        self._folio = Folio(okapi_url = url, okapi_token = token,
-                            tenant_id = tenant_id, an_prefix = an_prefix,
+        self._thumbnails_dir = thumbnails_dir
+        self._folio = Folio(okapi_url = url,
+                            okapi_token = token,
+                            tenant_id = tenant_id,
+                            an_prefix = an_prefix,
                             page_template = page_template)
 
 
@@ -112,6 +124,9 @@ class FolioInterface(LSPInterface):
         try:
             rec = self._folio.record(barcode = barcode)
             log(f'record for {barcode} has id {rec.id} in {self.url}')
+            thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
+            if rec.isbn_issn:
+                save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
             return LSPRecord(id            = rec.id,
                              url           = rec.details_page,
                              title         = rec.title,
@@ -119,8 +134,7 @@ class FolioInterface(LSPInterface):
                              publisher     = rec.publisher,
                              year          = rec.year,
                              edition       = rec.edition,
-                             isbn_issn     = rec.isbn_issn,
-                             thumbnail_url = rec.thumbnail_url)
+                             isbn_issn     = rec.isbn_issn)
         except:
             log(f'could not find {barcode} in FOLIO')
             raise ValueError('No such barcode {barcode} in {self.url}')
@@ -140,6 +154,11 @@ class LSP(LSPInterface):
             log(f'Using previously-created LSP object {str(cls)}')
             return lsp
 
+        # Read common configuration variables.
+        root = realpath(join(dirname(__file__), os.pardir))
+        thumbnails_dir = join(root, config('THUMBNAILS_DIR', section = 'dibs'))
+        log(f'assuming thumbnails dir is {thumbnails_dir}')
+
         # Select the appropriate interface type and create the object.
         lsp_type = config('LSP_TYPE').lower()
         if lsp_type == 'folio':
@@ -149,13 +168,16 @@ class LSP(LSPInterface):
             an_prefix     = config('EDS_ACCESSION_PREFIX',  section = 'folio')
             page_template = config('EDS_PAGE_TEMPLATE',     section = 'folio')
             log(f'Using FOLIO URL {url} with tenant id {tenant_id}')
-            lsp = FolioInterface(url = url, token = token,
-                                 tenant_id = tenant_id, an_prefix = an_prefix,
-                                 page_template = page_template)
+            lsp = FolioInterface(url = url,
+                                 token = token,
+                                 tenant_id = tenant_id,
+                                 an_prefix = an_prefix,
+                                 page_template = page_template,
+                                 thumbnails_dir = thumbnails_dir)
         elif lsp_type == 'tind':
             url = config('TIND_SERVER_URL', section = 'tind')
             log(f'Using TIND URL {url}')
-            lsp = TindInterface(url)
+            lsp = TindInterface(url, thumbnails_dir = thumbnails_dir)
         else:
             raise ValueError('LSP_TYPE value is missing from settings.ini')
 
