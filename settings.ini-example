@@ -26,13 +26,13 @@
 #HTPASSWD = /usr/bin/htpasswd
 #PASSWORD_FILE = /path/to/dibs/here/password.txt
 
-# Path to the sqlite database, relative to here.
-DATABASE_FILE = dibs.db
-
 # Set the next variable to either "folio" or "tind", depending on which LSP
 # you are using, and then uncomment and set the relevant variables later in
 # this file to configure your particular LSP.
 LSP_TYPE = 
+
+# Path to the sqlite database, relative to here.
+DATABASE_FILE = dibs.db
 
 # Directory containing IIIF manifest files.  Each file name should follow the
 # pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
@@ -47,7 +47,8 @@ MANIFEST_DIR = manifests
 # find out the current status.
 PROCESS_DIR = processing
 
-# IIIF image service API base path.  Include the protocol version at the end.
+# IIIF image service API base path.  Include the protocol version at the end,
+# as shown in the (fake) example on the next line.
 IIIF_BASE_URL = https://yourserver.com/iiif/2
 
 # DIBS caches pages it fetches from the IIIF server.  This sets the size of
@@ -88,13 +89,10 @@ RUN_MODE = normal
 # ~~~~~~~~~~~~~~~~~~~~~~~~ LSP interface settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# In what follows, uncomment only the section relevant to the LSP you use.
-
 [tind]
 # If you use TIND, set this to the base URL of your hosted TIND server.  For
 # example, when Caltech was using TIND, this was https://caltech.tind.io
-#
-#TIND_SERVER_URL = 
+TIND_SERVER_URL = 
 
 
 [folio]
@@ -103,7 +101,8 @@ RUN_MODE = normal
 # generate once and then can reuse for every call.  As of 2021-08-23, there
 # is some sample code in https://github.com/FOLIO-FSE/tech-partner-demo for
 # generating a token in various ways, such as using a shell script.
-#
-#FOLIO_OKAPI_URL = 
-#FOLIO_OKAPI_TENANT_ID = 
-#FOLIO_OKAPI_TOKEN = 
+FOLIO_OKAPI_URL = 
+FOLIO_OKAPI_TENANT_ID = 
+FOLIO_OKAPI_TOKEN = 
+EDS_ACCESSION_PREFIX = 
+EDS_PAGE_TEMPLATE = 
