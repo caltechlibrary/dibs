@@ -74,6 +74,9 @@ if not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
 _THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'thumbnails')
 if not isabs(_THUMBNAILS_DIR): _THUMBNAILS_DIR = join(_SERVER_ROOT, _THUMBNAILS_DIR)
 
+# Internal threshold for max size of thumbnail images uploaded via edit form.
+_MAX_FILE_SIZE = 1 * 1024 * 1024;
+
 # The base URL of the IIIF server endpoint. Note: there is no reasonable
 # default value for this one, so we fail if this is not set.
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
@@ -335,13 +338,15 @@ def manage_items():
 @dibs.get('/add', apply = VerifyStaffUser())
 def add():
     '''Display the page to add new items.'''
-    return page('edit', action = 'add', item = None)
+    return page('edit', action = 'add', item = None,
+                thumbnails_dir = _THUMBNAILS_DIR)
 
 
 @dibs.get('/edit/<barcode:int>', apply = VerifyStaffUser())
 def edit(barcode):
     '''Display the page to add new items.'''
-    return page('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
+    return page('edit', action = 'edit', thumbnails_dir = _THUMBNAILS_DIR,
+                item = Item.get(Item.barcode == barcode))
 
 
 @dibs.post('/update/add', apply = VerifyStaffUser())
@@ -368,6 +373,7 @@ def update_item():
         return page('error', summary = 'invalid copy number',
                     message = f'# of copies must be a positive number')
     notes = request.forms.get('notes').strip()
+    thumbnail = request.files.get('thumbnail-image')
 
     item = Item.get_or_none(Item.barcode == barcode)
     if '/update/add' in request.path:
@@ -399,6 +405,29 @@ def update_item():
         log(f'saving changes to {barcode}')
         item.save(only = [Item.barcode, Item.num_copies, Item.duration, Item.notes])
         # FIXME if we reduced the number of copies, we need to check loans.
+
+        # Handle replacement thumbnail images if the user chose one.
+        if not thumbnail or not thumbnail.filename:
+            log(f'user did not provide a new thumbnail image file')
+        elif thumbnail.content_type != 'image/jpeg':
+            log(f'thumbnail image type {thumbnail.content_type} != jpeg')
+        elif thumbnail.content_length > _MAX_FILE_SIZE:
+            log(f'thumbnail image size exceeds threshold')
+        else:
+             try:
+                file = thumbnail.file
+                data = b''
+                while ((chunk := file.read(1024)) and len(data) < _MAX_FILE_SIZE):
+                    data += chunk
+                if chunk and len(data) >= _MAX_FILE_SIZE:
+                    log(f'file exceeds max size -- ignoring the file')
+                else:
+                    dest_file = join(_THUMBNAILS_DIR, barcode + '.jpg')
+                    log(f'writing uploaded file to {dest_file}')
+                    with open(dest_file, 'wb') as new_file:
+                        new_file.write(data)
+             except Exception as ex:
+                 log(f'exception trying to save thumbnail: {str(ex)}')
     redirect(f'{dibs.base_url}/list')
 
 
