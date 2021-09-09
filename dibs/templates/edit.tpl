@@ -90,7 +90,7 @@
             %if item:
             <div class="col-2 d-flex align-items-center pr-5">
               %if thumbnail_file and exists(thumbnail_file):
-              <img class="mx-auto pt-3" style="width: 90px"
+              <img class="mx-auto pt-3 thumbnail-image" style="width: 90px"
                    src="{{base_url}}/thumbnails/{{item.barcode}}.jpg">
               %else:
               <img class="mx-auto py-3" style="width: 90px"

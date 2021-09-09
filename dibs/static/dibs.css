@@ -210,6 +210,16 @@ img.thumbnail {
   margin-top: 3rem;
 }
 
+.thumbnail-image {
+  box-shadow: 5px 10px 15px #ccc;
+  -moz-box-shadow: 5px 10px 15px #ccc;
+  -webkit-box-shadow: 5px 10px 15px #ccc;
+  -khtml-box-shadow: 5px 10px 15px #ccc;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+}
+
 /* Adjustments for different screen sizes .................................. */
 
 /* Special case for the footer, which starts to wrap around 820 pixels.
