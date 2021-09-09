@@ -110,8 +110,12 @@ def thumbnail_from_google(isbn):
     info = json_dict['items'][0]['volumeInfo']
     if 'imageLinks' in info and 'thumbnail' in info['imageLinks']:
         log(f'succeeded getting thumbnail image URL from Google for {isbn}')
-        import pdb; pdb.set_trace()
-        return info['imageLinks']['thumbnail']
+        image_url = info['imageLinks']['thumbnail']
+        (google_response, google_error) = net('get', image_url)
+        if not google_error:
+            return google_response.content
+        else:
+            return None
     log(f'Google did not return a thumbnail URL for {isbn}')
     return None
 
