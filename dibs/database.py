@@ -80,6 +80,7 @@ class Item(BaseModel):
     author     = TextField()
     year       = CharField()
     edition    = CharField()
+    publisher  = TextField()
     num_copies = SmallIntegerField()
     duration   = SmallIntegerField()    # Assumed to be hours.
     ready      = BooleanField(default = False)

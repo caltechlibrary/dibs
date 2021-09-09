@@ -27,10 +27,14 @@ Item.create(barcode    = '350470000363458',
             title      = 'The Biocrats',
             author     = 'Gerald Leach',
             year       = '1970',
+            publisher  = 'McGraw-Hill',
             edition    = 'First',
             num_copies = 1,
             duration   = 6,
-            ready      = True
+            notes      = ('This is just a random book chosen because it was'
+                          + ' the only title we could find in both a public'
+                          + ' external IIIF server and in our Caltech catalog'),
+            ready      = True,
 )
 
 print('-'*50)

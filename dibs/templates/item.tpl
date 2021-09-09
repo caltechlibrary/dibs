@@ -54,18 +54,31 @@
                     </strong>
                   </td>
                 </tr>
+
                 <tr>
                   <th>Author(s)</th>
-                  <td class="item-info-value">{{item.author.split(',')[0] + ' et al.' if item.author.count(',') > 2 else item.author}}</td>
+                  <td class="item-info-value">
+                    %author = item.author
+                    {{author.split(',')[0] + ' et al.' if author.count(',') > 2 else author}}
+                  </td>
                 </tr>
-                %if item.edition != '':
+
+                %if item.publisher != '':
                 <tr>
-                %else:
-                <tr class="last">
+                  <th>Publisher</th>
+                  <td class="item-info-value">{{item.publisher}}</td>
+                </tr>
                 %end
+
+                <tr
+                  %if item.edition == '':
+                  class="last"
+                  %end
+                  >
                   <th>Year</th>
                   <td class="item-info-value">{{item.year}}</td>
                 </tr>
+
                 %if item.edition != '':
                 <tr class="last">
                   <th>Edition</th>
