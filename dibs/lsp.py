@@ -80,20 +80,24 @@ class TindInterface(LSPInterface):
                 title += ': ' + rec.subtitle
             log(f'record for {barcode} has id {rec.tind_id} in {self.url}')
             thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
-            if rec.thumbnail_url:
-                save_thumbnail(thumbnail_file, url = rec.thumbnail_url)
-            elif rec.isbn_issn:
-                save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
+            # Don't overwrite existing images.
+            if not exists(thumbnail_file):
+                if rec.thumbnail_url:
+                    save_thumbnail(thumbnail_file, url = rec.thumbnail_url)
+                elif rec.isbn_issn:
+                    save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
+                else:
+                    log(f"{barcode} lacks ISBN & thumbnail URL => no thumbnail")
             else:
-                log(f"{barcode} lacks ISBN and thumbnail URL => no thumbnail")
-            return LSPRecord(id            = rec.tind_id,
-                             url           = rec.tind_url,
-                             title         = rec.title,
-                             author        = rec.author,
-                             publisher     = rec.publisher,
-                             year          = rec.year,
-                             edition       = rec.edition,
-                             isbn_issn     = rec.isbn_issn)
+                log(f'reusing existing thumbnail file {thumbnail_file}')
+            return LSPRecord(id        = rec.tind_id,
+                             url       = rec.tind_url,
+                             title     = rec.title,
+                             author    = rec.author,
+                             publisher = rec.publisher,
+                             year      = rec.year,
+                             edition   = rec.edition,
+                             isbn_issn = rec.isbn_issn)
         except:
             log(f'could not find {barcode} in TIND')
             raise ValueError('No such barcode {barcode} in {self.url}')
@@ -112,10 +116,10 @@ class FolioInterface(LSPInterface):
         self._an_prefix = an_prefix
         self._page_template = page_template
         self._thumbnails_dir = thumbnails_dir
-        self._folio = Folio(okapi_url = url,
-                            okapi_token = token,
-                            tenant_id = tenant_id,
-                            an_prefix = an_prefix,
+        self._folio = Folio(okapi_url     = url,
+                            okapi_token   = token,
+                            tenant_id     = tenant_id,
+                            an_prefix     = an_prefix,
                             page_template = page_template)
 
 
@@ -125,16 +129,20 @@ class FolioInterface(LSPInterface):
             rec = self._folio.record(barcode = barcode)
             log(f'record for {barcode} has id {rec.id} in {self.url}')
             thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
-            if rec.isbn_issn:
-                save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
-            return LSPRecord(id            = rec.id,
-                             url           = rec.details_page,
-                             title         = rec.title,
-                             author        = rec.author,
-                             publisher     = rec.publisher,
-                             year          = rec.year,
-                             edition       = rec.edition,
-                             isbn_issn     = rec.isbn_issn)
+            # Don't overwrite existing images.
+            if not exists(thumbnail_file):
+                if rec.isbn_issn:
+                    save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
+            else:
+                log(f'reusing existing thumbnail file {thumbnail_file}')
+            return LSPRecord(id        = rec.id,
+                             url       = rec.details_page,
+                             title     = rec.title,
+                             author    = rec.author,
+                             publisher = rec.publisher,
+                             year      = rec.year,
+                             edition   = rec.edition,
+                             isbn_issn = rec.isbn_issn)
         except:
             log(f'could not find {barcode} in FOLIO')
             raise ValueError('No such barcode {barcode} in {self.url}')
