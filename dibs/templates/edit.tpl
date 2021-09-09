@@ -19,10 +19,10 @@
           %end
         </h2>
         <p class="col-10 mx-auto font-italic">
-          Please note that DIBS does not change the item status
-          in TIND. The TIND record should be updated manually to reflect
-          the fact that some copies have been pulled from circulation and
-          made available via DIBS.
+          Please note that DIBS does not change the item status in the 
+          library catalog. The catalog record should be updated manually
+          to reflect the fact that some copies have been pulled from
+          circulation and made available via DIBS.
         </p>
 
         <form class="form-horizontal" action="{{base_url}}/update/{{action}}" method="POST">
