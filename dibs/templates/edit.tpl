@@ -59,6 +59,16 @@
                    required>
           </label>
 
+          <label for="notes" class="form-group control-label" style="display: block">
+            <span class="control-label">Notes (internal use only &ndash; not shown to patrons)</span>
+            <textarea name="notes" id="notes" class="form-control"
+                      rows="4" placeholder="Text">\\
+               %if item:
+                 {{item.notes}}\\
+               %end
+</textarea>
+          </label>
+
           <div class="py-4">
             <div class="btn-toolbar mx-auto" style="width: 240px;">
               <input class="btn btn-secondary mx-2" style="width: 100px"

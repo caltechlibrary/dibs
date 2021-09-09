@@ -367,6 +367,7 @@ def update_item():
     if not num_copies.isdigit() or int(num_copies) <= 0:
         return page('error', summary = 'invalid copy number',
                     message = f'# of copies must be a positive number')
+    notes = request.forms.get('notes').strip()
 
     item = Item.get_or_none(Item.barcode == barcode)
     if '/update/add' in request.path:
@@ -385,7 +386,7 @@ def update_item():
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
                     item_id = rec.id, item_page = rec.url, year = rec.year,
                     edition = rec.edition, num_copies = num_copies,
-                    duration = duration)
+                    duration = duration, notes = notes)
     else: # The operation is /update/edit.
         if not item:
             log(f'there is no item with barcode {barcode}')
@@ -394,8 +395,9 @@ def update_item():
         item.barcode    = barcode
         item.duration   = duration
         item.num_copies = num_copies
+        item.notes      = notes
         log(f'saving changes to {barcode}')
-        item.save(only = [Item.barcode, Item.num_copies, Item.duration])
+        item.save(only = [Item.barcode, Item.num_copies, Item.duration, Item.notes])
         # FIXME if we reduced the number of copies, we need to check loans.
     redirect(f'{dibs.base_url}/list')
 
