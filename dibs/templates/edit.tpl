@@ -19,55 +19,63 @@
           %end
         </h2>
         <p class="col-10 mx-auto font-italic">
-          Please note that DIBS does not change the item status in the 
+          Note that DIBS does not change the item status in the 
           library catalog. The catalog record should be updated manually
           to reflect the fact that some copies have been pulled from
           circulation and made available via DIBS.
         </p>
 
-        <form class="form-horizontal" action="{{base_url}}/update/{{action}}" method="POST">
+        <form action="{{base_url}}/update/{{action}}" method="POST">
+          <div class="row">
+            <div class="col-6"><!--left side -->
+              <div class="form-group row col-12">
+                <label for="barcode" class="col-form-label">Barcode:</label>
+                <input name="barcode" type="number" class="form-control"
+                       placeholder="Barcode number"
+                       %if item:
+                       value="{{item.barcode}}"
+                       %end
+                       required autofocus>
+              </div>
 
-          <label for="barcode" class="form-group control-label" style="display: block">
-            <span class="control-label">Barcode</span>
-            <input name="barcode" type="number" class="form-control"
-                   placeholder="Barcode"
-                   %if item:
-                   value="{{item.barcode}}"
-                   %end
-                   required autofocus>
-          </label>
+              <div class="form-group row col-12">
+                <label for="duration" class="col-form-label">Loan duration (in hours):</label>
+                <input name="duration" type="number" class="form-control"
+                       placeholder="Number of hours"
+                       step="any" min="1"
+                       %if item:
+                       value="{{item.duration}}"
+                       %end
+                       required>
+              </div>
+            </div>
 
-          <label for="numCopies" class="form-group control-label" style="display: block">
-            <span class="control-label">Loan duration (in hours)</span>
-            <input name="duration" type="number" class="form-control"
-                   placeholder="Maximum duration of a loan (in hours)"
-                   step="any" min="1"
-                   %if item:
-                   value="{{item.duration}}"
-                   %end
-                   required>
-          </label>
+            <div class="col-6"><!--right side -->
+              <div class="form-group row col-12">
+                <label for="num_copies" class="col-form-label">Number of copies to make available:</label>
+                <input name="num_copies" type="number" class="form-control"
+                       placeholder="Number of copies"
+                       step="any" min="1"
+                       %if item:
+                       value="{{item.num_copies}}"
+                       %end
+                       required>
 
-          <label for="numCopies" class="form-group control-label" style="display: block">
-            <span class="control-label">Number of copies</span>
-            <input name="num_copies" type="number" class="form-control"
-                   placeholder="Number of copies to be made available for simultaneous loans"
-                   step="any" min="1"
-                   %if item:
-                   value="{{item.num_copies}}"
-                   %end
-                   required>
-          </label>
+              </div>
+            </div>
+          </div>
 
-          <label for="notes" class="form-group control-label" style="display: block">
-            <span class="control-label">Notes (internal use only &ndash; not shown to patrons)</span>
+          <div class="form-group row col-12">
+            <label for="notes" class="form-group control-label">
+              Notes (optional; internal use only &ndash; not shown to patrons):
+            </label>
             <textarea name="notes" id="notes" class="form-control"
-                      rows="4" placeholder="Text">\\
+                      rows="4" placeholder="Note text">\\
                %if item:
 {{item.notes}}\\
                %end
 </textarea>
-          </label>
+          </div>
 
           <div class="py-4">
             <div class="btn-toolbar mx-auto" style="width: 240px;">
