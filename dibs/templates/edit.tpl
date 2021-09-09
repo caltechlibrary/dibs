@@ -64,7 +64,7 @@
             <textarea name="notes" id="notes" class="form-control"
                       rows="4" placeholder="Text">\\
                %if item:
-                 {{item.notes}}\\
+{{item.notes}}\\
                %end
 </textarea>
           </label>
