@@ -79,10 +79,10 @@
                   %if item:
                   Replace cover image:
                   %else:
-                  Upload custom cover image:
+                  Upload custom cover image (optional):
                   %end
                 </label>
-                <input class="btn btn-secondary col-12"
+                <input class="btn btn-light col-12"
                        name="thumbnail-image" type="file"/>
               </div>
             </div>
