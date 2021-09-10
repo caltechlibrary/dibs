@@ -92,9 +92,11 @@
           <div class="col-sm-2 col-xs-0 item-thumbnail">
             %thumbnail_file = join(thumbnails_dir, item.barcode + ".jpg")
             %if exists(thumbnail_file):
-            <img class="thumbnail img-responsive" src="{{base_url}}/thumbnails/{{item.barcode}}.jpg">
+            <img class="thumbnail thumbnail-image img-responsive"
+                 src="{{base_url}}/thumbnails/{{item.barcode}}.jpg">
             %else:
-            <img class="thumbnail img-responsive" src="{{base_url}}/static/missing-thumbnail.svg">
+            <img class="thumbnail img-responsive"
+                 src="{{base_url}}/static/missing-thumbnail.svg">
             %end
           </div>
 
