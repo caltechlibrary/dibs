@@ -10,6 +10,7 @@ file "LICENSE" for more information.
 '''
 
 from   abc import ABC, abstractmethod
+from   coif import cover_image
 from   dataclasses import dataclass
 import os
 from   os.path import realpath, dirname, join, exists, isabs
@@ -18,7 +19,6 @@ from   sidetrack import log
 from   topi import Tind
 
 from .settings import config
-from .thumbnail import save_thumbnail
 
 
 # Classes implementing interface to specific LSPs.
@@ -89,7 +89,7 @@ class TindInterface(LSPInterface):
                 else:
                     log(f"{barcode} lacks ISBN & thumbnail URL => no thumbnail")
             else:
-                log(f'reusing existing thumbnail file {thumbnail_file}')
+                log(f'thumbnail image already exists in {thumbnail_file}')
             return LSPRecord(id        = rec.tind_id,
                              url       = rec.tind_url,
                              title     = rec.title,
@@ -134,7 +134,7 @@ class FolioInterface(LSPInterface):
                 if rec.isbn_issn:
                     save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
             else:
-                log(f'reusing existing thumbnail file {thumbnail_file}')
+                log(f'thumbnail image already exists in {thumbnail_file}')
             return LSPRecord(id        = rec.id,
                              url       = rec.details_page,
                              title     = rec.title,
@@ -192,3 +192,30 @@ class LSP(LSPInterface):
         # Store the interface object (to implement the Singleton pattern).
         cls.__lsp_interface__ = lsp
         return lsp
+
+
+# Internal utilities.
+# .............................................................................
+
+def save_thumbnail(dest_file, url = None, isbn = None):
+    img = None
+    if isbn:
+        url, image = cover_image(isbn, kind = 'isbn', size = 'L',
+                                 cc_login = ("ebsco-test", "ebsco-test"))
+        log(f'cover_image returned image at {url}')
+    # We were either given a url in the call, or we found one using the isbn.
+    elif url:
+        (response, error) = net('get', url)
+        if not error and response.status_code == 200:
+            log(f'got image from {url}')
+            image = response.content
+    if image:
+        log(f'will save cover image in {dest_file}')
+        with open(dest_file, 'wb') as file:
+            file.write(image)
+    else:
+        log(f'no cover image found for {url}')
+
+
+def probable_issn(value):
+    return len(value) < 10 and '-' in value
