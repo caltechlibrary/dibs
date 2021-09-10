@@ -4,7 +4,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -47,10 +48,10 @@
   
   
     <title>System architecture &#8212; Caltech DIBS</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/material.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/material.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -105,7 +106,7 @@
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
-    <form class="md-search__form" action="search.html" method="GET" name="search">
+    <form class="md-search__form" action="search.html" method="get" name="search">
       <input type="text" class="md-search__input" name="q" placeholder="Search"
              autocapitalize="off" autocomplete="off" spellcheck="false"
              data-md-component="query" data-md-state="active">
@@ -390,10 +391,10 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  
+  <section class="tex2jax_ignore mathjax_ignore" id="system-architecture">
 <h1 id="architecture--page-root">System architecture<a class="headerlink" href="#architecture--page-root" title="Permalink to this headline">¶</a></h1>
 <p>This page describes the goals, design, and operation of DIBS.</p>
-
+<section id="design-goals">
 <h2 id="design-goals">Design goals<a class="headerlink" href="#design-goals" title="Permalink to this headline">¶</a></h2>
 <p>DIBS (“<em><strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem</em>”) is intended to be a basic, standalone, <a class="reference external" href="https://controlleddigitallending.org">controlled digital lending</a> system with the following goals:</p>
 <ul class="simple">
@@ -403,8 +404,8 @@
 <li><p><em>Decoupling</em>. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech’s TIND ILS is isolated to a very small section of code in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too – no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.</p></li>
 <li><p><em>Use of IIIF</em>. We chose IIIF because it is a highly flexible, widely-used, open standard for serving content, and there are many free and excellent resources for working with it (including servers and alternative viewers). However, DIBS does not rely on any particular workflow or system to create IIIF-compliant materials.  It only needs a IIIF manifest for each item that is to be made available for digital loans, and a IIIF server endpoint.</p></li>
 </ul>
-
-
+</section>
+<section id="architectural-overview">
 <h2 id="architectural-overview">Architectural overview<a class="headerlink" href="#architectural-overview" title="Permalink to this headline">¶</a></h2>
 <p>The following diagram illustrates the components of a complete CDL system using DIBS, as it is deployed at Caltech.</p>
 <figure>
@@ -421,8 +422,8 @@
 <li><p>Each user’s web browser runs an instance of the <a class="reference external" href="http://universalviewer.io">Universal Viewer</a> to display borrowed item content. The viewer is configured to contact the DIBS server for all content requests, thus masking the storage location for the IIIF content and making the DIBS server the sole arbiter of loan status and loan duration.</p></li>
 </ul>
 <p>The current implementation has some obvious bottlenecks, notably in the use of a single server for handling requests from users. Based on experience we gain from the currently-running pilot deployment at Caltech (in early 2021), we may revise some elements in the future to scale them up as needed.</p>
-
-
+</section>
+<section id="the-dibs-server-in-more-detail">
 <h2 id="the-dibs-server-in-more-detail">The DIBS server in more detail<a class="headerlink" href="#the-dibs-server-in-more-detail" title="Permalink to this headline">¶</a></h2>
 <p>DIBS is implemented on top of <a class="reference external" href="https://bottlepy.org">Bottle</a>, a lightweight WSGI micro web-framework for Python. The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.   Here is a summary of the endpoints implemented by the system:</p>
 <table>
@@ -566,16 +567,16 @@
 </tr>
 </tbody>
 </table>
-
-
+</section>
+<section id="the-dibs-database-in-more-detail">
 <h2 id="the-dibs-database-in-more-detail">The DIBS database in more detail<a class="headerlink" href="#the-dibs-database-in-more-detail" title="Permalink to this headline">¶</a></h2>
 <p>As mentioned above, DIBS maintains an internal database of item description and loan status.  The interface is defined in terms of high-level objects that are backed by an <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a> database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
-
-
+</section>
+<section id="the-iiif-server-in-more-detail">
 <h2 id="the-iiif-server-in-more-detail">The IIIF server in more detail<a class="headerlink" href="#the-iiif-server-in-more-detail" title="Permalink to this headline">¶</a></h2>
 <p>… <em>Forthcoming</em> …</p>
-
-
+</section>
+</section>
 
 
           </article>
@@ -624,10 +625,10 @@
               
           </div>
             Last updated on
-              Jun 08, 2021.
+              Sep 10, 2021.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.4.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.1.2.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
