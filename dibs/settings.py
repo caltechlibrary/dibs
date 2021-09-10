@@ -13,6 +13,7 @@ from   collections import OrderedDict
 from   configparser import ConfigParser
 from   decouple import Config, AutoConfig, DEFAULT_ENCODING, Undefined, undefined
 from   decouple import RepositoryIni, RepositoryEnv, RepositoryEmpty
+from   decouple import UndefinedValueError
 import os
 from   sidetrack import log
 
