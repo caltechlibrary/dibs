@@ -21,6 +21,7 @@
 
 # Initial imports. More things are imported later below.
 
+from   configparser import ConfigParser
 import pkg_resources
 import os
 from   os.path import exists, dirname, join, basename
@@ -50,9 +51,17 @@ else:
             print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
             exit(1)
 
-if not exists(join(here, 'settings.ini')):
+settings_file = join(here, 'settings.ini')
+if not exists(settings_file):
     print(f'‼️  File "settings.ini" not found in {where}.')
     print(f'‼️  Please create one starting with file "settings.ini-example".')
+    exit(1)
+
+config = ConfigParser()
+config.read(settings_file)
+if not config.has_section('dibs'):
+    print(f'‼️  File "settings.ini" is missing a section called [dibs].')
+    print(f'‼️  Please see the example in file "settings.ini-example".')
     exit(1)
 
 
