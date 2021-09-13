@@ -9,6 +9,7 @@
   <body>
     <div class="page-content">
       %include('common/navbar.tpl')
+      %from os import stat
       %from os.path import join, exists
 
       %thumbnail_file = item and join(thumbnails_dir, item.barcode + ".jpg")
@@ -77,9 +78,9 @@
               <div class="form-group row col-12">
                 <label for="upload" class="col-form-label">
                   %if item:
-                  Replace cover image:
+                  Replace cover image (max size {{max_size}}):
                   %else:
-                  Upload custom cover image (optional):
+                  Custom cover image (optional; max size {{max_size}}):
                   %end
                 </label>
                 <input class="btn btn-light col-12"
@@ -90,8 +91,9 @@
             %if item:
             <div class="col-2 d-flex align-items-center pr-5">
               %if thumbnail_file and exists(thumbnail_file):
+                %timestamp = stat(thumbnail_file).st_mtime
               <img class="mx-auto pt-3 thumbnail-image" style="width: 90px"
-                   src="{{base_url}}/thumbnails/{{item.barcode}}.jpg">
+                   src="{{base_url}}/thumbnails/{{item.barcode}}.jpg?{{timestamp}}">
               %else:
               <img class="mx-auto py-3" style="width: 90px"
                    src="{{base_url}}/static/missing-thumbnail.svg">

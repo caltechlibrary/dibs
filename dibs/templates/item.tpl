@@ -34,6 +34,7 @@
   <body>
     <div class="page-content">
       %include('common/navbar.tpl')
+      %from os import stat
       %from os.path import join, exists
 
       <div class="container main-container">
@@ -92,8 +93,9 @@
           <div class="col-sm-2 col-xs-0 item-thumbnail">
             %thumbnail_file = join(thumbnails_dir, item.barcode + ".jpg")
             %if exists(thumbnail_file):
+              %timestamp = stat(thumbnail_file).st_mtime
             <img class="thumbnail thumbnail-image img-responsive"
-                 src="{{base_url}}/thumbnails/{{item.barcode}}.jpg">
+                 src="{{base_url}}/thumbnails/{{item.barcode}}.jpg?{{timestamp}}">
             %else:
             <img class="thumbnail img-responsive"
                  src="{{base_url}}/static/missing-thumbnail.svg">
