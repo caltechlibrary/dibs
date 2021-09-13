@@ -20,7 +20,7 @@ from   enum import Enum, auto
 from   expiringdict import ExpiringDict
 from   fdsend import send_file
 import functools
-from   humanize import naturaldelta
+from   humanize import naturaldelta, naturalsize
 import inspect
 from   io import BytesIO
 import json
@@ -40,6 +40,7 @@ from . import __version__
 from .database import Item, Loan, History, database
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
+from .image_utils import as_jpeg
 from .lsp import LSP
 from .people import Person, person_from_environ
 from .roles import role_to_redirect, has_role, staff_user
@@ -75,7 +76,7 @@ _THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'thumbnails')
 if not isabs(_THUMBNAILS_DIR): _THUMBNAILS_DIR = join(_SERVER_ROOT, _THUMBNAILS_DIR)
 
 # Internal threshold for max size of thumbnail images uploaded via edit form.
-_MAX_FILE_SIZE = 1 * 1024 * 1024;
+_MAX_THUMBNAIL_SIZE = 1 * 1024 * 1024;
 
 # The base URL of the IIIF server endpoint. Note: there is no reasonable
 # default value for this one, so we fail if this is not set.
@@ -253,7 +254,7 @@ class RouteTracer(BottlePluginBase):
                 barcode = request.forms.get('barcode').strip()
             person = person_from_environ(request.environ)
             log(f'{route.method} {route.rule} invoked'
-                + (f' by {anon(person.uname)}' if person else '')
+                + (f' by user {anon(person.uname)}' if person else '')
                 + (f' for {barcode}' if barcode else ''))
             return callback(*args, **kwargs)
 
@@ -339,13 +340,16 @@ def manage_items():
 def add():
     '''Display the page to add new items.'''
     return page('edit', action = 'add', item = None,
-                thumbnails_dir = _THUMBNAILS_DIR)
+                thumbnails_dir = _THUMBNAILS_DIR,
+                max_size = naturalsize(_MAX_THUMBNAIL_SIZE))
 
 
 @dibs.get('/edit/<barcode:int>', apply = VerifyStaffUser())
 def edit(barcode):
     '''Display the page to add new items.'''
-    return page('edit', action = 'edit', thumbnails_dir = _THUMBNAILS_DIR,
+    return page('edit', browser_no_cache = True, action = 'edit',
+                thumbnails_dir = _THUMBNAILS_DIR,
+                max_size = naturalsize(_MAX_THUMBNAIL_SIZE),
                 item = Item.get(Item.barcode == barcode))
 
 
@@ -407,27 +411,27 @@ def update_item():
         # FIXME if we reduced the number of copies, we need to check loans.
 
         # Handle replacement thumbnail images if the user chose one.
-        if not thumbnail or not thumbnail.filename:
-            log(f'user did not provide a new thumbnail image file')
-        elif thumbnail.content_type != 'image/jpeg':
-            log(f'thumbnail image type {thumbnail.content_type} != jpeg')
-        elif thumbnail.content_length > _MAX_FILE_SIZE:
-            log(f'thumbnail image size exceeds threshold')
-        else:
-             try:
-                file = thumbnail.file
+        if thumbnail and thumbnail.filename:
+            # We don't seem to get content-length in the headers, so won't know
+            # the size ahead of time.  So, check size, & always convert to jpeg.
+            try:
                 data = b''
-                while ((chunk := file.read(1024)) and len(data) < _MAX_FILE_SIZE):
+                while (chunk := thumbnail.file.read(1024)):
                     data += chunk
-                if chunk and len(data) >= _MAX_FILE_SIZE:
-                    log(f'file exceeds max size -- ignoring the file')
-                else:
-                    dest_file = join(_THUMBNAILS_DIR, barcode + '.jpg')
-                    log(f'writing uploaded file to {dest_file}')
-                    with open(dest_file, 'wb') as new_file:
-                        new_file.write(data)
-             except Exception as ex:
+                    if len(data) >= _MAX_THUMBNAIL_SIZE:
+                        max_size = naturalsize(_MAX_THUMBNAIL_SIZE)
+                        log(f'file exceeds {max_size} -- ignoring the file')
+                        return page('error', summary = 'cover image is too large',
+                                    message = ('The chosen image is larger than'
+                                               + f' the limit of {max_size}.'))
+                dest_file = join(_THUMBNAILS_DIR, barcode + '.jpg')
+                log(f'writing {naturalsize(len(data))} image to {dest_file}')
+                with open(dest_file, 'wb') as new_file:
+                    new_file.write(as_jpeg(data))
+            except Exception as ex:
                  log(f'exception trying to save thumbnail: {str(ex)}')
+        else:
+            log(f'user did not provide a new thumbnail image file')
     redirect(f'{dibs.base_url}/list')
 
 
@@ -687,11 +691,11 @@ def end_loan(barcode, person):
     # the barcode data.  The following are compensatory mechanisms.
     post_barcode = request.POST.get('barcode')
     if not post_barcode:
-        log(f'missing post barcode in /return by {anon(person.uname)}')
+        log(f'missing post barcode in /return by user {anon(person.uname)}')
         if barcode:
             log(f'using barcode {barcode} from post address instead')
         else:
-            log(f'get /return invoked by {anon(person.uname)} but we have no barcode')
+            log(f'/return invoked by user {anon(person.uname)} but we have no barcode')
             return
     else:
         barcode = post_barcode
@@ -700,7 +704,7 @@ def end_loan(barcode, person):
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
         # Normal case: user has loaned a copy of item. Update to 'recent'.
-        log(f'locking db to change state of loan of {barcode} by {anon(person.uname)}')
+        log(f'locking db to change {barcode} loan state by user {anon(person.uname)}')
         with database.atomic('immediate'):
             now = time_now()
             loan.state = 'recent'
