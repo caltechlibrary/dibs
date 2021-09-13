@@ -3,7 +3,15 @@
   %include('common/banner.html')
   <head>
     %include('common/standard-inclusions.tpl')
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.0/css/all.css">
     <title>Add or edit a Caltech DIBS entry</title>
+
+    <script type="text/javascript">
+     function confirmDelete() {
+       return confirm('Delete the current cover thumbnail image?. '
+                    + 'This cannot be undone.');
+     }
+    </script>    
   </head>
   
   <body>
@@ -92,6 +100,10 @@
             <div class="col-2 d-flex align-items-center pr-5">
               %if thumbnail_file and exists(thumbnail_file):
                 %timestamp = stat(thumbnail_file).st_mtime
+              <a class="fas fa-trash-alt fa-2x text-danger"
+                 style="position: absolute; z-index: 100; top: 70%; right: 30%"
+                 onclick="return confirmDelete();"
+                 href="{{base_url}}/delete-thumbnail/{{item.barcode}}"></a>
               <img class="mx-auto pt-3 thumbnail-image" style="width: 90px"
                    src="{{base_url}}/thumbnails/{{item.barcode}}.jpg?{{timestamp}}">
               %else:

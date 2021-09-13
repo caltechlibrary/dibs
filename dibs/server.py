@@ -12,6 +12,7 @@ file "LICENSE" for more information.
 import bottle
 from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
+from   commonpy.file_utils import delete_existing
 from   commonpy.network_utils import net
 from   datetime import datetime as dt
 from   datetime import timedelta as delta
@@ -433,6 +434,17 @@ def update_item():
         else:
             log(f'user did not provide a new thumbnail image file')
     redirect(f'{dibs.base_url}/list')
+
+
+@dibs.get('/delete-thumbnail/<barcode:int>', apply = VerifyStaffUser())
+def edit(barcode):
+    '''Delete the current thumbnail image.'''
+    thumbnail_file = join(_THUMBNAILS_DIR, str(barcode) + '.jpg')
+    if exists(thumbnail_file):
+        delete_existing(thumbnail_file)
+    else:
+        log(f'there is no {thumbnail_file}')
+    redirect(f'{dibs.base_url}/edit/{barcode}')
 
 
 @dibs.post('/start-processing', apply = VerifyStaffUser())
