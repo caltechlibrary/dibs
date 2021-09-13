@@ -64,21 +64,21 @@
                   </td>
                 </tr>
 
-                %if item.publisher != '':
                 <tr>
-                  <th>Publisher</th>
-                  <td class="item-info-value">{{item.publisher}}</td>
+                  <th>Year</th>
+                  <td class="item-info-value">{{item.year}}</td>
                 </tr>
-                %end
 
+                %if item.publisher != '':
                 <tr
                   %if item.edition == '':
                   class="last"
                   %end
                   >
-                  <th>Year</th>
-                  <td class="item-info-value">{{item.year}}</td>
+                  <th>Publisher</th>
+                  <td class="item-info-value">{{item.publisher}}</td>
                 </tr>
+                %end
 
                 %if item.edition != '':
                 <tr class="last">
