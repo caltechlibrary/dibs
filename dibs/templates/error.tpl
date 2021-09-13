@@ -11,7 +11,7 @@
       %include('common/navbar.tpl')
 
       <div class="container main-container">
-        <div class="alert alert-danger my-3" role="alert">
+        <div class="alert alert-danger my-3 pb-1" role="alert">
           <h4 class="alert-heading">Error: {{summary}}</h4>
           <p id="with-barcode">{{message}}</p>
         </div>
