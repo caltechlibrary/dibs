@@ -200,8 +200,10 @@ th.item-info-label {
 }
 
 img.thumbnail {
+  max-width: 300px;
+  max-height: 178px;
+  height: auto;
   width: auto;
-  height: 178px;
   margin-right: 2em;
 }
 
