@@ -1,0 +1,33 @@
+# YAML 1.2
+---
+authors: 
+  -
+    affiliation: "Caltech Library"
+    family-names: Hucka
+    given-names: Michael
+    orcid: "https://orcid.org/0000-0001-9105-5960"
+  -
+    affiliation: "Caltech Library"
+    family-names: Doiel
+    given-names: Robert
+    orcid: "https://orcid.org/0000-0003-0900-6903"
+  -
+    affiliation: "Caltech Library"
+    family-names: Keswick
+    given-names: Tommy
+    orcid: "https://orcid.org/0000-0001-5644-440X"
+  -
+    affiliation: "Caltech Library"
+    family-names: Morrell
+    given-names: "Thomas E."
+    orcid: "https://orcid.org/0000-0001-9266-5146"
+cff-version: "1.1.0"
+date-released: 2021-06-04
+doi: 10.22002/D1.1988
+keywords: 
+  - controlled digital lending
+message: "If you use this software, please cite it using these metadata."
+repository-code: "https://github.com/caltechlibrary/dibs"
+title: "DIBS: An implementation of Controlled Digital Lending"
+version: "0.4.1"
+...
