@@ -104,12 +104,21 @@ TIND_SERVER_URL =
 
 [folio]
 # If you use FOLIO, set the URL to the URL for your FOLIO API (which is known
-# as "Okapi") server.  FOLIO/Okapi access also requires a token you must
-# generate once and then can reuse for every call.  As of 2021-08-23, there
-# is some sample code in https://github.com/FOLIO-FSE/tech-partner-demo for
-# generating a token in various ways, such as using a shell script.
+# as "Okapi") server, the tenant id, and the API access token.  (There is
+# sample code in https://github.com/FOLIO-FSE/tech-partner-demo that may help
+# you figure how to create a token for your FOLIO installation.)
+#
+# The accession prefix is the string that appears in front of accession
+# numbers in your instance of FOLIO. As an example of a prefix for accession
+# numbers, for Caltech the prefix is the `clc` part of an accession number
+# such as `clc.025d49d5.735a.4d79.8889.c5895ac65fd2`.
+#
+# The EDS page template is a URL for permalinks to detailed record pages in
+# EBSCO EDS, with the sequence of characters {accession_number} somewhere in
+# the URL.  DIBS will replace the sequence {accession_number} with actual
+# record accession numbers when creating hyperlinks to the record pages.
 FOLIO_OKAPI_URL = 
 FOLIO_OKAPI_TENANT_ID = 
 FOLIO_OKAPI_TOKEN = 
-EDS_ACCESSION_PREFIX = 
+FOLIO_ACCESSION_PREFIX = 
 EDS_PAGE_TEMPLATE = 
