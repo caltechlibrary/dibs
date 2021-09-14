@@ -114,29 +114,31 @@ class FolioInterface(LSPInterface):
         self._token = token
         self._tenant_id = tenant_id
         self._an_prefix = an_prefix
-        self._page_template = page_template
+        self._page_tmpl = page_template
         self._thumbnails_dir = thumbnails_dir
         self._folio = Folio(okapi_url     = url,
                             okapi_token   = token,
                             tenant_id     = tenant_id,
-                            an_prefix     = an_prefix,
-                            page_template = page_template)
+                            an_prefix     = an_prefix)
 
 
     def record(self, barcode = None):
         '''Return a record for the item identified by the "barcode".'''
         try:
             rec = self._folio.record(barcode = barcode)
-            log(f'record for {barcode} has id {rec.id} in {self.url}')
+            log(f'record for {barcode} has id {rec.id}')
             thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
             # Don't overwrite existing images.
             if not exists(thumbnail_file):
                 if rec.isbn_issn:
                     save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
+                else:
+                    log(f"{rec.id} has no ISBN/ISSN => can't get a thumbnail")
             else:
                 log(f'thumbnail image already exists in {thumbnail_file}')
+            url = self._page_tmpl.format(accession_number = rec.accession_number)
             return LSPRecord(id        = rec.id,
-                             url       = rec.details_page,
+                             url       = url,
                              title     = rec.title,
                              author    = rec.author,
                              publisher = rec.publisher,
@@ -170,11 +172,11 @@ class LSP(LSPInterface):
         # Select the appropriate interface type and create the object.
         lsp_type = config('LSP_TYPE').lower()
         if lsp_type == 'folio':
-            url           = config('FOLIO_OKAPI_URL',       section = 'folio')
-            token         = config('FOLIO_OKAPI_TOKEN',     section = 'folio')
-            tenant_id     = config('FOLIO_OKAPI_TENANT_ID', section = 'folio')
-            an_prefix     = config('EDS_ACCESSION_PREFIX',  section = 'folio')
-            page_template = config('EDS_PAGE_TEMPLATE',     section = 'folio')
+            url           = config('FOLIO_OKAPI_URL',        section = 'folio')
+            token         = config('FOLIO_OKAPI_TOKEN',      section = 'folio')
+            tenant_id     = config('FOLIO_OKAPI_TENANT_ID',  section = 'folio')
+            an_prefix     = config('FOLIO_ACCESSION_PREFIX', section = 'folio')
+            page_template = config('EDS_PAGE_TEMPLATE',      section = 'folio')
             log(f'Using FOLIO URL {url} with tenant id {tenant_id}')
             lsp = FolioInterface(url = url,
                                  token = token,
