@@ -38,14 +38,19 @@ class DIBSRepositoryIni(RepositoryIni):
     def __contains__(self, key):
         return (key in os.environ
                 or key in self.parser.sections()
+                or ('settings' in self.parser.sections() and
+                    self.parser.has_option('settings', key))
                 or self.parser.has_option(self.section, key))
 
 
     def __getitem__(self, key):
         if key in self.parser.sections():
             return self.parser[key]
-        else:
+        elif self.parser.has_option(self.section, key):
             return self.parser.get(self.section, key)
+        elif 'settings' in self.parser.sections():
+            # If it fails this default case, let it throw an exception.
+            return self.parser.get('settings', key)
 
 
 class DIBSConfig(Config):
