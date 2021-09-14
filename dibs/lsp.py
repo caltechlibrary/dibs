@@ -92,7 +92,7 @@ class TindInterface(LSPInterface):
                 log(f'thumbnail image already exists in {thumbnail_file}')
             return LSPRecord(id        = rec.tind_id,
                              url       = rec.tind_url,
-                             title     = rec.title,
+                             title     = truncated_title(rec.title),
                              author    = rec.author,
                              publisher = rec.publisher,
                              year      = rec.year,
@@ -139,7 +139,7 @@ class FolioInterface(LSPInterface):
             url = self._page_tmpl.format(accession_number = rec.accession_number)
             return LSPRecord(id        = rec.id,
                              url       = url,
-                             title     = rec.title,
+                             title     = truncated_title(rec.title),
                              author    = rec.author,
                              publisher = rec.publisher,
                              year      = rec.year,
@@ -221,3 +221,7 @@ def save_thumbnail(dest_file, url = None, isbn = None):
 
 def probable_issn(value):
     return len(value) < 10 and '-' in value
+
+
+def truncated_title(title):
+    return title.split(':')[0].strip()
