@@ -100,18 +100,21 @@ from   dibs.settings import config
 
 
 @plac.annotations(
-    adapter    = ('use file "A" as the WSGI adapter (default: adapter.wsgi)', 'option', 'a'),
-    base_url   = (f'set the server address (default: {_DEFAULT_BASE_URL})',   'option', 'b'),
-    database   = ('use "D" as the database file',                             'option', 'd'),
-    manifests  = ('look for manifest files in directory "F"',                 'option', 'f'),
-    iiif_url   = ('use "I" as the IIIF server endpoint',                      'option', 'i'),
-    mode       = ('run mode: normal, verbose, or debug (default: normal)',    'option', 'm'),
-    debug_user = ('identity of staff user in debug mode (default: none)',     'option', 'u'),
-    version    = ('print version info and exit',                              'flag',   'V'),
+    adapter    = ('use "A" as the WSGI adapter (default: adapter.wsgi)',    'option', 'a'),
+    base_url   = (f'set the server address (default: {_DEFAULT_BASE_URL})', 'option', 'b'),
+    database   = ('use "D" as the database file',                           'option', 'd'),
+    manifests  = ('look for manifest files in directory "F"',               'option', 'f'),
+    iiif_url   = ('use "I" as the IIIF base URL',                           'option', 'i'),
+    mode       = ('run mode: normal, verbose, or debug (default: normal)',  'option', 'm'),
+    processing = ('use directory "P" for process files',                    'option', 'p'),
+    thumbnails = ('look for thumbnail images in directory "T"',             'option', 't'),
+    debug_user = ('identity of staff user in debug mode (default: none)',   'option', 'u'),
+    version    = ('print version info and exit',                            'flag',   'V'),
 )
 
 def main(adapter = 'A', base_url = 'B', database = 'D', manifests = 'F',
-         iiif_url = 'I', mode = 'M', debug_user = 'U', version = False):
+         iiif_url = 'I', mode = 'M', processing = 'P', thumbnails = 'T',
+         debug_user = 'U', version = False):
     '''Convenient interface for running the DIBS server during development.
 
 This starts a local server running DIBS. It always looks for a file named
@@ -242,6 +245,20 @@ Command-line arguments summary
             print(f'‼️  Manifests directory not found or not readable: "{manifests}"')
             exit(1)
 
+    if processing != 'P':
+        if exists(processing) and readable(processing):
+            os.environ['PROCESS_DIR'] = processing
+        else:
+            print(f'‼️  Process directory not found or not readable: "{processing}"')
+            exit(1)
+
+    if thumbnails != 'T':
+        if exists(thumbnails) and readable(thumbnails):
+            os.environ['THUMBNAILS_DIR'] = thumbnails
+        else:
+            print(f'‼️  Thumbnails directory not found or not readable: "{thumbnails}"')
+            exit(1)
+
     if iiif_url != 'I':
         if iiif_url.startswith('http'):
             os.environ['IIIF_BASE_URL'] = iiif_url
@@ -364,12 +381,15 @@ def print_settings(mode, adapter_file = None):
     server = 'Bottle' if mode == 'debug' else 'mod_wsgi-express'
     adapter = adapter_file or '(not applicable)'
     settings = ('\n  Current settings are:\n'
-                + f'    Run mode:      {mode} (using {server} server)\n'
-                + f'    WSGI adapter:  {adapter}\n'
-                + f'    DATABASE_FILE: {config("DATABASE_FILE")}\n'
-                + f'    MANIFEST_DIR:  {config("MANIFEST_DIR")}\n'
-                + f'    IIIF_BASE_URL: {config("IIIF_BASE_URL")}')
+                + f'    Run mode:       {mode} (using {server} server)\n'
+                + f'    WSGI adapter:   {adapter}\n'
+                + f'    DATABASE_FILE:  {config("DATABASE_FILE")}\n'
+                + f'    MANIFEST_DIR:   {config("MANIFEST_DIR")}\n'
+                + f'    PROCESS_DIR:    {config("PROCESS_DIR")}\n'
+                + f'    THUMBNAILS_DIR: {config("THUMBNAILS_DIR")}\n'
+                + f'    IIIF_BASE_URL:  {config("IIIF_BASE_URL")}')
     log(settings)
+
 
 def print_geeky_logo():
     text = '''
