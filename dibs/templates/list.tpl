@@ -76,42 +76,65 @@
                   </td>
 
                   <td class="text-center">
-                    %# Explanation of the logic governing the code below:
-                    %#    if there's a manifest
-                    %#       show the availability checkbox
-                    %#    else, if there's a *-processing or *-initiated file
-                    %#       show the icon for processing
-                    %#    else, if there's a *-problem file
-                    %#       show the icon for a problem
-                    %#    else
-                    %#       show the button to start processing
-
-                    % bc              = item.barcode
+                    % bc = item.barcode
                     % manifest_exists = exists(join(manifest_dir, bc + "-manifest.json"))
-                    % initiated       = exists(join(process_dir, bc + "-initiated"))
-                    % processing      = exists(join(process_dir, bc + "-processing"))
-                    % problem_exists  = exists(join(process_dir, bc + "-problem"))
-                    % if problem_exists:
+                    %
+                    % if process_dir:
+                    %   # Explanation of the logic governing the code below:
+                    %   # if there's a *-problem file
+                    %   #    show the icon for a problem
+                    %   # else, if there's a *-processing or *-initiated file
+                    %   #    show the icon for processing
+                    %   # else, if there's a manifest
+                    %   #    show the availability checkbox
+                    %   # else
+                    %   #    show the button to start processing
+                    %
+                    %   initiated       = exists(join(process_dir, bc + "-initiated"))
+                    %   processing      = exists(join(process_dir, bc + "-processing"))
+                    %   problem_exists  = exists(join(process_dir, bc + "-problem"))
+                    %
+                    %   if problem_exists:
                     <i title="A problem occurred with image processing. DLD has been notified."
                        style="filter:drop-shadow(2px 2px 2px #eee); font-size: larger"
                        class="fas fa-exclamation-circle text-danger"></i>
-                    % elif initiated or processing:
+                    %   elif initiated or processing:
                     <i title="Item is being processed."
                        style="filter:drop-shadow(2px 2px 2px #eee); font-size: larger"
                        class="fas fa-hourglass-half text-secondary"></i>
-                    % elif manifest_exists:
+                    %   elif manifest_exists:
                     <form action="{{base_url}}/ready" method="POST">
                       <input type="hidden" name="barcode" value="{{item.barcode}}">
                       <input type="checkbox" class="checkbox"
                              onChange="this.form.submit()"
                              {{'checked="checked"' if item.ready else ''}}/>
                     </form>
-                    % else:
+                    %   else:
                     <form action="{{base_url}}/start-processing" method="POST">
                       <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                       <input type="submit" name="process" value="Process"
                              class="btn btn-primary btn-sm"/>
                     </form>
+                    %   end
+                    % else:
+                    %   # If the process dir scheme is not being used, show a
+                    %   # missing file icon until the manifest appears.
+                    %
+                    %   if manifest_exists:
+                    <form action="{{base_url}}/ready" method="POST">
+                      <input type="hidden" name="barcode" value="{{item.barcode}}">
+                      <input type="checkbox" class="checkbox"
+                             onChange="this.form.submit()"
+                             {{'checked="checked"' if item.ready else ''}}/>
+                    </form>
+                    %   else:
+                    <span class="fa-stack fa-2x">
+                      <i title="Manifest file is not available."
+                         class="fas fa-slash fa-stack-1x text-secondary"></i>
+                      <i title="Manifest file is not available."
+                         class="far fa-file fa-stack-1x text-secondary"></i>
+                    </span>
+                    %   end
                     % end
                   </td>
 

@@ -69,8 +69,8 @@ _MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
 if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
 
 # Directory containing workflow processing status files.
-_PROCESS_DIR = config('PROCESS_DIR', default = 'processing')
-if not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
+_PROCESS_DIR = config('PROCESS_DIR', default = None)
+if _PROCESS_DIR and not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
 
 # Directory containing thumbnail images of item covers/jackets.
 _THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'thumbnails')
@@ -430,7 +430,7 @@ def update_item():
                 with open(dest_file, 'wb') as new_file:
                     new_file.write(as_jpeg(data))
             except Exception as ex:
-                 log(f'exception trying to save thumbnail: {str(ex)}')
+                log(f'exception trying to save thumbnail: {str(ex)}')
         else:
             log(f'user did not provide a new thumbnail image file')
     redirect(f'{dibs.base_url}/list')
@@ -451,12 +451,15 @@ def edit(barcode):
 def start_processing():
     '''Handle http post request to start the processing workflow.'''
     barcode = request.POST.barcode.strip()
-    init_file = join(_PROCESS_DIR, f'{barcode}-initiated')
-    try:
-        log(f'creating {init_file}')
-        os.close(os.open(init_file, os.O_CREAT))
-    except Exception as ex:
-        log(f'problem creating {init_file}: {str(ex)}')
+    if _PROCESS_DIR:
+        init_file = join(_PROCESS_DIR, f'{barcode}-initiated')
+        try:
+            log(f'creating {init_file}')
+            os.close(os.open(init_file, os.O_CREAT))
+        except Exception as ex:
+            log(f'problem creating {init_file}: {str(ex)}')
+    else:
+        log(f'_PROCESS_DIR not set -- ignoring /start-processing for {barcode}')
     redirect(f'{dibs.base_url}/list')
 
 

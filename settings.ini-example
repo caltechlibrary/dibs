@@ -40,11 +40,17 @@ DATABASE_FILE = dibs.db
 # but the path can be changed if you put your manifests elsewhere.
 MANIFEST_DIR = manifests
 
-# Directory containing status files for items being processed.  Our workflow
-# involves automated conversion of scans to a format suitable for IIIF, and
-# this process is initiated by staff users.  While processing is happening,
-# DIBS reads and writes files in this directory to initiate processing and
-# find out the current status.
+# Directory containing status files for items being processed.  DIBS embodies
+# a simple scheme to interact with an external workflow for automated
+# processing of scans for IIIF.  This scheme involves reading and writing
+# files to a directory -- the PROCESS_DIR.  When a new item is added to DIBS
+# from the /list page, a button named "Process" is shown next to the new item;
+# when library staff press that button, DIBS writes a file in the PROCESS_DIR
+# location and watches for the presence of other files.  The end point of the
+# workflow is assumed to be the appearance of a IIIF manifest for the item in
+# the MANIFEST_DIR.  If you do not want to use the workflow scheme, leave this
+# value empty; DIBS will skip the "Process" button, and will only monitor for
+# the existence of the manifest file.
 PROCESS_DIR = processing
 
 # Directory containing thumbnail images of book covers/jackets.  Images are
