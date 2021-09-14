@@ -91,14 +91,7 @@
                     % initiated       = exists(join(process_dir, bc + "-initiated"))
                     % processing      = exists(join(process_dir, bc + "-processing"))
                     % problem_exists  = exists(join(process_dir, bc + "-problem"))
-                    % if manifest_exists:
-                    <form action="{{base_url}}/ready" method="POST">
-                      <input type="hidden" name="barcode" value="{{item.barcode}}">
-                      <input type="checkbox" class="checkbox"
-                             onChange="this.form.submit()"
-                             {{'checked="checked"' if item.ready else ''}}/>
-                    </form>
-                    % elif problem_exists:
+                    % if problem_exists:
                     <i title="A problem occurred with image processing. DLD has been notified."
                        style="filter:drop-shadow(2px 2px 2px #eee); font-size: larger"
                        class="fas fa-exclamation-circle text-danger"></i>
@@ -106,6 +99,13 @@
                     <i title="Item is being processed."
                        style="filter:drop-shadow(2px 2px 2px #eee); font-size: larger"
                        class="fas fa-hourglass-half text-secondary"></i>
+                    % elif manifest_exists:
+                    <form action="{{base_url}}/ready" method="POST">
+                      <input type="hidden" name="barcode" value="{{item.barcode}}">
+                      <input type="checkbox" class="checkbox"
+                             onChange="this.form.submit()"
+                             {{'checked="checked"' if item.ready else ''}}/>
+                    </form>
                     % else:
                     <form action="{{base_url}}/start-processing" method="POST">
                       <input type="hidden" name="barcode" value="{{item.barcode}}"/>
