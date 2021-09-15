@@ -119,8 +119,15 @@ def page(name, **kargs):
         response.add_header('Pragma', 'no-cache')
         response.add_header('Cache-Control',
                             'no-store, max-age=0, no-cache, must-revalidate')
+    announcement = None
+    if exists(join(_SERVER_ROOT, 'site-announcement.html')):
+        with open(join(_SERVER_ROOT, 'site-announcement.html'), 'r') as f:
+            announcement = f.read().strip()
+        if len(announcement) == 0:
+            announcement = None
     return template(name, base_url = dibs.base_url, version = __version__,
                     logged_in = logged_in, staff_user = staff_user(person),
+                    announcement = announcement,
                     feedback_url = _FEEDBACK_URL, help_url = _HELP_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
 
