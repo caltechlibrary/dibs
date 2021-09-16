@@ -204,7 +204,7 @@ class LoanExpirer(BottlePluginBase):
                 with database.atomic('immediate'):
                     for loan in loans:
                         barcode = loan.item.barcode
-                        log(f'updating loan state of {barcode} for {loan.user}')
+                        log(f'updating loan state of {barcode} for {anon(loan.user)}')
                         next_time = loan.end_time + _RELOAN_WAIT_TIME
                         loan.reloan_time = round_minutes(next_time, 'down')
                         loan.state = 'recent'
