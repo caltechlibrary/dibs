@@ -773,10 +773,11 @@ def return_iiif_manifest(barcode, person):
             log(f'{manifest_file} does not exist')
             return
         record_request(barcode)
-        with open(manifest_file, 'r') as mf:
+        with open(manifest_file, 'r', encoding = 'utf-8') as mf:
             adjusted_content = urls_rerouted(mf.read(), barcode)
-            data = BytesIO(adjusted_content.encode())
-            size = len(adjusted_content)
+            encoded_content = adjusted_content.encode()
+            data = BytesIO(encoded_content)
+            size = len(encoded_content)
             log(f'returning manifest for {barcode} for {anon(person.uname)}')
             return send_file(data, ctype = 'application/json', size = size)
     else:
