@@ -93,12 +93,12 @@ settings.ini
 *.swp
 .tern-port
 dibs.conf
-manifests/*-manifest.json
+data/manifests/*-manifest.json
 htpasswd
 .htpasswd
 .README.md.tmp
 *.bak
-processing/*-initiated
-processing/*-processing
-processing/*-problem
-thumbnails/*.jpg
+data/processing/*-initiated
+data/processing/*-processing
+data/processing/*-problem
+data/thumbnails/*.jpg

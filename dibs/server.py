@@ -65,7 +65,7 @@ _SERVER_ROOT = realpath(join(dirname(__file__), os.pardir))
 bottle.TEMPLATE_PATH.append(join(_SERVER_ROOT, 'dibs', 'templates'))
 
 # Directory containing IIIF manifest files.
-_MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
+_MANIFEST_DIR = config('MANIFEST_DIR', default = 'data/manifests')
 if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
 
 # Directory containing workflow processing status files.
@@ -73,7 +73,7 @@ _PROCESS_DIR = config('PROCESS_DIR', default = None)
 if _PROCESS_DIR and not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
 
 # Directory containing thumbnail images of item covers/jackets.
-_THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'thumbnails')
+_THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'data/thumbnails')
 if not isabs(_THUMBNAILS_DIR): _THUMBNAILS_DIR = join(_SERVER_ROOT, _THUMBNAILS_DIR)
 
 # Internal threshold for max size of thumbnail images uploaded via edit form.
@@ -908,4 +908,4 @@ def included_file(filename):
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
-    return static_file(filename, root = 'thumbnails')
+    return static_file(filename, root = _THUMBNAILS_DIR)

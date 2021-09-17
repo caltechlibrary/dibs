@@ -38,7 +38,7 @@ DATABASE_FILE = dibs.db
 # pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
 # for DIBS contains a subdirectory called "manifests" with a demo file in it,
 # but the path can be changed if you put your manifests elsewhere.
-MANIFEST_DIR = manifests
+MANIFEST_DIR = data/manifests
 
 # Directory containing status files for items being processed.  DIBS embodies
 # a simple scheme to interact with an external workflow for automated
@@ -51,14 +51,14 @@ MANIFEST_DIR = manifests
 # the MANIFEST_DIR.  If you do not want to use the workflow scheme, leave this
 # value empty; DIBS will skip the "Process" button, and will only monitor for
 # the existence of the manifest file.
-PROCESS_DIR = processing
+PROCESS_DIR = data/processing
 
 # Directory containing thumbnail images of book covers/jackets.  Images are
 # assumed to be in JPEG format and the files named "NNNNNN.jpg", where
 # "NNNNNN" is the barcode.  (Note: .jpg and not .jpeg.) DIBS attempts to
 # obtain cover images automatically and will store them in this directory,
 # but you can also deliberately put images there to override what DIBS uses.
-THUMBNAILS_DIR = thumbnails
+THUMBNAILS_DIR = data/thumbnails
 
 # IIIF image service API base path.  Include the protocol version at the end,
 # as shown in the (fake) example on the next line.
