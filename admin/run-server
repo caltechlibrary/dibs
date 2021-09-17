@@ -24,7 +24,7 @@
 from   configparser import ConfigParser
 import pkg_resources
 import os
-from   os.path import exists, dirname, join, basename
+from   os.path import exists, dirname, join, basename, abspath
 import sys
 from   sys import exit
 
@@ -36,24 +36,29 @@ if sys.version_info.major < 3 or sys.version_info.minor < 8:
     print('‼️  DIBS requires Python version 3.8 or higher')
     exit(1)
 
-here  = dirname(sys.argv[0])
-where = 'the current directory' if here == '.' else here
-
-if not exists(join(here, 'requirements.txt')):
-    print('‼️  Expected to be in same directory as requirements.txt')
-    exit(1)
+here = abspath(dirname(sys.argv[0]))
+if exists(join(here, 'requirements.txt')):
+    dibs_root = here
 else:
-    with open('requirements.txt', 'r') as req_file:
-        try:
-            pkg_resources.require(req_file)
-        except pkg_resources.DistributionNotFound as ex:
-            print('‼️  Not all Python dependencies have been installed.')
-            print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
-            exit(1)
+    parent = abspath(join(here, os.path.pardir))
+    if exists(join(parent, 'requirements.txt')):
+        dibs_root = parent
+    else:
+        print(f'‼️  File "requirements.txt" not found in {here} or {parent}.')
+        print('‼️  Unexpected directory organization -- unable to proceed.')
+        exit(1)
 
-settings_file = join(here, 'settings.ini')
+with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
+    try:
+        pkg_resources.require(req_file)
+    except pkg_resources.DistributionNotFound as ex:
+        print('‼️  Not all Python dependencies have been installed.')
+        print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
+        exit(1)
+
+settings_file = join(dibs_root, 'settings.ini')
 if not exists(settings_file):
-    print(f'‼️  File "settings.ini" not found in {where}.')
+    print(f'‼️  File "settings.ini" not found in {dibs_root}.')
     print(f'‼️  Please create one starting with file "settings.ini-example".')
     exit(1)
 
@@ -118,9 +123,9 @@ def main(adapter = 'A', base_url = 'B', database = 'D', manifests = 'F',
     '''Convenient interface for running the DIBS server during development.
 
 This starts a local server running DIBS. It always looks for a file named
-"settings.ini" in the current directory and reads it to set various DIBS
-configuration variables. The command-line options to run-server can override
-some of the configuration values in "settings.ini".
+"settings.ini" in the current directory or the parent directory, and reads
+it to set various DIBS configuration variables. The command-line options to
+run-server can override some of the configuration values in "settings.ini".
 
 Run modes
 ~~~~~~~~~
@@ -156,9 +161,10 @@ using the -m option. The possible run modes and their effects are as follows:
 
 Since debug mode uses Bottle's default server, the normal authentication
 mechanism is nonfunctional and you will not be able to access most pages
-unless you define a person using DIBS's people-manager interface and tell
-run-server the identity of that user.  To do this, use option -u with the
-name of the user you defined.  Here is an example of running in debug mode:
+unless you define a person using DIBS's people-manager script and give it
+the role of "library", and then tell run-server the identity of that user.
+To do this, use option -u with the name of the user you defined.  Here is
+an example of running in debug mode:
 
   people-manager add uname="debuguser" role="library"
   run-server -m debug -u debuguser
@@ -226,38 +232,15 @@ Command-line arguments summary
 
     debug_user = None if debug_user == 'U' else debug_user
 
-    adapter_file = join(here, 'adapter.wsgi') if adapter == 'A' else adapter
+    adapter_file = join(dibs_root, 'adapter.wsgi') if adapter == 'A' else adapter
     if not exists(adapter_file) or not readable(adapter_file):
         print(f'‼️  File not found or not readable: {adapter_file}')
         exit(1)
 
-    if database != 'D':
-        if exists(database) and readable(database):
-            os.environ['DATABASE_FILE'] = database
-        else:
-            print(f'‼️  Database file not found or not readable: "{database}"')
-            exit(1)
-
-    if manifests != 'F':
-        if exists(manifests) and readable(manifests):
-            os.environ['MANIFEST_DIR'] = manifests
-        else:
-            print(f'‼️  Manifests directory not found or not readable: "{manifests}"')
-            exit(1)
-
-    if processing != 'P':
-        if exists(processing) and readable(processing):
-            os.environ['PROCESS_DIR'] = processing
-        else:
-            print(f'‼️  Process directory not found or not readable: "{processing}"')
-            exit(1)
-
-    if thumbnails != 'T':
-        if exists(thumbnails) and readable(thumbnails):
-            os.environ['THUMBNAILS_DIR'] = thumbnails
-        else:
-            print(f'‼️  Thumbnails directory not found or not readable: "{thumbnails}"')
-            exit(1)
+    verify_and_set('DATABASE_FILE', database, 'D', 'database file')
+    verify_and_set('MANIFEST_DIR', manifests, 'F', 'manifests directory')
+    verify_and_set('PROCESS_DIR', processing, 'P', 'process directory')
+    verify_and_set('THUMBNAILS_DIR', thumbnails, 'T', 'thumbnails directory')
 
     if iiif_url != 'I':
         if iiif_url.startswith('http'):
@@ -352,6 +335,17 @@ def start_bottle_server(scheme, host, port, extra_path, debug_user):
 # Miscellaneous utilities.
 # .............................................................................
 
+def verify_and_set(settings_var, file_path, default_letter, description):
+    if file_path != default_letter:
+        os.environ[settings_var] = file_path
+    else:
+        file_path = config(settings_var)
+    if not exists(file_path) or not readable(file_path):
+        what = description.capitalize()
+        print(f'‼️  {what} not found or not readable: "{file_path}"')
+        exit(1)
+
+
 def print_safety_warning():
     name = basename(sys.argv[0])
     text = ("⚠️  REMINDER: DON'T USE THIS AS A PUBLIC SERVER. ⚠️\n"
@@ -383,6 +377,7 @@ def print_settings(mode, adapter_file = None):
     settings = ('\n  Current settings are:\n'
                 + f'    Run mode:       {mode} (using {server} server)\n'
                 + f'    WSGI adapter:   {adapter}\n'
+                + f'    DIBS root:      {dibs_root}\n'
                 + f'    DATABASE_FILE:  {config("DATABASE_FILE")}\n'
                 + f'    MANIFEST_DIR:   {config("MANIFEST_DIR")}\n'
                 + f'    PROCESS_DIR:    {config("PROCESS_DIR")}\n'

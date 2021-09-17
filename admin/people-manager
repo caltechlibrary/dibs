@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+# ==========================================================================
+# @file    people-manager
+# @brief   Manage user roles in DIBS's people table and htpasswd logins
+# @created 2021-01-25
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+#
+# This administrative utility lets you simultaneously (1) add/remove/edit
+# people's roles in DIBS's people table, and (2) do the same in a password
+# file used for Apache basic auth (if you use that).
+#
+# Background: authentication and access control in DIBS
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# There are 2 layers of access control in DIBS when deployed in a web server:
+#
+#    1) can an incoming user access any part of DIBS at all?
+#    2) can the user access staff pages, or only patron pages?
+#
+# Layer #1 is implemented in the web server environment, and the details of
+# how it's done depends on the specifics of the installation.  As far as DIBS
+# is concerned, it only cares about whether a user has been authenticated or
+# not.  When a page or API endpoint is requested from DIBS, the request
+# environment given to DIBS by the web server will either include a user
+# identity (if the use has been authenticated) or not.  DIBS simply refuses
+# access to everything it controls if a user identity is not present in the
+# request environment.
+#
+# Layer #2 is implemented in DIBS itself.  DIBS's database uses People
+# objects to distinguish between people known to have staff access (i.e., who
+# can access pages like /list), and everyone else.  When a request for a page
+# or an endpoint comes in, DIBS looks for the user identifier in the HTTP
+# request environment given to it from the web server, checks if that user is
+# in the People table, and checks if the user has a role of 'library'.  If
+# the role is 'library', access to staff pages is granted; if the People
+# entry doesn't have a role of 'library', the user is not shown links to the
+# staff pages nor can they access the relevant endpoints.
+#
+# Managing users using "people-manager"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# One of people-manager's purposes is to add and manage entries in DIBS's
+# People table.  Only users who should have staff access (i.e., have role
+# 'library') need to be added to the People table, and in an SSO scenario,
+# that's all you need to deal with.
+#
+# In an SSO scenario, the management of users in the authentication system is
+# typically handled by another system and possibly another administrative
+# entity at your institution.  In an Apache basic auth scenario, users are
+# listed in a password file managed by the command-line program "htpasswd",
+# and the Apache server configuration is set up to read this password file.
+#
+# If you are using Apache basic auth and htpasswd, and have enabled the
+# relevant variables in the settings.ini file, then people-manager will also
+# manage entries in the password file.  Thus, in a basic auth scenario, you
+# can use people-manager to simultaneously add/change users and their roles
+# in the password file and make the corresponding changes in DIBS's People
+# table.
+# ==========================================================================
+
+import sys
+from os.path import dirname, join, basename, isabs, exists
+from getpass import getpass
+from hashlib import blake2b
+from peewee import SqliteDatabase
+
+from dibs.database import database
+from dibs.people import PersonManager, setup_person_table
+from dibs.settings import config
+
+htpasswd = config('HTPASSWD')
+if not isabs(htpasswd):
+    htpasswd = join(dirname(config.config_file), htpasswd)
+if not exists(htpasswd):
+    exit(f'Cannot find {htpasswd}')
+
+password_file = config('PASSWORD_FILE')
+if not isabs(password_file):
+    password_file = join(dirname(config.config_file), password_file)
+if not exists(password_file):
+    exit(f'Cannot find {password_file}')
+
+
+def usage(app_name, exit_code):
+    print(f'''
+USAGE: {app_name} VERB [KEY_VALUE_PAIRS]
+
+{app_name} can manage user logins and roles
+
+VERBS
+Verbs are actions you can perform on a person's account or
+to show the version of the program or this help page.
+
+    help       this help page.
+    version    version of software
+    setup      setup {database} for the fist time
+
+    list       list users defined in {database}
+    add        add a user to {database}
+    update     set a value for user in {database}
+    remove     remove user from {database}
+
+Each account (person) has several fields associated with it.
+
+    uname          their login name like "ml@example.edu"
+    display_name   their human readable name, "Maxine L."
+    role           their application role, e.g. "library", "patron"
+    secret         if Apache Basic Auth is setup, their pass phrase
+
+Setting a field is expressed with a key/value pair separate by
+an equal sign (i.e. '='). There is no space between the key, the equal
+sign and the value (which can be in quotes). If no value is provided
+then you will be prompted to enter it. Pressing enter without setting
+the value will clear any existing value in the field.
+
+All verbs to manager accounts are add, update, remove and list.
+Adding an account creates a new record in {database}. Updates
+changes the values of fields in an existing account. Only the
+fields specified get changed.  Remove deletes an account from
+{database} and list lists all accounts. List will also list a
+specific account if you provide the value for the field "uname".
+
+EXAMPLES
+
+Add an account "rsdoiel" with a "display_name",
+"role".
+
+   {app_name} add uname=rsdoiel display_name='R. S. Doiel' role=library
+
+Update "rsdoiel" to include a password (you'll be prompted
+for the password)..
+
+   {app_name} update uname=rsdoiel secret=
+
+List the accounts.
+
+   {app_name} list
+
+List "rsdoiel" account specifically.
+
+   {app_name} list uname=rsdoiel
+
+Remove "rsdoiel"
+
+   {app_name} remove uname=rsdoiel
+
+If you need to remove a value just use the `field_name=` notation. 
+It'll prompt you for the value, press enter and the value will 
+become an empty string. So removing my library role for "rsdoiel"
+looks like
+
+   {app_name} update uname=rsdoiel role=
+
+Then putting it back
+
+   {app_name} update uname=rsdoiel role=library
+
+Fields: uname (manditory except for list), 
+        display_name, role, and secret
+
+''')
+    sys.exit(exit_code)
+
+if __name__ == '__main__':
+    app_name = basename(sys.argv[0])
+    if len(sys.argv) < 2:
+        usage(app_name, 1)
+    verb = sys.argv[1]
+    kv = {}
+    for term in sys.argv[2:]:
+        if "=" in term:
+            parts = term.split("=", 2);
+            key = parts[0].strip()
+            value = parts[1].strip().strip("'").strip('"')
+            if key:
+                if (not value) and not (key == 'secret'):
+                    value = input(f'''Enter {key}: ''')
+                kv[key] = value
+    pm = PersonManager(database, htpasswd, password_file)
+    if verb == 'setup':
+        setup_person_table(database)
+    elif verb == 'list':
+        pm.list_people(kv)
+    elif verb == 'add':
+        pm.add_people(kv)
+    elif verb == 'update':
+        pm.update_people(kv)
+    elif verb == 'remove':
+        pm.remove_people(kv)
+    elif verb in [ 'h', 'help', '-h', '--help', '-help']:
+        usage(app_name, 0)
+    else:
+        print(f'''ERROR: "{verb}" not understood''')
+        sys.exit(1)

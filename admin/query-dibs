@@ -8,9 +8,8 @@
 # =============================================================================
 
 from   datetime import datetime as dt
-from   decouple import config
 import os
-from   os.path import exists, dirname, join, basename
+from   os.path import dirname, join, isabs, exists
 from   peewee import *
 import plac
 from   rich import box
@@ -24,12 +23,19 @@ from   dibs.database import Item, Loan, History, database
 from   dibs.date_utils import human_datetime, time_now
 from   dibs.people import Person, person_from_environ
 from   dibs.roles import role_to_redirect, has_role, staff_user
+from   dibs.settings import config
 
 
 # Globals.
 # .............................................................................
 
-database = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+db_file = config('DATABASE_FILE')
+if not isabs(db_file):
+    db_file = join(dirname(config.config_file), db_file)
+if not exists(db_file):
+    exit(f'Cannot find database file {db_file}')
+
+database = SqliteDatabase(db_file)
 
 _DATETIME_FORMAT = '%m/%d %I:%M %p'
 
@@ -96,4 +102,8 @@ def loans_table(category, loans, color):
 # Main invocation.
 # .............................................................................
 
-plac.call(main)
+if __name__ == '__main__':
+    if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == 'help'):
+        plac.call(main, ['-h'])
+    else:
+        plac.call(main)
