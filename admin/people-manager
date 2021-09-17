@@ -27,13 +27,13 @@
 # access to everything it controls if a user identity is not present in the
 # request environment.
 #
-# Layer #2 is implemented in DIBS itself.  DIBS's database uses People
+# Layer #2 is implemented in DIBS itself.  DIBS's database uses Person
 # objects to distinguish between people known to have staff access (i.e., who
 # can access pages like /list), and everyone else.  When a request for a page
 # or an endpoint comes in, DIBS looks for the user identifier in the HTTP
 # request environment given to it from the web server, checks if that user is
-# in the People table, and checks if the user has a role of 'library'.  If
-# the role is 'library', access to staff pages is granted; if the People
+# in the Person table, and checks if the user has a role of 'library'.  If
+# the role is 'library', access to staff pages is granted; if the Person
 # entry doesn't have a role of 'library', the user is not shown links to the
 # staff pages nor can they access the relevant endpoints.
 #
@@ -41,8 +41,8 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # One of people-manager's purposes is to add and manage entries in DIBS's
-# People table.  Only users who should have staff access (i.e., have role
-# 'library') need to be added to the People table, and in an SSO scenario,
+# Person table.  Only users who should have staff access (i.e., have role
+# 'library') need to be added to the Person table, and in an SSO scenario,
 # that's all you need to deal with.
 #
 # In an SSO scenario, the management of users in the authentication system is
@@ -55,7 +55,7 @@
 # relevant variables in the settings.ini file, then people-manager will also
 # manage entries in the password file.  Thus, in a basic auth scenario, you
 # can use people-manager to simultaneously add/change users and their roles
-# in the password file and make the corresponding changes in DIBS's People
+# in the password file and make the corresponding changes in DIBS's Person
 # table.
 # ==========================================================================
 
