@@ -13,12 +13,9 @@ import os
 from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
 import plac
 from   playhouse.dataset import DataSet
-import sys
 from   sys import exit
 
 from   dibs.database import Item, Loan, History, Person, database
-from   dibs.date_utils import human_datetime, time_now
-from   dibs.people import Person, person_from_environ
 from   dibs.settings import config
 
 
@@ -30,11 +27,12 @@ from   dibs.settings import config
     format      = ('write output in csv or json format (default: csv)', 'option', 'f'),
     list_tables = ('list the tables in the database, and exit',         'flag',   'l'),
     output_dir  = ('write the output to directory "O"',                 'option', 'o'),
+    overwrite   = ('force overwriting destination files if they exist', 'flag',   'O'),
     tables      = ('names of tables to write out (default: "all")',     'option', 't'),
 )
 
 def main(base_name = 'B', format = 'F', list_tables = False, output_dir = 'O',
-         tables = 'T'):
+         overwrite  = False, tables = 'T'):
     '''Export the DIBS database to CSV or JSON files.
 
 This program first looks for the settings.ini configuration file in the
@@ -75,6 +73,9 @@ will cause the program to write files named
     dibs-2021-09-17-loan.json
     dibs-2021-09-17-history.json
     dibs-2021-09-17-person.json
+
+This program will not overwrite existing files unless the option --overwrite
+is also given.
 
 Command-line options summary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,6 +121,10 @@ Command-line options summary
 
     for table in tables:
         dest_file = base_name + '-' + table + '.' + format
+        if exists(dest_file) and not overwrite:
+            print(f'‼️  Quitting because file exists: {dest_file}')
+            exit(1)
+
         print(f'Writing {dest_file} ...')
         db.freeze(db[table].all(), format = format, filename = dest_file)
 
