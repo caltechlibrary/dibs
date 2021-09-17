@@ -38,12 +38,12 @@ from   textwrap import shorten
 from   trinomial import anon
 
 from . import __version__
-from .database import Item, Loan, History, database
+from .database import database, Item, Loan, History, Person
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
 from .image_utils import as_jpeg
 from .lsp import LSP
-from .people import Person, person_from_environ
+from .people import person_from_environ, GuestPerson
 from .roles import role_to_redirect, has_role, staff_user
 from .settings import config
 
@@ -161,6 +161,18 @@ def urls_restored(text, barcode):
     rewritten = text.replace(f'{barcode}!', barcode + r'%2F')
     return rewritten.replace(f'{dibs.base_url}/iiif/{barcode}', _IIIF_BASE_URL)
 
+
+def user(person):
+    if isinstance(person, Person) or isinstance(person, GuestPerson):
+        if person.uname:
+            return 'user ' + anon(person.uname)
+        else:
+            return 'guest user'
+    elif isinstance(person, str):
+        return 'user ' + anon(person)
+    else:
+        return 'unknown user'
+
 
 # Bespoke, locally-sourced, artisanal Bottle plugins.
 # .............................................................................
@@ -204,7 +216,7 @@ class LoanExpirer(BottlePluginBase):
                 with database.atomic('immediate'):
                     for loan in loans:
                         barcode = loan.item.barcode
-                        log(f'updating loan state of {barcode} for {anon(loan.user)}')
+                        log(f'updating {barcode} loan state for {user(loan.user)}')
                         next_time = loan.end_time + _RELOAN_WAIT_TIME
                         loan.reloan_time = round_minutes(next_time, 'down')
                         loan.state = 'recent'
@@ -261,9 +273,8 @@ class RouteTracer(BottlePluginBase):
             elif request.forms.get('barcode', None):
                 barcode = request.forms.get('barcode').strip()
             person = person_from_environ(request.environ)
-            log(f'{route.method} {route.rule} invoked'
-                + (f' by user {anon(person.uname)}' if person else '')
-                + (f' for {barcode}' if barcode else ''))
+            log(f'{route.method} {route.rule} invoked by {user(person)}'
+                + f' for {barcode}' if barcode else '')
             return callback(*args, **kwargs)
 
         return route_tracer
@@ -303,7 +314,7 @@ class VerifyStaffUser(BottlePluginBase):
                 return page('error', summary = 'authentication failure',
                             message = f'Unrecognized user identity.')
             if not staff_user(person):
-                log(f'{request.path} invoked by non-staff user {anon(person.uname)}')
+                log(f'{request.path} invoked by non-staff {user(person)}')
                 redirect(f'{dibs.base_url}/notallowed')
                 return
             return callback(*args, **kwargs)
@@ -640,7 +651,7 @@ def show_item_info(barcode, person):
     # the item on loan.  This is useful mainly for developers and staff.
     show_viewer = str2bool(request.query.get('viewer', '1'))
     if status == Status.LOANED_BY_USER and show_viewer:
-        log(f'redirecting {anon(person.uname)} to uv for {barcode}')
+        log(f'redirecting {user(person)} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
     return page('item', browser_no_cache = True, item = item,
@@ -662,14 +673,14 @@ def loan_item(person):
             # Normally we shouldn't see a loan request through this form if the
             # item is not ready, so either staff changed the status after the
             # item was made available or someone got here accidentally.
-            log(f'redirecting {anon(person.uname)} back to item page for {barcode}')
+            log(f'redirecting {user(person)} back to item page for {barcode}')
             redirect(f'{dibs.base_url}/item/{barcode}')
             return
         if status == Status.LOANED_BY_USER:
             # Shouldn't be able to reach this point b/c the item page
             # shouldn't make a loan available for this user & item combo.
             # But if something weird happens, we might.
-            log(f'redirecting {anon(person.uname)} to {dibs.base_url}/view/{barcode}')
+            log(f'redirecting {user(person)} to {dibs.base_url}/view/{barcode}')
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
         if status == Status.USER_HAS_OTHER:
@@ -687,7 +698,7 @@ def loan_item(person):
             # The loan button shouldn't have been clickable in this case, but
             # someone else might have gotten the loan between the last status
             # check and the user clicking it.
-            log(f'redirecting {anon(person.uname)} to {dibs.base_url}/view/{barcode}')
+            log(f'redirecting {user(person)} to {dibs.base_url}/view/{barcode}')
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
 
@@ -697,7 +708,7 @@ def loan_item(person):
         start = time_now()
         end = round_minutes(start + time, 'up')
         reloan = end + _RELOAN_WAIT_TIME
-        log(f'creating new loan for {barcode} for {anon(person.uname)}')
+        log(f'creating new loan for {barcode} for {user(person)}')
         Loan.create(item = item, state = 'active', user = person.uname,
                     start_time = start, end_time = end, reloan_time = reloan)
 
@@ -713,11 +724,11 @@ def end_loan(barcode, person):
     # the barcode data.  The following are compensatory mechanisms.
     post_barcode = request.POST.get('barcode')
     if not post_barcode:
-        log(f'missing post barcode in /return by user {anon(person.uname)}')
+        log(f'missing post barcode in /return by user {user(person)}')
         if barcode:
             log(f'using barcode {barcode} from post address instead')
         else:
-            log(f'/return invoked by user {anon(person.uname)} but we have no barcode')
+            log(f'/return invoked by user {user(person)} but we have no barcode')
             return
     else:
         barcode = post_barcode
@@ -726,7 +737,7 @@ def end_loan(barcode, person):
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
         # Normal case: user has loaned a copy of item. Update to 'recent'.
-        log(f'locking db to change {barcode} loan state by user {anon(person.uname)}')
+        log(f'locking db to change {barcode} loan state by user {user(person)}')
         with database.atomic('immediate'):
             now = time_now()
             loan.state = 'recent'
@@ -740,7 +751,7 @@ def end_loan(barcode, person):
                                end_time = loan.end_time)
         redirect(f'{dibs.base_url}/thankyou')
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/item/{barcode}')
 
 
@@ -750,7 +761,7 @@ def send_item_to_viewer(barcode, person):
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
-        log(f'redirecting to viewer for {barcode} for {anon(person.uname)}')
+        log(f'redirecting to viewer for {barcode} for {user(person)}')
         wait_time = _RELOAN_WAIT_TIME
         return page('uv', browser_no_cache = True, barcode = barcode,
                     title = shorten(item.title, width = 100, placeholder = ' …'),
@@ -758,7 +769,7 @@ def send_item_to_viewer(barcode, person):
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
                     wait_time = naturaldelta(wait_time))
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/item/{barcode}')
 
 
@@ -778,10 +789,10 @@ def return_iiif_manifest(barcode, person):
             encoded_content = adjusted_content.encode()
             data = BytesIO(encoded_content)
             size = len(encoded_content)
-            log(f'returning manifest for {barcode} for {anon(person.uname)}')
+            log(f'returning manifest for {barcode} for {user(person)}')
             return send_file(data, ctype = 'application/json', size = size)
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
         return
 
@@ -797,7 +808,7 @@ def return_iiif_content(barcode, rest, person):
         if url in _IIIF_CACHE:
             content, ctype = _IIIF_CACHE[url]
             data = BytesIO(content)
-            log(f'returning cached /iiif/{barcode}/{rest} for {anon(person.uname)}')
+            log(f'returning cached /iiif/{barcode}/{rest} for {user(person)}')
             return send_file(data, ctype = ctype, size = len(content))
 
         # Read the data from our IIIF server instance & send it to the client.
@@ -813,13 +824,13 @@ def return_iiif_content(barcode, rest, person):
                 ctype = 'image/jpeg'
             _IIIF_CACHE[url] = (content, ctype)
             data = BytesIO(content)
-            log(f'returning content of /iiif/{barcode}/{rest} for {anon(person.uname)}')
+            log(f'returning content of /iiif/{barcode}/{rest} for {user(person)}')
             return send_file(data, ctype = ctype, size = len(content))
         else:
             log(f'error {str(error)} accessing {url}')
             return
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
 
 
