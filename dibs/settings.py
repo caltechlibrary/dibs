@@ -77,7 +77,7 @@ class DIBSConfig(Config):
         self.section = section
 
 
-    def get(self, option, default = undefined, cast = undefined, section = undefined):
+    def get(self, option, default = undefined, cast = undefined, section = 'dibs'):
         '''Return the value for option or default if defined.'''
         # We can't avoid __contains__ because value may be empty.
         if isinstance(section, Undefined):
@@ -89,10 +89,17 @@ class DIBSConfig(Config):
         elif option in self.repository:
             value = self.repository[option]
         elif section != undefined and section in self.repository.parser.sections():
-            value = self.repository[section][option]
+            if self.repository.parser.has_option(section, option):
+                value = self.repository[section][option]
+            elif not isinstance(default, Undefined):
+                value = default
+            else:
+                msg = f'Setting variable {option} not found in section [{section}].'
+                raise UndefinedValueError(msg)
         else:
             if isinstance(default, Undefined):
-                raise UndefinedValueError(f'Setting variable {option} not found.')
+                msg = f'Setting variable {option} not found in section [settings].'
+                raise UndefinedValueError(msg)
             value = default
 
         if isinstance(cast, Undefined):
