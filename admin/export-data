@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    export-data
+# @brief   Export data from DIBS database
+# @created 2021-09-17
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+from   commonpy.data_utils import pluralized
+from   commonpy.file_utils import writable
+import os
+from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
+import plac
+from   playhouse.dataset import DataSet
+import sys
+from   sys import exit
+
+from   dibs.database import Item, Loan, History, Person, database
+from   dibs.date_utils import human_datetime, time_now
+from   dibs.people import Person, person_from_environ
+from   dibs.settings import config
+
+
+# CLI definition.
+# .............................................................................
+
+@plac.annotations(
+    base_name   = ('name files using base name "B" (e.g., B-loan.csv)', 'option', 'b'),
+    format      = ('write output in csv or json format (default: csv)', 'option', 'f'),
+    list_tables = ('list the tables in the database, and exit',         'flag',   'l'),
+    output_dir  = ('write the output to directory "O"',                 'option', 'o'),
+    tables      = ('names of tables to write out (default: "all")',     'option', 't'),
+)
+
+def main(base_name = 'B', format = 'F', list_tables = False, output_dir = 'O',
+         tables = 'T'):
+    '''Export the DIBS database.
+
+Option --table can be used to select a single table to export.
+'''
+
+    hint = '(Use -h for help.)'
+
+    db_file = config('DATABASE_FILE')
+    if not isabs(db_file):
+        db_file = join(dirname(config.config_file), db_file)
+    if not exists(db_file):
+        print(f'‼️  Cannot find DIBS database file {db_file}')
+        exit(1)
+    db = DataSet('sqlite:///' + db_file)
+
+    if list_tables:
+        print(', '.join(db.tables))
+        exit(0)
+
+    format = 'csv' if format == 'F' else format.lower()
+    if format not in ['json', 'csv']:
+        print(f'‼️  Unsupported output format {format}. {hint}')
+        exit(1)
+
+    if output_dir == 'O':
+        output_dir = os.getcwd()
+    if not isabs(output_dir):
+        output_dir = realpath(join(os.getcwd(), output_dir))
+    if isdir(output_dir):
+        if not writable(output_dir):
+            print(f'‼️  Directory not writable: {output_dir}')
+            exit(1)
+    elif not exists(output_dir):
+        os.makedirs(output_dir)
+
+    base_name = 'dibs' if base_name == 'B' else base_name
+
+    tables = db.tables if tables == 'T' else tables.split(',')
+    if not all(table in db.tables for table in tables):
+        bad = [table for table in tables if table not in db.tables]
+        print(f'‼️  Unrecognized table {pluralized("name", bad)}: {", ".join(bad)}')
+        exit(1)
+
+    for table in tables:
+        dest_file = base_name + '-' + table + '.' + format
+        print(f'Writing {dest_file} ...')
+        db.freeze(db[table].all(), format = format, filename = dest_file)
+
+    print('Done.')
+
+
+# Main invocation.
+# .............................................................................
+
+if __name__ == '__main__':
+    plac.call(main)
