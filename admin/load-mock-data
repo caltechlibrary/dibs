@@ -12,8 +12,7 @@ from decouple import config
 from os.path import dirname, join, isabs
 from peewee import SqliteDatabase
 
-from dibs.database import Item, Loan, History
-from dibs.people import Person
+from dibs.database import Item, Loan, History, Person
 from dibs.settings import config
 
 db_file = config('DATABASE_FILE')
