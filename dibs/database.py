@@ -15,7 +15,7 @@ file "LICENSE" for more information.
 
 from peewee import SqliteDatabase, Model
 from peewee import CharField, TextField, IntegerField, SmallIntegerField
-from peewee import ForeignKeyField, AutoField, DateTimeField, BooleanField
+from peewee import ForeignKeyField, DateTimeField, BooleanField, TimestampField
 
 from .settings import config
 
@@ -145,3 +145,41 @@ class History(BaseModel):
     what       = CharField()            # What is this about? (e.g. a barcode)
     start_time = DateTimeField()        # When did the event start?
     end_time   = DateTimeField()        # When did the event stop?
+
+
+class Person(BaseModel):
+    '''An authenticated user who is able to access DIBS pages.
+
+    There are 2 layers of access control in DIBS when deployed in a web server:
+
+       1) can an incoming user access any part of DIBS at all?
+       2) can the user access staff pages, or only patron pages?
+
+    Layer #1 is implemented in the web server environment, and the details of
+    how it's done depends on the specifics of the installation.  As far as
+    DIBS is concerned, it only cares about whether a user has been
+    authenticated or not.  When a page or API endpoint is requested from
+    DIBS, the request environment given to DIBS by the web server will either
+    include a user identity (if the use has been authenticated) or not.  DIBS
+    simply refuses access to everything it controls if a user identity is not
+    present in the request environment.
+
+    Layer #2 is implemented in DIBS itself.  DIBS's database uses Person
+    objects to distinguish between people known to have staff access (i.e.,
+    who can access pages like /list), and everyone else.  When a request for
+    a page or an endpoint comes in, DIBS looks for the user identifier in the
+    HTTP request environment given to it from the web server, checks if that
+    user is in the Person table, and checks if the user has a role of
+    'library'.  If the role is 'library', access to staff pages is granted;
+    if the Person entry doesn't have a role of 'library', the user is not
+    shown links to the staff pages nor can they access the relevant
+    endpoints.
+    '''
+
+    uname        = CharField()          # User name, e.g., "janedoe"
+    role         = CharField()          # Role, usually empty or "library"
+    display_name = CharField()          # Optional name, for printing messages
+    updated      = TimestampField()     # Last successful login timestamp
+
+    def has_role(self, required_role):
+        return self.role == required_role

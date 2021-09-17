@@ -19,18 +19,14 @@ file "LICENSE" for more information.
 '''
 
 from datetime import datetime
-from subprocess import Popen, PIPE
-
 from getpass import getpass
-
 from peewee import SqliteDatabase, Model
-from peewee import AutoField, CharField, TimestampField
+from subprocess import Popen, PIPE
 
 import os
 import sys
 
-from .settings import config
-from .database import database
+from .database import database, Person
 
 
 def setup_person_table(db_name):
@@ -43,21 +39,6 @@ def setup_person_table(db_name):
             db.create_tables([Person])
     else:
         print(f'''ERROR: could not connect to {db_name}''')
-
-
-# Person is for development, it uses a SQLite3 DB to user
-# connection validation data.
-class Person(Model):
-    uname = CharField()  # user name, e.g. janedoe
-    role = CharField()   # role is usually empty or "library"
-    display_name = CharField() # display_name, optional
-    updated = TimestampField() # last successful login timestamp
-
-    def has_role(self, required_role):
-        return self.role == required_role
-
-    class Meta:
-        database = database
 
 
 # GuestPerson only exists while REMOTE_USER available in the environment.
