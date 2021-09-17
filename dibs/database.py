@@ -22,10 +22,10 @@ from .settings import config
 
 # Database connection.
 # .............................................................................
-# Note: this is exported too, because other code sometimes needs to use context
+# Note: this is exported too, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-database = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+database = SqliteDatabase(config('DATABASE_FILE', default='data/dibs.db'))
 
 
 # Database object schemas.
@@ -48,7 +48,7 @@ class Item(BaseModel):
     could very well allow some items to be loaned out for longer periods than
     others.  Duration is in terms of hours right now.
 
-    The fields for author, title, year, edition, and thumbnail are not
+    The fields for author, title, year, edition, and publisher are not
     strictly necessary for loan purposes. They are here to cache the values
     so that they don't have to be looked up when generating the /item page.
     FIXME: keeping this data introduces an opportunity for inconsistencies,
