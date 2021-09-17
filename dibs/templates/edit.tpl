@@ -86,9 +86,9 @@
               <div class="form-group row col-12">
                 <label for="upload" class="col-form-label">
                   %if item:
-                  Replace cover image (max size {{max_size}}):
+                  Replace cover image (<&nbsp;{{max_size}}):
                   %else:
-                  Custom cover image (optional; max size {{max_size}}):
+                  Custom cover image (optional; <&nbsp;{{max_size}}):
                   %end
                 </label>
                 <input class="btn btn-light col-12"
