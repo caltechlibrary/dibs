@@ -35,9 +35,49 @@ from   dibs.settings import config
 
 def main(base_name = 'B', format = 'F', list_tables = False, output_dir = 'O',
          tables = 'T'):
-    '''Export the DIBS database.
+    '''Export the DIBS database to CSV or JSON files.
 
-Option --table can be used to select a single table to export.
+This program first looks for the settings.ini configuration file in the
+same directory where this program is located, or in the parent directory if
+not found in this program's directory, and reads the settings file to find the
+value of the DATABASE_FILE variable.  It reads the database file and, based
+on the options given on the command line, writes one or more files containing
+the contents of one or more tables in the DIBS database.  Each table holds
+a different kind of model instance, such as Item, History, etc.
+
+Options
+~~~~~~~
+
+Option --list-tables will cause this program to list all the know tables
+(that is, model classes) in the database, and exit.
+
+Option --tables can be used to select one or more tables to output.  The default
+is to write all the tables in the database.  The value given to --table can be
+a single table name or multiple table names separated by commas with no spaces.
+For example:
+
+    export-data --tables item,history
+
+Option --format can be used to select the output format.  The default is CSV
+(comma-separated values).  The available alternatives are JSON and CSV.
+
+Option --output-dir sets the destination directory where files will be
+written.  If not provided, the files are written to the current directory.
+
+Option --base-name can be used to set the base name for the files that are
+written.  For example,
+
+    export-data --base-name dibs-2021-09-17 --format json
+
+will cause the program to write files named
+
+    dibs-2021-09-17-item.json
+    dibs-2021-09-17-loan.json
+    dibs-2021-09-17-history.json
+    dibs-2021-09-17-person.json
+
+Command-line options summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 '''
 
     hint = '(Use -h for help.)'
