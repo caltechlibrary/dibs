@@ -1,6 +1,19 @@
 '''
 settings.py: interface for parsing the configuration file
 
+This implements a subclass of Decouple's AutoConfig object which accepts a
+parameter for a section name, such that values in a settings.ini file are
+looked up within that section instead of Decouple's default "settings" section.
+In addition, the "config" object provides a property, config_file, that holds
+the path to the settings file being used by config.  Neither of these
+capabilities exist in Decouple, but we needed them in DIBS.
+
+This module provides a "config" object in the same way that Decouple provides
+a "config" object.  Its class is DIBSAutoConfig instead of AutoConfig.
+
+For more information about Python Decouple, see the repository at
+https://github.com/henriquebastos/python-decouple
+
 Copyright
 ---------
 
@@ -24,7 +37,12 @@ from   sidetrack import log
 # able to add a 'section' keyword argument to the initializers.
 
 class DIBSRepositoryIni(RepositoryIni):
-    '''Subclass of decouple's RepositoryIni that accepts a section name.'''
+    '''Subclass of decouple's RepositoryIni that accepts a section name.
+
+    The default section name is "dibs".  It falls back to lookin for a
+    section named "settings" (the default in Decouple) if no section name
+    is given.
+    '''
 
     def __init__(self, source, encoding = DEFAULT_ENCODING, section = 'dibs'):
         super().__init__(source, encoding)
@@ -93,13 +111,16 @@ class DIBSConfig(Config):
 
 
 class DIBSAutoConfig(AutoConfig):
-    '''Subclass of decouple's AutoConfig that uses DIBSRepositoryIni.'''
+    '''Subclass of decouple's AutoConfig that uses DIBSRepositoryIni.
+
+    The property "config_file" on this object can be used to find out the
+    path to the file from where it is reading its values.
+    '''
 
     SUPPORTED = OrderedDict([
         ('settings.ini', DIBSRepositoryIni),
         ('.env', RepositoryEnv),
     ])
-
 
     def _load(self, path):
         # Avoid unintended permission errors
@@ -109,6 +130,7 @@ class DIBSAutoConfig(AutoConfig):
             filename = ''
         Repository = self.SUPPORTED.get(os.path.basename(filename), RepositoryEmpty)
         self.config = DIBSConfig(Repository(filename, encoding = self.encoding))
+        self.config_file = filename
 
 
 # Main exported symbol
