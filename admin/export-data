@@ -50,7 +50,7 @@ Option --list-tables will cause this program to list all the know tables
 (that is, model classes) in the database, and exit.
 
 Option --tables can be used to select one or more tables to output.  The default
-is to write all the tables in the database.  The value given to --table can be
+is to write all the tables in the database.  The value given to --tables can be
 a single table name or multiple table names separated by commas with no spaces.
 For example:
 
@@ -63,11 +63,11 @@ Option --output-dir sets the destination directory where files will be
 written.  If not provided, the files are written to the current directory.
 
 Option --base-name can be used to set the base name for the files that are
-written.  For example,
+written.  For example, the following command,
 
     export-data --base-name dibs-2021-09-17 --format json
 
-will cause the program to write files named
+will cause the program to write files named as follows:
 
     dibs-2021-09-17-item.json
     dibs-2021-09-17-loan.json
