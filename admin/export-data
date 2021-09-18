@@ -15,7 +15,7 @@ import plac
 from   playhouse.dataset import DataSet
 from   sys import exit
 
-from   dibs.database import Item, Loan, History, Person, database
+from   dibs.data_models import Item, Loan, History, Person, database
 from   dibs.settings import config
 
 

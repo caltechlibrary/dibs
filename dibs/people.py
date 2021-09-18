@@ -1,6 +1,6 @@
 '''
 people.py provides account profiles for a persons based on their fields
-in the person table in an SQLite3 database.
+in the Person table in an SQLite3 database.
 
 It does not provide suppport for authentication, that needs to be
 provided by your front end web server such as Apache 2. If you
@@ -26,7 +26,7 @@ from subprocess import Popen, PIPE
 import os
 import sys
 
-from .database import database, Person
+from .data_models import database, Person
 
 
 def setup_person_table(db_name):

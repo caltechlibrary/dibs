@@ -38,7 +38,7 @@ from   textwrap import shorten
 from   trinomial import anon
 
 from . import __version__
-from .database import database, Item, Loan, History, Person
+from .data_models import database, Item, Loan, History, Person
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
 from .image_utils import as_jpeg

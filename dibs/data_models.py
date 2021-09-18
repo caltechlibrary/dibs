@@ -1,5 +1,5 @@
 '''
-database.py: object definitions for the database
+data_models.py: model object class definitions for the database
 
 This uses Peewee (http://docs.peewee-orm.com/en/latest/), a small ORM that
 allows writing database code entirely in terms of Python objects without

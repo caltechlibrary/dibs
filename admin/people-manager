@@ -65,7 +65,7 @@ from getpass import getpass
 from hashlib import blake2b
 from peewee import SqliteDatabase
 
-from dibs.database import database
+from dibs.data_models import database
 from dibs.people import PersonManager, setup_person_table
 from dibs.settings import config
 

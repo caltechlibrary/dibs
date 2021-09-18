@@ -19,7 +19,7 @@ from   rich.table import Table
 import sys
 from   sys import exit
 
-from   dibs.database import Item, Loan, History, Person, database
+from   dibs.data_models import Item, Loan, History, Person, database
 from   dibs.date_utils import human_datetime, time_now
 from   dibs.roles import role_to_redirect, has_role, staff_user
 from   dibs.settings import config
