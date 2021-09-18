@@ -114,9 +114,9 @@ Command-line options summary
     base_name = 'dibs' if base_name == 'B' else base_name
 
     tables = db.tables if tables == 'T' else tables.split(',')
-    if not all(table in db.tables for table in tables):
-        bad = [table for table in tables if table not in db.tables]
-        print(f'‼️  Unrecognized table {pluralized("name", bad)}: {", ".join(bad)}')
+    unknown = [table for table in tables if table not in db.tables]
+    if any(unknown):
+        print(f'‼️  Unrecognized {pluralized("table", unknown)}: {", ".join(unknown)}')
         exit(1)
 
     for table in tables:
