@@ -9,10 +9,14 @@ the path to the settings file being used by config.  Neither of these
 capabilities exist in Decouple, but we needed them in DIBS.
 
 This module provides a "config" object in the same way that Decouple provides
-a "config" object.  Its class is DIBSAutoConfig instead of AutoConfig.
-
-For more information about Python Decouple, see the repository at
+a "config" object.  Its class is DIBSAutoConfig instead of AutoConfig.  For
+more information about Python Decouple, see its GitHub repository at
 https://github.com/henriquebastos/python-decouple
+
+Apart from the extensions to Decouple, this module adds a new function,
+dibs_path(...), for return an absolute path given a path relative to the
+settings file.  This is useful for converting relative paths used as values in
+the settings file (e.g., "DATABASE_FILE") to actual paths on the file system.
 
 Copyright
 ---------
@@ -28,6 +32,7 @@ from   decouple import Config, AutoConfig, DEFAULT_ENCODING, Undefined, undefine
 from   decouple import RepositoryIni, RepositoryEnv, RepositoryEmpty
 from   decouple import UndefinedValueError
 import os
+from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
 from   sidetrack import log
 
 
@@ -146,3 +151,17 @@ class DIBSAutoConfig(AutoConfig):
 # to decouple's AutoConfig.
 
 config = DIBSAutoConfig()
+
+def dibs_path(path):
+    '''Resolve "path" relative to the current directory or the settings file.'''
+    if not path:
+        return None
+    if not isabs(path):
+        abs_path = join(dirname(config.config_file), path)
+        if exists(abs_path):
+            return abs_path
+        else:
+            return None
+    elif exists(path):
+        return abspath(path)
+    return None
