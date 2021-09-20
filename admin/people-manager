@@ -67,21 +67,10 @@ from peewee import SqliteDatabase
 
 from dibs.data_models import database
 from dibs.people import PersonManager, setup_person_table
-from dibs.settings import config
+from dibs.settings import config, dibs_path
 
-htpasswd = config('HTPASSWD', default = None)
-if htpasswd:
-    if not isabs(htpasswd):
-        htpasswd = join(dirname(config.config_file), htpasswd)
-    if not exists(htpasswd):
-        exit(f'Cannot find {htpasswd}')
-
-password_file = config('PASSWORD_FILE', default = None)
-if password_file:
-    if not isabs(password_file):
-        password_file = join(dirname(config.config_file), password_file)
-    if not exists(password_file):
-        exit(f'Cannot find {password_file}')
+htpasswd = dibs_path(config('HTPASSWD', default = None))
+password_file = dibs_path(config('PASSWORD_FILE', default = None))
 
 
 def usage(app_name, exit_code):
