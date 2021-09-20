@@ -13,20 +13,21 @@ import sys
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from dibs.data_models import Item, Loan, History, Person
-from dibs.settings import config, dibs_path
+from dibs.settings import config
 
-
-# Find the database file.
+# In the present case, the database file will not exist yet, so we construct
+# a path to where it should be.
 db_file = config('DATABASE_FILE')
-db_path = dibs_path(db_file)
-if not db_path or not exists(db_path):
-    print(f'‼️  Cannot find DIBS database file {db_file}')
-    exit(1)
-database = SqliteDatabase(db_path)
+db_path = join(dirname(config.config_file), db_file)
 
-# Peewee autoconnects to the database if doing queries, but not for other ops.
+# Initialize the database.
+database = SqliteDatabase(db_path)
 database.connect()
+
+# Load our models AFTER initializing the database.
+from dibs.data_models import Item, Loan, History, Person
+
+# Create our tables.
 database.create_tables([Item, Loan, History, Person])
 
 # This next one is a demo item.  We provide a manifest in ./manifests/ and

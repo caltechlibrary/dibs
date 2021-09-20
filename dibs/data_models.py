@@ -25,7 +25,7 @@ from .settings import config, dibs_path
 # Note: this is exported too, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-db_path  = dibs_path(config('DATABASE_FILE'))
+db_path  = config('DATABASE_FILE', default = 'data/dibs.db')
 database = SqliteDatabase(db_path)
 
 
@@ -74,7 +74,7 @@ class Item(BaseModel):
     #    & "item_id" on Item objects.  Point #2 above explains why we must use
     #    something other than "id" for our LSP id field.  Thus: "item_id".
 
-    barcode    = CharField(primary_key = True, unique = True)
+    barcode    = CharField(primary_key = True)
     item_id    = CharField()            # The LSP's own id for this item.
     item_page  = TextField()            # URL for item's page in LSP.
     title      = TextField()
