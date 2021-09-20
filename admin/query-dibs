@@ -9,7 +9,7 @@
 
 from   datetime import datetime as dt
 import os
-from   os.path import dirname, join, isabs, exists
+from   os.path import dirname, join, isabs, exists, abspath
 from   peewee import *
 import plac
 from   rich import box
@@ -18,6 +18,8 @@ from   rich.padding import Padding
 from   rich.table import Table
 import sys
 from   sys import exit
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
 
 from   dibs.data_models import Item, Loan, History, Person
 from   dibs.date_utils import human_datetime, time_now
