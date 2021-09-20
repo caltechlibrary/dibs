@@ -60,10 +60,12 @@
 # ==========================================================================
 
 import sys
-from os.path import dirname, join, basename, isabs, exists
+from os.path import dirname, join, basename, isabs, abspath, exists
 from getpass import getpass
 from hashlib import blake2b
 from peewee import SqliteDatabase
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
 
 from dibs.data_models import database
 from dibs.people import PersonManager, setup_person_table

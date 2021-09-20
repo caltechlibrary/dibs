@@ -7,8 +7,11 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
-from peewee import SqliteDatabase
-from os.path import exists
+from   peewee import SqliteDatabase
+from   os.path import exists, dirname, join, abspath
+import sys
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
 
 from dibs.data_models import Item, Loan, History, Person
 from dibs.settings import config, dibs_path

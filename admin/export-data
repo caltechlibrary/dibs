@@ -17,6 +17,8 @@ from   playhouse.dataset import DataSet
 import sys
 from   sys import exit
 
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
 from   dibs.data_models import Item, Loan, History, Person, database
 from   dibs.settings import config, dibs_path
 

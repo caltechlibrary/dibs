@@ -100,6 +100,8 @@ from   shutil import get_terminal_size
 from   sidetrack import set_debug, log
 from   yurl import URL
 
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
 from   dibs import dibs, print_version
 from   dibs.settings import config
 
