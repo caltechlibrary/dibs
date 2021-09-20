@@ -17,7 +17,7 @@ from peewee import SqliteDatabase, Model
 from peewee import CharField, TextField, IntegerField, SmallIntegerField
 from peewee import ForeignKeyField, DateTimeField, BooleanField, TimestampField
 
-from .settings import config
+from .settings import config, dibs_path
 
 
 # Database connection.
@@ -25,7 +25,8 @@ from .settings import config
 # Note: this is exported too, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-database = SqliteDatabase(config('DATABASE_FILE', default='data/dibs.db'))
+db_path  = dibs_path(config('DATABASE_FILE'))
+database = SqliteDatabase(db_path)
 
 
 # Database object schemas.
