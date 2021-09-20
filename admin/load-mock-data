@@ -7,19 +7,20 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
-from datetime import datetime, timedelta
-from decouple import config
-from os.path import dirname, join, isabs
 from peewee import SqliteDatabase
+from os.path import exists
 
 from dibs.data_models import Item, Loan, History, Person
-from dibs.settings import config
+from dibs.settings import config, dibs_path
 
+
+# Find the database file.
 db_file = config('DATABASE_FILE')
-if not isabs(db_file):
-    db_file = join(dirname(config.config_file), db_file)
-
-database = SqliteDatabase(db_file)
+db_path = dibs_path(db_file)
+if not db_path or not exists(db_path):
+    print(f'‼️  Cannot find DIBS database file {db_file}')
+    exit(1)
+database = SqliteDatabase(db_path)
 
 # Peewee autoconnects to the database if doing queries, but not for other ops.
 database.connect()
