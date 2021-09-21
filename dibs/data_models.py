@@ -25,7 +25,7 @@ from .settings import config, dibs_path
 # Note: this is exported too, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-db_path  = config('DATABASE_FILE', default = 'data/dibs.db')
+db_path  = dibs_path(config('DATABASE_FILE', default = 'data/dibs.db'))
 database = SqliteDatabase(db_path)
 
 

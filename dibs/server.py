@@ -27,7 +27,7 @@ from   io import BytesIO
 import json
 from   lru import LRU
 import os
-from   os.path import realpath, dirname, join, exists, isabs
+from   os.path import realpath, dirname, join, exists
 from   peewee import *
 import random
 from   sidetrack import log
@@ -45,7 +45,7 @@ from .image_utils import as_jpeg
 from .lsp import LSP
 from .people import person_from_environ, GuestPerson
 from .roles import role_to_redirect, has_role, staff_user
-from .settings import config
+from .settings import config, dibs_path
 
 
 # General configuration and initialization.
@@ -65,16 +65,13 @@ _SERVER_ROOT = realpath(join(dirname(__file__), os.pardir))
 bottle.TEMPLATE_PATH.append(join(_SERVER_ROOT, 'dibs', 'templates'))
 
 # Directory containing IIIF manifest files.
-_MANIFEST_DIR = config('MANIFEST_DIR', default = 'data/manifests')
-if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
+_MANIFEST_DIR = dibs_path(config('MANIFEST_DIR', default = 'data/manifests'))
 
 # Directory containing workflow processing status files.
-_PROCESS_DIR = config('PROCESS_DIR', default = None)
-if _PROCESS_DIR and not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
+_PROCESS_DIR = dibs_path(config('PROCESS_DIR', default = 'data/processing'))
 
 # Directory containing thumbnail images of item covers/jackets.
-_THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'data/thumbnails')
-if not isabs(_THUMBNAILS_DIR): _THUMBNAILS_DIR = join(_SERVER_ROOT, _THUMBNAILS_DIR)
+_THUMBNAILS_DIR = dibs_path(config('THUMBNAILS_DIR', default = 'data/thumbnails'))
 
 # Internal threshold for max size of thumbnail images uploaded via edit form.
 _MAX_THUMBNAIL_SIZE = 1 * 1024 * 1024;
