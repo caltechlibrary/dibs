@@ -26,7 +26,7 @@ chdir(app_directory)
 
 # Now we can import our code.
 
-from dibs.server import dibs
+from dibs.server import dibs, preflight_check
 from dibs.settings import config
 
 # Notes:
@@ -72,6 +72,9 @@ def dibs_application(env, start_response):
         path   = get_script_name(env)
         dibs.base_url = f'{scheme}://{host}{path}'
         log(f'dibs.base_url = {dibs.base_url}')
+
+        # Make sure crucial directories are writable and variables are set.
+        preflight_check()
 
         # Mark this done.
         dibs._config_done = True
