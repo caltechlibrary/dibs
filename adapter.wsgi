@@ -26,7 +26,7 @@ chdir(app_directory)
 
 # Now we can import our code.
 
-from dibs import dibs
+from dibs.server import dibs
 from dibs.settings import config
 
 # Notes:
