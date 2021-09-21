@@ -1,7 +1,7 @@
 import os
 import pytest
 import sys
-import datetime as dt
+from datetime import datetime
 
 
 try:
@@ -14,22 +14,22 @@ from dibs.date_utils import *
 
 
 def test_round_minutes():
-    x = dt.datetime(2021, 4, 6, 23, 56, 3, 546899)
-    assert round_minutes(x, 'down') == dt.datetime(2021, 4, 6, 23, 56)
-    assert round_minutes(x, 'up')   == dt.datetime(2021, 4, 6, 23, 57)
+    x = datetime(2021, 4, 6, 23, 56, 3, 546899)
+    assert round_minutes(x, 'down') == datetime(2021, 4, 6, 23, 56)
+    assert round_minutes(x, 'up')   == datetime(2021, 4, 6, 23, 57)
 
-    x = dt.datetime(2021, 4, 6, 23, 56, 30, 546899)
-    assert round_minutes(x, 'down') == dt.datetime(2021, 4, 6, 23, 56)
-    assert round_minutes(x, 'up')   == dt.datetime(2021, 4, 6, 23, 57)
+    x = datetime(2021, 4, 6, 23, 56, 30, 546899)
+    assert round_minutes(x, 'down') == datetime(2021, 4, 6, 23, 56)
+    assert round_minutes(x, 'up')   == datetime(2021, 4, 6, 23, 57)
 
-    x = dt.datetime(2021, 4, 6, 23, 56, 0, 546899)
-    assert round_minutes(x, 'down') == dt.datetime(2021, 4, 6, 23, 56)
-    assert round_minutes(x, 'up')   == dt.datetime(2021, 4, 6, 23, 57)
+    x = datetime(2021, 4, 6, 23, 56, 0, 546899)
+    assert round_minutes(x, 'down') == datetime(2021, 4, 6, 23, 56)
+    assert round_minutes(x, 'up')   == datetime(2021, 4, 6, 23, 57)
 
-    x = dt.datetime(2021, 4, 6, 23, 56, 55, 0)
-    assert round_minutes(x, 'down') == dt.datetime(2021, 4, 6, 23, 56)
-    assert round_minutes(x, 'up')   == dt.datetime(2021, 4, 6, 23, 57)
+    x = datetime(2021, 4, 6, 23, 56, 55, 0)
+    assert round_minutes(x, 'down') == datetime(2021, 4, 6, 23, 56)
+    assert round_minutes(x, 'up')   == datetime(2021, 4, 6, 23, 57)
 
-    x = dt.datetime(2021, 4, 6, 23, 0, 0, 0)
-    assert round_minutes(x, 'down') == dt.datetime(2021, 4, 6, 23, 0)
-    assert round_minutes(x, 'up')   == dt.datetime(2021, 4, 6, 23, 1)
+    x = datetime(2021, 4, 6, 23, 0, 0, 0)
+    assert round_minutes(x, 'down') == datetime(2021, 4, 6, 23, 0)
+    assert round_minutes(x, 'up')   == datetime(2021, 4, 6, 23, 1)
