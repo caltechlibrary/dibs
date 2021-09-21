@@ -12,8 +12,9 @@ file "LICENSE" for more information.
 import bottle
 from   bottle import Bottle, HTTPResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
-from   commonpy.file_utils import delete_existing
+from   commonpy.file_utils import delete_existing, writable, readable
 from   commonpy.network_utils import net
+from   commonpy.string_utils import print_boxed
 from   datetime import datetime as dt
 from   datetime import timedelta as delta
 from   dateutil import tz
@@ -917,3 +918,42 @@ def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = _THUMBNAILS_DIR)
+
+
+# Miscellaneous helper functions.
+# .............................................................................
+
+def preflight_check():
+    '''Verify certain critical things are set up & complain if they're not.'''
+
+    db_file = config('DATABASE_FILE')
+    db_path = dibs_path(db_file, must_exist = True)
+    if not db_path:
+        print_boxed('Cannot find DIBS database using DATABASE_FILE value:'
+                    + db_file + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not writable(dirname(db_path)):
+        print_boxed('Cannot write to database directory\n'
+                    + db_path + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not readable(_MANIFEST_DIR):
+        print_boxed('Cannot write to MANIFEST_DIR directory\n'
+                    + db_path + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not writable(_PROCESS_DIR):
+        print_boxed('Cannot write to PROCESS_DIR directory:\n'
+                    + _PROCESS_DIR + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not writable(_THUMBNAILS_DIR):
+        print_boxed('Cannot write to THUMBNAILS_DIR directory:\n'
+                    + _THUMBNAILS_DIR + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not _IIIF_BASE_URL:
+        print_boxed('Variable IIIF_BASE_URL is not set.\n'
+                    ' DIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
