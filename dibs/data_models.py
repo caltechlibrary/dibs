@@ -16,17 +16,18 @@ file "LICENSE" for more information.
 from peewee import SqliteDatabase, Model
 from peewee import CharField, TextField, IntegerField, SmallIntegerField
 from peewee import ForeignKeyField, DateTimeField, BooleanField, TimestampField
+from playhouse.reflection import generate_models
 
 from .settings import config, dibs_path
 
 
 # Database connection.
 # .............................................................................
-# Note: this is exported too, because other code needs to use context
+# Note: symbol "database" is exported, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-db_path  = dibs_path(config('DATABASE_FILE', default = 'data/dibs.db'))
-database = SqliteDatabase(db_path)
+_db_path = dibs_path(config('DATABASE_FILE', default = 'data/dibs.db'))
+database = SqliteDatabase(_db_path)
 
 
 # Database object schemas.
@@ -165,16 +166,15 @@ class Person(BaseModel):
     simply refuses access to everything it controls if a user identity is not
     present in the request environment.
 
-    Layer #2 is implemented in DIBS itself.  DIBS's database uses Person
-    objects to distinguish between people known to have staff access (i.e.,
-    who can access pages like /list), and everyone else.  When a request for
-    a page or an endpoint comes in, DIBS looks for the user identifier in the
-    HTTP request environment given to it from the web server, checks if that
-    user is in the Person table, and checks if the user has a role of
-    'library'.  If the role is 'library', access to staff pages is granted;
-    if the Person entry doesn't have a role of 'library', the user is not
-    shown links to the staff pages nor can they access the relevant
-    endpoints.
+    Layer #2 is implemented in DIBS itself.  DIBS uses Person objects to
+    distinguish between people known to have staff access (i.e., who can
+    access pages like /list), and everyone else.  When a request for a page
+    or an endpoint comes in, DIBS looks for the user identifier in the HTTP
+    request environment passed in from the web server, checks if that user
+    is in the Person table, and checks if the user has a role of 'library'.
+    If the role is 'library', access to staff pages is granted; if the Person
+    entry doesn't have a role of 'library', the user is not shown links to
+    the staff pages nor can they access the relevant endpoints.
     '''
 
     uname        = CharField()          # User name, e.g., "janedoe"
@@ -184,3 +184,12 @@ class Person(BaseModel):
 
     def has_role(self, required_role):
         return self.role == required_role
+
+
+# Initialization.
+# .............................................................................
+# We need to make sure the database has been created the first time we try to
+# use DIBS.
+
+if generate_models(database) == {}:
+    database.create_tables([Item, Loan, History, Person])
