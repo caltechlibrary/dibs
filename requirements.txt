@@ -11,7 +11,7 @@ boltons         == 21.0.0
 bottle          == 0.12.19
 bottle-fdsend   == 0.1.1
 coif            == 0.0.1
-commonpy        == 1.4.0
+commonpy        == 1.5.0
 expiringdict    == 1.2.1
 humanize        == 3.9.0
 lru-dict        == 1.1.7
