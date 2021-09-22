@@ -26,29 +26,33 @@ from   dibs.settings import config, dibs_path
 # .............................................................................
 
 @plac.annotations(
-    base_name   = ('name files using base name "B" (e.g., B-loan.csv)', 'option', 'b'),
-    format      = ('write output in csv or json format (default: csv)', 'option', 'f'),
-    list_tables = ('list the tables in the database, and exit',         'flag',   'l'),
-    output_dir  = ('write the output to directory "O"',                 'option', 'o'),
-    overwrite   = ('force overwriting destination files if they exist', 'flag',   'O'),
-    quiet       = ('only print important messages while working',       'flag',   'q'),
-    tables      = ('names of tables to write out (default: "all")',     'option', 't'),
+    base_name   = ('name files using base name "B" (e.g., B-loan.csv)',     'option', 'b'),
+    database    = ('use database file "D" (default: look in settings.ini)', 'option', 'd'),
+    format      = ('write output in csv or json format (default: csv)',     'option', 'f'),
+    list_tables = ('list the tables in the database, and exit',             'flag',   'l'),
+    output_dir  = ('write the output to directory "O"',                     'option', 'o'),
+    overwrite   = ('force overwriting destination files if they exist',     'flag',   'O'),
+    quiet       = ('only print important messages while working',           'flag',   'q'),
+    tables      = ('names of tables to write out (default: "all")',         'option', 't'),
 )
 
-def main(base_name = 'B', no_color = False, format = 'F', list_tables = False,
+def main(base_name = 'B', database = 'D', format = 'F', list_tables = False,
          output_dir = 'O', overwrite  = False, quiet = False, tables = 'T'):
     '''Export the DIBS database to CSV or JSON files.
 
-This program first looks for the settings.ini configuration file in the
-same directory where this program is located, or in the parent directory if
-not found in this program's directory, and reads the settings file to find the
-value of the DATABASE_FILE variable.  It reads the database file and, based
-on the options given on the command line, writes one or more files containing
-the contents of one or more tables in the DIBS database.  Each table holds
-a different kind of model instance, such as Item, History, etc.
+This program reads a DIBS database file and, based on the options given on
+the command line, writes one or more files containing the contents of one or
+more tables in the DIBS database.  Each table holds a different kind of model
+instance, such as Item, History, etc.
 
 Options
 ~~~~~~~
+
+Unless given the option --database, this program looks for the settings.ini
+configuration file in the same directory where this program is located, or in
+the parent directory if not found in this program's directory, and reads the
+settings file to find the value of the DATABASE_FILE variable.  The option
+--database can be used to point it to a specific database file.
 
 Option --list-tables will cause this program to list all the know tables
 (that is, model classes) in the database, and exit.
@@ -103,14 +107,14 @@ Command-line options summary
     name = sys.argv[0]
     hint = '(Use -h for help.)'
 
-    db_file = config('DATABASE_FILE')
+    db_file = config('DATABASE_FILE') if database == 'D' else database
     db_path = dibs_path(db_file, must_exist = True)
     if not db_path:
         print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
         exit(1)
     db = DataSet('sqlite:///' + db_path)
 
-    def inform(msg):
+    def inform(msg):                    # Helper function
         if not quiet:
             print(msg)
 
