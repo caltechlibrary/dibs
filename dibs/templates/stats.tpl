@@ -128,6 +128,11 @@
                class="btn btn-primary m-0 mr-2 my-2 no-underline">
               <i class="fas fa-long-arrow-alt-left"></i>&nbsp;&nbsp;Return to list page
             </a>
+
+            <a href="{{base_url}}/download/history"
+               class="btn btn-info m-0 mr-2 my-2 no-underline">
+              <i class="fas fa-file-download"></i>&nbsp;&nbsp;Download history
+            </a>
           </div>
 
         </div>
