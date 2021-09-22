@@ -69,10 +69,10 @@ sys.path.append(join(dirname(abspath(__file__)), '..'))
 
 from dibs.data_models import database
 from dibs.people import PersonManager, setup_person_table
-from dibs.settings import config, dibs_path
+from dibs.settings import config, resolved_path
 
-htpasswd = dibs_path(config('HTPASSWD', default = None))
-password_file = dibs_path(config('PASSWORD_FILE', default = None))
+htpasswd = resolved_path(config('HTPASSWD', default = None))
+password_file = resolved_path(config('PASSWORD_FILE', default = None))
 
 
 def usage(app_name, exit_code):

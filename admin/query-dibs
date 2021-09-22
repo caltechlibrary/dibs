@@ -24,14 +24,14 @@ sys.path.append(join(dirname(abspath(__file__)), '..'))
 from   dibs.data_models import Item, Loan, History, Person
 from   dibs.date_utils import human_datetime, time_now
 from   dibs.roles import role_to_redirect, has_role, staff_user
-from   dibs.settings import config, dibs_path
+from   dibs.settings import config, resolved_path
 
 
 # Globals.
 # .............................................................................
 
 db_file = config('DATABASE_FILE')
-db_path = dibs_path(db_file, must_exist = True)
+db_path = resolved_path(db_file, must_exist = True)
 if not db_path:
     print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
     exit(1)

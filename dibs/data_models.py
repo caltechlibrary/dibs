@@ -18,7 +18,7 @@ from peewee import CharField, TextField, IntegerField, SmallIntegerField
 from peewee import ForeignKeyField, DateTimeField, BooleanField, TimestampField
 from playhouse.reflection import generate_models
 
-from .settings import config, dibs_path
+from .settings import config, resolved_path
 
 
 # Database connection.
@@ -26,7 +26,7 @@ from .settings import config, dibs_path
 # Note: symbol "database" is exported, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-_db_path = dibs_path(config('DATABASE_FILE', default = 'data/dibs.db'))
+_db_path = resolved_path(config('DATABASE_FILE', default = 'data/dibs.db'))
 database = SqliteDatabase(_db_path)
 
 # Annotate our database object with a path to the file we're using. This saves

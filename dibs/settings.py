@@ -14,7 +14,7 @@ more information about Python Decouple, see its GitHub repository at
 https://github.com/henriquebastos/python-decouple
 
 Apart from the extensions to Decouple, this module adds a new function,
-dibs_path(...), for return an absolute path given a path relative to the
+resolved_path(...), for return an absolute path given a path relative to the
 settings file.  This is useful for converting relative paths used as values in
 the settings file (e.g., "DATABASE_FILE") to actual paths on the file system.
 
@@ -153,8 +153,8 @@ class DIBSAutoConfig(AutoConfig):
 
 config = DIBSAutoConfig()
 
-def dibs_path(path, must_exist = False):
-    '''Resolve "path" intelligently relative to DIBS settings file.
+def resolved_path(path, must_exist = False):
+    '''Resolve "path" intelligently relative to the settings file.
 
     The algorithm followed by this function goes like this:
 
@@ -172,7 +172,7 @@ def dibs_path(path, must_exist = False):
     current directory of the process of the calling function.  File paths only
     make sense relative to some static on-disk landmarks like the settings
     file, because parent processes may change directories or be rooted in
-    different locations than where DIBS is installed.
+    different locations than where the application is installed.
     '''
 
     if not path:
