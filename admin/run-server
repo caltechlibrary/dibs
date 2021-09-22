@@ -103,7 +103,7 @@ from   yurl import URL
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
 from   dibs import print_version
-from   dibs.server import dibs
+from   dibs.server import dibs, preflight_check
 from   dibs.settings import config
 
 
@@ -251,6 +251,9 @@ Command-line arguments summary
         else:
             print(f'‼️  Value does not look like a URL: "{iiif_url}"')
             exit(1)
+
+    if not preflight_check():
+        exit(1)
 
     if mode != 'debug':
         print_safety_warning()
