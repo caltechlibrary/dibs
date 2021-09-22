@@ -10,7 +10,7 @@ file "LICENSE" for more information.
 '''
 
 import bottle
-from   bottle import Bottle, HTTPResponse, static_file, template
+from   bottle import Bottle, HTTPResponse, LocalResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
 from   commonpy.file_utils import delete_existing, writable, readable
 from   commonpy.network_utils import net
@@ -24,12 +24,13 @@ from   fdsend import send_file
 import functools
 from   humanize import naturaldelta, naturalsize
 import inspect
-from   io import BytesIO
+from   io import BytesIO, StringIO
 import json
 from   lru import LRU
 import os
 from   os.path import realpath, dirname, join, exists
 from   peewee import *
+from   playhouse.dataset import DataSet
 import random
 from   sidetrack import log
 from   str2bool import str2bool
@@ -543,6 +544,22 @@ def show_stats():
             avg_duration = delta(seconds = 0)
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
     return page('stats', browser_no_cache = True, usage_data = usage_data)
+
+
+@dibs.get('/download/<data:re:(items|history)>', apply = VerifyStaffUser())
+def download(data):
+    '''Handle http post request to download data from the database.'''
+    db = DataSet('sqlite:///' + database.file_path)
+    buffer = StringIO()
+    db.freeze(db[data].all(), format = 'csv', file_obj = buffer)
+    buffer.seek(0)
+    response = LocalResponse(
+        body = buffer,
+        headers = {
+            "Content-Disposition": f"attachment; filename=dibs-{data}",
+            "Content-Type": "text/csv",
+        })
+    return response
 
 
 # User endpoints.
