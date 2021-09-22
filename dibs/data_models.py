@@ -29,6 +29,10 @@ from .settings import config, dibs_path
 _db_path = dibs_path(config('DATABASE_FILE', default = 'data/dibs.db'))
 database = SqliteDatabase(_db_path)
 
+# Annotate our database object with a path to the file we're using. This saves
+# us from having to duplicate the path resolution logic elsewhere. Keep it DRY!
+database.file_path = _db_path
+
 
 # Database object schemas.
 # .............................................................................
