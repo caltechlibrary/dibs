@@ -926,34 +926,42 @@ def included_file(filename):
 def preflight_check():
     '''Verify certain critical things are set up & complain if they're not.'''
 
-    db_file = config('DATABASE_FILE')
-    db_path = dibs_path(db_file, must_exist = True)
-    if not db_path:
-        print_boxed('Cannot find DIBS database using DATABASE_FILE value:'
-                    + db_file + '\n\nDIBS cannot function properly.',
-                    title = 'DIBS Fatal Error')
+    success = True
+    if hasattr(database, 'file_path'):
+        if not database.file_path:
+            success = False
+            print_boxed('Cannot find DIBS database using DATABASE_FILE value:'
+                        + db_file + '\n\nDIBS cannot function properly.',
+                        title = 'DIBS Fatal Error')
 
-    if not writable(dirname(db_path)):
+    if not writable(dirname(database.file_path)):
+        success = False
         print_boxed('Cannot write to database directory\n'
-                    + db_path + '\n\nDIBS cannot function properly.',
+                    + database.file_path + '\n\nDIBS cannot function properly.',
                     title = 'DIBS Fatal Error')
 
     if not readable(_MANIFEST_DIR):
+        success = False
         print_boxed('Cannot write to MANIFEST_DIR directory\n'
-                    + db_path + '\n\nDIBS cannot function properly.',
+                    + _MANIFEST_DIR + '\n\nDIBS cannot function properly.',
                     title = 'DIBS Fatal Error')
 
     if not writable(_PROCESS_DIR):
+        success = False
         print_boxed('Cannot write to PROCESS_DIR directory:\n'
                     + _PROCESS_DIR + '\n\nDIBS cannot function properly.',
                     title = 'DIBS Fatal Error')
 
     if not writable(_THUMBNAILS_DIR):
+        success = False
         print_boxed('Cannot write to THUMBNAILS_DIR directory:\n'
                     + _THUMBNAILS_DIR + '\n\nDIBS cannot function properly.',
                     title = 'DIBS Fatal Error')
 
     if not _IIIF_BASE_URL:
+        success = False
         print_boxed('Variable IIIF_BASE_URL is not set.\n'
                     ' DIBS cannot function properly.',
                     title = 'DIBS Fatal Error')
+
+    return success
