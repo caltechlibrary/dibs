@@ -15,6 +15,7 @@ from   dataclasses import dataclass
 import os
 from   os.path import realpath, dirname, join, exists, isabs
 from   pokapi import Folio
+import re
 from   sidetrack import log
 from   topi import Tind
 
@@ -228,4 +229,4 @@ def probable_issn(value):
 
 
 def truncated_title(title):
-    return title.split(':')[0].strip()
+    return re.split(':|;', title)[0].strip()
