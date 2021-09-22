@@ -30,12 +30,6 @@ __email__       = 'helpdesk@library.caltech.edu'
 __license__     = 'BSD 3-clause'
 
 
-# Exports.
-# .............................................................................
-
-from .server import dibs
-
-
 # Miscellaneous utilities.
 # .............................................................................
 

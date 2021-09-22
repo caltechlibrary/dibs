@@ -31,9 +31,9 @@ from   dibs.settings import config, dibs_path
 # .............................................................................
 
 db_file = config('DATABASE_FILE')
-db_path = dibs_path(db_file)
-if not db_path or not exists(db_path):
-    print(f'‼️  Cannot find DIBS database file {db_file}')
+db_path = dibs_path(db_file, must_exist = True)
+if not db_path:
+    print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
     exit(1)
 database = SqliteDatabase(db_path)
 

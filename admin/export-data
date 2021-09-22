@@ -7,7 +7,6 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
-from   bun import UI, inform, alert, alert_fatal, warn
 from   commonpy.data_utils import pluralized
 from   commonpy.file_utils import writable
 import os
@@ -27,30 +26,33 @@ from   dibs.settings import config, dibs_path
 # .............................................................................
 
 @plac.annotations(
-    base_name   = ('name files using base name "B" (e.g., B-loan.csv)', 'option', 'b'),
-    no_color    = ('do not color-code terminal output',                 'flag',   'C'),
-    format      = ('write output in csv or json format (default: csv)', 'option', 'f'),
-    list_tables = ('list the tables in the database, and exit',         'flag',   'l'),
-    output_dir  = ('write the output to directory "O"',                 'option', 'o'),
-    overwrite   = ('force overwriting destination files if they exist', 'flag',   'O'),
-    quiet       = ('only print important messages while working',       'flag',   'q'),
-    tables      = ('names of tables to write out (default: "all")',     'option', 't'),
+    base_name   = ('name files using base name "B" (e.g., B-loan.csv)',     'option', 'b'),
+    database    = ('use database file "D" (default: look in settings.ini)', 'option', 'd'),
+    format      = ('write output in csv or json format (default: csv)',     'option', 'f'),
+    list_tables = ('list the tables in the database, and exit',             'flag',   'l'),
+    output_dir  = ('write the output to directory "O"',                     'option', 'o'),
+    overwrite   = ('force overwriting destination files if they exist',     'flag',   'O'),
+    quiet       = ('only print important messages while working',           'flag',   'q'),
+    tables      = ('names of tables to write out (default: "all")',         'option', 't'),
 )
 
-def main(base_name = 'B', no_color = False, format = 'F', list_tables = False,
+def main(base_name = 'B', database = 'D', format = 'F', list_tables = False,
          output_dir = 'O', overwrite  = False, quiet = False, tables = 'T'):
     '''Export the DIBS database to CSV or JSON files.
 
-This program first looks for the settings.ini configuration file in the
-same directory where this program is located, or in the parent directory if
-not found in this program's directory, and reads the settings file to find the
-value of the DATABASE_FILE variable.  It reads the database file and, based
-on the options given on the command line, writes one or more files containing
-the contents of one or more tables in the DIBS database.  Each table holds
-a different kind of model instance, such as Item, History, etc.
+This program reads a DIBS database file and, based on the options given on
+the command line, writes one or more files containing the contents of one or
+more tables in the DIBS database.  Each table holds a different kind of model
+instance, such as Item, History, etc.
 
 Options
 ~~~~~~~
+
+Unless given the option --database, this program looks for the settings.ini
+configuration file in the same directory where this program is located, or in
+the parent directory if not found in this program's directory, and reads the
+settings file to find the value of the DATABASE_FILE variable.  The option
+--database can be used to point it to a specific database file.
 
 Option --list-tables will cause this program to list all the know tables
 (that is, model classes) in the database, and exit.
@@ -88,11 +90,7 @@ Additional command-line arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If given the option --quiet, this program will not print informational messages
-while it is working. It will only print messages for warnings or errors. By
-default, the messages printed are also color-coded. If given the option
---no-color, this program will not color the text of messages it prints. (That
-option is useful when running Zowie within subshells inside other environments
-such as Emacs.)
+while it is working. It will only print messages for warnings or errors.
 
 Return values
 ~~~~~~~~~~~~~
@@ -109,15 +107,16 @@ Command-line options summary
     name = sys.argv[0]
     hint = '(Use -h for help.)'
 
-    ui = UI(name, show_banner = False, be_quiet = quiet, use_color = not no_color)
-    ui.start()
-
-    db_file = config('DATABASE_FILE')
-    db_path = dibs_path(db_file)
-    if not db_path or not exists(db_path):
-        alert_fatal(f'Cannot find DIBS database file {db_file}')
+    db_file = config('DATABASE_FILE') if database == 'D' else database
+    db_path = dibs_path(db_file, must_exist = True)
+    if not db_path:
+        print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
         exit(1)
     db = DataSet('sqlite:///' + db_path)
+
+    def inform(msg):                    # Helper function
+        if not quiet:
+            print(msg)
 
     # Preprocess arguments and handle early exits -----------------------------
 
@@ -129,7 +128,7 @@ Command-line options summary
 
     format = 'csv' if format == 'F' else format.lower()
     if format not in ['json', 'csv']:
-        alert_fatal(f'Unsupported output format {format}. {hint}')
+        print(f'‼️  Unsupported output format {format}. {hint}')
         exit(1)
 
     if output_dir == 'O':
@@ -138,13 +137,13 @@ Command-line options summary
         output_dir = realpath(join(os.getcwd(), output_dir))
     if isdir(output_dir):
         if not writable(output_dir):
-            alert_fatal(f'Directory not writable: {output_dir}')
+            print(f'‼️  Directory not writable: {output_dir}')
             exit(1)
 
     tables = db.tables if tables == 'T' else tables.split(',')
     unknown = [table for table in tables if table not in db.tables]
     if any(unknown):
-        alert_fatal(f'Unknown {pluralized("table", unknown)}: {", ".join(unknown)}')
+        print(f'‼️  Unknown {pluralized("table", unknown)}: {", ".join(unknown)}')
         exit(1)
 
     base_name = 'dibs' if base_name == 'B' else base_name
@@ -159,7 +158,7 @@ Command-line options summary
     for table in tables:
         dest_file = join(output_dir, base_name + '-' + table + '.' + format)
         if exists(dest_file) and not overwrite:
-            alert_fatal(f'Quitting because file exists: {dest_file}')
+            print(f'‼️  Quitting because file exists: {dest_file}')
             exit(1)
 
         inform(f'Writing {dest_file} ...')

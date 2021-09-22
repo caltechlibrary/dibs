@@ -13,19 +13,20 @@ import sys
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from dibs.settings import config
+from dibs.data_models import Item, Loan, History, Person
+from dibs.settings import config, dibs_path
 
 # In the present case, the database file will not exist yet, so we construct
-# a path to where it should be.
-db_file = config('DATABASE_FILE')
-db_path = join(dirname(config.config_file), db_file)
+# a path to where it should be but don't require that it exists.
+db_file = config('DATABASE_FILE', default = 'data/dibs.db')
+db_path = dibs_path(db_file)
+if not db_path:
+    print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
+    exit(1)
 
 # Initialize the database.
 database = SqliteDatabase(db_path)
 database.connect()
-
-# Load our models AFTER initializing the database.
-from dibs.data_models import Item, Loan, History, Person
 
 # Create our tables.
 database.create_tables([Item, Loan, History, Person])

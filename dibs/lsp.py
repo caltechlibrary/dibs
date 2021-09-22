@@ -15,6 +15,7 @@ from   dataclasses import dataclass
 import os
 from   os.path import realpath, dirname, join, exists, isabs
 from   pokapi import Folio
+import re
 from   sidetrack import log
 from   topi import Tind
 
@@ -126,6 +127,8 @@ class FolioInterface(LSPInterface):
         '''Return a record for the item identified by the "barcode".'''
         try:
             rec = self._folio.record(barcode = barcode)
+            if not all([rec.title, rec.author, rec.year]):
+                raise ValueError('Got incomplete record for {barcode} in {self.url}')
             log(f'record for {barcode} has id {rec.id}')
             thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
             # Don't overwrite existing images.
@@ -145,8 +148,10 @@ class FolioInterface(LSPInterface):
                              year      = rec.year,
                              edition   = rec.edition,
                              isbn_issn = rec.isbn_issn)
-        except:
-            log(f'could not find {barcode} in FOLIO')
+        except ValueError:
+            raise
+        except Exception as ex:
+            log(f'could not find {barcode} in FOLIO: {str(ex)}')
             raise ValueError('No such barcode {barcode} in {self.url}')
 
 
@@ -224,4 +229,4 @@ def probable_issn(value):
 
 
 def truncated_title(title):
-    return title.split(':')[0].strip()
+    return re.split(':|;', title)[0].strip()

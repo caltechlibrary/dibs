@@ -10,10 +10,11 @@ file "LICENSE" for more information.
 '''
 
 import bottle
-from   bottle import Bottle, HTTPResponse, static_file, template
+from   bottle import Bottle, HTTPResponse, LocalResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
-from   commonpy.file_utils import delete_existing
+from   commonpy.file_utils import delete_existing, writable, readable
 from   commonpy.network_utils import net
+from   commonpy.string_utils import print_boxed
 from   datetime import datetime as dt
 from   datetime import timedelta as delta
 from   dateutil import tz
@@ -23,12 +24,14 @@ from   fdsend import send_file
 import functools
 from   humanize import naturaldelta, naturalsize
 import inspect
-from   io import BytesIO
+from   io import BytesIO, StringIO
 import json
 from   lru import LRU
 import os
-from   os.path import realpath, dirname, join, exists, isabs
+from   os.path import realpath, dirname, join, exists
 from   peewee import *
+from   playhouse.dataset import DataSet
+from   playhouse.reflection import generate_models
 import random
 from   sidetrack import log
 from   str2bool import str2bool
@@ -45,7 +48,7 @@ from .image_utils import as_jpeg
 from .lsp import LSP
 from .people import person_from_environ, GuestPerson
 from .roles import role_to_redirect, has_role, staff_user
-from .settings import config
+from .settings import config, dibs_path
 
 
 # General configuration and initialization.
@@ -65,16 +68,13 @@ _SERVER_ROOT = realpath(join(dirname(__file__), os.pardir))
 bottle.TEMPLATE_PATH.append(join(_SERVER_ROOT, 'dibs', 'templates'))
 
 # Directory containing IIIF manifest files.
-_MANIFEST_DIR = config('MANIFEST_DIR', default = 'data/manifests')
-if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
+_MANIFEST_DIR = dibs_path(config('MANIFEST_DIR', default = 'data/manifests'))
 
 # Directory containing workflow processing status files.
-_PROCESS_DIR = config('PROCESS_DIR', default = None)
-if _PROCESS_DIR and not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
+_PROCESS_DIR = dibs_path(config('PROCESS_DIR', default = 'data/processing'))
 
 # Directory containing thumbnail images of item covers/jackets.
-_THUMBNAILS_DIR = config('THUMBNAILS_DIR', default = 'data/thumbnails')
-if not isabs(_THUMBNAILS_DIR): _THUMBNAILS_DIR = join(_SERVER_ROOT, _THUMBNAILS_DIR)
+_THUMBNAILS_DIR = dibs_path(config('THUMBNAILS_DIR', default = 'data/thumbnails'))
 
 # Internal threshold for max size of thumbnail images uploaded via edit form.
 _MAX_THUMBNAIL_SIZE = 1 * 1024 * 1024;
@@ -274,7 +274,7 @@ class RouteTracer(BottlePluginBase):
                 barcode = request.forms.get('barcode').strip()
             person = person_from_environ(request.environ)
             log(f'{route.method} {route.rule} invoked by {user(person)}'
-                + f' for {barcode}' if barcode else '')
+                + (f' for {barcode}' if barcode else ''))
             return callback(*args, **kwargs)
 
         return route_tracer
@@ -545,6 +545,30 @@ def show_stats():
             avg_duration = delta(seconds = 0)
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
     return page('stats', browser_no_cache = True, usage_data = usage_data)
+
+
+@dibs.get('/download/<fmt:re:(csv|json)>/<data:re:(item|history)>', apply = VerifyStaffUser())
+def download(fmt, data):
+    '''Handle http post request to download data from the database.'''
+    # The values of "data" are limited to known table names by the route, but
+    # if data_models.py is ever changed and we forget to update this function,
+    # the next safety check prevents db.freeze from creating a blank table.
+    if data not in generate_models(database):
+        log(f'download route database mismatch: requested {data} does not exist')
+        return page('error', summary = f'unable to download {data} data',
+                    message = 'The requested data is missing from the database ')
+    db = DataSet('sqlite:///' + database.file_path)
+    buffer = StringIO()
+    db.freeze(db[data].all(), format = fmt, file_obj = buffer)
+    buffer.seek(0)
+    response = LocalResponse(
+        body = buffer,
+        headers = {
+            'Content-Disposition' : f'attachment; filename=dibs-{data}',
+            'Content-Type'        : f'text/{fmt}',
+        })
+    log(f'returning file "dibs-{data}.{fmt}" to user')
+    return response
 
 
 # User endpoints.
@@ -920,3 +944,50 @@ def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = _THUMBNAILS_DIR)
+
+
+# Miscellaneous helper functions.
+# .............................................................................
+
+def preflight_check():
+    '''Verify certain critical things are set up & complain if they're not.'''
+
+    success = True
+    if hasattr(database, 'file_path'):
+        if not database.file_path:
+            success = False
+            print_boxed('Cannot find DIBS database using DATABASE_FILE value:'
+                        + db_file + '\n\nDIBS cannot function properly.',
+                        title = 'DIBS Fatal Error')
+
+    if not writable(dirname(database.file_path)):
+        success = False
+        print_boxed('Cannot write to database directory\n'
+                    + database.file_path + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not readable(_MANIFEST_DIR):
+        success = False
+        print_boxed('Cannot write to MANIFEST_DIR directory\n'
+                    + _MANIFEST_DIR + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not writable(_PROCESS_DIR):
+        success = False
+        print_boxed('Cannot write to PROCESS_DIR directory:\n'
+                    + _PROCESS_DIR + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not writable(_THUMBNAILS_DIR):
+        success = False
+        print_boxed('Cannot write to THUMBNAILS_DIR directory:\n'
+                    + _THUMBNAILS_DIR + '\n\nDIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    if not _IIIF_BASE_URL:
+        success = False
+        print_boxed('Variable IIIF_BASE_URL is not set.\n'
+                    ' DIBS cannot function properly.',
+                    title = 'DIBS Fatal Error')
+
+    return success
