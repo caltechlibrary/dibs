@@ -27,7 +27,7 @@
             <input id="auto-refresh-checkbox" class="form-check-input" checked=true
                    type="checkbox" value="true" onclick="toggleAutoRefresh()">
             <label class="form-check-label" for="auto-refresh-checkbox">
-              Keep refreshing this page automatically
+              Refresh this page automatically
             </label>
           </div>
           <p class="mx-auto text-center font-italic">
