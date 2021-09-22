@@ -90,7 +90,7 @@
               <i class="fas fa-long-arrow-alt-left"></i>&nbsp;&nbsp;Return to list page
             </a>
 
-            <a href="{{base_url}}/download/items"
+            <a href="{{base_url}}/download/csv/item"
                class="btn btn-info m-0 mr-2 my-2 no-underline">
               <i class="fas fa-file-download"></i>&nbsp;&nbsp;Download item list
             </a>
