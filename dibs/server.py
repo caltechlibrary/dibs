@@ -274,7 +274,7 @@ class RouteTracer(BottlePluginBase):
                 barcode = request.forms.get('barcode').strip()
             person = person_from_environ(request.environ)
             log(f'{route.method} {route.rule} invoked by {user(person)}'
-                + f' for {barcode}' if barcode else '')
+                + (f' for {barcode}' if barcode else ''))
             return callback(*args, **kwargs)
 
         return route_tracer
