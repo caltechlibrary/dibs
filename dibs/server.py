@@ -31,6 +31,7 @@ import os
 from   os.path import realpath, dirname, join, exists
 from   peewee import *
 from   playhouse.dataset import DataSet
+from   playhouse.reflection import generate_models
 import random
 from   sidetrack import log
 from   str2bool import str2bool
@@ -546,19 +547,27 @@ def show_stats():
     return page('stats', browser_no_cache = True, usage_data = usage_data)
 
 
-@dibs.get('/download/<data:re:(items|history)>', apply = VerifyStaffUser())
-def download(data):
+@dibs.get('/download/<fmt:re:(csv|json)>/<data:re:(item|history)>', apply = VerifyStaffUser())
+def download(fmt, data):
     '''Handle http post request to download data from the database.'''
+    # The values of "data" are limited to known table names by the route, but
+    # if data_models.py is ever changed and we forget to update this function,
+    # the next safety check prevents db.freeze from creating a blank table.
+    if data not in generate_models(database):
+        log(f'download route database mismatch: requested {data} does not exist')
+        return page('error', summary = f'unable to download {data} data',
+                    message = 'The requested data is missing from the database ')
     db = DataSet('sqlite:///' + database.file_path)
     buffer = StringIO()
-    db.freeze(db[data].all(), format = 'csv', file_obj = buffer)
+    db.freeze(db[data].all(), format = fmt, file_obj = buffer)
     buffer.seek(0)
     response = LocalResponse(
         body = buffer,
         headers = {
-            "Content-Disposition": f"attachment; filename=dibs-{data}",
-            "Content-Type": "text/csv",
+            'Content-Disposition' : f'attachment; filename=dibs-{data}',
+            'Content-Type'        : f'text/{fmt}',
         })
+    log(f'returning file "dibs-{data}.{fmt}" to user')
     return response
 
 
