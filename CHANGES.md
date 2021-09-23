@@ -4,12 +4,13 @@
 
 This version brings significant changes and new features.
 
-* Now supports FOLIO in addition to TIND LSP. Along with this, the configuration file `settings.ini-example` has had a number of changes for people's `settings.ini` files.
-* `run-server` allows the use of the `--debug-user` flag in all modes, for more debugging capabilities.
-* Updated dependency versions and changed `requirements.txt` to pin the version numbers.
-* Added [Pokapi](https://github.com/caltechlibrary/pokapi) as new dependency for FOLIO interface.
-* Fixed issue #88: wrong default set for the item processing directory by `server.py`.
+### Breaking changes
 
+The format of the `settings.ini` file has changed, as part of the DIBS enhancement to support FOLIO. The old format used a single section called `[settings]`; the new format replaces `[settings]` with a section called `[dibs]`, and adds additional sections for TIND and FOLIO. If you attempt to run the new version of DIBS without updating `settings.ini`, DIBS will either exit with an explicit error or fail to find variable values (which will be a clue that the problem is the changes to the settings file).
+
+### Other changes
+
+... forthcoming ...
 
 ## Version 0.4.1
 
