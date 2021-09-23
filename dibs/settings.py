@@ -185,18 +185,18 @@ def resolved_path(path, must_exist = False):
     caller_file = frame[0].f_code.co_filename
     if caller_file:
         dir_of_caller = dirname(caller_file)
-        relative_to_caller = abspath(join(dir_of_caller, path))
-        if exists(relative_to_caller):
-            return relative_to_caller
+        path_in_caller_dir = abspath(join(dir_of_caller, path))
+        if exists(path_in_caller_dir):
+            return path_in_caller_dir
         parent_dir_of_caller = join(dir_of_caller, os.path.pardir)
-        relative_to_parent_of_caller = abspath(join(parent_dir_of_caller, path))
-        if exists(relative_to_parent_of_caller):
-            return relative_to_parent_of_caller
+        path_in_parent_dir_of_caller = abspath(join(parent_dir_of_caller, path))
+        if exists(path_in_parent_dir_of_caller):
+            return path_in_parent_dir_of_caller
 
     # Try looking in the directory where settings.ini was found.
-    relative_to_settings = abspath(join(dirname(config.config_file), path))
-    if exists(relative_to_settings):
-        return relative_to_settings
+    path_in_settings_dir = abspath(join(dirname(config.config_file), path))
+    if exists(path_in_settings_dir):
+        return path_in_settings_dir
 
     # Give up.
     return path if not must_exist else None
