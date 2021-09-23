@@ -26,7 +26,7 @@ chdir(app_directory)
 
 # Run a preflight check before going much further.
 
-from dibs.prefight import preflight_check
+from dibs.preflight import preflight_check
 preflight_check()
 
 # If we make it this far, import the core pieces.
