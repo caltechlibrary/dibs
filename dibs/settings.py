@@ -178,7 +178,7 @@ def resolved_path(path, must_exist = False):
     if not path:
         return None
     if isabs(path) or exists(path):
-        return path
+        return abspath(path)
 
     # Try looking in the directory of the calling function, or its parent dir.
     frame = inspect.stack()[1]
