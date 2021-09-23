@@ -156,7 +156,7 @@
                       Copy&nbsp;link</button>
                   </td>
 
-                  <td style="padding-left: 0">
+                  <td style="padding-left: 5px">
                     <form action="{{base_url}}/edit/{{item.barcode}}" method="GET">
                       <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                       <input type="submit" name="edit" value="Edit&nbsp;entry"
