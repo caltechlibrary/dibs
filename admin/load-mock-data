@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    load-mock-data
+# @brief   Load some sample data for DIBS
+# @created 2021-01-07
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+from   os.path import exists, dirname, join, abspath
+from   peewee import SqliteDatabase
+from   playhouse.reflection import generate_models
+from   rich import print
+from   rich.panel import Panel
+import sys
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
+from dibs.data_models import Item, Loan, History, Person
+from dibs.settings import config, resolved_path
+
+# In the present case, the database file will not exist yet, so we construct
+# a path to where it should be but don't require that it exists.
+db_file = config('DATABASE_FILE', default = 'data/dibs.db')
+db_path = resolved_path(db_file)
+if not db_path:
+    text = f'Cannot find DIBS database {db_file or "-- not configured"}'
+    print(Panel(text, style = 'red', width = len(text) + 4))
+    exit(1)
+
+# Initialize the database.
+database = SqliteDatabase(db_path)
+database.connect()
+
+# Create our tables if they don't exist yet.
+if generate_models(database) == {}:
+    database.create_tables([Item, Loan, History, Person])
+
+# This next one is a demo item.  We provide a manifest in ./manifests/ and
+# it references an open copy of the book at the Wellcome Collection in the UK.
+if not Item.get_or_none(Item.barcode == '350470000363458'):
+    Item.create(barcode    = '350470000363458',
+                item_id    = '514607',
+                item_page  = 'https://caltech.tind.io/record/514607',
+                title      = 'The Biocrats',
+                author     = 'Gerald Leach',
+                year       = '1970',
+                publisher  = 'McGraw-Hill',
+                edition    = 'First',
+                num_copies = 1,
+                duration   = 6,
+                notes      = ('This is just a random book chosen because it was'
+                              + ' the only title we could find in both a public'
+                              + ' external IIIF server and in our Caltech catalog'),
+                ready      = True)
+
+if not Person.select().exists():
+    text = 'Now use admin/people-manager to add staff users'
+    print(Panel(text, style = 'dark_orange', width = len(text) + 4))

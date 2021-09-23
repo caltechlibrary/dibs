@@ -1,6 +1,6 @@
 '''
 people.py provides account profiles for a persons based on their fields
-in the person table in an SQLite3 database.
+in the Person table in an SQLite3 database.
 
 It does not provide suppport for authentication, that needs to be
 provided by your front end web server such as Apache 2. If you
@@ -19,19 +19,15 @@ file "LICENSE" for more information.
 '''
 
 from datetime import datetime
-from subprocess import Popen, PIPE
-
 from getpass import getpass
-
-from decouple import config
 from peewee import SqliteDatabase, Model
-from peewee import AutoField, CharField, TimestampField
+from subprocess import Popen, PIPE
 
 import os
 import sys
 
-# Figure out how are authentication and authorization is configured.
-_db = SqliteDatabase(config('DATABASE_FILE', default='dibs.db'))
+from .data_models import database, Person
+
 
 def setup_person_table(db_name):
     '''setup a people SQLite3 database'''
@@ -43,21 +39,6 @@ def setup_person_table(db_name):
             db.create_tables([Person])
     else:
         print(f'''ERROR: could not connect to {db_name}''')
-        
-
-# Person is for development, it uses a SQLite3 DB to user
-# connection validation data.
-class Person(Model):
-    uname = CharField()  # user name, e.g. janedoe
-    role = CharField()   # role is usually empty or "library"
-    display_name = CharField() # display_name, optional
-    updated = TimestampField() # last successful login timestamp
-
-    def has_role(self, required_role):
-        return self.role == required_role
-
-    class Meta:
-        database = _db
 
 
 # GuestPerson only exists while REMOTE_USER available in the environment.
@@ -109,7 +90,7 @@ class PersonManager:
     def _update_htpasswd(self, uname, secret):
         '''Update the password for user using htpasswd from Apache'''
         if (self.htpasswd == None) or (self.password_file == None):
-            print(f'ERROR: not setup for Apache htpasswd support')
+            print(f'ERROR: not set up for Apache htpasswd support')
             sys.exit(1)
         if not os.path.exists(self.password_file):
             print(f'ERROR: password file {self.password_file} does not exist')

@@ -3,6 +3,7 @@
   %include('common/banner.html')
   <head>
     %include('common/standard-inclusions.tpl')
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.0/css/all.css">
 
     <title>List of items currently in Caltech DIBS</title>
 
@@ -22,8 +23,7 @@
         <div class="d-grid gap-3">
 
           <div class="mb-3 table-responsive">
-            <table class="table table-borderless"
-                   data-page-size="50"
+            <table class="table table-borderless" data-page-size="50"
                    data-toggle="table" data-pagination="true" data-escape="false">
               <thead class="thead-light align-bottom align-text-bottom">
                 <tr>
@@ -46,8 +46,8 @@
                 %for item in items:
                 <tr scope="row">
                   <td>
-                    %if item.tind_id != '':
-                    <a href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.barcode}}</a>
+                    %if item.item_page != '':
+                    <a target="_blank" href="{{item.item_page}}">{{item.barcode}}</a>
                     %else:
                     {{item.barcode}}
                     %end
@@ -87,7 +87,12 @@
           <div class="mx-auto w-50 text-center">
             <a href="{{base_url}}/list"
                class="btn btn-primary m-0 mr-2 my-2 no-underline">
-              Return to list page
+              <i class="fas fa-long-arrow-alt-left"></i>&nbsp;&nbsp;Return to list page
+            </a>
+
+            <a href="{{base_url}}/download/csv/item"
+               class="btn btn-info m-0 mr-2 my-2 no-underline">
+              <i class="fas fa-file-download"></i>&nbsp;&nbsp;Download item list
             </a>
           </div>
 

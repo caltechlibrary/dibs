@@ -9,12 +9,12 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from   decouple import config
 from   sidetrack import log
 import smtplib
 from   trinomial import anon
 
 from .date_utils import human_datetime
+from .settings import config
 
 
 # Constants used throughout this file.

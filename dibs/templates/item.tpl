@@ -34,6 +34,8 @@
   <body>
     <div class="page-content">
       %include('common/navbar.tpl')
+      %from os import stat
+      %from os.path import join, exists
 
       <div class="container main-container">
         <div class="row pt-3 mx-auto item-info-row">
@@ -45,27 +47,39 @@
                   <th class="item-info-label">Title</th>
                   <td class="item-info-value">
                     <strong>
-                      %if item.tind_id != '':
-                      <a target="_blank"
-                         href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.title}}</a>
+                      %if item.item_page != '':
+                      <a target="_blank" href="{{item.item_page}}">{{item.title}}</a>
                       %else:
                       {{item.title}}
                       %end
                     </strong>
                   </td>
                 </tr>
+
                 <tr>
                   <th>Author(s)</th>
-                  <td class="item-info-value">{{item.author.split(',')[0] + ' et al.' if item.author.count(',') > 2 else item.author}}</td>
+                  <td class="item-info-value">
+                    %author = item.author
+                    {{author.split(',')[0] + ' et al.' if author.count(',') > 2 else author}}
+                  </td>
                 </tr>
-                %if item.edition != '':
+
                 <tr>
-                %else:
-                <tr class="last">
-                %end
                   <th>Year</th>
                   <td class="item-info-value">{{item.year}}</td>
                 </tr>
+
+                %if item.publisher != '':
+                <tr
+                  %if item.edition == '':
+                  class="last"
+                  %end
+                  >
+                  <th>Publisher</th>
+                  <td class="item-info-value">{{item.publisher}}</td>
+                </tr>
+                %end
+
                 %if item.edition != '':
                 <tr class="last">
                   <th>Edition</th>
@@ -77,10 +91,14 @@
           </div>
 
           <div class="col-sm-2 col-xs-0 item-thumbnail">
-            %if item.thumbnail != '':
-            <img class="thumbnail img-responsive" src="{{item.thumbnail}}">
+            %thumbnail_file = join(thumbnails_dir, item.barcode + ".jpg")
+            %if exists(thumbnail_file):
+              %timestamp = stat(thumbnail_file).st_mtime
+            <img class="thumbnail thumbnail-image img-responsive"
+                 src="{{base_url}}/thumbnails/{{item.barcode}}.jpg?{{timestamp}}">
             %else:
-            <img class="thumbnail img-responsive" src="{{base_url}}/static/missing-thumbnail.svg">
+            <img class="thumbnail img-responsive"
+                 src="{{base_url}}/static/missing-thumbnail.svg">
             %end
           </div>
 

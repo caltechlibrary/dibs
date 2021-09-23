@@ -200,14 +200,26 @@ th.item-info-label {
 }
 
 img.thumbnail {
+  max-width: 300px;
+  max-height: 178px;
+  height: auto;
   width: auto;
-  height: 178px;
   margin-right: 2em;
 }
 
 .loan-info {
   display: block;
   margin-top: 3rem;
+}
+
+.thumbnail-image {
+  box-shadow: 5px 10px 15px #ccc;
+  -moz-box-shadow: 5px 10px 15px #ccc;
+  -webkit-box-shadow: 5px 10px 15px #ccc;
+  -khtml-box-shadow: 5px 10px 15px #ccc;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
 }
 
 /* Adjustments for different screen sizes .................................. */

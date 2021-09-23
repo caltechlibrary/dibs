@@ -10,40 +10,45 @@ file "LICENSE" for more information.
 '''
 
 import bottle
-from   bottle import Bottle, HTTPResponse, static_file, template
+from   bottle import Bottle, HTTPResponse, LocalResponse, static_file, template
 from   bottle import request, response, redirect, route, get, post, error
+from   commonpy.file_utils import delete_existing, writable, readable
 from   commonpy.network_utils import net
+from   commonpy.string_utils import print_boxed
 from   datetime import datetime as dt
 from   datetime import timedelta as delta
 from   dateutil import tz
-from   decouple import config
 from   enum import Enum, auto
 from   expiringdict import ExpiringDict
 from   fdsend import send_file
 import functools
-from   humanize import naturaldelta
+from   humanize import naturaldelta, naturalsize
 import inspect
-from   io import BytesIO
+from   io import BytesIO, StringIO
 import json
 from   lru import LRU
 import os
-from   os.path import realpath, dirname, join, exists, isabs
+from   os.path import realpath, dirname, join, exists
 from   peewee import *
+from   playhouse.dataset import DataSet
+from   playhouse.reflection import generate_models
 import random
-from   sidetrack import log, logr
+from   sidetrack import log
 from   str2bool import str2bool
 import string
 import sys
 from   textwrap import shorten
-from   topi import Tind
 from   trinomial import anon
 
 from . import __version__
-from .database import Item, Loan, History, database
+from .data_models import database, Item, Loan, History, Person
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
-from .people import Person, person_from_environ
+from .image_utils import as_jpeg
+from .lsp import LSP
+from .people import person_from_environ, GuestPerson
 from .roles import role_to_redirect, has_role, staff_user
+from .settings import config, resolved_path
 
 
 # General configuration and initialization.
@@ -63,27 +68,31 @@ _SERVER_ROOT = realpath(join(dirname(__file__), os.pardir))
 bottle.TEMPLATE_PATH.append(join(_SERVER_ROOT, 'dibs', 'templates'))
 
 # Directory containing IIIF manifest files.
-_MANIFEST_DIR = config('MANIFEST_DIR', default = 'manifests')
-if not isabs(_MANIFEST_DIR): _MANIFEST_DIR = join(_SERVER_ROOT, _MANIFEST_DIR)
+_MANIFEST_DIR = resolved_path(config('MANIFEST_DIR'))
 
 # Directory containing workflow processing status files.
-_PROCESS_DIR = config('PROCESS_DIR', default = 'manifests')
-if not isabs(_PROCESS_DIR): _PROCESS_DIR = join(_SERVER_ROOT, _PROCESS_DIR)
+_PROCESS_DIR = resolved_path(config('PROCESS_DIR'))
 
-# The base URL of the IIIF server endpoint. Note: there is no reasonable
-# default value for this one, so we fail if this is not set.
+# Directory containing thumbnail images of item covers/jackets.
+_THUMBNAILS_DIR = resolved_path(config('THUMBNAILS_DIR'))
+
+# Internal threshold for max size of thumbnail images uploaded via edit form.
+_MAX_THUMBNAIL_SIZE = 1 * 1024 * 1024;
+
+# The base URL of the IIIF server endpoint.
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
 # Set it to 1 minute in debug mode. (Note: can't check dibs.debug_mode here b/c
 # when this file is loaded, it's not yet set.  Test a Bottle variable instead.)
 _RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
-                     else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
+                     else delta(minutes = int(config('RELOAN_WAIT_TIME'))))
 
 # Where we send users to give feedback.
-_FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
+_FEEDBACK_URL = config('FEEDBACK_URL')
 
-# Where we send users for help.
+# Where we send users for help.  The default is the DIBS software documentation
+# page, which is assumed to exist even if individual sites don't provide docs.
 _HELP_URL = config('HELP_URL', default = 'https://caltechlibrary.github.io/dibs')
 
 # Remember the most recent accesses so we can provide stats on recent activity.
@@ -94,7 +103,7 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
               '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
 
 # IIIF page cache.  This is a dict where the keys will be IIIF page URLs.
-_IIIF_CACHE = LRU(int(config('IIIF_CACHE_SIZE', default = 50000)))
+_IIIF_CACHE = LRU(int(config('IIIF_CACHE_SIZE')))
 
 
 # General-purpose utilities used repeatedly.
@@ -109,8 +118,15 @@ def page(name, **kargs):
         response.add_header('Pragma', 'no-cache')
         response.add_header('Cache-Control',
                             'no-store, max-age=0, no-cache, must-revalidate')
+    announcement = None
+    if exists(join(_SERVER_ROOT, 'site-announcement.html')):
+        with open(join(_SERVER_ROOT, 'site-announcement.html'), 'r') as f:
+            announcement = f.read().strip()
+        if len(announcement) == 0:
+            announcement = None
     return template(name, base_url = dibs.base_url, version = __version__,
                     logged_in = logged_in, staff_user = staff_user(person),
+                    announcement = announcement,
                     feedback_url = _FEEDBACK_URL, help_url = _HELP_URL,
                     reloan_wait_time = naturaldelta(_RELOAN_WAIT_TIME), **kargs)
 
@@ -143,6 +159,18 @@ def urls_restored(text, barcode):
     barcode = str(barcode)
     rewritten = text.replace(f'{barcode}!', barcode + r'%2F')
     return rewritten.replace(f'{dibs.base_url}/iiif/{barcode}', _IIIF_BASE_URL)
+
+
+def user(person):
+    if isinstance(person, Person) or isinstance(person, GuestPerson):
+        if person.uname:
+            return 'user ' + anon(person.uname)
+        else:
+            return 'guest user'
+    elif isinstance(person, str):
+        return 'user ' + anon(person)
+    else:
+        return 'unknown user'
 
 
 # Bespoke, locally-sourced, artisanal Bottle plugins.
@@ -187,7 +215,7 @@ class LoanExpirer(BottlePluginBase):
                 with database.atomic('immediate'):
                     for loan in loans:
                         barcode = loan.item.barcode
-                        log(f'updating loan state of {barcode} for {loan.user}')
+                        log(f'updating {barcode} loan state for {user(loan.user)}')
                         next_time = loan.end_time + _RELOAN_WAIT_TIME
                         loan.reloan_time = round_minutes(next_time, 'down')
                         loan.state = 'recent'
@@ -244,8 +272,7 @@ class RouteTracer(BottlePluginBase):
             elif request.forms.get('barcode', None):
                 barcode = request.forms.get('barcode').strip()
             person = person_from_environ(request.environ)
-            log(f'{route.method} {route.rule} invoked'
-                + (f' by {anon(person.uname)}' if person else '')
+            log(f'{route.method} {route.rule} invoked by {user(person)}'
                 + (f' for {barcode}' if barcode else ''))
             return callback(*args, **kwargs)
 
@@ -286,7 +313,7 @@ class VerifyStaffUser(BottlePluginBase):
                 return page('error', summary = 'authentication failure',
                             message = f'Unrecognized user identity.')
             if not staff_user(person):
-                log(f'{request.path} invoked by non-staff user {anon(person.uname)}')
+                log(f'{request.path} invoked by non-staff {user(person)}')
                 redirect(f'{dibs.base_url}/notallowed')
                 return
             return callback(*args, **kwargs)
@@ -330,13 +357,18 @@ def manage_items():
 @dibs.get('/add', apply = VerifyStaffUser())
 def add():
     '''Display the page to add new items.'''
-    return page('edit', action = 'add', item = None)
+    return page('edit', action = 'add', item = None,
+                thumbnails_dir = _THUMBNAILS_DIR,
+                max_size = naturalsize(_MAX_THUMBNAIL_SIZE))
 
 
 @dibs.get('/edit/<barcode:int>', apply = VerifyStaffUser())
 def edit(barcode):
     '''Display the page to add new items.'''
-    return page('edit', action = 'edit', item = Item.get(Item.barcode == barcode))
+    return page('edit', browser_no_cache = True, action = 'edit',
+                thumbnails_dir = _THUMBNAILS_DIR,
+                max_size = naturalsize(_MAX_THUMBNAIL_SIZE),
+                item = Item.get(Item.barcode == barcode))
 
 
 @dibs.post('/update/add', apply = VerifyStaffUser())
@@ -362,6 +394,8 @@ def update_item():
     if not num_copies.isdigit() or int(num_copies) <= 0:
         return page('error', summary = 'invalid copy number',
                     message = f'# of copies must be a positive number')
+    notes = request.forms.get('notes').strip()
+    thumbnail = request.files.get('thumbnail-image')
 
     item = Item.get_or_none(Item.barcode == barcode)
     if '/update/add' in request.path:
@@ -369,20 +403,18 @@ def update_item():
             log(f'{barcode} already exists in the database')
             return page('error', summary = 'duplicate entry',
                         message = f'An item with barcode {barcode} already exists.')
-        # Our current approach only uses items with barcodes that exist in
-        # TIND.  If that ever changes, the following needs to change too.
-        tind = Tind('https://caltech.tind.io')
+        lsp = LSP()
         try:
-            rec = tind.item(barcode = barcode).parent
+            rec = lsp.record(barcode = barcode)
         except:
-            log(f'could not find {barcode} in TIND')
+            log(f'could not find {barcode} in LSP')
             return page('error', summary = 'no such barcode',
                         message = f'There is no item with barcode {barcode}.')
         log(f'adding item entry {barcode} for {rec.title}')
         Item.create(barcode = barcode, title = rec.title, author = rec.author,
-                    tind_id = rec.tind_id, year = rec.year,
-                    edition = rec.edition, thumbnail = rec.thumbnail_url,
-                    num_copies = num_copies, duration = duration)
+                    item_id = rec.id, item_page = rec.url, year = rec.year,
+                    edition = rec.edition, publisher = rec.publisher,
+                    num_copies = num_copies, duration = duration, notes = notes)
     else: # The operation is /update/edit.
         if not item:
             log(f'there is no item with barcode {barcode}')
@@ -391,22 +423,60 @@ def update_item():
         item.barcode    = barcode
         item.duration   = duration
         item.num_copies = num_copies
+        item.notes      = notes
         log(f'saving changes to {barcode}')
-        item.save(only = [Item.barcode, Item.num_copies, Item.duration])
+        item.save(only = [Item.barcode, Item.num_copies, Item.duration, Item.notes])
         # FIXME if we reduced the number of copies, we need to check loans.
+
+        # Handle replacement thumbnail images if the user chose one.
+        if thumbnail and thumbnail.filename:
+            # We don't seem to get content-length in the headers, so won't know
+            # the size ahead of time.  So, check size, & always convert to jpeg.
+            try:
+                data = b''
+                while (chunk := thumbnail.file.read(1024)):
+                    data += chunk
+                    if len(data) >= _MAX_THUMBNAIL_SIZE:
+                        max_size = naturalsize(_MAX_THUMBNAIL_SIZE)
+                        log(f'file exceeds {max_size} -- ignoring the file')
+                        return page('error', summary = 'cover image is too large',
+                                    message = ('The chosen image is larger than'
+                                               + f' the limit of {max_size}.'))
+                dest_file = join(_THUMBNAILS_DIR, barcode + '.jpg')
+                log(f'writing {naturalsize(len(data))} image to {dest_file}')
+                with open(dest_file, 'wb') as new_file:
+                    new_file.write(as_jpeg(data))
+            except Exception as ex:
+                log(f'exception trying to save thumbnail: {str(ex)}')
+        else:
+            log(f'user did not provide a new thumbnail image file')
     redirect(f'{dibs.base_url}/list')
+
+
+@dibs.get('/delete-thumbnail/<barcode:int>', apply = VerifyStaffUser())
+def edit(barcode):
+    '''Delete the current thumbnail image.'''
+    thumbnail_file = join(_THUMBNAILS_DIR, str(barcode) + '.jpg')
+    if exists(thumbnail_file):
+        delete_existing(thumbnail_file)
+    else:
+        log(f'there is no {thumbnail_file}')
+    redirect(f'{dibs.base_url}/edit/{barcode}')
 
 
 @dibs.post('/start-processing', apply = VerifyStaffUser())
 def start_processing():
     '''Handle http post request to start the processing workflow.'''
     barcode = request.POST.barcode.strip()
-    init_file = join(_PROCESS_DIR, f'{barcode}-initiated')
-    try:
-        log(f'creating {init_file}')
-        os.close(os.open(init_file, os.O_CREAT))
-    except Exception as ex:
-        log(f'problem creating {init_file}: {str(ex)}')
+    if _PROCESS_DIR:
+        init_file = join(_PROCESS_DIR, f'{barcode}-initiated')
+        try:
+            log(f'creating {init_file}')
+            os.close(os.open(init_file, os.O_CREAT))
+        except Exception as ex:
+            log(f'problem creating {init_file}: {str(ex)}')
+    else:
+        log(f'_PROCESS_DIR not set -- ignoring /start-processing for {barcode}')
     redirect(f'{dibs.base_url}/list')
 
 
@@ -474,6 +544,30 @@ def show_stats():
             avg_duration = delta(seconds = 0)
         usage_data.append((item, active, len(durations), avg_duration, retrievals))
     return page('stats', browser_no_cache = True, usage_data = usage_data)
+
+
+@dibs.get('/download/<fmt:re:(csv|json)>/<data:re:(item|history)>', apply = VerifyStaffUser())
+def download(fmt, data):
+    '''Handle http post request to download data from the database.'''
+    # The values of "data" are limited to known table names by the route, but
+    # if data_models.py is ever changed and we forget to update this function,
+    # the next safety check prevents db.freeze from creating a blank table.
+    if data not in generate_models(database):
+        log(f'download route database mismatch: requested {data} does not exist')
+        return page('error', summary = f'unable to download {data} data',
+                    message = 'The requested data is missing from the database ')
+    db = DataSet('sqlite:///' + database.file_path)
+    buffer = StringIO()
+    db.freeze(db[data].all(), format = fmt, file_obj = buffer)
+    buffer.seek(0)
+    response = LocalResponse(
+        body = buffer,
+        headers = {
+            'Content-Disposition' : f'attachment; filename=dibs-{data}',
+            'Content-Type'        : f'text/{fmt}',
+        })
+    log(f'returning file "dibs-{data}.{fmt}" to user')
+    return response
 
 
 # User endpoints.
@@ -580,13 +674,13 @@ def show_item_info(barcode, person):
     # the item on loan.  This is useful mainly for developers and staff.
     show_viewer = str2bool(request.query.get('viewer', '1'))
     if status == Status.LOANED_BY_USER and show_viewer:
-        log(f'redirecting {anon(person.uname)} to uv for {barcode}')
+        log(f'redirecting {user(person)} to uv for {barcode}')
         redirect(f'{dibs.base_url}/view/{barcode}')
         return
     return page('item', browser_no_cache = True, item = item,
                 available = (status == Status.AVAILABLE),
                 when_available = human_datetime(when_available),
-                explanation = explanation)
+                explanation = explanation, thumbnails_dir = _THUMBNAILS_DIR)
 
 
 @dibs.post('/loan', apply = AddPersonArgument())
@@ -602,14 +696,14 @@ def loan_item(person):
             # Normally we shouldn't see a loan request through this form if the
             # item is not ready, so either staff changed the status after the
             # item was made available or someone got here accidentally.
-            log(f'redirecting {anon(person.uname)} back to item page for {barcode}')
+            log(f'redirecting {user(person)} back to item page for {barcode}')
             redirect(f'{dibs.base_url}/item/{barcode}')
             return
         if status == Status.LOANED_BY_USER:
             # Shouldn't be able to reach this point b/c the item page
             # shouldn't make a loan available for this user & item combo.
             # But if something weird happens, we might.
-            log(f'redirecting {anon(person.uname)} to {dibs.base_url}/view/{barcode}')
+            log(f'redirecting {user(person)} to {dibs.base_url}/view/{barcode}')
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
         if status == Status.USER_HAS_OTHER:
@@ -627,7 +721,7 @@ def loan_item(person):
             # The loan button shouldn't have been clickable in this case, but
             # someone else might have gotten the loan between the last status
             # check and the user clicking it.
-            log(f'redirecting {anon(person.uname)} to {dibs.base_url}/view/{barcode}')
+            log(f'redirecting {user(person)} to {dibs.base_url}/view/{barcode}')
             redirect(f'{dibs.base_url}/view/{barcode}')
             return
 
@@ -637,7 +731,7 @@ def loan_item(person):
         start = time_now()
         end = round_minutes(start + time, 'up')
         reloan = end + _RELOAN_WAIT_TIME
-        log(f'creating new loan for {barcode} for {anon(person.uname)}')
+        log(f'creating new loan for {barcode} for {user(person)}')
         Loan.create(item = item, state = 'active', user = person.uname,
                     start_time = start, end_time = end, reloan_time = reloan)
 
@@ -653,11 +747,11 @@ def end_loan(barcode, person):
     # the barcode data.  The following are compensatory mechanisms.
     post_barcode = request.POST.get('barcode')
     if not post_barcode:
-        log(f'missing post barcode in /return by {anon(person.uname)}')
+        log(f'missing post barcode in /return by user {user(person)}')
         if barcode:
             log(f'using barcode {barcode} from post address instead')
         else:
-            log(f'get /return invoked by {anon(person.uname)} but we have no barcode')
+            log(f'/return invoked by user {user(person)} but we have no barcode')
             return
     else:
         barcode = post_barcode
@@ -666,7 +760,7 @@ def end_loan(barcode, person):
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
         # Normal case: user has loaned a copy of item. Update to 'recent'.
-        log(f'locking db to change state of loan of {barcode} by {anon(person.uname)}')
+        log(f'locking db to change {barcode} loan state by user {user(person)}')
         with database.atomic('immediate'):
             now = time_now()
             loan.state = 'recent'
@@ -680,7 +774,7 @@ def end_loan(barcode, person):
                                end_time = loan.end_time)
         redirect(f'{dibs.base_url}/thankyou')
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/item/{barcode}')
 
 
@@ -690,7 +784,7 @@ def send_item_to_viewer(barcode, person):
     item = Item.get(Item.barcode == barcode)
     loan = Loan.get_or_none(Loan.item == item, Loan.user == person.uname)
     if loan and loan.state == 'active':
-        log(f'redirecting to viewer for {barcode} for {anon(person.uname)}')
+        log(f'redirecting to viewer for {barcode} for {user(person)}')
         wait_time = _RELOAN_WAIT_TIME
         return page('uv', browser_no_cache = True, barcode = barcode,
                     title = shorten(item.title, width = 100, placeholder = ' …'),
@@ -698,7 +792,7 @@ def send_item_to_viewer(barcode, person):
                     js_end_time = human_datetime(loan.end_time, '%m/%d/%Y %H:%M:%S'),
                     wait_time = naturaldelta(wait_time))
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/item/{barcode}')
 
 
@@ -713,14 +807,15 @@ def return_iiif_manifest(barcode, person):
             log(f'{manifest_file} does not exist')
             return
         record_request(barcode)
-        with open(manifest_file, 'r') as mf:
+        with open(manifest_file, 'r', encoding = 'utf-8') as mf:
             adjusted_content = urls_rerouted(mf.read(), barcode)
-            data = BytesIO(adjusted_content.encode())
-            size = len(adjusted_content)
-            log(f'returning manifest for {barcode} for {anon(person.uname)}')
+            encoded_content = adjusted_content.encode()
+            data = BytesIO(encoded_content)
+            size = len(encoded_content)
+            log(f'returning manifest for {barcode} for {user(person)}')
             return send_file(data, ctype = 'application/json', size = size)
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
         return
 
@@ -736,7 +831,7 @@ def return_iiif_content(barcode, rest, person):
         if url in _IIIF_CACHE:
             content, ctype = _IIIF_CACHE[url]
             data = BytesIO(content)
-            log(f'returning cached /iiif/{barcode}/{rest} for {anon(person.uname)}')
+            log(f'returning cached /iiif/{barcode}/{rest} for {user(person)}')
             return send_file(data, ctype = ctype, size = len(content))
 
         # Read the data from our IIIF server instance & send it to the client.
@@ -752,13 +847,13 @@ def return_iiif_content(barcode, rest, person):
                 ctype = 'image/jpeg'
             _IIIF_CACHE[url] = (content, ctype)
             data = BytesIO(content)
-            log(f'returning content of /iiif/{barcode}/{rest} for {anon(person.uname)}')
+            log(f'returning content of /iiif/{barcode}/{rest} for {user(person)}')
             return send_file(data, ctype = ctype, size = len(content))
         else:
             log(f'error {str(error)} accessing {url}')
             return
     else:
-        log(f'{anon(person.uname)} does not have {barcode} loaned out')
+        log(f'{user(person)} does not have {barcode} loaned out')
         redirect(f'{dibs.base_url}/notallowed')
 
 
@@ -827,7 +922,7 @@ def error405(error):
                            'not have permission to perform the action.'))
 
 
-# Miscellaneous static pages.
+# Miscellaneous static pages and files.
 # .............................................................................
 
 @dibs.get('/favicon.ico')
@@ -841,3 +936,10 @@ def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = 'dibs/static')
+
+
+@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>')
+def included_file(filename):
+    '''Return a static file used with %include in a template.'''
+    log(f'returning included file {filename}')
+    return static_file(filename, root = _THUMBNAILS_DIR)

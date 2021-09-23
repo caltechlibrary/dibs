@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    export-data
+# @brief   Export data from DIBS database
+# @created 2021-09-17
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+from   commonpy.data_utils import pluralized
+from   commonpy.file_utils import writable
+import os
+from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
+import plac
+from   playhouse.dataset import DataSet
+import sys
+from   sys import exit
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
+from   dibs.settings import config, resolved_path
+
+
+# CLI definition.
+# .............................................................................
+
+@plac.annotations(
+    base_name   = ('name files using base name "B" (e.g., B-loan.csv)',     'option', 'b'),
+    database    = ('use database file "D" (default: look in settings.ini)', 'option', 'd'),
+    format      = ('write output in csv or json format (default: csv)',     'option', 'f'),
+    list_tables = ('list the tables in the database, and exit',             'flag',   'l'),
+    output_dir  = ('write the output to directory "O"',                     'option', 'o'),
+    overwrite   = ('force overwriting destination files if they exist',     'flag',   'O'),
+    quiet       = ('only print important messages while working',           'flag',   'q'),
+    tables      = ('names of tables to write out (default: "all")',         'option', 't'),
+)
+
+def main(base_name = 'B', database = 'D', format = 'F', list_tables = False,
+         output_dir = 'O', overwrite  = False, quiet = False, tables = 'T'):
+    '''Export the DIBS database to CSV or JSON files.
+
+This program reads a DIBS database file and, based on the options given on
+the command line, writes one or more files containing the contents of one or
+more tables in the DIBS database.  Each table holds a different kind of model
+instance, such as Item, History, etc.
+
+Options
+~~~~~~~
+
+Unless given the option --database, this program looks for the settings.ini
+configuration file in the same directory where this program is located, or in
+the parent directory if not found in this program's directory, and reads the
+settings file to find the value of the DATABASE_FILE variable.  The option
+--database can be used to point it to a specific database file.
+
+Option --list-tables will cause this program to list all the know tables
+(that is, model classes) in the database, and exit.
+
+Option --tables can be used to select one or more tables to output.  The default
+is to write all the tables in the database.  The value given to --tables can be
+a single table name or multiple table names separated by commas with no spaces.
+For example:
+
+    export-data --tables item,history
+
+Option --format can be used to select the output format.  The default is CSV
+(comma-separated values).  The available alternatives are JSON and CSV.
+
+Option --output-dir sets the destination directory where files will be
+written.  If not provided, the files are written to the current directory.
+
+Option --base-name can be used to set the base name for the files that are
+written.  For example, the following command,
+
+    export-data --base-name saved-2021-09-17 --format json
+
+will cause the program to write files named as follows:
+
+    saved-2021-09-17-item.json
+    saved-2021-09-17-loan.json
+    saved-2021-09-17-history.json
+    saved-2021-09-17-person.json
+
+This program will not overwrite existing files unless the option --overwrite
+is also given.  (I.e., if "saved-2021-09-17-item.json" already exists, this
+program will quit rather than overwrite it, unless --overwrite is used.)
+
+Additional command-line arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If given the option --quiet, this program will not print informational messages
+while it is working. It will only print messages for warnings or errors.
+
+Return values
+~~~~~~~~~~~~~
+
+This program exists with a return code of 0 if no problems are encountered. If
+any problems are encountered, it returns with a status code of 1.
+
+Command-line options summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+'''
+
+    # Initial setup -----------------------------------------------------------
+
+    name = sys.argv[0]
+    hint = '(Use -h for help.)'
+
+    db_file = config('DATABASE_FILE') if database == 'D' else database
+    db_path = resolved_path(db_file, must_exist = True)
+    if not db_path:
+        print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
+        exit(1)
+    db = DataSet('sqlite:///' + db_path)
+
+    def inform(msg):                    # Helper function
+        if not quiet:
+            print(msg)
+
+    # Preprocess arguments and handle early exits -----------------------------
+
+    if list_tables:
+        inform(f'Database tables found in {db_file}')
+        for table in db.tables:
+            inform(f'  {table}')
+        exit(0)
+
+    format = 'csv' if format == 'F' else format.lower()
+    if format not in ['json', 'csv']:
+        print(f'‼️  Unsupported output format {format}. {hint}')
+        exit(1)
+
+    if output_dir == 'O':
+        output_dir = os.getcwd()
+    if not isabs(output_dir):
+        output_dir = realpath(join(os.getcwd(), output_dir))
+    if isdir(output_dir):
+        if not writable(output_dir):
+            print(f'‼️  Directory not writable: {output_dir}')
+            exit(1)
+
+    tables = db.tables if tables == 'T' else tables.split(',')
+    unknown = [table for table in tables if table not in db.tables]
+    if any(unknown):
+        print(f'‼️  Unknown {pluralized("table", unknown)}: {", ".join(unknown)}')
+        exit(1)
+
+    base_name = 'dibs' if base_name == 'B' else base_name
+
+    # Do the real work --------------------------------------------------------
+
+    if not exists(output_dir):
+        inform(f'Creating directory {output_dir}')
+        os.makedirs(output_dir)
+
+    inform(f'Using database found at {db_file}')
+    for table in tables:
+        dest_file = join(output_dir, base_name + '-' + table + '.' + format)
+        if exists(dest_file) and not overwrite:
+            print(f'‼️  Quitting because file exists: {dest_file}')
+            exit(1)
+
+        inform(f'Writing {dest_file} ...')
+        db.freeze(db[table].all(), format = format, filename = dest_file)
+
+    # And exit ----------------------------------------------------------------
+
+    inform('Done.')
+
+
+# Main invocation.
+# .............................................................................
+
+if __name__ == '__main__':
+    plac.call(main)

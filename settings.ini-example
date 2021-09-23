@@ -11,33 +11,57 @@
 #
 # =============================================================================
 
-[settings]
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~ General DIBS settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[dibs]
 # For production use, we highly recommend that DIBS be placed behind a single
 # sign-on authentication system such as Shibboleth.  For testing & development,
-# or internal use behind a firewall, you could also use Apache's Basic AuthType
-# scheme.  If you do, unset the following variables and match the location of
+# or internal use behind a firewall, you could use Apache's Basic AuthType.
+# If you do the latter, unset the following variables and match the location of
 # the password file to wherever you configured it in your Apache config file.
 #
 #HTPASSWD = /usr/bin/htpasswd
 #PASSWORD_FILE = /path/to/dibs/here/password.txt
 
+# Set the next variable to either "folio" or "tind", depending on which LSP
+# you are using, and then uncomment and set the relevant variables later in
+# this file to configure your particular LSP.
+LSP_TYPE = 
+
 # Path to the sqlite database, relative to here.
-DATABASE_FILE = dibs.db
+DATABASE_FILE = data/dibs.db
 
 # Directory containing IIIF manifest files.  Each file name should follow the
 # pattern "NNNNNN-manifest.json", where NNNNNN is the item barcode.  The repo
 # for DIBS contains a subdirectory called "manifests" with a demo file in it,
 # but the path can be changed if you put your manifests elsewhere.
-MANIFEST_DIR = manifests
+MANIFEST_DIR = data/manifests
 
-# Directory containing status files for items being processed.  Our workflow
-# involves automated conversion of scans to a format suitable for IIIF, and
-# this process is initiated by staff users.  While processing is happening,
-# DIBS reads and writes files in this directory to initiate processing and
-# find out the current status.
-PROCESS_DIR = processing
+# Directory containing status files for items being processed.  DIBS embodies
+# a simple scheme to interact with an external workflow for automated
+# processing of scans for IIIF.  This scheme involves reading and writing
+# files to a directory -- the PROCESS_DIR.  When a new item is added to DIBS
+# from the /list page, a button named "Process" is shown next to the new item;
+# when library staff press that button, DIBS writes a file in the PROCESS_DIR
+# location and watches for the presence of other files.  The end point of the
+# workflow is assumed to be the appearance of a IIIF manifest for the item in
+# the MANIFEST_DIR.  If you do not want to use the workflow scheme, leave this
+# value empty; DIBS will skip the "Process" button, and will only monitor for
+# the existence of the manifest file.
+PROCESS_DIR = data/processing
 
-# IIIF image service API base path.  Include the protocol version at the end.
+# Directory containing thumbnail images of book covers/jackets.  Images are
+# assumed to be in JPEG format and the files named "NNNNNN.jpg", where
+# "NNNNNN" is the barcode.  (Note: .jpg and not .jpeg.) DIBS attempts to
+# obtain cover images automatically and will store them in this directory,
+# but you can also deliberately put images there to override what DIBS uses.
+THUMBNAILS_DIR = data/thumbnails
+
+# IIIF image service API base path.  Include the protocol version at the end,
+# as shown in the (fake) example on the next line.
 IIIF_BASE_URL = https://yourserver.com/iiif/2
 
 # DIBS caches pages it fetches from the IIIF server.  This sets the size of
@@ -52,10 +76,10 @@ IIIF_CACHE_SIZE = 50000
 # work, the account owning the web server process must be able to send email.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25
-MAIL_SENDER = helpdesk@library.caltech.edu
+MAIL_SENDER = helpdesk@library.yourinstitution.edu
 
-# Time a user must wait between when they return a title and when they can
-# loan it out again (in minutes).
+# Set the cooling off period: the time a user must wait between when they
+# return a title and when they can loan it out again (in minutes).
 RELOAN_WAIT_TIME = 30
 
 # Feedback form URL.  This is used on the thank-you page and in the hamburger
@@ -72,3 +96,35 @@ HELP_URL = https://caltechlibrary.github.io/dibs/usage.html
 # When started using the program run-server included with DIBS, this value
 # maybe overriden by command-line options given to run-server.
 RUN_MODE = normal
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~ LSP interface settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[tind]
+# If you use TIND, set this to the base URL of your hosted TIND server.  For
+# example, when Caltech was using TIND, this was https://caltech.tind.io
+TIND_SERVER_URL = 
+
+
+[folio]
+# If you use FOLIO, set the URL to the URL for your FOLIO API (which is known
+# as "Okapi") server, the tenant id, and the API access token.  (There is
+# sample code in https://github.com/FOLIO-FSE/tech-partner-demo that may help
+# you figure how to create a token for your FOLIO installation.)
+#
+# The accession prefix is the string that appears in front of accession
+# numbers in your instance of FOLIO. As an example of a prefix for accession
+# numbers, for Caltech the prefix is the `clc` part of an accession number
+# such as `clc.025d49d5.735a.4d79.8889.c5895ac65fd2`.
+#
+# The EDS page template is a URL for permalinks to detailed record pages in
+# EBSCO EDS, with the sequence of characters {accession_number} somewhere in
+# the URL.  DIBS will replace the sequence {accession_number} with actual
+# record accession numbers when creating hyperlinks to the record pages.
+FOLIO_OKAPI_URL = 
+FOLIO_OKAPI_TENANT_ID = 
+FOLIO_OKAPI_TOKEN = 
+FOLIO_ACCESSION_PREFIX = 
+EDS_PAGE_TEMPLATE = 

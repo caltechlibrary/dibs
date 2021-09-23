@@ -9,7 +9,6 @@
 # Initial imports. More things are imported later below.
 
 import bottle
-from   decouple import config
 from   os import chdir
 from   os.path import realpath, dirname
 from   sidetrack import log, set_debug
@@ -25,9 +24,15 @@ app_directory = realpath(dirname(__file__))
 sys.path.insert(0, app_directory)
 chdir(app_directory)
 
-# Now we can import our code.
+# Run a preflight check before going much further.
 
-from dibs import dibs
+from dibs.preflight import preflight_check
+preflight_check()
+
+# If we make it this far, import the core pieces.
+
+from dibs.server import dibs
+from dibs.settings import config
 
 # Notes:
 #

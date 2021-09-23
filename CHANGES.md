@@ -1,5 +1,17 @@
 #  Change log for DIBS
 
+## Version 0.5.0
+
+This version brings significant changes and new features.
+
+### Breaking changes
+
+The format of the `settings.ini` file has changed, as part of the DIBS enhancement to support FOLIO. The old format used a single section called `[settings]`; the new format replaces `[settings]` with a section called `[dibs]`, and adds additional sections for TIND and FOLIO. If you attempt to run the new version of DIBS without updating `settings.ini`, DIBS will either exit with an explicit error or fail to find variable values (which will be a clue that the problem is the changes to the settings file).
+
+### Other changes
+
+... forthcoming ...
+
 ## Version 0.4.1
 
 * Fix issue #85: remove email address from server log message printed during status checks

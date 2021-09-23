@@ -24,11 +24,11 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 
 ## Introduction
 
-DIBS is a web-based system that enables members of Caltech to borrow materials that are not otherwise available in e-book or other electronic formats.  The system was developed in the year 2021 to help Caltech students and faculty continue their studies and work during the global [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019). Access to content in Caltech's live DIBS server is limited to members of Caltech, but the software for DIBS itself is open-sourced under a BSD type license.
+DIBS is a web-based system that enables users to borrow, in a time-limited fashion, scanned materials that are not otherwise available in e-book or other electronic formats.  The system was developed in the year 2021 to help Caltech students and faculty continue their studies and work during the global [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019). Access to content in Caltech's institutional DIBS server is limited to members of Caltech, but the software for DIBS itself is open-sourced under a BSD type license and is free for use by any interested users.
 
 The concept of [controlled digital lending](https://controlleddigitallending.org/faq) (CDL) is to allow libraries to loan items to digital patrons in a "lend like print" fashion.  It is the digital equivalent of traditional library lending. Libraries digitize a physical item from their collection, then lend out a secured digital version to one user at a time while the original, printed copy is simultaneously marked as unavailable. The number of digital copies of an item allowed to be loaned at any given time is strictly controlled to match the number of physical print copies taken off the shelves, to ensure an exact "owned-to-loaned" ratio.
 
-DIBS provides two main components of a CDL system: a loan tracking system, and an integrated digital content viewing interface.  DIBS embeds the [Universal Viewer](http://universalviewer.io) to display materials that comply with the [International Image Interoperability Framework](https://iiif.io) (IIIF). 
+DIBS provides two main components of a CDL system: a loan tracking system, and an integrated digital content viewing interface.  DIBS embeds the [Universal Viewer](http://universalviewer.io) to display materials that comply with the [International Image Interoperability Framework](https://iiif.io) (IIIF). In addition, it provides a basic administrative interface for library staff, and a way to connect to an external workflow for converting scans of materials into IIIF format. (Caltech's workflow automation for this purpose is available in a [separate repository](https://github.com/caltechlibrary/dibsiiif).)
 
 <p align="center"><img width="60%" src=".graphics/status-warning.svg"></p>
 
@@ -48,8 +48,8 @@ In order to use DIBS at another institution (other than [Caltech](https://www.ca
 
 1. A **IIIF server**. At Caltech, we use a serverless component running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). If you're looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.
 2. A **web server** to host DIBS.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.13, High Sierra). DIBS comes with a WSGI adapter file and sample config file for Apache, but it should be possible to run DIBS in other WSGI-compliant servers.
-3. An **authentication layer**. For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach the DIBS pages are allowed to view content. DIBS only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system, but it is possible to use other schemes.  The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
-4. Modification to the metadata retrieval code. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item's barcode, and lacking a universal scheme or ILS interface to do that, we had to hard code the access. Thankfully, this is limited to just a few lines in  [`server.py`](dibs/server.py). We currently use TIND at Caltech, so unless you also use TIND, you will need to modify the TIND-specific lines in that file.
+3. An **authentication layer**. For authentication, DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach the DIBS pages are allowed to view content. DIBS itself only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system, but it is possible to use other schemes. For demonstration purposes, [Apache Basic Authentication](https://httpd.apache.org/docs/2.4/howto/auth.html) can also be used. The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
+4. The use of [FOLIO](https://www.folio.org) LSP or [TIND](https://tind.io) ILS for retrieving metadata based on barcodes or unique identifiers, or the ability to extend the existing metadata retrieval layer in DIBS. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item's barcode, and lacking a universal scheme or ILS interface to do that, we had to write our own interface layer. To use another LSP will require extending this interface layer. (Thankfully, the code is short and the amount of metadata required is small.)
 5. Modification to the HTML templates to change the branding. The template files in [`dibs/templates`](dibs/templates) are specific to Caltech, and will need to be edited to suit another installation. (We are open to making the branding customization easier and would welcome a [pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) for suitable changes!)
 
 
@@ -100,34 +100,34 @@ and edit its contents in a text editor to suit your local installation.
 
 ### ⓶ _Load a sample book into DIBS_
 
-Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data.py`](load-mock-data.py):
+Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data`](admin/load-mock-data) located in the `admin` subdirectory of the DIBS source code tree.
 
 ```sh
-python3 load-mock-data.py
+admin/load-mock-data
 ```
 
 
 ### ⓷ _Load a sample user into DIBS_
 
-The program [`people-manager`](people-manager) is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of "library".  Suppose you want to name your sample user "dibsuser", then you could run the following command:
+The program [`people-manager`](admin/people-manager) in the `admin` subdirectory is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of "library".  Suppose you want to name your sample user "dibsuser", then you could run the following command:
 
 ```sh
-./people-manager add role="library" uname=dibsuser
+admin/people-manager add role="library" uname=dibsuser
 ```
 
 
 ### ⓸ _Start a local DIBS server for testing_
 
-For local experimentation and development only, the script [`run-server`](run-server) can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior:
+For local experimentation and development only, the script [`run-server`](admin/run-server) in the `admin` subdirectory can be used to start a local copy of the server.  It assumes you are in the current directory, and it takes a few arguments for controlling its behavior. You can get a summary at any time by using the `--help` flag:
 
 ```sh
-./run-server -h
+admin/run-server --help
 ```
 
 In a real installation, DIBS needs the web server to provide user authentication.  This is not the situation in a local development server, and so for demo/debugging purposes, the `run-server` command lets you tell DIBS that a specific user has already been authenticated.  Using the example user from above, you can start a local DIBS server in debug mode like this:
 
 ```
-./run-server -m debug -u dibsuser
+admin/run-server --mode debug --debug-user dibsuser
 ```
 
 By default it starts the server on `localhost` port 8080.  Using the `debug` run mode flag changes the behavior in various useful ways, such as to reload the source files automatically if any of them are edited, and to run `pdb` upon any exceptions.  (These would not be enabled in a production server.)
@@ -173,7 +173,43 @@ DIBS was designed and implemented by [Michael Hucka](https://github.com/mhucka),
 
 This work was funded by the California Institute of Technology Library.
 
-The [vector artwork](https://thenounproject.com/term/book-waiting/1531542/) of a book with a clock on it, used as the icon for this project, was created by [Royyan Wijaya](https://thenounproject.com/roywj/) from the Noun Project.  It is licensed under the Creative Commons [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/) license.
+The [vector artwork](https://thenounproject.com/term/book-waiting/1531542/) of a book with a clock on it, used as the icon for this project, was created by [Royyan Wijaya](https://thenounproject.com/roywj/) from the Noun Project.  It is licensed under the Creative Commons [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/) license.  DIBS also uses other icons created by [Scott Desmond](https://thenounproject.com/thezyna) and [SlideGenius](https://thenounproject.com/slidegenius).
+
+We gratefully acknowledge bug reports and fixes submitted by the following users, who helped improve DIBS:
+
+<table>
+<tr>
+<td><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;</td>
+
+<td align="center"><a href="https://github.com/stanonik"><img src="https://avatars.githubusercontent.com/stanonik" title="stanonik" width="50" height="50"><br>@stanonik</a></td>
+<td align="center"><a href="https://github.com/phette23"><img src="https://avatars.githubusercontent.com/phette23" title="phette23" width="50" height="50"><br>@phette23</a></td>
+
+<td><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>&nbsp;&nbsp;</td>
+</tr>
+</table>
 
 DIBS makes use of numerous open-source packages, without which it would have been effectively impossible to develop DIBS with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
 
@@ -183,22 +219,29 @@ DIBS makes use of numerous open-source packages, without which it would have bee
 * [Boltons](https://github.com/mahmoud/boltons/) &ndash; package of miscellaneous Python utilities
 * [Bottle](https://bottlepy.org) &ndash; a lightweight WSGI micro web framework for Python
 * [Clipboard.js](https://clipboardjs.com) &ndash; JavaScript library for copying text to the clipboard
+* [Coif](https://github.com/caltechlibrary/coif) &ndash; a Python package for finding book cover images
 * [CommonPy](https://github.com/caltechlibrary/commonpy) &ndash; a collection of commonly-useful Python functions
 * [expiringdict](https://pypi.org/project/expiringdict/) &ndash; an ordered dictionary class with auto-expiring values
 * [Font Awesome](https://fontawesome.com) &ndash; scalable vector icons for web design
 * [humanize](https://github.com/jmoiron/humanize) &ndash; make numbers more easily readable by humans
 * [ipdb](https://github.com/gotcha/ipdb) &ndash; the IPython debugger
 * [jQuery](https://jquery.com) &ndash; JavaScript library of common functions
+* [LRU Dict](https://github.com/amitdev/lru-dict) &ndash; an implementation of Least Recently Used caching
 * [mod_wsgi](http://www.modwsgi.org) &ndash; an Apache module for hosting Python WSGI web applications
 * [Peewee](http://docs.peewee-orm.com/en/latest/) &ndash; a simple ORM for Python
+* [Pillow](https://github.com/python-pillow/Pillow) &ndash; a fork of the Python Imaging Library
 * [Plac](https://github.com/ialbert/plac) &ndash; a command line argument parser
+* [Pokapi](https://github.com/caltechlibrary/pokapi) &ndash; a simple Python OKAPI interface
 * [Popper.js](https://popper.js.org) &ndash; web page tooltip engine
 * [Python Decouple](https://github.com/henriquebastos/python-decouple/) &ndash; a high-level configuration file interface
 * [Rich](https://rich.readthedocs.io/en/latest/) &ndash; library for writing styled text to the terminal
 * [Sidetrack](https://github.com/caltechlibrary/sidetrack) &ndash; simple debug logging/tracing package
 * [str2bool](https://github.com/symonsoft/str2bool) &ndash; convert a string to a Boolean value
+* [Trinomial](https://github.com/caltechlibrary/trinomial) &ndash; a simple name anonymization package
 * [Topi](https://github.com/caltechlibrary/topi) &ndash; a simple package for getting data from a TIND.io ILS instance
 * [Universal Viewer](https://github.com/UniversalViewer/universalviewer) &ndash; a browser-based viewer for content in [IIIF](https://iiif.io) format
+* [Yurl](https://github.com/homm/yurl/) &ndash; URL manipulation library
+* [Werkzeug](https://werkzeug.palletsprojects.com/en/2.0.x/) &ndash; WSGI application library
 
 <div align="center">
   <br>

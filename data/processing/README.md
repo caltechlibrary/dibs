@@ -1,0 +1,3 @@
+# Processing directory example
+
+DIBS embodies a simple scheme to interact with an external workflow for automated processing of scans for [IIIF](https://iiif.io).  This scheme involves reading and writing files to a directory identified as the value of the variable `PROCESS_DIR` in the [`settings.ini`](../settings.ini-example) file.  When a new item is added to DIBS from the `/list` page, a button named **Process** is shown next to the new item; when library staff press that button, DIBS writes a file in the `PROCESS_DIR` location and watches for the presence of other files.  The end point of the workflow is assumed to be the appearance of a IIIF manifest for the item in the `MANIFEST_DIR`.

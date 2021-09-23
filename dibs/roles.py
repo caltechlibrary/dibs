@@ -11,7 +11,7 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from .people import Person
+from .data_models import Person
 
 
 _role_table = {

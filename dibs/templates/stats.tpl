@@ -27,7 +27,7 @@
             <input id="auto-refresh-checkbox" class="form-check-input" checked=true
                    type="checkbox" value="true" onclick="toggleAutoRefresh()">
             <label class="form-check-label" for="auto-refresh-checkbox">
-              Keep refreshing this page automatically
+              Refresh this page automatically
             </label>
           </div>
           <p class="mx-auto text-center font-italic">
@@ -75,8 +75,8 @@
                     %end
                   >
                   <td>
-                    %if item.tind_id != '':
-                    <a href="https://caltech.tind.io/record/{{item.tind_id}}">{{item.barcode}}</a>
+                    %if item.item_page != '':
+                    <a target="_blank" href="{{item.item_page}}">{{item.barcode}}</a>
                     %else:
                     {{item.barcode}}
                     %end
@@ -126,7 +126,12 @@
           <div class="mx-auto w-50 text-center">
             <a href="{{base_url}}/list"
                class="btn btn-primary m-0 mr-2 my-2 no-underline">
-              Return to list page
+              <i class="fas fa-long-arrow-alt-left"></i>&nbsp;&nbsp;Return to list page
+            </a>
+
+            <a href="{{base_url}}/download/csv/history"
+               class="btn btn-info m-0 mr-2 my-2 no-underline">
+              <i class="fas fa-file-download"></i>&nbsp;&nbsp;Download history
             </a>
           </div>
 

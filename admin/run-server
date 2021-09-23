@@ -21,9 +21,10 @@
 
 # Initial imports. More things are imported later below.
 
+from   configparser import ConfigParser
 import pkg_resources
 import os
-from   os.path import exists, dirname, join, basename
+from   os.path import exists, dirname, join, basename, abspath
 import sys
 from   sys import exit
 
@@ -35,24 +36,37 @@ if sys.version_info.major < 3 or sys.version_info.minor < 8:
     print('‼️  DIBS requires Python version 3.8 or higher')
     exit(1)
 
-here  = dirname(sys.argv[0])
-where = 'the current directory' if here == '.' else here
-
-if not exists(join(here, 'requirements.txt')):
-    print('‼️  Expected to be in same directory as requirements.txt')
-    exit(1)
+here = abspath(dirname(sys.argv[0]))
+if exists(join(here, 'requirements.txt')):
+    dibs_root = here
 else:
-    with open('requirements.txt', 'r') as req_file:
-        try:
-            pkg_resources.require(req_file)
-        except pkg_resources.DistributionNotFound as ex:
-            print('‼️  Not all Python dependencies have been installed.')
-            print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
-            exit(1)
+    parent = abspath(join(here, os.path.pardir))
+    if exists(join(parent, 'requirements.txt')):
+        dibs_root = parent
+    else:
+        print(f'‼️  File "requirements.txt" not found in {here} or {parent}.')
+        print('‼️  Unexpected directory organization -- unable to proceed.')
+        exit(1)
 
-if not exists(join(here, 'settings.ini')):
-    print(f'‼️  File "settings.ini" not found in {where}.')
+with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
+    try:
+        pkg_resources.require(req_file)
+    except pkg_resources.DistributionNotFound as ex:
+        print('‼️  Not all Python dependencies have been installed.')
+        print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
+        exit(1)
+
+settings_file = join(dibs_root, 'settings.ini')
+if not exists(settings_file):
+    print(f'‼️  File "settings.ini" not found in {dibs_root}.')
     print(f'‼️  Please create one starting with file "settings.ini-example".')
+    exit(1)
+
+config = ConfigParser()
+config.read(settings_file)
+if not config.has_section('dibs'):
+    print(f'‼️  File "settings.ini" is missing a section called [dibs].')
+    print(f'‼️  Please see the example in file "settings.ini-example".')
     exit(1)
 
 
@@ -75,7 +89,6 @@ from   bottle import request
 from   commonpy.data_utils import timestamp
 from   commonpy.file_utils import readable
 from   commonpy.string_utils import antiformat
-from   decouple import config
 from   mod_wsgi.server import cmd_start_server as mod_wsgi_start
 import os
 import plac
@@ -84,31 +97,39 @@ from   rich.box import DOUBLE_EDGE
 from   rich.console import Console
 from   rich.panel import Panel
 from   shutil import get_terminal_size
-from   sidetrack import set_debug, log, logr
+from   sidetrack import set_debug, log
 from   yurl import URL
 
-from   dibs import dibs, print_version
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
+from   dibs import print_version
+from   dibs.preflight import preflight_check
+from   dibs.server import dibs
+from   dibs.settings import config
 
 
 @plac.annotations(
-    adapter    = ('use file "A" as the WSGI adapter (default: adapter.wsgi)', 'option', 'a'),
-    base_url   = (f'set the server address (default: {_DEFAULT_BASE_URL})',   'option', 'b'),
-    database   = ('use "D" as the database file',                             'option', 'd'),
-    manifests  = ('look for manifest files in directory "F"',                 'option', 'f'),
-    iiif_url   = ('use "I" as the IIIF server endpoint',                      'option', 'i'),
-    mode       = ('run mode: normal, verbose, or debug (default: normal)',    'option', 'm'),
-    debug_user = ('identity of staff user in debug mode (default: none)',     'option', 'u'),
-    version    = ('print version info and exit',                              'flag',   'V'),
+    adapter    = ('use "A" as the WSGI adapter (default: adapter.wsgi)',    'option', 'a'),
+    base_url   = (f'set the server address (default: {_DEFAULT_BASE_URL})', 'option', 'b'),
+    database   = ('use "D" as the database file',                           'option', 'd'),
+    manifests  = ('look for manifest files in directory "F"',               'option', 'f'),
+    iiif_url   = ('use "I" as the IIIF base URL',                           'option', 'i'),
+    mode       = ('run mode: normal, verbose, or debug (default: normal)',  'option', 'm'),
+    processing = ('use directory "P" for process files',                    'option', 'p'),
+    thumbnails = ('look for thumbnail images in directory "T"',             'option', 't'),
+    debug_user = ('identity of staff user in debug mode (default: none)',   'option', 'u'),
+    version    = ('print version info and exit',                            'flag',   'V'),
 )
 
 def main(adapter = 'A', base_url = 'B', database = 'D', manifests = 'F',
-         iiif_url = 'I', mode = 'M', debug_user = 'U', version = False):
+         iiif_url = 'I', mode = 'M', processing = 'P', thumbnails = 'T',
+         debug_user = 'U', version = False):
     '''Convenient interface for running the DIBS server during development.
 
 This starts a local server running DIBS. It always looks for a file named
-"settings.ini" in the current directory and reads it to set various DIBS
-configuration variables. The command-line options to run-server can override
-some of the configuration values in "settings.ini".
+"settings.ini" in the current directory or the parent directory, and reads
+it to set various DIBS configuration variables. The command-line options to
+run-server can override some of the configuration values in "settings.ini".
 
 Run modes
 ~~~~~~~~~
@@ -144,9 +165,10 @@ using the -m option. The possible run modes and their effects are as follows:
 
 Since debug mode uses Bottle's default server, the normal authentication
 mechanism is nonfunctional and you will not be able to access most pages
-unless you define a person using DIBS's people-manager interface and tell
-run-server the identity of that user.  To do this, use option -u with the
-name of the user you defined.  Here is an example of running in debug mode:
+unless you define a person using DIBS's people-manager script and give it
+the role of "library", and then tell run-server the identity of that user.
+To do this, use option -u with the name of the user you defined.  Here is
+an example of running in debug mode:
 
   people-manager add uname="debuguser" role="library"
   run-server -m debug -u debuguser
@@ -214,24 +236,15 @@ Command-line arguments summary
 
     debug_user = None if debug_user == 'U' else debug_user
 
-    adapter_file = join(here, 'adapter.wsgi') if adapter == 'A' else adapter
+    adapter_file = join(dibs_root, 'adapter.wsgi') if adapter == 'A' else adapter
     if not exists(adapter_file) or not readable(adapter_file):
         print(f'‼️  File not found or not readable: {adapter_file}')
         exit(1)
 
-    if database != 'D':
-        if exists(database) and readable(database):
-            os.environ['DATABASE_FILE'] = database
-        else:
-            print(f'‼️  Database file not found or not readable: "{database}"')
-            exit(1)
-
-    if manifests != 'F':
-        if exists(manifests) and readable(manifests):
-            os.environ['MANIFEST_DIR'] = manifests
-        else:
-            print(f'‼️  Manifests directory not found or not readable: "{manifests}"')
-            exit(1)
+    verify_and_set('DATABASE_FILE', database, 'D', 'database file')
+    verify_and_set('MANIFEST_DIR', manifests, 'F', 'manifests directory')
+    verify_and_set('PROCESS_DIR', processing, 'P', 'process directory')
+    verify_and_set('THUMBNAILS_DIR', thumbnails, 'T', 'thumbnails directory')
 
     if iiif_url != 'I':
         if iiif_url.startswith('http'):
@@ -239,6 +252,9 @@ Command-line arguments summary
         else:
             print(f'‼️  Value does not look like a URL: "{iiif_url}"')
             exit(1)
+
+    if not preflight_check():
+        exit(1)
 
     if mode != 'debug':
         print_safety_warning()
@@ -255,7 +271,7 @@ Command-line arguments summary
         if mode == 'debug':
             start_bottle_server(scheme, host, port, extra_path, debug_user)
         else:
-            start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode)
+            start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode, debug_user)
     except Exception as ex:
         exception = sys.exc_info()
         msg = antiformat(exception[1])
@@ -270,11 +286,13 @@ Command-line arguments summary
         log('_'*8 + f' stopped {timestamp()} ' + '_'*8)
 
 
-def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode):
+def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode, debug_user):
     # mod_wsgi-express doesn't have a direct way to set parameters; you have
     # to construct a command line parsed by mod_wsgi_start(...).  Oh well.
     args = [adapter_file, '--host', host, '--port', port,
             '--setenv', 'RUN_MODE', mode]
+    if debug_user:
+        args += ['--setenv', 'REMOTE_USER', debug_user]
     if extra_path:
         args += ['--mount-point', extra_path]
     if mode == 'verbose':
@@ -284,8 +302,10 @@ def start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode):
         args += ['--error-log-format', '[%{%H:%M:%S}t] %M']
         args += ['--access-log-format', '[%{%a %b %0e %H:%M:%S %Y}t] %h \"%r\" %>s']
         print_settings(mode, adapter_file)
+    if debug_user:
+        print_debug_user_warning()
 
-    logr(f'starting mod_wsgi with arguments: {" ".join(args)}')
+    log(f'starting mod_wsgi with arguments: {" ".join(args)}')
     mod_wsgi_start(args)
 
 
@@ -322,6 +342,17 @@ def start_bottle_server(scheme, host, port, extra_path, debug_user):
 # Miscellaneous utilities.
 # .............................................................................
 
+def verify_and_set(settings_var, file_path, default_letter, description):
+    if file_path != default_letter:
+        os.environ[settings_var] = file_path
+    else:
+        file_path = config(settings_var)
+    if not exists(file_path) or not readable(file_path):
+        what = description.capitalize()
+        print(f'‼️  {what} not found or not readable: "{file_path}"')
+        exit(1)
+
+
 def print_safety_warning():
     name = basename(sys.argv[0])
     text = ("⚠️  REMINDER: DON'T USE THIS AS A PUBLIC SERVER. ⚠️\n"
@@ -332,19 +363,35 @@ def print_safety_warning():
     panel_width = 55 if terminal_width > 55 else terminal_width
     padding = min(abs(panel_width - len(text) - 2) // 2, 2)
     Console().print(Panel(text, width = panel_width, padding = (0, padding),
-                          style = 'orange_red1'))
+                          style = 'orange3'))
+
+
+def print_debug_user_warning():
+    text = ("⚠️  [bold]DANGER: YOU HAVE DISABLED AUTHENTICATION.[/] ⚠️\n"
+            + 'Running with --debug-user means that all visitors\n'
+            + 'are considered pre-authenticated. Do [bold]not[/] run in\n'
+            + 'this mode on a production or public server.')
+    terminal_width = get_terminal_size().columns
+    panel_width = 55 if terminal_width > 55 else terminal_width
+    padding = min(abs(panel_width - len(text) - 2) // 2, 2)
+    Console().print(Panel(text, width = panel_width, padding = (0, padding),
+                          style = 'red'))
 
 
 def print_settings(mode, adapter_file = None):
     server = 'Bottle' if mode == 'debug' else 'mod_wsgi-express'
     adapter = adapter_file or '(not applicable)'
     settings = ('\n  Current settings are:\n'
-                + f'    Run mode:      {mode} (using {server} server)\n'
-                + f'    WSGI adapter:  {adapter}\n'
-                + f'    DATABASE_FILE: {config("DATABASE_FILE")}\n'
-                + f'    MANIFEST_DIR:  {config("MANIFEST_DIR")}\n'
-                + f'    IIIF_BASE_URL: {config("IIIF_BASE_URL")}')
+                + f'    Run mode:       {mode} (using {server} server)\n'
+                + f'    WSGI adapter:   {adapter}\n'
+                + f'    DIBS root:      {dibs_root}\n'
+                + f'    DATABASE_FILE:  {config("DATABASE_FILE")}\n'
+                + f'    MANIFEST_DIR:   {config("MANIFEST_DIR")}\n'
+                + f'    PROCESS_DIR:    {config("PROCESS_DIR")}\n'
+                + f'    THUMBNAILS_DIR: {config("THUMBNAILS_DIR")}\n'
+                + f'    IIIF_BASE_URL:  {config("IIIF_BASE_URL")}')
     log(settings)
+
 
 def print_geeky_logo():
     text = '''
