@@ -103,7 +103,8 @@ from   yurl import URL
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
 from   dibs import print_version
-from   dibs.server import dibs, preflight_check
+from   dibs.preflight import preflight_check
+from   dibs.server import dibs
 from   dibs.settings import config
 
 
