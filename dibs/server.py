@@ -68,29 +68,28 @@ _SERVER_ROOT = realpath(join(dirname(__file__), os.pardir))
 bottle.TEMPLATE_PATH.append(join(_SERVER_ROOT, 'dibs', 'templates'))
 
 # Directory containing IIIF manifest files.
-_MANIFEST_DIR = resolved_path(config('MANIFEST_DIR', default = 'data/manifests'))
+_MANIFEST_DIR = resolved_path(config('MANIFEST_DIR'))
 
 # Directory containing workflow processing status files.
-_PROCESS_DIR = resolved_path(config('PROCESS_DIR', default = 'data/processing'))
+_PROCESS_DIR = resolved_path(config('PROCESS_DIR'))
 
 # Directory containing thumbnail images of item covers/jackets.
-_THUMBNAILS_DIR = resolved_path(config('THUMBNAILS_DIR', default = 'data/thumbnails'))
+_THUMBNAILS_DIR = resolved_path(config('THUMBNAILS_DIR'))
 
 # Internal threshold for max size of thumbnail images uploaded via edit form.
 _MAX_THUMBNAIL_SIZE = 1 * 1024 * 1024;
 
-# The base URL of the IIIF server endpoint. Note: there is no reasonable
-# default value for this one, so we fail if this is not set.
+# The base URL of the IIIF server endpoint.
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
 
 # Cooling-off period after a loan ends, before user can borrow same title again.
 # Set it to 1 minute in debug mode. (Note: can't check dibs.debug_mode here b/c
 # when this file is loaded, it's not yet set.  Test a Bottle variable instead.)
 _RELOAN_WAIT_TIME = (delta(minutes = 1) if ('BOTTLE_CHILD' in os.environ)
-                     else delta(minutes = int(config('RELOAN_WAIT_TIME', default = 30))))
+                     else delta(minutes = int(config('RELOAN_WAIT_TIME'))))
 
 # Where we send users to give feedback.
-_FEEDBACK_URL = config('FEEDBACK_URL', default = '/')
+_FEEDBACK_URL = config('FEEDBACK_URL')
 
 # Where we send users for help.  The default is the DIBS software documentation
 # page, which is assumed to exist even if individual sites don't provide docs.
@@ -104,7 +103,7 @@ _REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
               '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
 
 # IIIF page cache.  This is a dict where the keys will be IIIF page URLs.
-_IIIF_CACHE = LRU(int(config('IIIF_CACHE_SIZE', default = 50000)))
+_IIIF_CACHE = LRU(int(config('IIIF_CACHE_SIZE')))
 
 
 # General-purpose utilities used repeatedly.

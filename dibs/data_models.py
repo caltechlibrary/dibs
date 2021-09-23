@@ -26,7 +26,7 @@ from .settings import config, resolved_path
 # Note: symbol "database" is exported, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-_db_path = resolved_path(config('DATABASE_FILE', default = 'data/dibs.db'))
+_db_path = resolved_path(config('DATABASE_FILE'))
 database = SqliteDatabase(_db_path)
 
 # Annotate our database object with a path to the file we're using. This saves
