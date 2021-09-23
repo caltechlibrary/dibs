@@ -31,7 +31,7 @@ preflight_check()
 
 # If we make it this far, import the core pieces.
 
-from dibs import dibs
+from dibs.server import dibs
 from dibs.settings import config
 
 # Notes:
