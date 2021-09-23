@@ -25,8 +25,9 @@ def preflight_check(database = None):
     '''Verify certain critical things are set up & complain if they're not.'''
 
     successes = [
-        verified('IIIF_BASE_URL'),
+        verified('LSP_TYPE'),
         verified('DATABASE_FILE'),
+        verified('IIIF_BASE_URL'),
         verified('MANIFEST_DIR', test_read = True),
         verified('PROCESS_DIR', test_read = True, test_write = True),
         verified('THUMBNAILS_DIR', test_read = True, test_write = True),
