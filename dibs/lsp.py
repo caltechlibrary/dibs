@@ -11,6 +11,7 @@ file "LICENSE" for more information.
 
 from   abc import ABC, abstractmethod
 from   coif import cover_image
+from   commonpy.network_utils import net
 from   dataclasses import dataclass
 import os
 from   os.path import realpath, dirname, join, exists, isabs
