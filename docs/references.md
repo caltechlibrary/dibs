@@ -4,11 +4,14 @@ The following are some additional resources about Controlled Digital Lending:
 
 * The website [Controlled Digital Lending by Libraries](https://controlleddigitallending.org) provides information and resources related to CDL, including pointers to legal frameworks, pointers to papers on the topic of CDL, and a list of [frequently asked questions (and answers)](https://controlleddigitallending.org/faq).
 
+* In September, the non-profit [Library Futures Foundation](https://www.libraryfutures.net) released a policy document titled [Controlled Digital Lending: Unlocking the Library’s Full Potential](https://www.libraryfutures.net/policy-document-2021). The document _"expands beyond the legal rationale laid out in the Controlled Digital Lending (CDL) White Paper by clarifying the core principles that are the foundations of a library’s mission to provide access to materials to serve the public good. "_
+
 * The [Controlled Digital Lending Implementers](https://sites.google.com/view/cdl-implementers) is a forum [organized in April 2020](https://sites.google.com/view/cdl-implementers/about-cdli?authuser=0) by a group of libraries and people interested in implementing controlled digital lending services. They host a regular forum and provide links to resources about CDL.
 
 * [Project ReShare](https://projectreshare.org/about/) is a group of libraries, consortia, information organizations, and developers, with both commercial and non-commercial interests working on implementing new and open approaches to library resource sharing. The [ReShare Community Charter](https://projectreshare.org/about/community-charter/) provides more details about the goals of the effort.
-
 * The [CDL Information & Recommendation Cooperative (CIRC)](https://www.cdlproject.org) is a group of library professionals working to discover and evaluate potential tools and solutions for CDL.
+
+* In June 2021, the [International Federation of Library Associations and Institutions](https://www.ifla.org) issued a [statement on Controlled Digital Lending](https://www.ifla.org/publications/ifla-statement-on-controlled-digital-lending/) in support of CDL as a means of enabling libraries to fulfil their missions.
 
 Caltech's DIBS is not the only CDL implementation, nor is it the first. The following are others that the developers of DIBS are aware of:
 
