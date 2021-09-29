@@ -90,7 +90,6 @@ from   commonpy.data_utils import timestamp
 from   commonpy.file_utils import readable
 from   commonpy.string_utils import antiformat
 from   mod_wsgi.server import cmd_start_server as mod_wsgi_start
-import os
 import plac
 from   rich import box
 from   rich.box import DOUBLE_EDGE
