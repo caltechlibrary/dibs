@@ -27,10 +27,10 @@ def preflight_check(database = None):
     successes = [
         verified('LSP_TYPE'),
         verified('IIIF_BASE_URL'),
-        verified('DATABASE_FILE',  write_parent = True),
-        verified('MANIFEST_DIR',   read = True),
-        verified('PROCESS_DIR',    read = True, write = True),
-        verified('THUMBNAILS_DIR', read = True, write = True),
+        verified('DATABASE_FILE',  check_parent_writable = True),
+        verified('MANIFEST_DIR',   check_readable = True),
+        verified('PROCESS_DIR',    check_readable = True, check_writable = True),
+        verified('THUMBNAILS_DIR', check_readable = True, check_writable = True),
     ]
 
     if all(successes):
@@ -41,7 +41,10 @@ def preflight_check(database = None):
         return False
 
 
-def verified(variable, read = False, write = False, write_parent = False):
+def verified(variable, check_readable = False, check_writable = False,
+             check_parent_writable = False):
+    '''Verify the given configuration 'variable' in various ways.'''
+
     if not config(variable, default = None):
         print_boxed(f'Variable {variable} is not set.\n'
                     ' DIBS cannot function properly.',
@@ -49,19 +52,19 @@ def verified(variable, read = False, write = False, write_parent = False):
         return False
     dir = resolved_path(config(variable))
     success = True
-    if read and not readable(dir):
+    if check_readable and not readable(dir):
         print_boxed(f'Cannot read the directory indicated by the configuration\n'
                     f'variable {variable}. The directory located at\n\n'
                     f'{dir}\n\nis not readable. DIBS cannot function properly.',
                     title = 'DIBS configuration error')
         success = False
-    if write and not writable(dir):
+    if check_writable and not writable(dir):
         print_boxed(f'Cannot write the directory indicated by the configuration\n'
                     f'variable {variable}. The directory located at\n\n'
                     f'{dir}\n\nis not writable. DIBS cannot function properly.',
                     title = 'DIBS configuration error')
         success = False
-    if write_parent and not writable(dirname(dir)):
+    if check_parent_writable and not writable(dirname(dir)):
         parent = dirname(dir)
         print_boxed(f'Cannot write in the parent directory of the value indicated by\n'
                     f'the configuraton variable {variable}. The directory located at\n\n'
