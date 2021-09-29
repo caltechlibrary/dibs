@@ -21,12 +21,17 @@ file "LICENSE" for more information.
 from datetime import datetime
 from getpass import getpass
 from peewee import SqliteDatabase, Model
+from rich import box
+from rich.console import Console
+from rich.padding import Padding
+from rich.table import Table
 from subprocess import Popen, PIPE
 
 import os
 import sys
 
 from .data_models import database, Person
+from .date_utils import human_datetime
 
 
 def setup_person_table(db_name):
@@ -86,7 +91,7 @@ class PersonManager:
         self.htpasswd = htpasswd
         self.password_file = password_file
         self.db_name = db_name
-        
+
     def _update_htpasswd(self, uname, secret):
         '''Update the password for user using htpasswd from Apache'''
         if (self.htpasswd == None) or (self.password_file == None):
@@ -108,7 +113,7 @@ class PersonManager:
             if err:
                 print(err)
         return True 
-    
+
     def _delete_htpasswd(self, uname):
         if (self.htpasswd == None) or (self.password_file == None):
             print(f'ERROR: not setup for Apache htpasswd support')
@@ -125,26 +130,7 @@ class PersonManager:
             if err:
                 print(err)
         return True 
-    
-    def list_people(self, kv):
-        '''list people in the SQLite3 database table called person'''
-        if 'uname' in kv:
-            row = (Person.select().where(Person.uname == kv['uname']).get())
-            if row == None:
-                print(f'''Cannot find person {kv["uname"]}''')
-            else:
-                print(f'''
-        Username: {row.uname}
-    Display Name: {row.display_name}
-            Role: {row.role}
-         Updated: {row.updated}
-    ''')
-        else:
-            print(f'''Username\tDisplay Name\tRole\tUpdated''')
-            query = (Person.select().order_by(Person.display_name))
-            for row in query:
-                print(f'''{row.uname}\t{row.display_name}\t{row.role}\t{row.updated}''')
-    
+
     def add_people(self, kv):
         if not 'uname' in kv:
             print(f'''ERROR: uname is required''')
@@ -159,7 +145,7 @@ class PersonManager:
                 kv[key] = ''
         user = Person(uname = kv['uname'], role = kv['role'], display_name = kv['display_name'])
         user.save()
-    
+
     def update_people(self, kv):
         user = Person.select().where(Person.uname == kv['uname']).get()
         if user == None:
@@ -175,7 +161,7 @@ class PersonManager:
         if 'role' in kv:
             user.role = kv['role']
         user.save()
-    
+
     def remove_people(self, kv):
         if not 'uname' in kv:
             print(f'''WARNING: uname is required''')
@@ -184,4 +170,26 @@ class PersonManager:
         if self.htpasswd != None:
             self._delete_htpasswd(kv['uname'])
         print(f'''{nrows} row deleted from person in {self.db_name}''')
-    
+
+    def list_people(self, kv):
+        '''list people in the SQLite3 database table called person'''
+        table = Table(pad_edge = False, box = box.MINIMAL_DOUBLE_HEAD)
+        table.add_column('User name',    style = 'sky_blue2')
+        table.add_column('Display name', style = 'medium_turquoise')
+        table.add_column('Role')
+        table.add_column('updated',      style = 'light_cyan3')
+        if 'uname' in kv:
+            row = (Person.select().where(Person.uname == kv['uname']).get())
+            if row:
+                updated = human_datetime(row.updated)
+                table.add_row(row.uname, row.display_name, row.role, updated)
+            else:
+                table.add_row(kv['uname'], 'n/a', 'n/a', 'n/a')
+        else:
+            query = (Person.select().order_by(Person.display_name))
+            for row in query:
+                updated = human_datetime(row.updated)
+                table.add_row(row.uname, row.display_name, row.role, updated)
+        console = Console()
+        console.print(Padding(f'[white italic]List of people in database[/]', (1, 0, 0, 1)))
+        console.print(table)
