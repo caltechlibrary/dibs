@@ -128,3 +128,11 @@ FOLIO_OKAPI_TENANT_ID =
 FOLIO_OKAPI_TOKEN = 
 FOLIO_ACCESSION_PREFIX = 
 EDS_PAGE_TEMPLATE = 
+
+
+[contentcafe]
+# DIB's LSP layer attempts to get book jacket cover images from multiple
+# sources.  One source it can use is Baker & Taylor's Content Cafe 2.  If you
+# have an account for using the Content Cafe API, provide the account info.
+CC_USER =
+CC_PASSWORD = 
