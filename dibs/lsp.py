@@ -11,6 +11,7 @@ file "LICENSE" for more information.
 
 from   abc import ABC, abstractmethod
 from   coif import cover_image
+from   commonpy.network_utils import net
 from   dataclasses import dataclass
 import os
 from   os.path import realpath, dirname, join, exists, isabs
@@ -205,10 +206,13 @@ class LSP(LSPInterface):
 # .............................................................................
 
 def save_thumbnail(dest_file, url = None, isbn = None):
-    img = None
+    image = None
+    cc_user = config('CC_USER', section = 'contentcafe', default = None)
+    cc_password = config('CC_PASSWORD', section = 'contentcafe', default = None)
+    cc_login = (cc_user, cc_password) if (cc_user and cc_password) else None
+
     if isbn:
-        url, image = cover_image(isbn, kind = 'isbn', size = 'L',
-                                 cc_login = ("ebsco-test", "ebsco-test"))
+        url, image = cover_image(isbn, size = 'L', cc_login = cc_login)
         log(f'cover_image returned image at {url}')
     # We were either given a url in the call, or we found one using the isbn.
     elif url:
