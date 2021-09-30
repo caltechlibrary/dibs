@@ -16,7 +16,6 @@ maxdepth: 2
 usage.md
 architecture.md
 installation.md
-history.md
-references.md
+general.md
 colophon.md
 ```
