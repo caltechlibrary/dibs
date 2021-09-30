@@ -24,3 +24,8 @@ Caltech's DIBS is not the only CDL implementation, nor is it the first. The foll
 * [Alma Digital](https://developers.exlibrisgroup.com/blog/controlled-digital-lending-with-existing-tools-in-the-toolbox-alma-digital/) is a commercial repository system that's part of [ExLibris Alma](https://exlibrisgroup.com/products/alma-library-services-platform/). It supports digital lending, including control on number of concurrent users, cooling-off periods, and more.
 
 * DLSG's [Directed Lending Solution](https://www.dlsg.com) is another commercial system for digital lending.
+
+
+Articles about DIBS:
+
+* [How the Library’s Digital Borrowing Service (DIBS) Solved a Pandemic Problem](https://www.library.caltech.edu/DIBS-overview) (Chris Daley, June 2021, Caltech)
