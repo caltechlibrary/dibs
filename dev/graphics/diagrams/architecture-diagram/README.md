@@ -2,7 +2,7 @@
 
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/caltechlibrary/dibs/main/dev/graphics/diagrams/dibs-architecture.svg">
 
-The system overview diagram in [dibs-architecture.graffle](dibs-architecture.graffle) was created by Michael Hucka in May, 2021, using OmniGraffle 7.11.5 on a macOS 10.13.6 computer. The SVG version in [dibs-architecture.svg](dibs-architecture.svg) was produced using the following steps: 
+The system overview diagram in [dibs-architecture.graffle](dibs-architecture.graffle) was created by Michael Hucka in 2021, using OmniGraffle Pro 7.18.5  on a macOS 10.4.6 computer. The SVG version in [dibs-architecture.svg](dibs-architecture.svg) was produced using the following steps: 
 
 <img width="400px" align="right"  src="https://github.com/caltechlibrary/dibs/blob/main/dev/graphics/diagrams/omnigraffle-export-options.png?raw=true"/>
 
