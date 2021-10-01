@@ -16,6 +16,11 @@ DIBS is <a href="https://en.wikipedia.org/wiki/Open-source_software">open-source
 
 The following subsections summarize the major released versions of DIBS.
 
+### Version 0.5.0 (October 1, 2021)
+
+[Release 0.5.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.5.0) brings significant new features and some backwards-incompatible changes. The new features include **support for FOLIO** as an alternative to TIND.io; support for triggering IIIF conversion workflows after adding a new item to DIBS; the ability to download the item database and history as CSV files; the ability to replace book cover thumbnail images with your own preferred images; and the ability to show a site banner for announcements. The breaking changes include changes to the database object models, changes to the format of the settings file, and some changes to the HTML page templates. Finally, this release fixes a number of bugs and adds some other enhancements.
+
+
 ### Version 0.4.0 (May 28, 2021)
 
 [Release 0.4.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.4.0) adds an interface to the `/list` page for starting an external workflow for scan/image conversion. More documentation is needed on this facility, but the basic idea is to write a file to a designation location that will then trigger some external action. In addition, the new release anonymizes user identities in log messages printed when verbose mode is turned on; this uses the Python module [Trinomial](https://github.com/caltechlibrary/trinomial) to replace user email addresses with a pseudorandom hex string. Finally, this release addresses some additional issues, removes some small bugs, and refactors some code to simplify internal logic.
