@@ -272,21 +272,21 @@
     <li class="md-nav__item">
     
     
-      <a href="#the-dibs-server-in-more-detail" class="md-nav__link">The DIBS server in more detail</a>
+      <a href="#the-dibs-server-in-detail" class="md-nav__link">The DIBS server in detail</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="#the-dibs-database-in-more-detail" class="md-nav__link">The DIBS database in more detail</a>
+      <a href="#the-dibs-database-in-detail" class="md-nav__link">The DIBS database in detail</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="#the-iiif-server-in-more-detail" class="md-nav__link">The IIIF server in more detail</a>
+      <a href="#the-iiif-server-in-detail" class="md-nav__link">The IIIF server in detail</a>
       
     
     </li></ul>
@@ -393,16 +393,16 @@
             
   <section class="tex2jax_ignore mathjax_ignore" id="system-architecture">
 <h1 id="architecture--page-root">System architecture<a class="headerlink" href="#architecture--page-root" title="Permalink to this headline">¶</a></h1>
-<p>This page describes the goals, design, and operation of DIBS.</p>
+<p>This page describes the goals, design, and organization of DIBS.</p>
 <section id="design-goals">
 <h2 id="design-goals">Design goals<a class="headerlink" href="#design-goals" title="Permalink to this headline">¶</a></h2>
 <p>DIBS (“<em><strong>Di</strong>gital <strong>B</strong>orrowing <strong>S</strong>ystem</em>”) is intended to be a basic, standalone, <a class="reference external" href="https://controlleddigitallending.org">controlled digital lending</a> system with the following goals:</p>
 <ul class="simple">
 <li><p><em>Simplicity</em>. We wanted to keep everything as simple as we could – simple user interfaces, simple internal logic, simple installation. This supported rapid development and deployment, and going forward, it will help continued maintenance and evolution.</p></li>
-<li><p><em>Patron privacy</em>. In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not active, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) barcode they have on loan during the loan period. There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on user identities.</p></li>
-<li><p><em>Single sign-on integration</em>. DIBS doesn’t implement logins, and instead relies on an institutional single sign-on system to provide authentication. This simultaneously avoids having to implement user account logins and other complex, error-prone elements in DIBS itself, and makes the user experience consistent with other institutional software systems.</p></li>
-<li><p><em>Decoupling</em>. The system is deliberately not integrated tightly with an ILS.  The current interface to Caltech’s TIND ILS is isolated to a very small section of code in the server, and the item metadata fields needed by DIBS are very basic: a barcode, a title, an author list, a year, and a couple of others.  There is zero dependence on data formats, too – no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.</p></li>
+<li><p><em>Single sign-on integration</em>. DIBS doesn’t implement logins, and instead relies on the web server to provide authentication via an institutional single sign-on system or other mechanism. This simultaneously avoids having to implement user account logins and other complex, error-prone elements in DIBS itself, and makes the user experience consistent with other institutional software systems.</p></li>
+<li><p><em>Patron privacy</em>. In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks. DIBS does not store any patron information when a loan is not active, and during a loan, it stores only the user’s institutional SSO identity combined with the (single) barcode they have on loan during the loan period. There are no provisions in the software for retaining the user information past the cooling-off period after the loan, or tracking identities or loan statistics based on user identities. In addition, a one-way anonymization process is applied when writing log files to prevent writing user’s identities to the logs produced by DIBS.</p></li>
 <li><p><em>Use of IIIF</em>. We chose IIIF because it is a highly flexible, widely-used, open standard for serving content, and there are many free and excellent resources for working with it (including servers and alternative viewers). However, DIBS does not rely on any particular workflow or system to create IIIF-compliant materials.  It only needs a IIIF manifest for each item that is to be made available for digital loans, and a IIIF server endpoint.</p></li>
+<li><p><em>Decoupling</em>. The system is deliberately not integrated tightly with a particular ILS.  There is an object-oriented abstraction layer to isolate ILS-specific code to a small number of lines. It currently supports FOLIO and TIND, but the abstraction layer is extensible.  The record metadata needed by DIBS is very basic and consists of just 8 fields such as a barcode, a title, an author list, a year, and a few others.  There is zero dependence on particular data formats, too – no XML, no MARC, nothing. This should make it possible to replace the TIND-specific code with an interface to another ILS without great difficulty.</p></li>
 </ul>
 </section>
 <section id="architectural-overview">
@@ -413,19 +413,33 @@
 </figure>
 <p>The following summarizes the components depicted above:</p>
 <ul class="simple">
-<li><p>A network attached storage (NAS) system in the Caltech Library is the destination for book scans made by the Library’s staff in response to request from Caltech faculty. For each book, staff create a folder named after the book’s barcode.</p></li>
+<li><p>A network attached storage (NAS) system in the Caltech Library is the destination for book scans made by the Library’s staff in response to request from Caltech faculty. For each book to be put in DIBS, staff create a folder named after the book’s barcode.</p></li>
 <li><p>A  <a class="reference external" href="https://github.com/caltechlibrary/dibs-scripts">script written in Python</a> converts the scanned document images into a IIIF-compliant format, and also creates a <a class="reference external" href="https://iiif.io">IIIF</a> manifest. The script copies the converted images to a location where our IIIF server will find them, and also copies the manifest to a directory on the server running DIBS.   The manifest is given a file name with the pattern <i><code>barcode</code></i><code>-manifest.json</code>, where <i><code>barcode</code></i> is the item’s barcode.</p></li>
 <li><p>An Amazon S3 bucket is the location where the converted files are stored.</p></li>
-<li><p>An Amazon Lambda serverless application instance runs <a class="reference external" href="https://github.com/nulib/serverless-iiif">serverless-iiif</a>. This process responds to IIIF requests from DIBS, and returns the images stored in the Amazon S3 bucket.</p></li>
+<li><p>An Amazon Lambda serverless application instance runs <a class="reference external" href="https://github.com/nulib/serverless-iiif">serverless-iiif</a>. This process responds to IIIF requests from DIBS, and returns the images stored in the Amazon S3 bucket. (However, DIBS is not dependent on <code class="docutils literal notranslate"><span class="pre">serverless-iiif</span></code>, and other IIIF servers can be used.)</p></li>
 <li><p>The compute server running DIBS is located in the Library’s on-premises computing facility. The server runs an Apache web server that is configured to run DIBS as a <a class="reference external" href="https://wsgi.readthedocs.io/en/latest/what.html">WSGI</a>-compliant application. The DIBS server uses an internal <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a> database (not shown) to track active loans, the items available for loans, and the IIIF manifests for the items.</p></li>
 <li><p>DIBS contacts an SSO service operated by Caltech’s campus information technology group. The SSO service runs separately from the Library’s computing infrastructure.</p></li>
+<li><p>The ILS used by Caltech (FOLIO) runs in a hosted service provider’s facilities. DIBS only needs to contact the ILS to get basic metadata when an item is first added to DIBS by library staff.</p></li>
 <li><p>Each user’s web browser runs an instance of the <a class="reference external" href="http://universalviewer.io">Universal Viewer</a> to display borrowed item content. The viewer is configured to contact the DIBS server for all content requests, thus masking the storage location for the IIIF content and making the DIBS server the sole arbiter of loan status and loan duration.</p></li>
 </ul>
 <p>The current implementation has some obvious bottlenecks, notably in the use of a single server for handling requests from users. Based on experience we gain from the currently-running pilot deployment at Caltech (in early 2021), we may revise some elements in the future to scale them up as needed.</p>
 </section>
-<section id="the-dibs-server-in-more-detail">
-<h2 id="the-dibs-server-in-more-detail">The DIBS server in more detail<a class="headerlink" href="#the-dibs-server-in-more-detail" title="Permalink to this headline">¶</a></h2>
-<p>DIBS is implemented on top of <a class="reference external" href="https://bottlepy.org">Bottle</a>, a lightweight WSGI micro web-framework for Python. The definition of the service endpoints and the behaviors is in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.   Here is a summary of the endpoints implemented by the system:</p>
+<section id="the-dibs-server-in-detail">
+<h2 id="the-dibs-server-in-detail">The DIBS server in detail<a class="headerlink" href="#the-dibs-server-in-detail" title="Permalink to this headline">¶</a></h2>
+<p>DIBS is implemented on top of <a class="reference external" href="https://bottlepy.org">Bottle</a>, a lightweight WSGI micro web-framework for Python. The definitions of the service endpoints and the behaviors reside in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span>.  Information about available items, ongoing loans, history of loans, and user access permissions are kept in an <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a> database accessed via an object-relational mapping (<a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>). The web pages shown to users are generated by Bottle using HTML templates stored in in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/templates</span></code></span>; static elements such as CSS files are stored in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/static</span></code></span>.</p>
+<section id="authentication-access-control">
+<h3 id="authentication-access-control">Authentication/access control<a class="headerlink" href="#authentication-access-control" title="Permalink to this headline">¶</a></h3>
+<p>There are 2 layers of access control in DIBS when deployed in a web server:</p>
+<ol class="simple">
+<li><p>can an incoming user access any part of DIBS at all?</p></li>
+<li><p>can the user access staff pages, or only patron pages?</p></li>
+</ol>
+<p>Layer #1 is implemented in the web server environment, and the details of how it’s done depends on the specifics of the installation.  As far as DIBS is concerned, it only cares about whether a user has been authenticated or not.  When a page or API endpoint is requested from DIBS, the request environment given to DIBS by the web server will either include a user identity (if the use has been authenticated) or not.  DIBS simply refuses access to everything it controls if a user identity is not present in the request environment.</p>
+<p>Layer #2 is implemented in DIBS itself.  DIBS uses <code class="docutils literal notranslate"><span class="pre">Person</span></code> objects to distinguish between people known to have staff access (i.e., who can access pages like <code class="docutils literal notranslate"><span class="pre">/list</span></code>), and everyone else.  When a request for a page or an endpoint comes in, DIBS looks for the user identifier in the HTTP request environment passed in from the web server, checks if that user is in the <code class="docutils literal notranslate"><span class="pre">Person</span></code> table in the database, and checks if the user has a role of <code class="docutils literal notranslate"><span class="pre">"library"</span></code>.  If the role is <code class="docutils literal notranslate"><span class="pre">"library"</span></code>, access to staff pages is granted; if not, the user is not shown links to the staff pages nor can they access the relevant endpoints.</p>
+</section>
+<section id="actions-implemented-by-the-server">
+<h3 id="actions-implemented-by-the-server">Actions implemented by the server<a class="headerlink" href="#actions-implemented-by-the-server" title="Permalink to this headline">¶</a></h3>
+<p>Here is a summary of the endpoints implemented by the system:</p>
 <table>
 <thead>
 <tr class="row-odd"><th class="head"><p>Endpoint</p></th>
@@ -450,7 +464,17 @@
 <td><p>Staff</p></td>
 <td><p>Show the page to add/edit an item</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/edit/&lt;barcode&gt;</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/delete-thumbnail/BARCODE</span></code></p></td>
+<td><p>GET</p></td>
+<td><p>Staff</p></td>
+<td><p>Delete the thumbnail image for BARCODE</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/download/&lt;type&gt;/&lt;data&gt;</span></code></p></td>
+<td><p>GET</p></td>
+<td><p>Staff</p></td>
+<td><p>Download the item list or loan history</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/edit/BARCODE</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Staff</p></td>
 <td><p>Show the page to add/edit an item</p></td>
@@ -470,7 +494,7 @@
 <td><p>Any</p></td>
 <td><p>Get loan availability info about an item</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/item/&lt;barcode&gt;</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/item/BARCODE</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Any</p></td>
 <td><p>Shows item information page for a given item</p></td>
@@ -495,7 +519,7 @@
 <td><p>Staff</p></td>
 <td><p>Show the page to manage the list of items</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/manifests/&lt;barcode&gt;</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/manifests/BARCODE</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Any</p></td>
 <td><p>Sends manifest to viewer</p></td>
@@ -513,37 +537,47 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/ready</span></code></p></td>
 <td><p>POST</p></td>
 <td><p>Staff</p></td>
-<td><p>Handles checkbox in <code class="docutils literal notranslate"><span class="pre">list</span></code> page to make an item ready to loan</p></td>
+<td><p>Toggles item ready status in <code class="docutils literal notranslate"><span class="pre">list</span></code> page</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/remove</span></code></p></td>
 <td><p>POST</p></td>
 <td><p>Staff</p></td>
-<td><p>Handles button in <code class="docutils literal notranslate"><span class="pre">list</span></code> page to remove an item</p></td>
+<td><p>Handles button in <code class="docutils literal notranslate"><span class="pre">manage</span></code> page</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/return/&lt;barcode&gt;</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/return/BARCODE</span></code></p></td>
 <td><p>POST</p></td>
 <td><p>Any</p></td>
 <td><p>Handles Return button from viewer page</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/static/&lt;args&gt;</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/start-processing</span></code></p></td>
+<td><p>POST</p></td>
+<td><p>Staff</p></td>
+<td><p>Write the workflow init file for an item</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/static/&lt;args&gt;</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Any</p></td>
 <td><p>Send static content (used by pages &amp; viewer)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/stats</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/stats</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Staff</p></td>
 <td><p>Show the statistics page</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/status</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/status</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Staff</p></td>
 <td><p>Show the statistics page</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/thankyou</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/thankyou</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Any</p></td>
 <td><p>Destination after user uses Return button</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/thumbnails/BARCODE.jpg</span></code></p></td>
+<td><p>GET</p></td>
+<td><p>Any</p></td>
+<td><p>Fetch the thumbnail image for BARCODE</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/update/add</span></code></p></td>
 <td><p>POST</p></td>
@@ -563,18 +597,53 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/viewer/&lt;args&gt;</span></code></p></td>
 <td><p>GET</p></td>
 <td><p>Any</p></td>
-<td><p>Handles requests for components of the viewer page</p></td>
+<td><p>Handles requests for viewer elements</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="the-dibs-database-in-more-detail">
-<h2 id="the-dibs-database-in-more-detail">The DIBS database in more detail<a class="headerlink" href="#the-dibs-database-in-more-detail" title="Permalink to this headline">¶</a></h2>
-<p>As mentioned above, DIBS maintains an internal database of item description and loan status.  The interface is defined in terms of high-level objects that are backed by an <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a> database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
+<section id="the-lsp-interface">
+<h3 id="the-lsp-interface">The LSP interface<a class="headerlink" href="#the-lsp-interface" title="Permalink to this headline">¶</a></h3>
+<p>To save library staff the trouble of having to enter book metadata manually when adding a new item to DIBS, the system gets basic title/author/year/etc information from an institutional ILS or LSP automatically. DIBS features a straightforward abstraction layer that separates the details of contacting ILS/LSP servers from the main code. At Caltech, we originally used <a class="reference external" href="https://tind.io">TIND</a> but in mid-2021 switched to <a class="reference external" href="https://www.folio.org">FOLIO</a>; the abstraction layer in DIBS currently has interfaces to both systems, and the use of one or the other is determined by a variable in the site <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file.</p>
+<p>The LSP abstraction layer consists of three main object classes, <code class="docutils literal notranslate"><span class="pre">LSP</span></code>, <code class="docutils literal notranslate"><span class="pre">LSPRecord</span></code> and <code class="docutils literal notranslate"><span class="pre">LSPInterface</span></code>, defined in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/lsp.py</span></code></span>.</p>
+<ul class="simple">
+<li><p>The class <code class="docutils literal notranslate"><span class="pre">LSPRecord</span></code> defines the metadata fields that are used by the DIBS server. These are title, author, year, and a few others.</p></li>
+<li><p>For every ILS/LSP system to which DIBS can interface, there is a subclass of <code class="docutils literal notranslate"><span class="pre">LSPInterface</span></code> that implements the details of communicating with the ILS/LSP server and getting metadata about an item given a barcode.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">LSP</span></code> class handles the miscellaneous details of reading configuration data from <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> and creating the appropriate subclass of interface. This is what is actually used by the code in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/server.py</span></code></span> to get an interface object for communicating with the ILS/LSP service at run time.</p></li>
+</ul>
 </section>
-<section id="the-iiif-server-in-more-detail">
-<h2 id="the-iiif-server-in-more-detail">The IIIF server in more detail<a class="headerlink" href="#the-iiif-server-in-more-detail" title="Permalink to this headline">¶</a></h2>
-<p>… <em>Forthcoming</em> …</p>
+</section>
+<section id="the-dibs-database-in-detail">
+<h2 id="the-dibs-database-in-detail">The DIBS database in detail<a class="headerlink" href="#the-dibs-database-in-detail" title="Permalink to this headline">¶</a></h2>
+<p>As mentioned above, DIBS maintains an internal database.  The interface is defined in terms of high-level objects that are backed by an <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a> database back-end.  The ORM used is <a class="reference external" href="http://docs.peewee-orm.com/en/latest/">Peewee</a>.</p>
+<p>The database consists of four object models:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Item</span></code>: this describes an item available via DIBS. Each item available for loaning out gets a separate <code class="docutils literal notranslate"><span class="pre">Item</span></code> object in the database. The object fields include the following: the barcode used by the ILS to identify the item, the page in the ILS for displaying information about the item, the number of copies being made available through DIBS, the loan duration, whether the item is ready/available or not, and staff notes.  A number of metadata fields that are not strictly necessary for loans is also stored in the <code class="docutils literal notranslate"><span class="pre">Item</span></code>, such as the title and authors of the work; these are to avoid having to do lookups in the ILS every time the information is needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Loan</span></code>: loan objects describe an active or recently-ended loan. The object fields include the start time, end time, reloan time, and user login.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">History</span></code>: after a loan has ended and the reloan time has expired, DIBS creates a <code class="docutils literal notranslate"><span class="pre">History</span></code> object to keep a basic record of the item that was borrowed for purposes of reporting statistics. The fields stored are very limited: the item borrowed, the start time, and the end time – that’s all. User logins are not retained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Person</span></code>: in order to determine whether a given user can be shown staff pages, DIBS uses objects called <code class="docutils literal notranslate"><span class="pre">Person</span></code>. The object has fields for the user’s login, and a role. DIBS <em>only</em> an object for every staff user: non-staff users don’t need to be listed in the <code class="docutils literal notranslate"><span class="pre">Person</span></code> table, and thus patron identities are not stored in the database.</p></li>
+</ul>
+</section>
+<section id="the-iiif-server-in-detail">
+<h2 id="the-iiif-server-in-detail">The IIIF server in detail<a class="headerlink" href="#the-iiif-server-in-detail" title="Permalink to this headline">¶</a></h2>
+<p>DIBS does not include a IIIF server. Instead, it can work with any compliant IIIF server that you wish to set up or already have access to.</p>
+<p>Before choosing and setting up a IIIF server, it may be helpful to understand how DIBS will use it. The process of accessing content and serving it goes roughly like this:</p>
+<ol class="simple">
+<li><p>A IIIF viewer client (such as the <a class="reference external" href="http://universalviewer.io">Universal Viewer</a> included with DIBS) requests a <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest file</a> from DIBS at the endpoint <code class="docutils literal notranslate"><span class="pre">/manifests/BARCODE</span></code>, where <code class="docutils literal notranslate"><span class="pre">BARCODE</span></code> is the item barcode.</p></li>
+<li><p>DIBS checks if the user making the request has an active loan on <code class="docutils literal notranslate"><span class="pre">BARCODE</span></code>. If not, it responds with an error code; otherwise, DIBS performs the following steps:</p>
+<ol class="simple">
+<li><p>retrieves the manifest file from disk and reads it into memory;</p></li>
+<li><p>modifies the contents of the manifest file in memory, replacing every instance of the IIIF base URL (set in the site <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file) with a URL that points at DIBS’ address rather than the real IIIF server; and</p></li>
+<li><p>sends the adjusted manifest file contents to the client.</p></li>
+</ol>
+</li>
+<li><p>The IIIF client parses the manifest to learn the URLs for the page images.</p></li>
+<li><p>The client starts fetching images at the URLs following the IIIF protocol. (Since these URLs all point to a location under <code class="docutils literal notranslate"><span class="pre">/iiif</span></code> on the DIBS server by virtue of the transformation applied in step 2b, the requests actually go to the DIBS server, not the actual IIIF server.)</p></li>
+<li><p>For every URL request from the client, DIBS checks if the user has an active loan on the associated item. If the user does, then DIBS reverses the the transformation it previously applied to the URL so it can determine the real IIIF URL, fetches the image data from the IIIF server, and returns the image data to the client.  To improve performance, the DIBS server also caches images in memory, so that subsequent client requests are answered more quickly.</p></li>
+</ol>
+<p>The most important implication of this scheme is the following: <strong>for content that you host in your instance of DIBS, clients never contact the IIIF server directly</strong>. Everything goes through DIBS, which acts as a conduit between the client and the IIIF server. The only exception is if your manifest file contains references to a IIIF server address for which DIBS is <em>not</em> configured to rewrite URLs; then clients will contact that server directly.</p>
+<p>This approach gives you the freedom to set up your IIIF server in many ways. All that DIBS needs to know is a base URL, and all that DIBS does is request pages using the IIIF protocol.  As long as DIBS can communicate with the IIIF server you use, things should work.</p>
+<p>At Caltech, we use a copy of <a class="reference external" href="https://github.com/samvera-labs/serverless-iiif">serverless-iiif</a> hosted on an Amazon AWS server. That server is configured to read images from an Amazon S3 bucket where we store the book content for DIBS. Clients do not know the details, however, and we could equally have used a different IIIF server hosted on our own hardware, or something else. We can also change the IIIF server setup at any time without clients needing to make any changes.</p>
 </section>
 </section>
 
@@ -625,7 +694,7 @@
               
           </div>
             Last updated on
-              Sep 30, 2021.
+              Oct 01, 2021.
             <br/>
             Created using
             <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
