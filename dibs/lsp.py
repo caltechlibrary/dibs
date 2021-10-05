@@ -20,7 +20,7 @@ import re
 from   sidetrack import log
 from   topi import Tind
 
-from .settings import config
+from .settings import config, resolved_path
 
 
 # Classes implementing interface to specific LSPs.
@@ -105,7 +105,6 @@ class TindInterface(LSPInterface):
             raise ValueError('No such barcode {barcode} in {self.url}')
 
 
-
 class FolioInterface(LSPInterface):
     '''Interface layer for FOLIO hosted LSP servers.'''
 
@@ -155,6 +154,26 @@ class FolioInterface(LSPInterface):
             log(f'could not find {barcode} in FOLIO: {str(ex)}')
             raise ValueError('No such barcode {barcode} in {self.url}')
 
+
+class UnconfiguredInterface(LSPInterface):
+    '''Dummy interface, for when no LSP is chosen.'''
+
+    def __repr__(self):
+        '''Return a string representing this interface object.'''
+        return "<{}>".format(self.__class__.__name__)
+
+
+    def record(self, barcode = None):
+        '''Return a record for the item identified by the "barcode".'''
+        return LSPRecord(id        = 'LSP not configured',
+                         url       = '',
+                         title     = 'LSP not configured',
+                         author    = 'LSP not configured',
+                         publisher = 'LSP not configured',
+                         year      = 'LSP not configured',
+                         edition   = 'LSP not configured',
+                         isbn_issn = '')
+
 
 # Primary exported class.
 # .............................................................................
@@ -171,8 +190,7 @@ class LSP(LSPInterface):
             return lsp
 
         # Read common configuration variables.
-        root = realpath(join(dirname(__file__), os.pardir))
-        thumbnails_dir = join(root, config('THUMBNAILS_DIR', section = 'dibs'))
+        thumbnails_dir = resolved_path(config('THUMBNAILS_DIR', section = 'dibs'))
         log(f'assuming thumbnails dir is {thumbnails_dir}')
 
         # Select the appropriate interface type and create the object.
@@ -195,7 +213,7 @@ class LSP(LSPInterface):
             log(f'Using TIND URL {url}')
             lsp = TindInterface(url, thumbnails_dir = thumbnails_dir)
         else:
-            raise ValueError('LSP_TYPE value is missing from settings.ini')
+            lsp = UnconfiguredInterface()
 
         # Store the interface object (to implement the Singleton pattern).
         cls.__lsp_interface__ = lsp
