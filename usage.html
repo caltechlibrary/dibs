@@ -55,6 +55,8 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -295,12 +297,12 @@
     <li class="md-nav__item">
     
     
-      <a href="installation.html" class="md-nav__link">Installation and configuration</a>
+      <a href="installation.html" class="md-nav__link">Installation and operation</a>
       <ul class="md-nav__list"> 
     <li class="md-nav__item">
     
     
-      <a href="installation.html#requirements" class="md-nav__link">Requirements</a>
+      <a href="installation.html#preliminary-requirements" class="md-nav__link">Preliminary requirements</a>
       
     
     </li>
@@ -321,14 +323,7 @@
     <li class="md-nav__item">
     
     
-      <a href="installation.html#management-of-staff-roles" class="md-nav__link">Management of staff roles</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="installation.html#operation" class="md-nav__link">Operation</a>
+      <a href="installation.html#running-dibs" class="md-nav__link">Running DIBS</a>
       
     
     </li></ul>
@@ -393,39 +388,39 @@
             
   <section class="tex2jax_ignore mathjax_ignore" id="using-dibs">
 <h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this headline">¶</a></h1>
-<p>This page describes how DIBS works from the users’ standpoint.  A separate section in this document describes the <a class="reference external" href="architecture.html#architecture--page-root">system architecture</a> that implements the functionality described here.</p>
+<p>This page describes how DIBS works from the standpoint of the user interface as seen by patrons and staff.  A separate section in this document describes the <span class="xref myst">system architecture</span> that implements the functionality described here.</p>
 <section id="authentication">
 <h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
-<p>Authentication is assumed to be handled by the system hosting DIBS. In Caltech’s case, we use <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a>, an institute-wide, single sign-on system (SSO) for authentication. This means that a sign-in page is presented before users ever reach DIBS, by an authentication layer implemented by the web server. The screenshot below shows an example of this:</p>
+<p>Authentication is assumed to be handled by the system hosting DIBS. In Caltech’s case, we use <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a>, an institute-wide, single sign-on system (SSO) for authentication. This means that before users ever reach DIBS, a sign-in page is presented by the web server. The screenshot below shows an example of this:</p>
 <figure>
 <img src="_static/media/sso.png"/>
 </figure>
-<p>DIBS itself does not do anything beyond distinguishing between regular users and those who have staff privileges (discussed below). This distinction is made based on the identity of the user as conveyed by the SSO system. DIBS does not ask for user login credentials nor store them (nor can it access them, since that is handled by the SSO system).</p>
+<p>DIBS itself does not do anything beyond distinguishing between regular users and those who have staff privileges (discussed below). This distinction is made based on the identity of the user as conveyed by the SSO system. DIBS does not ask for user login credentials nor store them.</p>
 </section>
 <section id="front-page">
 <h2 id="front-page">Front page<a class="headerlink" href="#front-page" title="Permalink to this headline">¶</a></h2>
 <p>The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:</p>
 <ol class="simple">
 <li><p>We expect that patrons will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of “all things available for digital loan”. In part, this is because we expect patrons will be directly informed about the pages describing individual items, and in part because we anticipate that in the future we will add DIBS links directly to Caltech’s <a class="reference external" href="https://www.folio.org">FOLIO</a>-based catalog.</p></li>
-<li><p>We expect that library staff need to interact with the system in a substantially <em>different</em> way: not to read the materials, but to manage the items in the database of digitized works and control loan parameters.  Thus, staff <em>do</em> see a list of all items available through the system, but access to this list is limited to Library staff.</p></li>
+<li><p>We expect that library staff need to interact with the system in a <em>different</em> way: not to read the materials, but to manage the items in the database of digitized works and control loan parameters.  Thus, staff <em>do</em> see a list of all items available through the system, but access to this list is limited to Library staff.</p></li>
 </ol>
-<p>These considerations explain the front page of DIBS, which (perhaps contrary to expectations) lacks a login/sign-in interface or a list of items.  This is because in normal use, we expect that users will go straight either to a page describing an individual item or to a DIBS management page.  The front page acts mainly as an information page that describes the purpose of the system and the loan policies:</p>
+<p>These considerations explain the front page of DIBS, which (perhaps contrary to expectations) lacks an index or listing of all items in DIBS.  This is because in normal use, we expect that users will go straight either to a page describing an individual item or to a DIBS management page.  The front page acts mainly as an information page that describes the purpose of the system and the loan policies:</p>
 <figure>
 <img src="_static/media/welcome-page.png"/>
 </figure>
 </section>
 <section id="the-patron-experience">
 <h2 id="the-patron-experience">The patron experience<a class="headerlink" href="#the-patron-experience" title="Permalink to this headline">¶</a></h2>
-<p>As mentioned above, patrons are assumed to be provided information about specific items available for loan.  The working assumption is that they will be given URLs that take them directly to item description pages in DIBS.  An example of such an item description page is shown below:</p>
+<p>As mentioned above, patrons are assumed to be provided information about individual items available for loan.  The working assumption is that they will be given URLs that take them directly to item description pages in DIBS.  An example of such an item description page is shown below:</p>
 <figure>
 <img src="_static/media/item-page.png"/>
 </figure>
 <p>The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech’s <a class="reference external" href="https://www.folio.org">FOLIO</a> server based on the barcode used by Library staff when they add the item to DIBS.</p>
-<p>The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-not-available">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:</p>
+<p>The text and button shown in the lower half of the page change based on the current availability of the item. The page shows a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-not-available">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:</p>
 <figure>
 <img src="_static/media/item-not-available.png"/>
 </figure>
-<p>If the item is available to the user, and they click the <span class="button color-primary">Get loan</span> button, then they will be presented with a brief confirmation dialog.  If they elect to proceed, a loan will be started immediately and they will be transferred to the viewer.</p>
+<p>If the item is available to the user, and they click the <span class="button color-primary">Get loan</span> button, then they will be presented with a brief confirmation dialog.  If they elect to proceed, a loan will be started immediately and they will be transferred to the viewer. The screenshot below gives an example of what a book looks like in this viewer:</p>
 <figure>
 <img src="_static/media/loan-in-viewer.png"/>
 </figure>
@@ -441,7 +436,7 @@
 <p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <a class="reference external" href="#the-patron-experience">patron experience</a> described in the previous section.)</p>
 <section id="how-users-are-identified-as-staff-users">
 <h3 id="how-users-are-identified-as-staff-users">How users are identified as staff users<a class="headerlink" href="#how-users-are-identified-as-staff-users" title="Permalink to this headline">¶</a></h3>
-<p>As mentioned at the beginning of this page, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that is needed is to tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> for that purpose. (It’s located in the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
+<p>As mentioned <a class="reference external" href="#authentication">above</a>, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that system administrators need to do is tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> for that purpose. (It’s located in the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@caltech.edu"</span> <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
 </pre></div>
 </div>
@@ -462,10 +457,10 @@
 <p>As its name implies, the list page provides a list all of the items known to DIBS (whether they are ready to be available for digital loans or not), and allows staff to add, edit, or remove items.  It is also the place where staff can get the link to be distributed to patrons to request loans.  In more detail:</p>
 <ul class="simple">
 <li><p><strong>Barcode</strong>: the barcode identifying the item in the Caltech Library.</p></li>
-<li><p><strong>Title</strong>: the title of the item. This is entered free-form in the DIBS entry form and does not have to match the actual title in Caltech’s FOLIO database.</p></li>
-<li><p><strong>Author</strong>: the author of the item. This is entered free-form in the DIBS entry form and does not have to match the actual author in Caltech’s FOLIO database.</p></li>
+<li><p><strong>Title</strong>: the title of the item.  This is obtained automatically from the LSP (in Caltech’s case, FOLIO) based on the item’s barcode.</p></li>
+<li><p><strong>Author</strong>: the author of the item.  This is obtained automatically from the LSP (in Caltech’s case, FOLIO) based on the item’s barcode.</p></li>
 <li><p><strong>Available to loan?</strong>: when unchecked, the item is not made available for digital loans. The presence of a checkbox in this column depends on the state of processing of the document in the scanning workflow; see the section on <a href="#the-scanning-workflow"><i>The scanning workflow</i></a> below.</p></li>
-<li><p><strong>Loan duration</strong>: the duration of a loan. The system automatically closes the loan after the loan period and blocks the patron’s access. (Patrons can also close loans early if they wish.)</p></li>
+<li><p><strong>Loan duration</strong>: the duration of a loan, in hours.</p></li>
 <li><p><strong>Copies for loans</strong>: how many copies of the item are being made available for simultaneous borrowing?</p></li>
 <li><p><span class="button color-secondary">Copy link</span>: this copies to the user’s clipboard a link to the item loan page.  This is what should be communicated to course instructors, so that they can pass on the URLs to their students.</p></li>
 <li><p><span class="button color-info">Edit entry</span>: edit the entry. This brings up the same form as is used to add new entries, but with the values filled in, allowing the user to change the values and save the results.</p></li>
@@ -481,16 +476,17 @@
 <figure>
 <img src="_static/media/add-item-page.png"/>
 </figure>
-<p>Here, information can be entered to describe a new item being made available for digital loans.  All of the information about a given item is based on the barcode; this barcode is used to look up the item in Caltech’s FOLIO server, and the information extracted from FOLIO is used to populate the item view page discussed in the previous section.</p>
+<p>Here, information can be entered to describe a new item to be made available for digital loans. Staff only need to enter the item’s barcode, the duration of a loan, and the number of copies of the item to be made available via DIBS.  Optionally, they can add internal notes as free-form text, and also, upload a custom cover image. (If the cover image is left off, DIBS will automatically try to find an image based on the ISBN obtained from the LSP.)</p>
+<p>Note the only item-specific information needed is the barcode.  All of the metadata shown about an item on other pages (such as the title, the authors, ISBN, etc.) is based on the barcode and obtained by looking up the item barcode LSP.</p>
 </section>
 <section id="editing-existing-items">
 <h3 id="editing-existing-items">Editing existing items<a class="headerlink" href="#editing-existing-items" title="Permalink to this headline">¶</a></h3>
-<p>As mentioned above, every item on the list page has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.</p>
+<p>As mentioned above, every item on the <a class="reference external" href="#listing-all-items-in-dibs">list page</a> has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.</p>
 <figure>
 <img src="_static/media/edit-item-page.png"/>
 </figure>
 <p>As you might have guessed, staff can modify entries by editing these values and then clicking the  <span class="button color-primary">Save</span> button to save the changes to the database.</p>
-<p>The edit page also provides the ability to replace the item’s cover image, or to delete it altogether. When there is an existing thumbnail image, the page shows the image with a small red trashcan icon overlaid on top of it in the bottom right corner. Clicking this trashcan icon will delete the existing thumbnail image file. On the other hand, clicking the “Choose file” button under the field heading <em>Replace cover image</em> will allow to upload an image from their computer’s hard drive; after clicking the <span class="button color-primary">Save</span> button, the uploaded image will become the new cover image for the item.</p>
+<p>The edit page also provides the ability to replace the item’s cover image, or to delete it altogether. When there is an existing thumbnail image, the page shows the image with a small red trashcan icon overlaid on top of it in the bottom right corner. Clicking this trashcan icon will delete the existing thumbnail image file. On the other hand, clicking the “Choose file” button under the field heading <em>Replace cover image</em> allows a staff user to upload an image from their computer’s hard drive; after clicking the <span class="button color-primary">Save</span> button, the uploaded image will become the new cover image for the item.</p>
 </section>
 <section id="managing-the-list-of-items">
 <h3 id="managing-the-list-of-items">Managing the list of items<a class="headerlink" href="#managing-the-list-of-items" title="Permalink to this headline">¶</a></h3>
@@ -517,7 +513,7 @@
 <li><p><em>Average loan duration</em>: the mean duration of all loans for the item. If the item has never been borrowed, it is reported as “(never borrowed)”, otherwise a duration is given in general human-understandable terms.</p></li>
 <li><p><em>Content retrievals</em>: this column contains a small bar graph for each item, expressing the number of page retrievals for that item within the past 15, 30, 45 and 60 minutes.  The counts change over time in a rolling fashion and are recomputed relative to the present time every time the page is refreshed. The values are intended to give a rough sense of the reader activity over the past hour for a given item.</p></li>
 </ul>
-<p>The bottom of the stats page also offers a button named <span class="button color-info">Download history</span>. When clicked, this will cause the complete loan history to be downloaded to the user’s computer in <a class="reference external" href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> format.</p>
+<p>The bottom of the stats page also offers a button named <span class="button color-info">Download history</span>, as shown in the screenshot below. When clicked, this will cause the complete loan history to be downloaded to the user’s computer in <a class="reference external" href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> format.</p>
 <figure>
 <img src="_static/media/stats-page-buttons.png"/>
 </figure>
@@ -583,7 +579,7 @@
               
           </div>
             Last updated on
-              Oct 01, 2021.
+              Oct 05, 2021.
             <br/>
             Created using
             <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
