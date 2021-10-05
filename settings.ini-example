@@ -29,7 +29,7 @@
 # Set the next variable to either "folio" or "tind", depending on which LSP
 # you are using, and then uncomment and set the relevant variables later in
 # this file to configure your particular LSP.
-LSP_TYPE = 
+LSP_TYPE = unconfigured
 
 # Path to the sqlite database, relative to here.
 DATABASE_FILE = data/dibs.db
@@ -60,9 +60,10 @@ PROCESS_DIR = data/processing
 # but you can also deliberately put images there to override what DIBS uses.
 THUMBNAILS_DIR = data/thumbnails
 
-# IIIF image service API base path.  Include the protocol version at the end,
-# as shown in the (fake) example on the next line.
-IIIF_BASE_URL = https://yourserver.com/iiif/2
+# IIIF image service API base path.  Include the protocol version at the end.
+# This will almost certainly be "/iiif/2" as shown in the (fake) example on
+# the next line.
+IIIF_BASE_URL = https://unconfigured.edu/iiif/2
 
 # DIBS caches pages it fetches from the IIIF server.  This sets the size of
 # the least-recently used cache to the given number of images.  Bear in mind
@@ -76,7 +77,7 @@ IIIF_CACHE_SIZE = 50000
 # work, the account owning the web server process must be able to send email.
 MAIL_HOST   = localhost
 MAIL_PORT   = 25
-MAIL_SENDER = helpdesk@library.yourinstitution.edu
+MAIL_SENDER = helpdesk@unconfigured.edu
 
 # Set the cooling off period: the time a user must wait between when they
 # return a title and when they can loan it out again (in minutes).
@@ -84,7 +85,7 @@ RELOAN_WAIT_TIME = 30
 
 # Feedback form URL.  This is used on the thank-you page and in the hamburger
 # menu in the upper right of every page (it's link for "Give feedback").
-FEEDBACK_URL = https://some.forms.server/your/feedback/form
+FEEDBACK_URL = https://unconfigured.server/your/feedback/form
 
 # Help page URL.  This is used in the hamburger menu in the upper right of
 # every page (it's link for "Help").
