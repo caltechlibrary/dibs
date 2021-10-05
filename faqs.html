@@ -47,7 +47,7 @@
   
   
   
-    <title>References and resources &#8212; Caltech DIBS</title>
+    <title>FAQs about DIBS &#8212; Caltech DIBS</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/material.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
@@ -58,8 +58,8 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Colophon" href="colophon.html" />
-    <link rel="prev" title="DIBS history" href="history.html" />
+    <link rel="next" title="DIBS history" href="history.html" />
+    <link rel="prev" title="General information" href="general.html" />
   
    
 
@@ -78,7 +78,7 @@
   <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
   <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
   <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-  <a href="#references" tabindex="1" class="md-skip"> Skip to content </a>
+  <a href="#faqs" tabindex="1" class="md-skip"> Skip to content </a>
   <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
     <div class="md-flex navheader">
@@ -97,7 +97,7 @@
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           <span class="md-header-nav__topic">Caltech DIBS</span>
-          <span class="md-header-nav__topic"> References and resources </span>
+          <span class="md-header-nav__topic"> FAQs about DIBS </span>
         </div>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -334,7 +334,16 @@
     <li class="md-nav__item">
     
     
-      <a href="faqs.html" class="md-nav__link">FAQs about DIBS</a>
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <label class="md-nav__link md-nav__link--active" for="__toc"> FAQs about DIBS </label>
+    
+      <a href="#" class="md-nav__link md-nav__link--active">FAQs about DIBS</a>
+      
+        
+<nav class="md-nav md-nav--secondary">
+  <ul class="md-nav__list" data-md-scrollfix="">
+  </ul>
+</nav>
       
     
     </li>
@@ -348,16 +357,7 @@
     <li class="md-nav__item">
     
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    <label class="md-nav__link md-nav__link--active" for="__toc"> References and resources </label>
-    
-      <a href="#" class="md-nav__link md-nav__link--active">References and resources</a>
-      
-        
-<nav class="md-nav md-nav--secondary">
-  <ul class="md-nav__list" data-md-scrollfix="">
-  </ul>
-</nav>
+      <a href="references.html" class="md-nav__link">References and resources</a>
       
     
     </li></ul>
@@ -392,30 +392,52 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  <section class="tex2jax_ignore mathjax_ignore" id="references-and-resources">
-<h1 id="references--page-root">References and resources<a class="headerlink" href="#references--page-root" title="Permalink to this headline">¶</a></h1>
-<p>The following are some additional resources about Controlled Digital Lending:</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="faqs-about-dibs">
+<h1 id="faqs--page-root">FAQs about DIBS<a class="headerlink" href="#faqs--page-root" title="Permalink to this headline">¶</a></h1>
+<p>Here are answers to some common questions about DIBS.</p>
+<section id="what-ils-or-lsp-systems-does-dibs-support">
+<h2 id="what-ils-or-lsp-systems-does-dibs-support">What ILS or LSP systems does DIBS support?<a class="headerlink" href="#what-ils-or-lsp-systems-does-dibs-support" title="Permalink to this headline">¶</a></h2>
+<p>As of version 0.5, the DIBS software architecture features an abstraction layer for interfacing to LSP/ILS systems. Out of the box, it includes two concrete interfaces, for <a class="reference external" href="https://www.folio.org">FOLIO</a> and <a class="reference external" href="https://tind.io">TIND</a>. The use of one or the other is selectable in the DIBS site settings file.</p>
+<p>DIBS only needs to retrieve about 8 metadata fields for an item in a catalog system. These are fields such as a barcode, a title, author, year – that sort of thing.  Given the abstraction layer, and the scheme for configuring LSP parameters using the site settings file, the developers of DIBS believe it would not require significant effort to add interfaces to other LSPs. We would welcome code contributions from other institutions to enhance DIBS in this way.</p>
+</section>
+<section id="are-documents-in-dibs-stored-as-pdfs">
+<h2 id="are-documents-in-dibs-stored-as-pdfs">Are documents in DIBS stored as PDFs?<a class="headerlink" href="#are-documents-in-dibs-stored-as-pdfs" title="Permalink to this headline">¶</a></h2>
+<p>No. The IIIF format is image-based, and document pages are stored in a pyramidal image scheme in which each document page is represented by multiple fragments at different resolutions. The scheme minimizes the data sent to a user’s browser while still enabling the ability to zoom in and out (similar to how you can zoom in and out in Google Maps).</p>
+</section>
+<section id="is-ocr-applied-to-document-pages-can-it-be">
+<h2 id="is-ocr-applied-to-document-pages-can-it-be">Is OCR applied to document pages? Can it be?<a class="headerlink" href="#is-ocr-applied-to-document-pages-can-it-be" title="Permalink to this headline">¶</a></h2>
+<p>In principle, one could apply optical character recognition (OCR) to document pages and make the text available <em>somehow</em>. We (the Caltech developers of DIBS) did not pursue this, in part because we feared it would put DIBS on shakier legal grounds than the strict CDL approach we followed. Instead, we focused on producing a library book-lending experience in electronic form.</p>
+</section>
+<section id="can-patrons-schedule-loans">
+<h2 id="can-patrons-schedule-loans">Can patrons schedule loans?<a class="headerlink" href="#can-patrons-schedule-loans" title="Permalink to this headline">¶</a></h2>
+<p>There is currently no scheduling system in DIBS. Users need to visit the information page for a given book when they are interested in borrowing it.</p>
+</section>
+<section id="do-items-have-waiting-lists-associated-with-them">
+<h2 id="do-items-have-waiting-lists-associated-with-them">Do items have waiting lists associated with them?<a class="headerlink" href="#do-items-have-waiting-lists-associated-with-them" title="Permalink to this headline">¶</a></h2>
+<p>There is currently no queuing or wait list system in DIBS. It is a first-come, first-served system.</p>
+</section>
+<section id="isnt-the-lack-of-a-queuing-system-in-dibs-a-problem">
+<h2 id="isnt-the-lack-of-a-queuing-system-in-dibs-a-problem">Isn’t the lack of a queuing system in DIBS a problem?<a class="headerlink" href="#isnt-the-lack-of-a-queuing-system-in-dibs-a-problem" title="Permalink to this headline">¶</a></h2>
+<p>At the Caltech Library, our policy has been that if a book is in particularly high demand, we purchase more copies and then make more copies available in DIBS. We have not yet had to do this, nor have we encountered pressure situations on any given book.</p>
+<p>That said, we do realize that not all institutions may have the resources to take this approach; moreover, perhaps this approach works at Caltech because Caltech is particularly small and we don’t have enough students to cause problems.</p>
+<p>Finally, while we don’t have the resources to implement a queuing system at this time, we would welcome outside code contributions to implement such a feature in DIBS.</p>
+</section>
+<section id="how-does-dibs-prevent-users-from-saving-copies-of-the-materials">
+<h2 id="how-does-dibs-prevent-users-from-saving-copies-of-the-materials">How does DIBS prevent users from saving copies of the materials?<a class="headerlink" href="#how-does-dibs-prevent-users-from-saving-copies-of-the-materials" title="Permalink to this headline">¶</a></h2>
+<p>DIBS uses multiple techniques to prevent users from saving the books they borrow through the system:</p>
 <ul class="simple">
-<li><p>The website <a class="reference external" href="https://controlleddigitallending.org">Controlled Digital Lending by Libraries</a> provides information and resources related to CDL, including pointers to legal frameworks, pointers to papers on the topic of CDL, and a list of <a class="reference external" href="https://controlleddigitallending.org/faq">frequently asked questions (and answers)</a>.</p></li>
-<li><p>In September 2021, the non-profit <a class="reference external" href="https://www.libraryfutures.net">Library Futures Foundation</a> released a policy document titled <a class="reference external" href="https://www.libraryfutures.net/policy-document-2021">Controlled Digital Lending: Unlocking the Library’s Full Potential</a>. The document <em>“expands beyond the legal rationale laid out in the Controlled Digital Lending (CDL) White Paper by clarifying the core principles that are the foundations of a library’s mission to provide access to materials to serve the public good. “</em></p></li>
-<li><p>In June 2021, the <a class="reference external" href="https://www.ifla.org">International Federation of Library Associations and Institutions</a> issued a <a class="reference external" href="https://www.ifla.org/publications/ifla-statement-on-controlled-digital-lending/">statement on Controlled Digital Lending</a> in support of CDL as a means of enabling libraries to fulfill their missions.</p></li>
-<li><p>The Internet Archive and Library Futures hosted a webinar on “Myth Busting Controlled Digital Lending” in Feburary, 2021. The <a class="reference external" href="http://blog.archive.org/2021/02/11/mythbusting-controlled-digital-lending-community-rallies-to-fight-misinformation-about-the-library-practice/">video is available online</a> and touches on many myths and realities of CDL.</p></li>
-<li><p>The <a class="reference external" href="https://sites.google.com/view/cdl-implementers">Controlled Digital Lending Implementers</a> is a forum <a class="reference external" href="https://sites.google.com/view/cdl-implementers/about-cdli?authuser=0">organized in April 2020</a> by a group of libraries and people interested in implementing controlled digital lending services. They host a regular forum and provide links to resources about CDL.</p></li>
-<li><p><a class="reference external" href="https://projectreshare.org/about/">Project ReShare</a> is a group of libraries, consortia, information organizations, and developers, with both commercial and non-commercial interests working on implementing new and open approaches to library resource sharing. The <a class="reference external" href="https://projectreshare.org/about/community-charter/">ReShare Community Charter</a> provides more details about the goals of the effort.</p></li>
-<li><p>The <a class="reference external" href="https://www.cdlproject.org">CDL Information &amp; Recommendation Cooperative (CIRC)</a> is a group of library professionals working to discover and evaluate potential tools and solutions for CDL.</p></li>
+<li><p>Each book is stored on the IIIF server as thousands of images, not as single PDFs files.</p></li>
+<li><p>The IIIF format is structured in such a way that individual pages are not stored as complete page images, but rather as multiple fragments of each page. The data received by the user’s browser consists of (many) fragments for any given page. Clever users may think of opening a browser’s web developer interface and inspecting the image content, but they will not find complete pages stored anywhere.</p></li>
+<li><p>Downloading is disabled in the Universal Viewer (the system used for rendering documents in user’s web browsers). There is no “download” button, and UV does not provide a way to “open the image” of a document page that users see in their browsers.</p></li>
+<li><p>The DIBS server acts as a traffic cop between the IIIF server and the user. All URLs to document images retrieved by the viewer go through the DIBS server, and the server checks a user’s loan status for every image retrieval. If the user’s loan period has ended (or they have not borrowed the requested item), the server refuses all network requests for image retrievals. Users can save the URLs to loaned books, but those URLs are useless outside of the limited periods of time when the user has an active loan in progress.</p></li>
+<li><p>Caltech has an <a class="reference external" href="https://deans.caltech.edu/HonorCode">Honor Code</a>, a code of ethics that guides the entire campus of students, staff, and faculty. At Caltech, we point out to users that attempting to circumvent the intellectual property protections built into DIBS is a violation of trust and therefore the honor code. Honor code violations are punishable.</p></li>
 </ul>
-<p>Caltech’s DIBS is not the only CDL implementation, nor is it the first. The following are others that the developers of DIBS are aware of:</p>
-<ul class="simple">
-<li><p>The <a class="reference external" href="https://openlibrary.org">Open Library</a> is an open library catalog and digital lending system implemented by the Internet Archive. The <a class="reference external" href="https://github.com/internetarchive/openlibrary/">source code is available from GitHub</a>.</p></li>
-<li><p>Princeton University Library has implemented CDL using <a class="reference external" href="https://github.com/pulibrary/figgy">Figgy</a>, an open-source digital repository application <a class="reference external" href="https://library.princeton.edu/digital-collections/digital-pul/technology">they developed</a>.  Like DIBS, it uses IIIF and the Universal Viewer.</p></li>
-<li><p>Fordham University developed <a class="reference external" href="https://github.com/Fordham-University-Libraries/G-CDL">G-CDL</a>, an open-source CDL system that uses Google Drive as its backend.</p></li>
-<li><p><a class="reference external" href="https://developers.exlibrisgroup.com/blog/controlled-digital-lending-with-existing-tools-in-the-toolbox-alma-digital/">Alma Digital</a> is a commercial repository system that’s part of <a class="reference external" href="https://exlibrisgroup.com/products/alma-library-services-platform/">ExLibris Alma</a>. It supports digital lending, including control on number of concurrent users, cooling-off periods, and more.</p></li>
-<li><p>DLSG’s <a class="reference external" href="https://www.dlsg.com">Directed Lending Solution</a> is another commercial system for digital lending.</p></li>
-</ul>
-<p>Articles about DIBS:</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://www.library.caltech.edu/DIBS-overview">How the Library’s Digital Borrowing Service (DIBS) Solved a Pandemic Problem</a> (Chris Daley, June 2021, Caltech)</p></li>
-</ul>
+<p>These measures represent a best-faith effort in DIBS to prevent copyright violations through DIBS itself. Ultimately, though, there is only so much we can do. DIBS cannot prevent users from (say) taking photos of screen images using their cell phones, just as physical libraries cannot prevent users from taking photos of physical books. Not even Amazon can prevent users of Kindle from doing the same – and if an entity with the resources of Amazon cannot prevent all methods of saving content, then we certainly cannot.</p>
+</section>
+<section id="does-dibs-use-iiif-authentication">
+<h2 id="does-dibs-use-iiif-authentication">Does DIBS use IIIF authentication?<a class="headerlink" href="#does-dibs-use-iiif-authentication" title="Permalink to this headline">¶</a></h2>
+<p>IIIF has an authentication protocol. We did not investigate its use in DIBS because the approach used to implement timed loans ended up encompassing all network communications and thereby obviated the need for separate authentication at the IIIF level. Not using the IIIF authentication component also has the benefit of simplifying what DIBS needs from IIIF, which in turn simplifies IIIF server configuration and management.</p>
+</section>
 </section>
 
 
@@ -428,7 +450,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
           
-            <a href="history.html" title="DIBS history"
+            <a href="general.html" title="General information"
                class="md-flex md-footer-nav__link md-footer-nav__link--prev"
                rel="prev">
               <div class="md-flex__cell md-flex__cell--shrink">
@@ -437,17 +459,17 @@
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> DIBS history </span>
+                      class="md-footer-nav__direction"> Previous </span> General information </span>
               </div>
             </a>
           
           
-            <a href="colophon.html" title="Colophon"
+            <a href="history.html" title="DIBS history"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> Colophon </span>
+                class="md-footer-nav__direction"> Next </span> DIBS history </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>

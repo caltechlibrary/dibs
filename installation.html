@@ -4,7 +4,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -47,17 +48,17 @@
   
   
     <title>Installation and configuration &#8212; Caltech DIBS</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/material.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/material.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="DIBS history" href="history.html" />
+    <link rel="next" title="General information" href="general.html" />
     <link rel="prev" title="System architecture" href="architecture.html" />
   
    
@@ -105,7 +106,7 @@
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
-    <form class="md-search__form" action="search.html" method="GET" name="search">
+    <form class="md-search__form" action="search.html" method="get" name="search">
       <input type="text" class="md-search__input" name="q" placeholder="Search"
              autocapitalize="off" autocomplete="off" spellcheck="false"
              data-md-component="query" data-md-state="active">
@@ -234,7 +235,7 @@
     <li class="md-nav__item">
     
     
-      <a href="usage.html#the-document-scanning-workflow" class="md-nav__link">The document scanning workflow</a>
+      <a href="usage.html#the-scanning-workflow" class="md-nav__link">The scanning workflow</a>
       
     
     </li></ul>
@@ -262,21 +263,21 @@
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#the-dibs-server-in-more-detail" class="md-nav__link">The DIBS server in more detail</a>
+      <a href="architecture.html#the-dibs-server-in-detail" class="md-nav__link">The DIBS server in detail</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#the-dibs-database-in-more-detail" class="md-nav__link">The DIBS database in more detail</a>
+      <a href="architecture.html#the-dibs-database-in-detail" class="md-nav__link">The DIBS database in detail</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#the-iiif-server-in-more-detail" class="md-nav__link">The IIIF server in more detail</a>
+      <a href="architecture.html#the-iiif-server-in-detail" class="md-nav__link">The IIIF server in detail</a>
       
     
     </li></ul>
@@ -336,22 +337,20 @@
     <li class="md-nav__item">
     
     
-      <a href="history.html" class="md-nav__link">DIBS history</a>
+      <a href="general.html" class="md-nav__link">General information</a>
       <ul class="md-nav__list"> 
     <li class="md-nav__item">
     
     
-      <a href="history.html#origin-story" class="md-nav__link">Origin story</a>
+      <a href="faqs.html" class="md-nav__link">FAQs about DIBS</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="history.html#version-history" class="md-nav__link">Version history</a>
+      <a href="history.html" class="md-nav__link">DIBS history</a>
       
-    
-    </li></ul>
     
     </li>
     <li class="md-nav__item">
@@ -359,6 +358,8 @@
     
       <a href="references.html" class="md-nav__link">References and resources</a>
       
+    
+    </li></ul>
     
     </li>
     <li class="md-nav__item">
@@ -390,16 +391,16 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  
+  <section class="tex2jax_ignore mathjax_ignore" id="installation-and-configuration">
 <h1 id="installation--page-root">Installation and configuration<a class="headerlink" href="#installation--page-root" title="Permalink to this headline">¶</a></h1>
-
+<section id="requirements">
 <h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <a class="reference external" href="#installation">installation step</a> steps.</p>
-
+<section id="requirements-to-run-a-demo">
 <h3 id="requirements-to-run-a-demo"><em>Requirements to run a demo</em><a class="headerlink" href="#requirements-to-run-a-demo" title="Permalink to this headline">¶</a></h3>
 <p>Although DIBS relies on the existence of a IIIF image server (and content to serve), for initial exploration and demonstration purposes, you don’t need to set up an IIIF server; you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of that.  Beyond this, you shouldn’t need anything else to run the DIBS demo. (If that’s not the case, please <a class="reference external" href="https://github.com/caltechlibrary/dibs/issues">report the problem</a>.)</p>
-
-
+</section>
+<section id="requirements-to-use-dibs-for-real-use-at-another-institution">
 <h3 id="requirements-to-use-dibs-for-real-use-at-another-institution"><em>Requirements to use DIBS for real use at another institution</em><a class="headerlink" href="#requirements-to-use-dibs-for-real-use-at-another-institution" title="Permalink to this headline">¶</a></h3>
 <p>In order to use DIBS at another institution (other than <a class="reference external" href="https://www.caltech.edu">Caltech</a>), certain additional things are needed.</p>
 <ol class="simple">
@@ -409,12 +410,12 @@
 <li><p>Modification to the metadata retrieval code. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item’s barcode, and lacking a universal scheme or ILS interface to do that, we had to hard code the access. Thankfully, this is limited to just a few lines in  <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">server.py</span></code></span>. We currently use TIND at Caltech, so unless you also use TIND, you will need to modify the TIND-specific lines in that file.</p></li>
 <li><p>Modification to the HTML templates to change the branding. The template files in <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dibs/templates</span></code></span> are specific to Caltech, and will need to be edited to suit another installation. (We are open to making the branding customization easier and would welcome a <a class="reference external" href="https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">pull request</a> for suitable changes!)</p></li>
 </ol>
-
-
-
+</section>
+</section>
+<section id="installation">
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>The current version of DIBS does not have a separate installation process; using DIBS currently means having to get the source code from this repository and running it from the source directory.</p>
-
+<section id="get-the-dibs-source-code">
 <h3 id="get-the-dibs-source-code">⓵ <em>Get the DIBS source code</em><a class="headerlink" href="#get-the-dibs-source-code" title="Permalink to this headline">¶</a></h3>
 <p>There are several ways of getting the latest release of the DIBS source code. Here is one of the simplest:</p>
 <ol class="simple">
@@ -425,8 +426,8 @@
 <li><p>Unzip the file.</p></li>
 </ol>
 <p>The result will be a subdirectory named <code class="docutils literal notranslate"><span class="pre">dibs</span></code>, which contains the source code.</p>
-
-
+</section>
+<section id="install-python-dependencies">
 <h3 id="install-python-dependencies">⓶ <em>Install Python dependencies</em><a class="headerlink" href="#install-python-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>Next, install the Python dependencies on your system or your virtual environment:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> dibs
@@ -434,36 +435,36 @@ python3 -m pip install -r requirements.txt
 </pre></div>
 </div>
 <p>That is all you should need to run a demo of DIBS on a Linux or macOS system.  As mentioned above, if you plan on deploying DIBS, you will also need to install and configure Apache, and an authentication system running in conjunction with the Apache server. Instructions for doing this vary too widely based on individual site requirements, and are outside the scope of this document.</p>
-
-
-
+</section>
+</section>
+<section id="configuration">
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
 <p>Certain characteristics of DIBS are configured using a file named <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>, which DIBS looks for in the <code class="docutils literal notranslate"><span class="pre">dibs</span></code> directory. The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file for DIBS.  Copy the file to <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
 </pre></div>
 </div>
 <p>and edit its contents in a text editor to suit your local installation. The comments explain what each of the variables does, but we elaborate on some of the variables below.</p>
-
+<section id="manifest-dir">
 <h3 id="manifest-dir"><code class="docutils literal notranslate"><span class="pre">MANIFEST_DIR</span></code><a class="headerlink" href="#manifest-dir" title="Permalink to this headline">¶</a></h3>
 <p>This variable sets the path to the directory where DIBS looks for manifest files.  Each file name should follow the pattern <i><code>N</code></i><code>-manifest.json</code>, where <i><code>N</code></i> is the item barcode.  The source distribution of DIBS comes with a sample manifest for illustration purposes.</p>
-
-
+</section>
+<section id="iiif-base-url">
 <h3 id="iiif-base-url"><code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code><a class="headerlink" href="#iiif-base-url" title="Permalink to this headline">¶</a></h3>
 <p>The value of this variable should have the form <code class="docutils literal notranslate"><span class="pre">https://youriiifserver.com/iiif/2</span></code>, and it should be the common base for IIIF URLs served by your IIIF server. (This means that the value should appear throughout your manifest files, as the common root of all page images.) This URL will not be shared with clients.  <strong>You should protect this URL from becoming public</strong> if you are making copyrighted works available via DIBS, because knowledge of this URL would allow anyone with familiarity with IIIF to bypass restrictions in DIBS and access your IIIF content directly.</p>
 <p>When DIBS reads a manifest, it replaces all instances of the value of <code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code> with a URL rooted at the DIBS server’s address, and this modified manifest is what it serves to clients. When a client requests page images via the translated URL, DIBS reverses the transformation to construct the IIIF URL from where it can get the page image, and then returns that data back to the client. The client never sees the real URL of the IIIF server or the images. The <em>controlled digital lending</em> aspect of DIBS is that it also refuses to return IIIF content unless the client has been authenticated and the user has borrowed the item through DIBS’ loan system.</p>
-
-
-
+</section>
+</section>
+<section id="management-of-staff-roles">
 <h2 id="management-of-staff-roles">Management of staff roles<a class="headerlink" href="#management-of-staff-roles" title="Permalink to this headline">¶</a></h2>
 <p>As mentioned above, DIBS assumes that another mechanism in the web server handles authentication of users. However, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and other users. DIBS employs a simple “people” table in its database, and a program, <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span>, that provides an interface for adding user role information to this table.</p>
 <p>To be able to manage DIBS content, you must create at least one user with a role of “library”. As an example, suppose you want to name your sample user <code class="docutils literal notranslate"><span class="pre">dibsuser</span></code>, then you could run the following command:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span><span class="s2">"dibsuser"</span>
 </pre></div>
 </div>
-
-
+</section>
+<section id="operation">
 <h2 id="operation">Operation<a class="headerlink" href="#operation" title="Permalink to this headline">¶</a></h2>
-
+<section id="running-dibs-locally-for-demonstration-and-development">
 <h3 id="running-dibs-locally-for-demonstration-and-development">Running DIBS locally for demonstration and development<a class="headerlink" href="#running-dibs-locally-for-demonstration-and-development" title="Permalink to this headline">¶</a></h3>
 <p>For demonstration purposes as well as development, it’s convenient to run DIBS on your local machine.  The following instructions describes how you can do this. Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">load-mock-data.py</span></code></span>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3 load-mock-data.py
@@ -479,13 +480,13 @@ python3 -m pip install -r requirements.txt
 </div>
 <p>By default it starts the server on <code class="docutils literal notranslate"><span class="pre">localhost</span></code> port 8080.  Using the <code class="docutils literal notranslate"><span class="pre">debug</span></code> run mode flag changes the behavior in various useful ways, such as to reload the source files automatically if any of them are edited, and to run <code class="docutils literal notranslate"><span class="pre">pdb</span></code> upon any exceptions.  (These would not be enabled in a production server.)</p>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">run-server</span></code> is <strong>not intended for use in production servers</strong>. For actual use, you must configure a web server such as <a class="reference external" href="https://httpd.apache.org">Apache</a> to host the system. DIBS comes with an <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code></span> and an example <span class="xref myst">Apache conf file</span> for this purpose to help you get started.</p>
-
-
+</section>
+<section id="running-dibs-in-production">
 <h3 id="running-dibs-in-production">Running DIBS in production<a class="headerlink" href="#running-dibs-in-production" title="Permalink to this headline">¶</a></h3>
 <p>DIBS comes with a sample Apache configuration file in <code class="docutils literal notranslate"><span class="pre">dibs.conf-example</span></code>. This file configures the web server and tells it to use <code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code> (also provided with DIBS) to define a WSGI application for DIBS.</p>
-
-
-
+</section>
+</section>
+</section>
 
 
           </article>
@@ -511,12 +512,12 @@ python3 -m pip install -r requirements.txt
             </a>
           
           
-            <a href="history.html" title="DIBS history"
+            <a href="general.html" title="General information"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> DIBS history </span>
+                class="md-footer-nav__direction"> Next </span> General information </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
@@ -534,10 +535,10 @@ python3 -m pip install -r requirements.txt
               
           </div>
             Last updated on
-              Jun 04, 2021.
+              Oct 01, 2021.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.4.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

@@ -18,7 +18,7 @@ DIBS itself does not do anything beyond distinguishing between regular users and
 
 The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:
 
-1. We expect that patrons will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of "all things available for digital loan". In part, this is because we expect patrons will be directly informed about the pages describing individual items, and in part because we anticipate that in the future we will add DIBS links directly to Caltech's [TIND](https://info.tind.io/ils)-based catalog.
+1. We expect that patrons will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of "all things available for digital loan". In part, this is because we expect patrons will be directly informed about the pages describing individual items, and in part because we anticipate that in the future we will add DIBS links directly to Caltech's [FOLIO](https://www.folio.org)-based catalog.
 
 2. We expect that library staff need to interact with the system in a substantially _different_ way: not to read the materials, but to manage the items in the database of digitized works and control loan parameters.  Thus, staff _do_ see a list of all items available through the system, but access to this list is limited to Library staff.
 
@@ -37,7 +37,7 @@ As mentioned above, patrons are assumed to be provided information about specifi
     <img src="_static/media/item-page.png">
 </figure>
 
-The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech's [TIND](https://info.tind.io/ILS) server based on the barcode used by Library staff when they add the item to DIBS. 
+The item description page provides basic information about a particular title available through DIBS, along with a button to request a digital loan.  The information about the title is derived from Caltech's [FOLIO](https://www.folio.org) server based on the barcode used by Library staff when they add the item to DIBS. 
 
 The text and button shown in the lower half of the page change based on the current availability of the item. The page will show a  <span class="button color-primary">Get loan</span> button if the item is available for loan at that time.  If the item is not available to the patron, the button changes to <span class="button color-not-available">Not available</span>, and in addition, the text above the button provides information about why it is not available and when it will be available again:
 
@@ -69,10 +69,10 @@ Overall, the workflow to add new items to DIBS is simple: staff scan books and s
 
 ### How users are identified as staff users
 
-As mentioned at the beginning of this page, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS's implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have basic privileges, so all that is needed is to tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called [`people-manager`](../people-manager) for that purpose.  For example, to add a user with identity `fakeuser2021@caltech.edu` as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:
+As mentioned at the beginning of this page, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS's implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that is needed is to tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called [`people-manager`](../admin/people-manager) for that purpose. (It's located in the [`admin`](.../admin) subdirectory of the DIBS source repository). For example, to add a user with identity `fakeuser2021@caltech.edu` as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:
 
 ```sh
-./people-manager add uname="fakeuser2021@caltech.edu" role="library"
+admin/people-manager add uname="fakeuser2021@caltech.edu" role="library"
 ```
 
 
@@ -85,7 +85,7 @@ Users with staff privileges see additional links in the upper-right hand corner 
 </figure>
 
 
-### The list page
+### Listing all items in DIBS
 
 Staff are redirected to the main entry point for staff, which is the list page located at `/list`:
 
@@ -96,9 +96,9 @@ Staff are redirected to the main entry point for staff, which is the list page l
 As its name implies, the list page provides a list all of the items known to DIBS (whether they are ready to be available for digital loans or not), and allows staff to add, edit, or remove items.  It is also the place where staff can get the link to be distributed to patrons to request loans.  In more detail:
 
 * **Barcode**: the barcode identifying the item in the Caltech Library.
-* **Title**: the title of the item. This is entered free-form in the DIBS entry form and does not have to match the actual title in Caltech's TIND database.
-* **Author**: the author of the item. This is entered free-form in the DIBS entry form and does not have to match the actual author in Caltech's TIND database.
-* **Available to loan?**: when unchecked, the item is not made available for digital loans. The presence of a checkbox in this column depends on the state of processing of the document in the scanning workflow; see the section on <a href="#the-document-scanning-workflow"><i>The document scanning workflow</i></a> below.
+* **Title**: the title of the item. This is entered free-form in the DIBS entry form and does not have to match the actual title in Caltech's FOLIO database.
+* **Author**: the author of the item. This is entered free-form in the DIBS entry form and does not have to match the actual author in Caltech's FOLIO database.
+* **Available to loan?**: when unchecked, the item is not made available for digital loans. The presence of a checkbox in this column depends on the state of processing of the document in the scanning workflow; see the section on <a href="#the-scanning-workflow"><i>The scanning workflow</i></a> below.
 * **Loan duration**: the duration of a loan. The system automatically closes the loan after the loan period and blocks the patron's access. (Patrons can also close loans early if they wish.)
 * **Copies for loans**: how many copies of the item are being made available for simultaneous borrowing?
 * <span class="button color-secondary">Copy link</span>: this copies to the user's clipboard a link to the item loan page.  This is what should be communicated to course instructors, so that they can pass on the URLs to their students.
@@ -119,10 +119,23 @@ If the user clicks the <span class="button color-primary">Add new item</span> bu
     <img src="_static/media/add-item-page.png">
 </figure>
 
-Here, information can be entered to describe a new item being made available for digital loans.  All of the information about a given item is based on the barcode; this barcode is used to look up the item in Caltech's TIND server, and the information extracted from TIND is used to populate the item view page discussed in the previous section.
+Here, information can be entered to describe a new item being made available for digital loans.  All of the information about a given item is based on the barcode; this barcode is used to look up the item in Caltech's FOLIO server, and the information extracted from FOLIO is used to populate the item view page discussed in the previous section.
 
 
-### Managing items
+### Editing existing items
+
+As mentioned above, every item on the list page has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.
+
+<figure>
+    <img src="_static/media/edit-item-page.png">
+</figure>
+
+As you might have guessed, staff can modify entries by editing these values and then clicking the  <span class="button color-primary">Save</span> button to save the changes to the database.
+
+The edit page also provides the ability to replace the item's cover image, or to delete it altogether. When there is an existing thumbnail image, the page shows the image with a small red trashcan icon overlaid on top of it in the bottom right corner. Clicking this trashcan icon will delete the existing thumbnail image file. On the other hand, clicking the "Choose file" button under the field heading _Replace cover image_ will allow to upload an image from their computer's hard drive; after clicking the <span class="button color-primary">Save</span> button, the uploaded image will become the new cover image for the item.
+
+
+### Managing the list of items
 
 If the user clicks the <span class="button color-danger">Manage item list</span> button, they are presented with the following screen:
 
@@ -130,10 +143,18 @@ If the user clicks the <span class="button color-danger">Manage item list</span>
     <img src="_static/media/manage-item-list-page.png">
 </figure>
 
-In the current version of DIBS, this page only implements one action. Clicking the <span class="button color-danger">Delist</span> button removes the entry for the item in the DIBS database. (This does not remove the manifest, scans, or other files, only the database entry.) In future versions of DIBS, the management page may include additional operations.
+In the current version of DIBS, this page only implements two actions. One of them is the ability to remove items from the DIBS database. Clicking the <span class="button color-danger">Delist</span> button next to an item in the list removes the entry for the item in the DIBS database. (However, it does _not_ remove the manifest, scans, or other files &ndash; it only affects the database entry.)
+
+The second feature on the management page is a button near the bottom named <span class="button color-info">Download item list</span>. This button allows staff to download the complete list of items known to DIBS, in [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
+
+<figure>
+    <img src="_static/media/manage-items-page-buttons.png">
+</figure>
+
+DIBS does not currently have a facility to upload lists of items in (e.g.) CSV format. A future enhancement may bring this capability. Currently, the only way to add items to DIBS is via the web interface, or command-line tools on the server.
 
 
-### The stats page
+### Viewing loan statistics
 
 DIBS offers some basic statistics on the _stats_ page:
 
@@ -149,8 +170,16 @@ Any items currently on loan will be shown in bold face in the list. In addition,
 
 * _Content retrievals_: this column contains a small bar graph for each item, expressing the number of page retrievals for that item within the past 15, 30, 45 and 60 minutes.  The counts change over time in a rolling fashion and are recomputed relative to the present time every time the page is refreshed. The values are intended to give a rough sense of the reader activity over the past hour for a given item.
 
+The bottom of the stats page also offers a button named <span class="button color-info">Download history</span>. When clicked, this will cause the complete loan history to be downloaded to the user's computer in [CSV](https://en.wikipedia.org/wiki/Comma-separated_values) format.
 
-## The document scanning workflow
+<figure>
+    <img src="_static/media/stats-page-buttons.png">
+</figure>
+
+Although it's true that the DIBS stats page offers only very basic loan statistics, the ability to download the loan history in CSV format means that users can generate additional statistics and visualizations based on the raw data. 
+
+
+## The scanning workflow
 
 Before a new item is to be made available through DIBS, it normally requires a workflow to be completed. This workflow involves steps such as scanning book pages, converting the scan images to a format suitable for IIIF, and more. DIBS supports this process in the following way.
 

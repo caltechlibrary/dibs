@@ -4,7 +4,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -47,10 +48,10 @@
   
   
     <title>Colophon &#8212; Caltech DIBS</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/material.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/material.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -104,7 +105,7 @@
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
-    <form class="md-search__form" action="search.html" method="GET" name="search">
+    <form class="md-search__form" action="search.html" method="get" name="search">
       <input type="text" class="md-search__input" name="q" placeholder="Search"
              autocapitalize="off" autocomplete="off" spellcheck="false"
              data-md-component="query" data-md-state="active">
@@ -233,7 +234,7 @@
     <li class="md-nav__item">
     
     
-      <a href="usage.html#the-document-scanning-workflow" class="md-nav__link">The document scanning workflow</a>
+      <a href="usage.html#the-scanning-workflow" class="md-nav__link">The scanning workflow</a>
       
     
     </li></ul>
@@ -261,21 +262,21 @@
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#the-dibs-server-in-more-detail" class="md-nav__link">The DIBS server in more detail</a>
+      <a href="architecture.html#the-dibs-server-in-detail" class="md-nav__link">The DIBS server in detail</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#the-dibs-database-in-more-detail" class="md-nav__link">The DIBS database in more detail</a>
+      <a href="architecture.html#the-dibs-database-in-detail" class="md-nav__link">The DIBS database in detail</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="architecture.html#the-iiif-server-in-more-detail" class="md-nav__link">The IIIF server in more detail</a>
+      <a href="architecture.html#the-iiif-server-in-detail" class="md-nav__link">The IIIF server in detail</a>
       
     
     </li></ul>
@@ -326,22 +327,20 @@
     <li class="md-nav__item">
     
     
-      <a href="history.html" class="md-nav__link">DIBS history</a>
+      <a href="general.html" class="md-nav__link">General information</a>
       <ul class="md-nav__list"> 
     <li class="md-nav__item">
     
     
-      <a href="history.html#origin-story" class="md-nav__link">Origin story</a>
+      <a href="faqs.html" class="md-nav__link">FAQs about DIBS</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="history.html#version-history" class="md-nav__link">Version history</a>
+      <a href="history.html" class="md-nav__link">DIBS history</a>
       
-    
-    </li></ul>
     
     </li>
     <li class="md-nav__item">
@@ -349,6 +348,8 @@
     
       <a href="references.html" class="md-nav__link">References and resources</a>
       
+    
+    </li></ul>
     
     </li>
     <li class="md-nav__item">
@@ -389,11 +390,19 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  
+  <section class="tex2jax_ignore mathjax_ignore" id="colophon">
 <h1 id="colophon--page-root">Colophon<a class="headerlink" href="#colophon--page-root" title="Permalink to this headline">¶</a></h1>
 <p>This documentation was written by <a class="reference external" href="https://www.cds.caltech.edu/~mhucka/">Michael Hucka</a>.</p>
 <p>The source files use <a class="reference external" href="https://myst-parser.readthedocs.io/en/latest/">MyST-flavored Markdown</a> and the <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html">Napoleon</a> extension to <a class="reference external" href="https://www.sphinx-doc.org">Sphinx</a>. A <a class="reference external" href="https://github.com/caltechlibrary/dibs/blob/main/.github/workflows/build-sphinx.yml">GitHub Action</a> takes care of creating the formatted version of the documentation and hosting it on <a class="reference external" href="http://GitHub.io">GitHub.io</a> at <a class="reference external" href="https://caltechlibrary.github.io/dibs">https://caltechlibrary.github.io/dibs</a>. The formatted output can also be produced manually using commands implemented in the <span class="xref myst">Makefile</span> located in the <a class="reference external" href="https://github.com/caltechlibrary/dibs/tree/main/docs"><code class="docutils literal notranslate"><span class="pre">docs/</span></code></a> subdirectory of the DIBS source code repository.</p>
-
+<p>The DIBS <a class="reference external" href="architecture.html#architectural-overview">architecture diagram</a> was created using <a class="reference external" href="https://www.omnigroup.com/omnigraffle">OmniGraffle Pro 7.18</a> on a macOS 10.4.6 computer. The SVG output from OmniGraffle Pro was post-processed using <a class="reference external" href="https://github.com/phauer/svg-buddy">svg-buddy version 1.2.3</a> to embed the fonts into the SVG file. The architecture diagram contains, embedded within it, icons obtained from the Noun Project.  All are licensed under the Creative Commons <a class="reference external" href="https://creativecommons.org/licenses/by/3.0/">CC-BY 3.0</a> license. Here are acknowledgments for the original artwork contained in the architecture diagram:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://thenounproject.com/search/?q=book&amp;i=2289902">Book icon</a> by <a class="reference external" href="https://thenounproject.com/vigorn/">vigorn</a></p></li>
+<li><p><a class="reference external" href="https://thenounproject.com/search/?q=book+scanner&amp;i=3635943">Book scanner icon</a> by <a class="reference external" href="https://thenounproject.com/a.panasovsky/">Oleksandr Panasovskyi</a></p></li>
+<li><p><a class="reference external" href="https://thenounproject.com/search/?q=laptop&amp;i=3563257">Laptop icon</a> by <a class="reference external" href="https://thenounproject.com/heyrabbit/">Hey Rabbit</a></p></li>
+<li><p><a class="reference external" href="https://thenounproject.com/search/?q=tablet&amp;i=205015">Tablet icon</a> by <a class="reference external" href="https://thenounproject.com/iconmood/">Emel Çelik</a></p></li>
+</ul>
+<p>The <a class="reference external" href="https://thenounproject.com/term/book-waiting/1531542/">vector artwork</a> used as the icon for DIBS – a book with a clock on it – was created by <a class="reference external" href="https://thenounproject.com/roywj/">Royyan Wijaya</a> from the Noun Project.  It is licensed under the Creative Commons <a class="reference external" href="https://creativecommons.org/licenses/by/3.0/">CC-BY 3.0</a> license.</p>
+</section>
 
 
           </article>
@@ -431,10 +440,10 @@
               
           </div>
             Last updated on
-              Jun 04, 2021.
+              Oct 01, 2021.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 3.5.4.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
