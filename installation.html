@@ -411,7 +411,7 @@
   click node2 "/installation.html#installation-and-configuration" _self;
   click node3 "/installation.html#setting-up-dibs-for-a-local-test" _self;
   click node4 "/installation.html#setting-up-dibs-for-real-use" _self;
-  click node5 "/installation.html#running-dibs-in-test-debug-mode" _self;
+  click node5 "/installation.html#running-dibs-locally" _self;
   click node6 "/installation.html#running-dibs-in-production" _self;
         </div></div>
 <section id="preliminary-requirements">
@@ -486,33 +486,33 @@
 <h3 id="configuring-dibs-for-a-local-test">Configuring DIBS for a local test<a class="headerlink" href="#configuring-dibs-for-a-local-test" title="Permalink to this headline">¶</a></h3>
 <p>DIBS comes with an example IIIF manifest that uses a public IIIF server operated by the <a class="reference external" href="https://wellcomelibrary.org">Wellcome Library</a>. (Thank you, Wellcome Library!) This makes it possible to run a local copy of DIBS without much effort. Please follow the simple steps below.</p>
 <section id="create-the-settings-ini-file">
-<h4 id="create-the-settings-ini-file">① <em>Create the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file</em><a class="headerlink" href="#create-the-settings-ini-file" title="Permalink to this headline">¶</a></h4>
+<h4 id="create-the-settings-ini-file">① Create the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-the-settings-ini-file" title="Permalink to this headline">¶</a></h4>
 <p>The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file. For a test run of DIBS, it is enough to simply copy the example to create <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
 </pre></div>
 </div>
 </section>
 <section id="load-a-sample-book-into-dibs">
-<h4 id="load-a-sample-book-into-dibs">⓶ <em>Load a sample book into DIBS</em><a class="headerlink" href="#load-a-sample-book-into-dibs" title="Permalink to this headline">¶</a></h4>
+<h4 id="load-a-sample-book-into-dibs">⓶ Load a sample book into DIBS<a class="headerlink" href="#load-a-sample-book-into-dibs" title="Permalink to this headline">¶</a></h4>
 <p>Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">load-mock-data</span></code></span> located in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory of the DIBS source code tree.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/load-mock-data
 </pre></div>
 </div>
 </section>
-<section id="load-a-sample-user-into-dibs">
-<h4 id="load-a-sample-user-into-dibs">⓷ <em>Load a sample user into DIBS</em><a class="headerlink" href="#load-a-sample-user-into-dibs" title="Permalink to this headline">¶</a></h4>
+<section id="set-a-sample-users-role">
+<h4 id="set-a-sample-users-role">⓷ Set a sample user’s role<a class="headerlink" href="#set-a-sample-users-role" title="Permalink to this headline">¶</a></h4>
 <p>The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of “library”.  Suppose you want to name your sample user “dibsuser”, then you could run the following command:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span><span class="s2">"dibsuser"</span>
 </pre></div>
 </div>
-<p>After this, proceed to the section on <a class="reference external" href="#running-dibs-in-test-debug-mode">Running DIBS in test mode</a> below.</p>
+<p>After this, proceed to the section on <a class="reference external" href="#running-dibs-locally">Running DIBS locally</a> below.</p>
 </section>
 </section>
 <section id="configuring-dibs-for-real-use">
 <h3 id="configuring-dibs-for-real-use">Configuring DIBS for real use<a class="headerlink" href="#configuring-dibs-for-real-use" title="Permalink to this headline">¶</a></h3>
 <p>Setting up an actual server in an institutional setting will require a little bit more configuration work, as well as a IIIF server that you can use.</p>
 <section id="create-and-edit-the-settings-ini-file">
-<h4 id="create-and-edit-the-settings-ini-file">①  <em>Create and edit the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file</em><a class="headerlink" href="#create-and-edit-the-settings-ini-file" title="Permalink to this headline">¶</a></h4>
+<h4 id="create-and-edit-the-settings-ini-file">①  Create and edit the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-and-edit-the-settings-ini-file" title="Permalink to this headline">¶</a></h4>
 <p>Certain characteristics are configured using a file named <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>, which DIBS looks for in the <code class="docutils literal notranslate"><span class="pre">dibs</span></code> directory. The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file for DIBS.  Copy the file to <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
 </pre></div>
@@ -529,7 +529,7 @@
 </ul>
 </section>
 <section id="set-permissions-on-critical-directories">
-<h4 id="set-permissions-on-critical-directories">⓶ <em>Set permissions on critical directories</em><a class="headerlink" href="#set-permissions-on-critical-directories" title="Permalink to this headline">¶</a></h4>
+<h4 id="set-permissions-on-critical-directories">⓶ Set permissions on critical directories<a class="headerlink" href="#set-permissions-on-critical-directories" title="Permalink to this headline">¶</a></h4>
 <p>A server process such as Apache normally runs with a user identity and group identity that is different from real user accounts on the server computer. This means that the files and directories for DIBS, when they are installed, may have different ownership and permissions than are needed by the server process. To make sure that the DIBS server process can write to the directories it needs, DIBS comes with a small program to set permissions on certain critical DIBS files and directories. Run this program as follows, replacing <code class="docutils literal notranslate"><span class="pre">PROCESS_USER</span></code> and <code class="docutils literal notranslate"><span class="pre">PROCESS_GROUP</span></code> with the actual server process user and group (and note the use of <code class="docutils literal notranslate"><span class="pre">sudo</span></code> here):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo admin/set-server-permissions --owner PROCESS_USER --group PROCESS_GROUP
 </pre></div>
@@ -537,7 +537,7 @@
 <p>(For example, on our servers, <code class="docutils literal notranslate"><span class="pre">PROCESS_USER</span></code> and <code class="docutils literal notranslate"><span class="pre">PROCESS_GROUP</span></code> are both <code class="docutils literal notranslate"><span class="pre">www-data</span></code>, so for our installation, the command uses the arguments <code class="docutils literal notranslate"><span class="pre">--owner</span> <span class="pre">www-data</span> <span class="pre">--group</span> <span class="pre">www-data</span></code>.)</p>
 </section>
 <section id="add-staff-users">
-<h4 id="add-staff-users">⓷ <em>Add staff users</em><a class="headerlink" href="#add-staff-users" title="Permalink to this headline">¶</a></h4>
+<h4 id="add-staff-users">⓷ Add staff users<a class="headerlink" href="#add-staff-users" title="Permalink to this headline">¶</a></h4>
 <p>As mentioned above, DIBS assumes that another mechanism in the web server handles authentication of users. However, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, create at least one user with a role of <code class="docutils literal notranslate"><span class="pre">library</span></code>. The user name must be given as the name used by people in the authentication system (e.g., the SSO sign-on login name, if you use SSO). For example, to make <code class="docutils literal notranslate"><span class="pre">fakeuser2021@someuniversity.edu</span></code> be recognized as having staff privileges, you would run the following command:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@someuniversity.edu</span>
 </pre></div>

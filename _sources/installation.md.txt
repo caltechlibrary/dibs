@@ -25,7 +25,7 @@ flowchart TD;
   click node2 "/installation.html#installation-and-configuration" _self;
   click node3 "/installation.html#setting-up-dibs-for-a-local-test" _self;
   click node4 "/installation.html#setting-up-dibs-for-real-use" _self;
-  click node5 "/installation.html#running-dibs-in-test-debug-mode" _self;
+  click node5 "/installation.html#running-dibs-locally" _self;
   click node6 "/installation.html#running-dibs-in-production" _self;
 ```
 
@@ -112,7 +112,7 @@ If you are new to DIBS and all you want to do is test drive it, you can follow t
 
 DIBS comes with an example IIIF manifest that uses a public IIIF server operated by the [Wellcome Library](https://wellcomelibrary.org). (Thank you, Wellcome Library!) This makes it possible to run a local copy of DIBS without much effort. Please follow the simple steps below.
 
-#### ① _Create the `settings.ini` file_
+#### ① Create the `settings.ini` file
 
 The file `settings.ini-example` is a sample configuration file. For a test run of DIBS, it is enough to simply copy the example to create `settings.ini`:
 
@@ -120,7 +120,7 @@ The file `settings.ini-example` is a sample configuration file. For a test run o
 cp settings.ini-example settings.ini
 ```
 
-#### ⓶ _Load a sample book into DIBS_
+#### ⓶ Load a sample book into DIBS
 
 Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script [`load-mock-data`](admin/load-mock-data) located in the `admin` subdirectory of the DIBS source code tree.
 
@@ -128,7 +128,7 @@ Prior to starting the DIBS server for the first time, for testing purposes, you 
 admin/load-mock-data
 ```
 
-#### ⓷ _Load a sample user into DIBS_
+#### ⓷ Set a sample user's role
 
 The program [`people-manager`](admin/people-manager) in the `admin` subdirectory is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of "library".  Suppose you want to name your sample user "dibsuser", then you could run the following command:
 
@@ -137,7 +137,7 @@ admin/people-manager add role="library" uname="dibsuser"
 ```
 
 
-After this, proceed to the section on [Running DIBS in test mode](#running-dibs-in-test-debug-mode) below.
+After this, proceed to the section on [Running DIBS locally](#running-dibs-locally) below.
 
 
 ### Configuring DIBS for real use
@@ -145,7 +145,7 @@ After this, proceed to the section on [Running DIBS in test mode](#running-dibs-
 Setting up an actual server in an institutional setting will require a little bit more configuration work, as well as a IIIF server that you can use.
 
 
-#### ①  _Create and edit the `settings.ini` file_
+#### ①  Create and edit the `settings.ini` file
 
 Certain characteristics are configured using a file named `settings.ini`, which DIBS looks for in the `dibs` directory. The file `settings.ini-example` is a sample configuration file for DIBS.  Copy the file to `settings.ini`,
 
@@ -164,7 +164,7 @@ then edit its contents in a text editor to suit your local installation. The com
 * `RUN_MODE`: This variable takes one of two values: `normal` or `verbose`. In `verbose` mode, DIBS logs debug-level information in the server logs (or the standard output, if being run using the `run-server` program included with DIBS). Patron names/email addresses are anonymized, so there is relatively little privacy risk in running in `verbose` mode in production. It can be very useful to use `verbose` mode while learning how DIBS works, even if you later decide to switch to `normal`.
 
 
-#### ⓶ _Set permissions on critical directories_
+#### ⓶ Set permissions on critical directories
 
 A server process such as Apache normally runs with a user identity and group identity that is different from real user accounts on the server computer. This means that the files and directories for DIBS, when they are installed, may have different ownership and permissions than are needed by the server process. To make sure that the DIBS server process can write to the directories it needs, DIBS comes with a small program to set permissions on certain critical DIBS files and directories. Run this program as follows, replacing `PROCESS_USER` and `PROCESS_GROUP` with the actual server process user and group (and note the use of `sudo` here):
 
@@ -175,7 +175,7 @@ sudo admin/set-server-permissions --owner PROCESS_USER --group PROCESS_GROUP
 (For example, on our servers, `PROCESS_USER` and `PROCESS_GROUP` are both `www-data`, so for our installation, the command uses the arguments `--owner www-data --group www-data`.)
 
 
-#### ⓷ _Add staff users_
+#### ⓷ Add staff users
 
 As mentioned above, DIBS assumes that another mechanism in the web server handles authentication of users. However, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program [`people-manager`](admin/people-manager) in the `admin` subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, create at least one user with a role of `library`. The user name must be given as the name used by people in the authentication system (e.g., the SSO sign-on login name, if you use SSO). For example, to make `fakeuser2021@someuniversity.edu` be recognized as having staff privileges, you would run the following command:
 
