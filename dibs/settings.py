@@ -154,18 +154,21 @@ class DIBSAutoConfig(AutoConfig):
 config = DIBSAutoConfig()
 
 def resolved_path(path, must_exist = False):
-    '''Resolve "path" intelligently relative to the settings file.
+    '''Resolve "path" intelligently relative to settings.ini if possible.
 
     The algorithm followed by this function goes like this:
 
-      1. if "path" is absolute, return it as-is
-      2. else, if path exists as-is, return it
+      1. if "path" exists as given, return it (as an absolute path)
+      2. else, if "path" is absolute:
+          if must_exist is False, return "path"
+          else return None
       3. else, try the following alternatives in turn:
-         a) prepend directory of caller's file; if result exists, return it
-         b) prepend parent dir of caller's file; if result exists, return it
-         c) prepend path of settings.ini; if result exists, return it
-      4. else, if must_exist == False (the default), return "path" unchanged
-      5. else, return None
+          a) prepend directory of caller's file; if result exists, return it
+          b) prepend parent dir of caller's file; if result exists, return it
+          c) prepend path of settings.ini; if result exists, return it
+      4. else,
+          if must_exist is False, return "path" relative to settings.ini
+          else, return None
 
     "Caller's file" refers to the file containing the code of the caller of
     this function.  Note the file's path is not necessarily the same as the
@@ -173,12 +176,20 @@ def resolved_path(path, must_exist = False):
     make sense relative to some static on-disk landmarks like the settings
     file, because parent processes may change directories or be rooted in
     different locations than where the application is installed.
+
+    The path returned is always made an absolute path.
     '''
 
     if not path:
         return None
-    if isabs(path) or exists(path):
+    if exists(path):
         return abspath(path)
+    if isabs(path):
+        # Path is absolute and we already know it doesn't exist.
+        if not must_exist:
+            return path
+        else:
+            return None
 
     # Try looking in the directory of the calling function, or its parent dir.
     frame = inspect.stack()[1]
@@ -193,10 +204,11 @@ def resolved_path(path, must_exist = False):
         if exists(path_in_parent_dir_of_caller):
             return path_in_parent_dir_of_caller
 
-    # Try looking in the directory where settings.ini was found.
+    # Try looking in the directory where settings.ini was found.  This is also
+    # our final answer if we don't require the path to exist.
     path_in_settings_dir = abspath(join(dirname(config.config_file), path))
-    if exists(path_in_settings_dir):
+    if exists(path_in_settings_dir) or not must_exist:
         return path_in_settings_dir
-
-    # Give up.
-    return path if not must_exist else None
+    else:
+        # Give up.
+        return None
