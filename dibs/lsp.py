@@ -18,6 +18,7 @@ from   os.path import realpath, dirname, join, exists, isabs
 from   pokapi import Folio
 import re
 from   sidetrack import log
+from   textwrap import wrap
 from   topi import Tind
 
 from .settings import config, resolved_path
@@ -251,4 +252,8 @@ def probable_issn(value):
 
 
 def truncated_title(title):
-    return re.split(':|;|\.', title)[0].strip()
+    modified_title = re.split(':|;|\.', title)[0].strip()
+    if len(modified_title) > 60:
+        return wrap(modified_title, 60)[0] + ' ...'
+    else:
+        return modified_title
