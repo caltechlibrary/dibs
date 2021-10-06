@@ -45,7 +45,7 @@ else:
         dibs_root = parent
     else:
         print(f'‼️  File "requirements.txt" not found in {here} or {parent}.')
-        print('‼️  Unexpected directory organization -- unable to proceed.')
+        print(f'‼️  Unexpected directory organization -- unable to proceed.')
         exit(1)
 
 with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
@@ -54,6 +54,19 @@ with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
     except pkg_resources.DistributionNotFound as ex:
         print('‼️  Not all Python dependencies have been installed.')
         print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
+        exit(1)
+    except pkg_resources.VersionConflict as ex:
+        if hasattr(ex, 'dist'):
+            name = ex.dist.project_name
+            got  = ex.dist.version
+            if len(ex.req.specs) == 1:  # Most common case.
+                want = ''.join(ex.req.specs[0])
+            else:
+                want = '(' + ' and '.join([''.join(spec) for spec in ex.req.specs]) + ')'
+            print(f'‼️  Encountered conflicting Python package requirements.')
+            print(f'‼️  Need {name} version {want} but version {got} is installed.')
+        else:
+            print('‼️  Conflicting Python package requirement: '+ str(ex))
         exit(1)
 
 settings_file = join(dibs_root, 'settings.ini')
