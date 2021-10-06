@@ -104,7 +104,7 @@
 
         </div>
 
-        <div class="loan-info">
+        <div class="loan-info mt-5 pt-5">
           <p class="mx-auto text-center w-75 mt-2">
             <span id="available">This item is currently not available
               to you for a digital loan.</span>
@@ -115,11 +115,11 @@
           <div class="col-md-3 mx-auto text-center">
             <form action="{{base_url}}/loan" method="POST"
                   onSubmit="return confirm('This will start your {{item.duration}} '
-                                           + 'hour loan period immediately. Proceed?'
+                                           + 'hour loan period immediately.'
                                            + '\n\nReminder: closing the viewer window '
                                            + 'will not end the loan  – please use the '
-                                           + 'End Loan button when you are ready. '
-                                           + 'You may also open the viewer in other '
+                                           + 'End Loan button when you are ready.'
+                                           + '\n\nYou may open the viewer in other '
                                            + 'devices during the loan period.');">
               <input type="hidden" name="barcode" value="{{item.barcode}}"/>
               <input id="loan-button" class="d-none btn btn-block mx-auto mb-3"
