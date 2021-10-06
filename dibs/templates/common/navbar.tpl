@@ -32,7 +32,9 @@
         <li><a href="{{base_url}}/stats">Loan statistics</a></li>
       %end
       <li><a href="{{help_url}}">Help</a></li>
+      %if feedback_url:
       <li><a href="{{feedback_url}}">Give feedback</a></li>
+      %end
       <li><a href="{{base_url}}/about">About</a></li>
     </ul>
   </div><!-- /.navbar-collapse -->
