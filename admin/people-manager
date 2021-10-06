@@ -177,10 +177,13 @@ if __name__ == '__main__':
         pm.list_people(kv)
     elif verb == 'add':
         pm.add_people(kv)
+        print(f'Added new person {kv["uname"]}.')
     elif verb == 'update':
         pm.update_people(kv)
+        print(f'Updated entry for {kv["uname"]}.')
     elif verb == 'remove':
         pm.remove_people(kv)
+        print(f'Removed {kv["uname"]}.')
     elif verb in [ 'h', 'help', '-h', '--help', '-help']:
         usage(app_name, 0)
     else:
