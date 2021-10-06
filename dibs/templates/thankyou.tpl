@@ -18,7 +18,7 @@
           If you experienced any problems or have any suggestions for
           this service, please let us know!
           %if feedback_url:
-          You can use our easy <a href="{{feedback_url}}">
+          You can use our simple <a href="{{feedback_url}}">
           <nobr>feedback form</nobr></a>.
           %end
         </p>
