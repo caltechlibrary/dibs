@@ -38,20 +38,20 @@ if generate_models(database) == {}:
 
 # This next one is a demo item.  We provide a manifest in ./manifests/ and
 # it references an open copy of the book at the Wellcome Collection in the UK.
-if not Item.get_or_none(Item.barcode == '350470000363458'):
-    Item.create(barcode    = '350470000363458',
-                item_id    = '514607',
-                item_page  = 'https://caltech.tind.io/record/514607',
-                title      = 'The Biocrats',
-                author     = 'Gerald Leach',
-                year       = '1970',
-                publisher  = 'McGraw-Hill',
-                edition    = 'First',
+if not Item.get_or_none(Item.barcode == '350470000180226'):
+    Item.create(barcode    = '350470000180226',
+                item_id    = '2b2e4a55-7d82-4a97-9ed3-62e48b10699c',
+                item_page  = 'https://search.ebscohost.com/login.aspx?direct=true&site=eds-live&scope=site&authtype=ip,guest&profid=eds&custid=s8984125&groupid=main&db=cat08655a&AN=clc.2b2e4a55.7d82.4a97.9ed3.62e48b10699c',
+                title      = 'Bibliographical history of electricity & magnetism, chronologically arranged',
+                author     = 'Mottelay, Paul Fleury',
+                year       = '1922',
+                publisher  = 'C. Griffin & company limited',
+                edition    = '',
                 num_copies = 1,
-                duration   = 6,
+                duration   = 3,
                 notes      = ('This is just a random book chosen because it was'
-                              + ' the only title we could find in both a public'
-                              + ' external IIIF server and in our Caltech catalog'),
+                              + ' a title we could find in both an external'
+                              + ' public IIIF server and our Caltech catalog.'),
                 ready      = True)
 
 if not Person.select().exists():
