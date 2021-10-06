@@ -880,13 +880,22 @@ def serve_uv_img_files(filepath):
 @dibs.route('/view/lib/<filepath:path>')
 @dibs.route('/viewer/lib/<filepath:path>')
 def serve_uv_lib_files(filepath):
-    log(f'serving static uv file /viewer/lib/{filepath}')
-    return static_file(filepath, root = 'viewer/lib')
+    # Don't return config files from UV because they would override ours.
+    # Otherwise, return the requested file.
+    if filepath.endswith('.config.json'):
+        log(f'serving file /dibs/static/uv-config.json')
+        return static_file('uv-config.json', root = 'dibs/static')
+    else:
+        log(f'serving static uv file /viewer/lib/{filepath}')
+        return static_file(filepath, root = 'viewer/lib')
 
 
 @dibs.route('/view/themes/<filepath:path>')
 @dibs.route('/viewer/themes/<filepath:path>')
 def serve_uv_themes_files(filepath):
+    # Intercept requests for undefined themes and reroute them to a default.
+    if filepath.startswith('undefined'):
+        filepath = filepath.replace('undefined', 'uv-en-gb-theme')
     log(f'serving static uv file /viewer/themes/{filepath}')
     return static_file(filepath, root = 'viewer/themes')
 
