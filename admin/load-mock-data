@@ -55,5 +55,5 @@ if not Item.get_or_none(Item.barcode == '350470000180226'):
                 ready      = True)
 
 if not Person.select().exists():
-    text = 'Now use admin/people-manager to add staff users'
+    text = 'Now use admin/people-manager to add library staff users'
     print(Panel(text, style = 'dark_orange', width = len(text) + 4))
