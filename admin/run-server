@@ -67,6 +67,7 @@ with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
             print(f'‼️  Need {name} version {want} but version {got} is installed.')
         else:
             print('‼️  Conflicting Python package requirement: '+ str(ex))
+        print(f'‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
         exit(1)
 
 settings_file = join(dibs_root, 'settings.ini')
