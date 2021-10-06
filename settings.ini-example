@@ -85,7 +85,7 @@ RELOAN_WAIT_TIME = 30
 
 # Feedback form URL.  This is used on the thank-you page and in the hamburger
 # menu in the upper right of every page (it's link for "Give feedback").
-FEEDBACK_URL = https://unconfigured.server/your/feedback/form
+FEEDBACK_URL =
 
 # Help page URL.  This is used in the hamburger menu in the upper right of
 # every page (it's link for "Help").

@@ -251,4 +251,4 @@ def probable_issn(value):
 
 
 def truncated_title(title):
-    return re.split(':|;', title)[0].strip()
+    return re.split(':|;|\.', title)[0].strip()
