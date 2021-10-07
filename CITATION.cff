@@ -29,5 +29,5 @@ keywords:
 message: "If you use this software, please cite it using these metadata."
 repository-code: "https://github.com/caltechlibrary/dibs"
 title: "DIBS: An implementation of Controlled Digital Lending"
-version: "0.4.1"
+version: "0.5.0"
 ...
