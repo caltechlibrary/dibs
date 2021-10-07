@@ -4,7 +4,7 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.8+-brightgreen.svg?style=flat-square)](https://www.python.org/downloads/release/python-380/)
-[![Latest release](https://img.shields.io/github/v/release/caltechlibrary/dibs.svg?style=flat-square&color=b44e88)](https://github.com/caltechlibrary/dibs/releases)
+[![Latest release](https://img.shields.io/github/v/release/caltechlibrary/dibs.svg?style=flat-square&color=b44e88&label=Latest%20release)](https://github.com/caltechlibrary/dibs/releases)
 [![DOI](https://img.shields.io/badge/dynamic/json.svg?label=DOI&style=flat-square&color=lightgray&query=$.metadata.doi&uri=https://data.caltech.edu/api/record/1988)](https://data.caltech.edu/records/1988)
 
 ## Table of contents
@@ -14,7 +14,7 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 * [Installation and operation](#installation-and-operation)
 * [General information](#general-information)
 * [Known issues and limitations](#known-issues-and-limitations)
-* [Getting help](#getting-help)
+* [Getting help](#getting-help-and-support)
 * [Contributing](#contributing)
 * [License](#license)
 * [Authors and history](#authors-and-history)
@@ -42,17 +42,17 @@ The core DIBS server is written in [Python 3](https://www.python.org) and makes 
 
 ### _Requirements to run a demo_
 
-Although DIBS relies on the existence of a IIIF image server (and content to serve), for initial exploration and demonstration purposes, you don't need to set up a IIIF server; you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) as an example of that.  Beyond this, you shouldn't need anything else to run the DIBS demo. (If that's not the case, please [report the problem](https://github.com/caltechlibrary/dibs/issues).)
+Although DIBS relies on the existence of a IIIF image server (and content to serve), for initial exploration and demonstration purposes, you don't need to set up a IIIF server; you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) to illustrate that.  You shouldn't need anything else to run the DIBS demo on your local computer.
 
 
 ### _Requirements to use DIBS for real use at another institution_
 
-In order to use DIBS at another institution (other than [Caltech](https://www.caltech.edu)), certain additional things are needed. 
+In order to run a multiuser DIBS server at another institution, certain additional things are needed. 
 
 1. A **IIIF server**. At Caltech, we use a [serverless component](https://github.com/nulib/serverless-iiif) running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). If you're looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.
 2. A **web server** to host DIBS.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.14, Mojave). DIBS comes with a [WSGI adapter file](https://github.com/caltechlibrary/dibs/blob/main/adapter.wsgi) and [sample config file for Apache](https://github.com/caltechlibrary/dibs/blob/main/dibs.conf-example), but it should be possible to run DIBS in other WSGI-compliant servers.
-3. An **authentication layer**. DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach DIBS pages are allowed to view content. DIBS itself only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system, but it is possible to use other schemes. For demonstration purposes, [Apache Basic Authentication](https://httpd.apache.org/docs/2.4/howto/auth.html) can also be used. The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
-4. The use of [FOLIO](https://www.folio.org) LSP or [TIND](https://tind.io) ILS for retrieving metadata based on barcodes or unique identifiers, _or_  a willingness to extend the existing metadata retrieval layer in DIBS. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item's barcode, and lacking a universal scheme to do that, we had to write our own interface layer. The use of another LSP will require extending this interface layer. (Thankfully, the [code is short](https://github.com/caltechlibrary/dibs/blob/main/dibs/lsp.py) and the amount of metadata required is small.)
+3. An **authentication layer**. DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach DIBS pages are allowed to view content. DIBS itself only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system, but it is possible to use other schemes, including [Apache Basic Authentication](https://httpd.apache.org/docs/2.4/howto/auth.html). The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
+4. The use of [FOLIO](https://www.folio.org) LSP or [TIND](https://tind.io) ILS for retrieving metadata based on barcodes or unique identifiers, _or_  a willingness to extend the existing metadata retrieval layer in DIBS.  The interface for adding items to DIBS requires looking up metadata based on an item's barcode, and lacking a universal scheme to do that, we had to write our own interface layer. The use of another LSP will require extending this interface layer. (Thankfully, the [code is short](https://github.com/caltechlibrary/dibs/blob/main/dibs/lsp.py) and the amount of metadata required is small.)
 5. Modification to the HTML templates to change the branding. The template files in [`dibs/templates`](https://github.com/caltechlibrary/dibs/blob/main/dibs/templates) are specific to Caltech, and will need to be edited to suit another installation. (We are open to making the branding customization easier and would welcome a [pull request](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) for suitable changes!)
 
 
@@ -146,6 +146,7 @@ DIBS makes use of numerous open-source packages, without which it would have bee
 * [Bootstrap Table](https://bootstrap-table.com) &ndash; extended table framework for Bootstrap
 * [Boltons](https://github.com/mahmoud/boltons/) &ndash; package of miscellaneous Python utilities
 * [Bottle](https://bottlepy.org) &ndash; a lightweight WSGI micro web framework for Python
+* [Bottle-fdsend](https://pypi.org/project/bottle-fdsend/) &ndash; Bottle plugin to enable sending content from in-memory files
 * [Clipboard.js](https://clipboardjs.com) &ndash; JavaScript library for copying text to the clipboard
 * [Coif](https://github.com/caltechlibrary/coif) &ndash; a Python package for finding book cover images
 * [CommonPy](https://github.com/caltechlibrary/commonpy) &ndash; a collection of commonly-useful Python functions
