@@ -6,9 +6,9 @@ This version brings significant changes and new features, but it is also not ful
 
 ### Breaking changes
 
-* The database object models have changed, and **previous DIBS database files will not work without migration**. Migrating a pre-version-0.5 database file is not difficult and instructions for migrating existing databases are provided.
+* The database object models have changed, and **previous DIBS database files will not work without migration**. Migrating a pre-version-0.5 database file is not difficult and instructions for migrating existing databases are provided in the [wiki for the project on GitHub](https://github.com/caltechlibrary/dibs/wiki).
 * The **format of the `settings.ini` file has changed**, as part of the DIBS enhancement to support FOLIO. The old format used a single section called `[settings]`; the new format replaces `[settings]` with a section called `[dibs]`, and adds additional sections for TIND and FOLIO. If you attempt to run the new version of DIBS without updating `settings.ini`, DIBS will either exit with an explicit error or fail to find variable values (which will be a clue that the problem is the changes to the settings file).
-* Some of the HTML template pages have been changed. If you previously installed DIBS and modified the templates to adapt them to your site, it will be necessary to inspect the new templates and figure out how to make the corresponding changes in the new version of DIBS. A normal `diff` between the old and new `dibs/templates`  directories will help, and the changes are limited to only some files (and then mostly to the logic and not the layout components).
+* Some of the **HTML template pages have changed**. If you previously installed DIBS and modified the templates to adapt them to your site, it will be necessary to inspect the new templates and figure out how to make the corresponding changes in the new version of DIBS. A normal `diff` between the old and new `dibs/templates`  directories will help, and the changes are limited to only some files (and then mostly to the logic and not the layout components).
 
 
 ### New features
