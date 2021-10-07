@@ -37,8 +37,8 @@
       %from os import stat
       %from os.path import join, exists
 
-      <div class="container main-container">
-        <div class="row pt-3 mx-auto item-info-row">
+      <div class="container-fluid main-container">
+        <div class="row d-flex justify-content-center w-100 pt-3 my-3 mx-auto item-info-row">
 
           <div class="col-sm-9 col-xs-12 item-info my-auto">
             <table class="item-info-table table table-sm">
@@ -101,48 +101,50 @@
                  src="{{base_url}}/static/missing-thumbnail.svg">
             %end
           </div>
-
         </div>
 
-        <div class="loan-info mt-5 pt-5">
-          <p class="mx-auto text-center w-75 mt-2">
-            <span id="available">This item is currently not available
-              to you for a digital loan.</span>
-            <span id="explanation"></span>
-            <span id="when"></span>
-          </p>
+        <div class="row d-flex justify-content-center">
+          <div class="loan-info mt-5">
+            <p class="mx-auto text-center w-100 pt-3">
+              <span id="available">This item is currently not available
+                to you for a digital loan.</span>
+              <span id="explanation"></span>
+              <span id="when"></span>
+            </p>
 
-          <div class="col-md-3 mx-auto text-center">
-            <form action="{{base_url}}/loan" method="POST"
-                  onSubmit="return confirm('This will start your {{item.duration}} '
+            <div class="mx-auto text-center w-100">
+              <form action="{{base_url}}/loan" method="POST"
+                    onSubmit="return confirm('This will start your {{item.duration}} '
                                            + 'hour loan period immediately.'
                                            + '\n\nReminder: closing the viewer window '
                                            + 'will not end the loan  – please use the '
                                            + 'End Loan button when you are ready.'
                                            + '\n\nYou may open the viewer in other '
                                            + 'devices during the loan period.');">
-              <input type="hidden" name="barcode" value="{{item.barcode}}"/>
-              <input id="loan-button" class="d-none btn btn-block mx-auto mb-3"
-                     type="submit" value="Not Available" disabled />
-            </form>
-          </div>
+                <input type="hidden" name="barcode" value="{{item.barcode}}"/>
+                <input id="loan-button"
+                       class="d-none btn mb-3"
+                       type="submit" value="Not Available" disabled />
+              </form>
+            </div>
 
-          <p id="no-javascript" class="delayed alert alert-danger mx-auto text-center w-75">
-            Note: JavaScript is disabled in your browser.
-            This site cannot function properly without JavaScript.
-            Please enable JavaScript and reload this page.
-          </p>
-          <p id="no-cookies" class="d-none delayed alert alert-danger mx-auto text-center w-75">
-            Note: web cookies are blocked by your browser.
-            The document viewer cannot function properly without cookies.
-            Please allow cookies from this site in your browser, and reload this page.
-          </p>
-          <p class="mx-auto text-center w-75">
-            Loan duration: {{item.duration}} hours
-          </p>
-          <p id="refresh-tip" class="d-none mx-auto text-center w-75 text-info">
-            This page will refresh automatically.
-          </p>
+            <p id="no-javascript" class="delayed alert alert-danger mx-auto text-center w-75">
+              Note: JavaScript is disabled in your browser.
+              This site cannot function properly without JavaScript.
+              Please enable JavaScript and reload this page.
+            </p>
+            <p id="no-cookies" class="d-none delayed alert alert-danger mx-auto text-center w-75">
+              Note: web cookies are blocked by your browser.
+              The document viewer cannot function properly without cookies.
+              Please allow cookies from this site in your browser, and reload this page.
+            </p>
+            <p class="mx-auto text-center w-75">
+              Loan duration: {{item.duration}} hours
+            </p>
+            <p id="refresh-tip" class="d-none mx-auto text-center w-75 text-info">
+              This page will refresh automatically.
+            </p>
+          </div>
         </div>
 
         <script>
