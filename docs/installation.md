@@ -9,7 +9,7 @@ flowchart TD;
   node1(Preliminary requirements)-->node2(Installation);
 
   node2-->node3(Configuring DIBS for a local test);
-  node2-->node4(Configuring DIBS for real use);
+  node2-->node4(Configuring DIBS for multiuser use);
 
   node3-->node5(Running DIBS in test/debug mode);
   node4-->node6(Running DIBS in production);
@@ -23,8 +23,8 @@ flowchart TD;
 
   click node1 "/dibs/installation.html#preliminary-requirements" _self;
   click node2 "/dibs/installation.html#installation" _self;
-  click node3 "/dibs/installation.html#setting-up-dibs-for-a-local-test" _self;
-  click node4 "/dibs/installation.html#setting-up-dibs-for-real-use" _self;
+  click node3 "/dibs/installation.html#configuring-dibs-for-a-local-test" _self;
+  click node4 "/dibs/installation.html#configuring-dibs-for-multiuser-use" _self;
   click node5 "/dibs/installation.html#running-dibs-locally" _self;
   click node6 "/dibs/installation.html#running-dibs-in-production" _self;
 ```
@@ -105,7 +105,7 @@ python3 -m pip install -r requirements.txt
 
 ## Configuration
 
-If you are new to DIBS and all you want to do is test drive it, you can follow the instructions in the first subsection below. If you are setting up DIBS for real use, you can [jump ahead to the second subsection](#setting-up-dibs-for-real-use).
+If you are new to DIBS and all you want to do is test drive it, you can follow the instructions in the first subsection below. If you are setting up DIBS for multiuser use, you can [jump ahead to the second subsection](#configuring-dibs-for-real-use).
 
 
 ### Configuring DIBS for a local test
@@ -140,7 +140,7 @@ admin/people-manager add role="library" uname="dibsuser"
 After this, proceed to the section on [Running DIBS locally](#running-dibs-locally) below.
 
 
-### Configuring DIBS for real use
+### Configuring DIBS for multiuser use
 
 Setting up an actual server in an institutional setting will require a little bit more configuration work, as well as a IIIF server that you can use.
 
@@ -164,24 +164,60 @@ then edit its contents in a text editor to suit your local installation. The com
 * `RUN_MODE`: This variable takes one of two values: `normal` or `verbose`. In `verbose` mode, DIBS logs debug-level information in the server logs (or the standard output, if being run using the `run-server` program included with DIBS). Patron names/email addresses are anonymized, so there is relatively little privacy risk in running in `verbose` mode in production. It can be very useful to use `verbose` mode while learning how DIBS works, even if you later decide to switch to `normal`.
 
 
-#### ⓶ Set permissions on critical directories
+#### ⓶ Set up authentication for DIBS
 
-A server process such as Apache normally runs with a user identity and group identity that is different from real user accounts on the server computer. This means that the files and directories for DIBS, when they are installed, may have different ownership and permissions than are needed by the server process. To make sure that the DIBS server process can write to the directories it needs, DIBS comes with a small program to set permissions on certain critical DIBS files and directories. Run this program as follows, replacing `PROCESS_USER` and `PROCESS_GROUP` with the actual server process user and group (and note the use of `sudo` here):
+The details of this step depend on your particular institutional requirements and local system configuration. If you are using a single sign-on system such as Shibboleth, you may need to do configuration and other steps in your server environment, but it is beyond the scope of this document to explain how that can be done.
+
+If you are setting up a server behind a firewall (perhaps for local development of a new DIBS site, or within some other closed environment) and want to use [basic authentication in Apache](https://httpd.apache.org/docs/2.4/howto/auth.html), take the following steps:
+
+* Uncomment the variables `HTPASSWD` and `PASSWORD_FILE` in your `settings.ini` file, and set them to point to the `htpasswd` program on your system and the file you will use to store encrypted passwords, respectively.
+* Enable `AuthType Basic` in your Apache configuration. The location of the configuration file depends on the way Apache is set up on your system; as an example, on our internal development server running on Ubuntu the location is `/etc/apache2/sites-available/apps-le-ssl.conf`. Here's an example of what the configuration can look like:
+    ```
+    # DIBS comes with an adapter.wsgi file ready to use.
+    WSGIScriptAlias /dibs /var/www/sites/dibs/adapter.wsgi
+    <Location /dibs>
+            AuthType Basic
+            AuthName "DIBS"
+            AuthBasicProvider file
+            AuthUserFile "/var/www/sites/dibs/password.txt"
+            require valid-user
+    </Location>
+    ```
+
+The value of the `AuthUserFile` **must match the path in** `PASSWORD_FILE` used in the DIBS `settings.ini` file.  
+
+
+#### ⓷ Add staff users
+
+As mentioned above, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program [`people-manager`](admin/people-manager) in the `admin` subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, **create at least one user with a role of `library`**.
+
+If you are using Apache basic auth, `people-manager` will also allow you to add entries (with passwords) to the password file indicated by the `PASSWORD_FILE` variable in DIBS' `settings.ini` file.
+
+The user name must be given as the name used by people in the authentication system (e.g., the SSO sign-on login name, if you use SSO). For example, to make `fakeuser2021@someuniversity.edu` be recognized as having staff privileges, you would run the following command:
+
+```sh
+admin/people-manager add role="library" uname="fakeuser2021@someuniversity.edu
+```
+
+
+#### ④ Set permissions on important DIBS directories
+
+A server process such as Apache normally runs with a user identity and group identity that is different from real user accounts on the server computer. This means that the files and directories for DIBS, when they are installed by a user on the computer, may have different ownership and permissions than are needed by the web server process. To make sure that the web server process can read and write to the directories, DIBS comes with a small program to set permissions on certain critical DIBS files and directories. Run this program as shown below, replacing `PROCESS_USER` and `PROCESS_GROUP` with the actual server process user and group (and note the use of `sudo` here):
 
 ```sh
 sudo admin/set-server-permissions --owner PROCESS_USER --group PROCESS_GROUP
 ```
 
-(For example, on our servers, `PROCESS_USER` and `PROCESS_GROUP` are both `www-data`, so for our installation, the command uses the arguments `--owner www-data --group www-data`.)
+For example, on our servers, `PROCESS_USER` and `PROCESS_GROUP` are both `www-data`, so for our installation, the command uses the arguments `--owner www-data --group www-data`.
+
+Note: make sure to **run `set-server-permissions` after running `people-manager`** for the first time, so that `set-server-permissions` can set the permissions on the DIBS database file. 
 
 
-#### ⓷ Add staff users
+#### ⑤ Set up your IIIF server
 
-As mentioned above, DIBS assumes that another mechanism in the web server handles authentication of users. However, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program [`people-manager`](admin/people-manager) in the `admin` subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, create at least one user with a role of `library`. The user name must be given as the name used by people in the authentication system (e.g., the SSO sign-on login name, if you use SSO). For example, to make `fakeuser2021@someuniversity.edu` be recognized as having staff privileges, you would run the following command:
+A fully functioning DIBS installation requires a IIIF server where you put content to be served via DIBS. A final step is thus to set up a IIIF server for DIBS' use. The instructions for doing so depend on the specific server used &ndash; please refer to the relevant documentation for whatever IIIF server you are using.
 
-```sh
-admin/people-manager add role="library" uname="fakeuser2021@someuniversity.edu
-```
+Once a IIIF server is running, set the value of the `IIIF_BASE_URL` variable in the file `settings.ini` appropriately.
 
 
 ## Running DIBS
@@ -191,7 +227,7 @@ You can run DIBS on your local computer for initial exploration and testing, as 
 
 ### Running DIBS locally
 
-For local experimentation and development, the script [`run-server`](run-server) can be used to start a built-in web server on your computer. Since a local environment will not have the authentication layer normally assumed by DIBS, you need to tell the built-in web server who to pretend to be. For example, if you used `people-manager` to add a user named "dibsuser" as [described in the section on configuration](#setting-up-dibs-for-a-local-test), then you can start the local server in debug mode like this:
+For local experimentation and development, the script [`run-server`](run-server) can be used to start a built-in web server on your computer. Since a local environment will not have the authentication layer normally assumed by DIBS, you need to tell the built-in web server who to pretend to be. For example, if you used `people-manager` to add a user named "dibsuser" as [described in the section on configuration](#configuring-dibs-for-a-local-test), then you can start the local server in debug mode like this:
 
 ```sh
 admin/run-server --mode debug --debug-user dibsuser
@@ -212,6 +248,6 @@ Using the `debug` run mode changes the behavior of `run-server` in various usefu
 
 ### Running DIBS in production
 
-Note that `run-server` is **not intended for use in production servers**. For actual use, you must configure a web server such as [Apache](https://httpd.apache.org) to host the system. DIBS comes with an [`adapter.wsgi`](adapter.wsgi) and an example [Apache conf file](dibs.conf-example) for this purpose to help you get started.
+Note that `run-server` is **not intended for use in production servers**. For actual use, you must configure a web server such as [Apache](https://httpd.apache.org) to host the system. DIBS comes with an [`adapter.wsgi`](adapter.wsgi) and an example [Apache conf file](dibs.conf-example) for this purpose to help you get started. The latter file configures the web server and tells it to use `adapter.wsgi` (also provided with DIBS) to define a WSGI application for DIBS.
 
-DIBS also comes with a sample Apache configuration file in `dibs.conf-example`. This file configures the web server and tells it to use `adapter.wsgi` (also provided with DIBS) to define a WSGI application for DIBS.
+To start DIBS in this environment, you most likely need to restart the Apache process on your system. 
