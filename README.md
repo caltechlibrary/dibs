@@ -60,6 +60,8 @@ In order to run a multiuser DIBS server at another institution, certain addition
 
 Please refer to the [detailed installation instructions in the DIBS manual](https://caltechlibrary.github.io/dibs/installation.html).
 
+**Backwards compatibility warning**: If you previously used a DIBS version before version 0.5, you will not be able to run 0.5 without migrating the database and doing other work.  Some migration help can be found in the [DIBS wiki on GitHub](https://github.com/caltechlibrary/dibs/wiki).  The version 0.5 release brings significant changes and new features, but it is also not fully backward compatible with previous versions. We apologize for breaking backward compatibility; we lack the resources to do it differently or create a proper migration engine.
+
 
 ## General information
 
