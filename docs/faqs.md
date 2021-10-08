@@ -19,6 +19,11 @@ No. The IIIF format is image-based, and document pages are stored in a pyramidal
 In principle, one could apply optical character recognition (OCR) to document pages and make the text available _somehow_. We (the Caltech developers of DIBS) did not pursue this, in part because we feared it would put DIBS on shakier legal grounds than the strict CDL approach we followed. Instead, we focused on producing a library book-lending experience in electronic form.
 
 
+## Is the viewer compatible with screen readers?
+
+The [Universal Viewer](http://universalviewer.io) used in DIBS for presenting documents is (to our knowledge) unfortunately not compatible with screen readers at this time. We are not aware of any IIIF viewers that are compatible. The IIIF community has made some efforts in this direction but there does not seem to be a solution at this time.
+
+
 ## Can patrons schedule loans?
 
 There is currently no scheduling system in DIBS. Users need to visit the information page for a given book when they are interested in borrowing it.

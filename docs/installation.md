@@ -217,6 +217,8 @@ Note: make sure to **run `set-server-permissions` after running `people-manager`
 
 A fully functioning DIBS installation requires a IIIF server where you put content to be served via DIBS. A final step is thus to set up a IIIF server for DIBS' use. The instructions for doing so depend on the specific server used &ndash; please refer to the relevant documentation for whatever IIIF server you are using.
 
+Once a IIIF server is running, set the value of the `IIIF_BASE_URL` variable in the file `settings.ini` appropriately.
+
 
 ## Running DIBS
 
