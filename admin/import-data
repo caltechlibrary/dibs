@@ -19,7 +19,7 @@ from   playhouse.dataset import DataSet
 import sys
 from   sys import exit
 import zipfile
-from   zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED
+from   zipfile import ZipFile
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
@@ -31,10 +31,12 @@ from   dibs.data_models import Item, Loan, History, Person
 # .............................................................................
 
 def import_items(data, database, quiet):
+    if not quiet:
+        print('Importing items ...')
     added = 0
     for entry in data:
         if Item.get_or_none(Item.barcode == entry['barcode']):
-            print(f'Skipping duplicate item with barcode {entry["barcode"]}')
+            print(f'  Skipping duplicate item with barcode {entry["barcode"]}')
             continue
         if 'tind_id' in data:
             # Version 0.4 database format.
@@ -82,14 +84,21 @@ def import_items(data, database, quiet):
 # concern to justify the time to implement this edge case.
 
 def import_loans(data, database, quiet):
+    if not quiet:
+        print('Importing loans ...')
     added = 0
     for entry in data:
         if 'itemid' in data:
             # Version 0.4 database format.
-            print(f'Skipping loans (can\'t import loans from pre-version 0.5).')
+            print(f'  Skipping loans (can\'t import from pre-version 0.5).')
             return
         else:
             # Version 0.5 database format.
+            if Loan.get_or_none(Loan.item == entry['item'],
+                                Loan.user == entry['user'],
+                                Loan.start_time == entry['start_time']):
+                print(f'  Skipping duplicate loan entry for {entry["item"]}')
+                continue
             Loan.create(item        = entry['item'],
                         state       = entry['state'],
                         user        = entry['user'],
@@ -102,8 +111,14 @@ def import_loans(data, database, quiet):
 
 
 def import_history(data, database, quiet):
+    if not quiet:
+        print('Importing history ...')
     added = 0
     for entry in data:
+        if History.get_or_none(History.what == entry['what'],
+                               History.start_time == entry['start_time']):
+            print(f'  Skipping duplicate history entry for {entry["what"]}')
+            continue
         History.create(type       = entry['type'],
                        what       = entry['what'],
                        start_time = entry['start_time'],
@@ -114,10 +129,12 @@ def import_history(data, database, quiet):
 
 
 def import_persons(data, database, quiet):
+    if not quiet:
+        print('Importing persons ...')
     added = 0
     for entry in data:
         if Person.get_or_none(Person.uname == entry['uname']):
-            print(f'Skipping duplicate person with uname {entry["uname"]}')
+            print(f'  Skipping duplicate person with uname {entry["uname"]}')
             continue
         Person.create(uname        = entry['uname'],
                       role         = entry['role'],
