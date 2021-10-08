@@ -104,7 +104,7 @@
         </div>
 
         <div class="row d-flex justify-content-center">
-          <div class="loan-info mt-5">
+          <div class="loan-info mt-5 px-3">
             <p class="mx-auto text-center w-100 pt-3">
               <span id="available">This item is currently not available
                 to you for a digital loan.</span>

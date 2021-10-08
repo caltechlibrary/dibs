@@ -11,20 +11,15 @@ try:
 except:
     sys.path.append('..')
 
-from dibs.settings import config, dibs_path
-
-def test_config_path():
-    here = dirname(__file__)
-    parent = join(here, os.path.pardir)
-    assert abspath(dirname(config.config_file)) == abspath(parent)
+from dibs.settings import config, resolved_path
 
 def test_relative_to_caller():
     me = __file__
-    d = dibs_path('tests/test_dibs_path.py')
+    d = resolved_path('tests/test_resolved_path.py')
     assert d == abspath(me)
 
 def test_relative_to_settings():
     here = dirname(__file__)
     other = abspath(join(here, os.pardir, 'admin/run-server'))
-    d = dibs_path('admin/run-server')
+    d = resolved_path('admin/run-server')
     assert d == other
