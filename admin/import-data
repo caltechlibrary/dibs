@@ -254,6 +254,9 @@ Command-line options summary
     for file_name in zip_file.namelist():
         for table_name, import_data in IMPORT_HANDLERS.items():
             if table_name in file_name:
+                if zip_file.getinfo(file_name).file_size < 50:
+                    print(f'File {file_name} inside ZIP archive has no data')
+                    continue
                 with zip_file.open(file_name) as contents:
                     data = json.load(contents)
                     import_data(data, database, quiet)
