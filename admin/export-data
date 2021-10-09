@@ -30,24 +30,25 @@ from   dibs.settings import config, resolved_path
 @plac.annotations(
     base_name   = ('name files using base name "B" (e.g., B-loan.csv)',     'option', 'b'),
     database    = ('use database file "D" (default: look in settings.ini)', 'option', 'd'),
-    format      = ('write output in csv or json format (default: csv)',     'option', 'f'),
+    format      = ('write output in csv or json format (default: json)',    'option', 'f'),
     list_tables = ('list the tables in the database, and exit',             'flag',   'l'),
     output_dir  = ('write the output to directory "O"',                     'option', 'o'),
     overwrite   = ('force overwriting destination files if they exist',     'flag',   'O'),
     quiet       = ('only print important messages while working',           'flag',   'q'),
     tables      = ('names of tables to write out (default: "all")',         'option', 't'),
-    zip         = ('put output files into a single uncompressed ZIP file',  'flag',   'z'),
+    no_zip      = ('do not put output files into a single ZIP file',        'flag',   'Z'),
 )
 
 def main(base_name = 'B', database = 'D', format = 'F', list_tables = False,
          output_dir = 'O', overwrite  = False, quiet = False, tables = 'T',
-         zip = False):
+         no_zip = False):
     '''Export the DIBS database to CSV or JSON files.
 
 This program reads a DIBS database file and, based on the options given on
 the command line, writes one or more files containing the contents of one or
 more tables in the DIBS database.  Each table holds a different kind of model
-instance, such as Item, History, etc.
+instance, such as Item, History, etc.  The default action is to gather the
+files and produce one ZIP archive as the output.
 
 Options
 ~~~~~~~
@@ -68,13 +69,13 @@ For example:
 
     export-data --tables item,history
 
-Option --format can be used to select the output format.  The default is CSV
-(comma-separated values).  The available alternatives are JSON and CSV.
+Option --format can be used to select the output format.  The default is JSON.
+The available alternatives are JSON and CSV (comma-separated values).
 
 Option --base-name can be used to set the base name for the files that are
 written.  For example, the following command,
 
-    export-data --base-name saved-2021-09-17 --format json
+    export-data --base-name saved-2021-09-17
 
 will cause the program to write files named as follows:
 
@@ -86,11 +87,14 @@ will cause the program to write files named as follows:
 Option --output-dir sets the destination directory where files will be
 written.  If not provided, the files are written to the current directory.
 
-Option --zip will cause the program to collect the output files into a single
-ZIP archive file instead of leaving the output as separate files.  The ZIP
-will be uncompressed for greater ZIP program compatibility and because it tends
-to be safer that compressed formats, for archiving purposes.  The option
---base-name is applied to the name of the ZIP archive as well.
+By default, all of the files will be gathered into a single ZIP archive file
+instead of leaving the output as separate files.  The ZIP will be uncompressed
+for greater ZIP program compatibility and because it tends to be safer that
+compressed formats, for archiving purposes.  The option --base-name is applied
+to the name of the ZIP archive as well.
+
+If the option --no-zip is given, then the ZIP file is not produced, and instead
+the separate files are left as output.
 
 This program will not overwrite existing files unless the option --overwrite
 is also given.  (I.e., if "saved-2021-09-17-item.json" already exists, this
@@ -115,6 +119,7 @@ Command-line options summary
     # Initial setup -----------------------------------------------------------
 
     name = sys.argv[0]
+    zip  = not no_zip                   # To avoid double negatives in the code
     hint = '(Use -h for help.)'
 
     db_file = config('DATABASE_FILE') if database == 'D' else database
