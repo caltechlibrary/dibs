@@ -141,7 +141,7 @@ Command-line options summary
             inform(f'  {table}')
         exit(0)
 
-    format = 'csv' if format == 'F' else format.lower()
+    format = 'json' if format == 'F' else format.lower()
     if format not in ['json', 'csv']:
         print(f'‼️  Unsupported output format {format}. {hint}')
         exit(1)
