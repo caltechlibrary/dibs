@@ -94,12 +94,12 @@ def import_loans(data, database, quiet):
             return
         else:
             # Version 0.5 database format.
-            if Loan.get_or_none(Loan.item == entry['item'],
+            if Loan.get_or_none(Loan.item == entry['barcode'],
                                 Loan.user == entry['user'],
                                 Loan.start_time == entry['start_time']):
-                print(f'  Skipping duplicate loan entry for {entry["item"]}')
+                print(f'  Skipping duplicate loan entry for {entry["barcode"]}')
                 continue
-            Loan.create(item        = entry['item'],
+            Loan.create(item        = entry['barcode'],
                         state       = entry['state'],
                         user        = entry['user'],
                         start_time  = entry['start_time'],
