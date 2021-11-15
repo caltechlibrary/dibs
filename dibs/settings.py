@@ -161,7 +161,7 @@ def resolved_path(path, must_exist = False):
       1. if "path" exists as given, return it (as an absolute path)
       2. else, if "path" is absolute:
           if must_exist is False, return "path"
-          else return None
+          else return None (because it didn't exist when tested by step #1)
       3. else, try the following alternatives in turn:
           a) prepend directory of caller's file; if result exists, return it
           b) prepend parent dir of caller's file; if result exists, return it
