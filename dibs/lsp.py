@@ -15,6 +15,7 @@ from   commonpy.network_utils import net
 from   dataclasses import dataclass
 import os
 from   os.path import realpath, dirname, join, exists, isabs
+import pokapi
 from   pokapi import Folio
 import re
 from   sidetrack import log
@@ -125,14 +126,25 @@ class FolioInterface(LSPInterface):
 
 
     def record(self, barcode = None):
-        '''Return a record for the item identified by the "barcode".'''
+        '''Return a record for the item identified by the "barcode".
+
+        This will return None if no such entry can be found in FOLIO.
+        It will raise a ValueError exception if an entry is found but lacks
+        the 3 most basic metadata fields of title, author and year.
+        '''
         try:
             rec = self._folio.record(barcode = barcode)
-            if not all([rec.title, rec.author, rec.year]):
-                raise ValueError('Got incomplete record for {barcode} in {self.url}')
-            log(f'record for {barcode} has id {rec.id}')
-            thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
-            # Don't overwrite existing images.
+        except pokapi.exceptions.NotFound:
+            log(f'could not find {barcode} in FOLIO')
+            return None
+
+        log(f'record for {barcode} has id {rec.id}')
+        if not all([rec.title, rec.author, rec.year]):
+            log(f'record for {barcode} in FOLIO lacks minimum metadata')
+            raise ValueError('Got incomplete record for {barcode} in {self.url}')
+
+        thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
+        try:
             if not exists(thumbnail_file):
                 if rec.isbn_issn:
                     save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
@@ -140,20 +152,19 @@ class FolioInterface(LSPInterface):
                     log(f"{rec.id} has no ISBN/ISSN => can't get a thumbnail")
             else:
                 log(f'thumbnail image already exists in {thumbnail_file}')
-            url = self._page_tmpl.format(accession_number = rec.accession_number)
-            return LSPRecord(id        = rec.id,
-                             url       = url,
-                             title     = truncated_title(rec.title),
-                             author    = rec.author,
-                             publisher = rec.publisher,
-                             year      = rec.year,
-                             edition   = rec.edition,
-                             isbn_issn = rec.isbn_issn)
-        except ValueError:
-            raise
         except Exception as ex:
-            log(f'could not find {barcode} in FOLIO: {str(ex)}')
-            raise ValueError('No such barcode {barcode} in {self.url}')
+            # Log it but otherwise we won't fail just because of this.
+            log(f'failed to save thumbnail for {barcode}: ' + str(ex))
+
+        url = self._page_tmpl.format(accession_number = rec.accession_number)
+        return LSPRecord(id        = rec.id,
+                         url       = url,
+                         title     = truncated_title(rec.title),
+                         author    = rec.author,
+                         year      = rec.year,
+                         publisher = rec.publisher or '',
+                         edition   = rec.edition or '',
+                         isbn_issn = rec.isbn_issn or '')
 
 
 class UnconfiguredInterface(LSPInterface):
