@@ -1,5 +1,10 @@
 #  Change log for DIBS<img width="70em" align="right" src="https://github.com/caltechlibrary/dibs/raw/main/docs/_static/media//dibs-icon.png">
 
+## ★ Version 0.5.1 ★
+
+This version fixes an issue wherein trying to add an item that had an incomplete records in the LSP would result in a misleading error about the item being not found at all.
+
+
 ## ★ Version 0.5.0 ★
 
 This version brings significant changes and new features, but it is also not fully backward compatible with previous versions. We apologize for breaking backward compatibility; we lack the resources to do it differently or create a proper migration engine. If you installed a previous version of DIBS, updating to this new version will, unfortunately, require some work (but hopefully not too much!).
