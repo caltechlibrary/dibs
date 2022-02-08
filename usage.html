@@ -400,7 +400,7 @@
 <section id="front-page">
 <h2 id="front-page">Front page<a class="headerlink" href="#front-page" title="Permalink to this headline">¶</a></h2>
 <p>The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>We expect that patrons will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of “all things available for digital loan”. In part, this is because we expect patrons will be directly informed about the pages describing individual items, and in part because we anticipate that in the future we will add DIBS links directly to Caltech’s <a class="reference external" href="https://www.folio.org">FOLIO</a>-based catalog.</p></li>
 <li><p>We expect that library staff need to interact with the system in a <em>different</em> way: not to read the materials, but to manage the items in the database of digitized works and control loan parameters.  Thus, staff <em>do</em> see a list of all items available through the system, but access to this list is limited to Library staff.</p></li>
 </ol>
@@ -523,7 +523,7 @@
 <section id="the-scanning-workflow">
 <h2 id="the-scanning-workflow">The scanning workflow<a class="headerlink" href="#the-scanning-workflow" title="Permalink to this headline">¶</a></h2>
 <p>Before a new item is to be made available through DIBS, it normally requires a workflow to be completed. This workflow involves steps such as scanning book pages, converting the scan images to a format suitable for IIIF, and more. DIBS supports this process in the following way.</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>After an entry is created for a new item as <a href="#adding-new-items">described above</a>, if no IIIF manifest exists yet for that entry, then DIBS shows a button named <span class="button color-primary">Process</span> in the column titled <strong>Available to loan?</strong> as shown in the figure below.  When this button is pressed, an indicator file is created in a location where the document processing workflow looks for it.  Staff do not have to press this button immediately: they can add an entry to DIBS and continue scanning pages until they are done.  Once scanning is completed and the item is ready to be converted to IIIF format, then that is when staff should press the  <span class="button color-primary">Process</span> button.  <figure><img alt="_images/process-button.png" src="_images/process-button.png"/></figure></p></li>
 <li><p>Once it is initiated, the workflow runs independently and externally to DIBS and takes time to complete. Until the workflow completes or is interrupted, DIBS shows an hourglass icon in the  <strong>Available to loan?</strong> column of the list page:  <figure><img alt="_images/item-processing-hourglass.png" src="_images/item-processing-hourglass.png"/></figure></p></li>
 <li><p>If an error occurred during processing, the hourglass icon will change to a stop sign, as shown in the figure below. The error symbol is for notification purposes only; DIBS does not provide an interface to take additional actions, because the underlying problem is expected to be detected by the workflow system and appropriate measures are assumed to be taken automatically outside of DIBS.  <figure><img alt="_images/item-processing-problem.png" src="_images/item-processing-problem.png"/></figure></p></li>
@@ -579,10 +579,10 @@
               
           </div>
             Last updated on
-              Nov 23, 2021.
+              Feb 08, 2022.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
