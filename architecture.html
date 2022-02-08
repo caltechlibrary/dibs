@@ -426,7 +426,7 @@
 <section id="authentication-access-control">
 <h3 id="authentication-access-control">Authentication/access control<a class="headerlink" href="#authentication-access-control" title="Permalink to this headline">¶</a></h3>
 <p>There are 2 layers of access control in DIBS when deployed in a web server:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>can an incoming user access any part of DIBS at all?</p></li>
 <li><p>can the user access staff pages, or only patron pages?</p></li>
 </ol>
@@ -624,10 +624,10 @@
 <h2 id="the-iiif-server-in-detail">The IIIF server in detail<a class="headerlink" href="#the-iiif-server-in-detail" title="Permalink to this headline">¶</a></h2>
 <p>DIBS does not include a IIIF server. Instead, it can work with any compliant IIIF server that you wish to set up or already have access to.</p>
 <p>Before choosing and setting up a IIIF server, it may be helpful to understand how DIBS will use it. The process of accessing content and serving it proceeds roughly like this:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>A IIIF viewer client (such as the <a class="reference external" href="http://universalviewer.io">Universal Viewer</a> included with DIBS) requests a <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest file</a> from DIBS at the endpoint <code class="docutils literal notranslate"><span class="pre">/manifests/BARCODE</span></code>, where <code class="docutils literal notranslate"><span class="pre">BARCODE</span></code> is the item barcode.</p></li>
 <li><p>DIBS checks if the user making the request has an active loan on <code class="docutils literal notranslate"><span class="pre">BARCODE</span></code>. If not, it responds with an error code; otherwise, DIBS performs the following steps:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>retrieves the manifest file from disk and reads it into memory;</p></li>
 <li><p>modifies the contents of the manifest file in memory, replacing every instance of the IIIF base URL (set in the site <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file) with a URL that points at DIBS’ address rather than the real IIIF server; and</p></li>
 <li><p>sends the adjusted manifest file contents to the client.</p></li>
@@ -690,10 +690,10 @@
               
           </div>
             Last updated on
-              Nov 23, 2021.
+              Feb 08, 2022.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

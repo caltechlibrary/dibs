@@ -419,7 +419,7 @@
 <p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <a class="reference external" href="#installation">installation steps</a>. It also assumes a Unix-like environment (Linux, macOS) and a working Internet connection.</p>
 <p>Although DIBS relies on the existence of a IIIF image server, for initial exploration, you <em>don’t</em> need to set up a IIIF server – you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of doing that. Thus, in principle, all you need to run the DIBS demo is a Unix-like system (Linux, macOS), a Python installation, the DIBS source code, and an Internet connection.</p>
 <p>To run a proper DIBS server at another institution (other than <a class="reference external" href="https://www.caltech.edu">Caltech</a>), certain additional things are needed:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>A <strong>IIIF server</strong>. At Caltech, we use a <a class="reference external" href="https://github.com/nulib/serverless-iiif">serverless component</a> running on an Amazon cloud instance, but <a class="reference external" href="https://github.com/IIIF/awesome-iiif#image-servers">many other IIIF server options exist</a>. If you’re looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.</p></li>
 <li><p>A <strong>web server</strong> to host DIBS.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.14, Mojave). DIBS comes with a <a class="reference external" href="https://github.com/caltechlibrary/dibs/blob/main/adapter.wsgi">WSGI adapter file</a> adapter file and <a class="reference external" href="https://github.com/caltechlibrary/dibs/blob/main/dibs.conf-example">sample config file for Apache</a>, but it should be possible to run DIBS in other WSGI-compliant servers.</p></li>
 <li><p>An <strong>authentication layer</strong>. DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach DIBS pages are allowed to view content. DIBS itself only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> single sign-on system, but it is possible to use other schemes. For a local server behind firewalls, <a class="reference external" href="https://httpd.apache.org/docs/2.4/howto/auth.html">Apache Basic Authentication</a> can also be used. The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.</p></li>
@@ -433,7 +433,7 @@
 <section id="download-a-copy-of-the-software">
 <h3 id="download-a-copy-of-the-software">Download a copy of the software<a class="headerlink" href="#download-a-copy-of-the-software" title="Permalink to this headline">¶</a></h3>
 <p>There are several ways of getting the latest release of the DIBS source code. Here is one of the simplest:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>Go to the <a class="reference external" href="https://github.com/caltechlibrary/dibs/releases">releases page</a> in the GitHub repository for DIBS.</p></li>
 <li><p>Find the latest release there (normally the first one on the page). <a class="reference internal" href="https://github.com/caltechlibrary/dibs/raw/main/.graphics/assets.png"><img alt="https://github.com/caltechlibrary/dibs/raw/main/.graphics/assets.png" class="align-right" src="https://github.com/caltechlibrary/dibs/raw/main/.graphics/assets.png" style="width: 200px;"/></a></p></li>
 <li><p>Find the <strong>Assets</strong> section of the release.</p></li>
@@ -646,10 +646,10 @@
               
           </div>
             Last updated on
-              Nov 23, 2021.
+              Feb 08, 2022.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
