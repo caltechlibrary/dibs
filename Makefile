@@ -60,7 +60,12 @@ update-init-file:;
 update-codemeta-file:;
 	@sed -i .bak -e "/version/ s/[0-9].[0-9][0-9]*.[0-9][0-9]*/$(version)/" codemeta.json
 
-edited := codemeta.json $(init_file)
+update-citation:;
+	$(eval date  := $(shell date "+%F"))
+	@sed -i .bak -e "/^date-released/ s/[0-9][0-9-]*/$(date)/" CITATION.cff
+	@sed -i .bak -e "/^version/ s/[0-9].[0-9][0-9]*.[0-9][0-9]*/$(version)/" CITATION.cff
+
+edited := codemeta.json $(init_file) CITATION.cff
 
 check-in-updated-files:;
 	git add $(edited)
@@ -90,9 +95,12 @@ print-instructions:;
 update-doi: 
 	sed -i .bak -e 's|/api/record/[0-9]\{1,\}|/api/record/$(doi_tail)|' README.md
 	sed -i .bak -e 's|edu/records/[0-9]\{1,\}|edu/records/$(doi_tail)|' README.md
-	git add README.md
+	sed -i .bak -e '/doi:/ s|10.22002/[0-9]\{1,\}|10.22002/$(doi_tail)|' CITATION.cff
+	git add README.md CITATION.cff
 	git diff-index --quiet HEAD README.md || \
 	    (git commit -m"Update DOI" README.md && git push -v --all)
+	git diff-index --quiet HEAD CITATION.cff || \
+	    (git commit -m"Update DOI" CITATION.cff && git push -v --all)
 
 
 # Cleanup and miscellaneous directives ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
