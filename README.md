@@ -42,7 +42,7 @@ The core DIBS server is written in [Python 3](https://www.python.org) and makes 
 
 ### _Requirements to run a demo_
 
-Although DIBS relies on the existence of a IIIF image server (and content to serve), for initial exploration and demonstration purposes, you don't need to set up a IIIF server; you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/explainers/using_iiif_resources/#iiif-manifest) to illustrate that.  You shouldn't need anything else to run the DIBS demo on your local computer.
+Although DIBS relies on the existence of a IIIF image server (and content to serve), for initial exploration and demonstration purposes, you don't need to set up a IIIF server; you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample [IIIF manifest](https://iiif.io/get-started/how-iiif-works/#key-concepts-youll-encounter-when-working-with-iiif) to illustrate that.  You shouldn't need anything else to run the DIBS demo on your local computer.
 
 
 ### _Requirements to use DIBS for real use at another institution_
