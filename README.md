@@ -124,6 +124,7 @@ We gratefully acknowledge bug reports and fixes submitted by the following users
 
 <td align="center"><a href="https://github.com/phette23"><img src="https://avatars.githubusercontent.com/dlasusa" title="dlasusa" width="50" height="50"><br>@dlasusa</a></td>
 <td align="center"><a href="https://github.com/stanonik"><img src="https://avatars.githubusercontent.com/stanonik" title="stanonik" width="50" height="50"><br>@stanonik</a></td>
+<td align="center"><a href="https://github.com/hadro"><img src="https://avatars.githubusercontent.com/hadro" title="phette23" width="50" height="50"><br>@hadro</a></td>
 <td align="center"><a href="https://github.com/phette23"><img src="https://avatars.githubusercontent.com/phette23" title="phette23" width="50" height="50"><br>@phette23</a></td>
 
 <td><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
