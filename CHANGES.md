@@ -1,8 +1,14 @@
 #  Change log for DIBS<img width="70em" align="right" src="https://github.com/caltechlibrary/dibs/raw/main/docs/_static/media//dibs-icon.png">
 
+## ★ Version 0.5.3 ★
+
+This version only updates `requirements.txt` to use newer versions of certain libraries, notably Pillow to address a [security issue in that package](https://github.com/advisories/GHSA-9j59-75qj-795w).
+
+
 ## ★ Version 0.5.2 ★
 
 This version fixes a [bug reported (with a fix) by @dlasusa](https://github.com/caltechlibrary/dibs/issues/93) involving incorrect time zone locale handling in the viewer interface, and also bumps up the required version of [Pillow](https://pypi.org/project/Pillow/) to address [several security vulnerabilities](https://github.com/caltechlibrary/dibs/security/dependabot/3) flagged by Dependabot. It also updates a number of other dependencies in `requirements.txt` to their latest versions.
+
 
 ## ★ Version 0.5.1 ★
 
