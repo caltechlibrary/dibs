@@ -15,13 +15,11 @@ import plac
 from   playhouse.dataset import DataSet
 import sys
 from   sys import exit
-import zipfile
-from   zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED
+from   zipfile import ZipFile, ZIP_STORED
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-import dibs
-from   dibs.settings import config, resolved_path
+from   dibs.settings import config, resolved_path  # noqa: E402
 
 
 # CLI definition.
@@ -118,7 +116,6 @@ Command-line options summary
 
     # Initial setup -----------------------------------------------------------
 
-    name = sys.argv[0]
     zip  = not no_zip                   # To avoid double negatives in the code
     hint = '(Use -h for help.)'
 
@@ -191,11 +188,11 @@ Command-line options summary
         try:
             os.chdir(output_dir)
             print(f'Collecting all files into {relative(archive_file)} ...')
-            with zipfile.ZipFile(archive_file, 'w', ZIP_STORED) as zf:
+            with ZipFile(archive_file, 'w', ZIP_STORED) as zf:
                 for exported_file in files_written:
                     zf.write(exported_file)
                 zf.comment = comment.encode()
-            print(f'Deleting temporary files ...')
+            print('Deleting temporary files ...')
             for file in files_written:
                 delete_existing(file)
         except Exception as ex:

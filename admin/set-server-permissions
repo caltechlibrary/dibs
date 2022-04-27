@@ -18,9 +18,8 @@
 from   getpass import getuser
 from   grp import getgrgid
 import os
-from   os.path import exists, dirname, join, basename, abspath
+from   os.path import exists, dirname, join, abspath
 import plac
-from   pwd import getpwnam
 from   shutil import chown
 import stat
 import sys

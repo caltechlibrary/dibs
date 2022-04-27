@@ -7,24 +7,20 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
-from   commonpy.data_utils import pluralized
-from   commonpy.file_utils import writable, relative
+from   commonpy.file_utils import relative
 import json
-import os
-from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
+from   os.path import dirname, join, abspath
 from   peewee import SqliteDatabase
 import plac
 from   playhouse.reflection import generate_models
-from   playhouse.dataset import DataSet
 import sys
 from   sys import exit
-import zipfile
 from   zipfile import ZipFile
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from   dibs.settings import config, resolved_path
-from   dibs.data_models import Item, Loan, History, Person
+from   dibs.settings import config, resolved_path           # noqa: E402
+from   dibs.data_models import Item, Loan, History, Person  # noqa: E402
 
 
 # Database object import handlers.
@@ -90,7 +86,7 @@ def import_loans(data, database, quiet):
     for entry in data:
         if 'itemid' in data:
             # Version 0.4 database format.
-            print(f'  Skipping loans (can\'t import from pre-version 0.5).')
+            print('  Skipping loans (can\'t import from pre-version 0.5).')
             return
         else:
             # Version 0.5 database format.

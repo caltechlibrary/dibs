@@ -7,7 +7,7 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
-from   os.path import exists, dirname, join, abspath
+from   os.path import dirname, join, abspath
 from   peewee import SqliteDatabase
 from   playhouse.reflection import generate_models
 from   rich import print
@@ -16,8 +16,8 @@ import sys
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from dibs.data_models import Item, Loan, History, Person
-from dibs.settings import config, resolved_path
+from dibs.data_models import Item, Loan, History, Person  # noqa: E402
+from dibs.settings import config, resolved_path           # noqa: E402
 
 # In the present case, the database file will not exist yet, so we construct
 # a path to where it should be but don't require that it exists.
@@ -50,8 +50,8 @@ if not Item.get_or_none(Item.barcode == '350470000180226'):
                 num_copies = 1,
                 duration   = 3,
                 notes      = ('This is just a random book chosen because it was'
-                              + ' a title we could find in both an external'
-                              + ' public IIIF server and our Caltech catalog.'),
+                              ' a title we could find in both an external'
+                              ' public IIIF server and our Caltech catalog.'),
                 ready      = True)
 
 if not Person.select().exists():

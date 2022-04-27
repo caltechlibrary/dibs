@@ -8,9 +8,8 @@
 # =============================================================================
 
 from   datetime import datetime as dt
-import os
-from   os.path import dirname, join, isabs, exists, abspath
-from   peewee import *
+from   os.path import dirname, join, abspath
+from   peewee import SqliteDatabase
 import plac
 from   rich import box
 from   rich.console import Console
@@ -22,10 +21,10 @@ from   trinomial import anon
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from   dibs.data_models import Item, Loan, History, Person
-from   dibs.date_utils import human_datetime, time_now
-from   dibs.roles import role_to_redirect, has_role, staff_user
-from   dibs.settings import config, resolved_path
+from   dibs import print_version                         # noqa: E402
+from   dibs.data_models import Loan                      # noqa: E402
+from   dibs.date_utils import human_datetime, time_now   # noqa: E402
+from   dibs.settings import config, resolved_path        # noqa: E402
 
 
 # Globals.
@@ -87,9 +86,9 @@ def loans_table(category, loans, color):
     table = Table(title = f'[{color}]{category.title()}[/] loans: [{color}]{len(loans)}[/]',
                   pad_edge = False, box = box.MINIMAL_DOUBLE_HEAD)
     table.add_column('Barcode', style = 'sky_blue2', width = 14)
-    table.add_column('Title',   style = 'medium_turquoise', width = 22)
+    table.add_column('Title', style = 'medium_turquoise', width = 22)
     table.add_column('Start')
-    table.add_column('End',     style = 'light_cyan3')
+    table.add_column('End', style = 'light_cyan3')
     table.add_column('User')
     for loan in loans:
         table.add_row(loan.item.barcode,

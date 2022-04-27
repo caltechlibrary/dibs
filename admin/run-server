@@ -51,7 +51,7 @@ else:
 with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
     try:
         pkg_resources.require(req_file)
-    except pkg_resources.DistributionNotFound as ex:
+    except pkg_resources.DistributionNotFound:
         print('‼️  Not all Python dependencies have been installed.')
         print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
         exit(1)
@@ -66,21 +66,21 @@ with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
             print(f'‼️  Encountered conflicting Python package requirements.')
             print(f'‼️  Need {name} version {want} but version {got} is installed.')
         else:
-            print('‼️  Conflicting Python package requirement: '+ str(ex))
-        print(f'‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
+            print('‼️  Conflicting Python package requirement: ' + str(ex))
+        print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
         exit(1)
 
 settings_file = join(dibs_root, 'settings.ini')
 if not exists(settings_file):
-    print(f'‼️  File "settings.ini" not found in {dibs_root}.')
-    print(f'‼️  Please create one starting with file "settings.ini-example".')
+    print('‼️  File "settings.ini" not found in ' + dibs_root)
+    print('‼️  Please create one starting with file "settings.ini-example".')
     exit(1)
 
 config = ConfigParser()
 config.read(settings_file)
 if not config.has_section('dibs'):
-    print(f'‼️  File "settings.ini" is missing a section called [dibs].')
-    print(f'‼️  Please see the example in file "settings.ini-example".')
+    print('‼️  File "settings.ini" is missing a section called [dibs].')
+    print('‼️  Please see the example in file "settings.ini-example".')
     exit(1)
 
 
@@ -97,7 +97,6 @@ _DEFAULT_BASE_URL = 'http://localhost:8080'
 # file is against Pythonic best practices, but IMHO, testing for the packages
 # first (above) lets us give a more informative error if anything is missing.
 
-from   boltons.debugutils import pdb_on_signal
 import bottle
 from   bottle import request
 from   commonpy.data_utils import timestamp
@@ -105,8 +104,6 @@ from   commonpy.file_utils import readable
 from   commonpy.string_utils import antiformat
 from   mod_wsgi.server import cmd_start_server as mod_wsgi_start
 import plac
-from   rich import box
-from   rich.box import DOUBLE_EDGE
 from   rich.console import Console
 from   rich.panel import Panel
 from   shutil import get_terminal_size
@@ -285,7 +282,7 @@ Command-line arguments summary
             start_bottle_server(scheme, host, port, extra_path, debug_user)
         else:
             start_wsgi_server(scheme, host, port, extra_path, adapter_file, mode, debug_user)
-    except Exception as ex:
+    except Exception:
         exception = sys.exc_info()
         msg = antiformat(exception[1])
         if mode == 'debug':
@@ -369,9 +366,9 @@ def verify_and_set(settings_var, file_path, default_letter, description):
 def print_safety_warning():
     name = basename(sys.argv[0])
     text = ("⚠️  REMINDER: DON'T USE THIS AS A PUBLIC SERVER. ⚠️\n"
-            + f'"{name}" starts a server with weak security. \n'
-            + 'It is intended for testing and debugging only.\n'
-            + 'For production, set up Apache with adapter.wsgi.')
+            f'"{name}" starts a server with weak security. \n'
+            'It is intended for testing and debugging only.\n'
+            'For production, set up Apache with adapter.wsgi.')
     terminal_width = get_terminal_size().columns
     panel_width = 55 if terminal_width > 55 else terminal_width
     padding = min(abs(panel_width - len(text) - 2) // 2, 2)
@@ -381,9 +378,9 @@ def print_safety_warning():
 
 def print_debug_user_warning():
     text = ("⚠️  [bold]DANGER: YOU HAVE DISABLED AUTHENTICATION.[/] ⚠️\n"
-            + 'Running with --debug-user means that all visitors\n'
-            + 'are considered pre-authenticated. Do [bold]not[/] run in\n'
-            + 'this mode on a production or public server.')
+            'Running with --debug-user means that all visitors\n'
+            'are considered pre-authenticated. Do [bold]not[/] run in\n'
+            'this mode on a production or public server.')
     terminal_width = get_terminal_size().columns
     panel_width = 55 if terminal_width > 55 else terminal_width
     padding = min(abs(panel_width - len(text) - 2) // 2, 2)
@@ -395,14 +392,14 @@ def print_settings(mode, adapter_file = None):
     server = 'Bottle' if mode == 'debug' else 'mod_wsgi-express'
     adapter = adapter_file or '(not applicable)'
     settings = ('\n  Current settings are:\n'
-                + f'    Run mode:       {mode} (using {server} server)\n'
-                + f'    WSGI adapter:   {adapter}\n'
-                + f'    DIBS root:      {dibs_root}\n'
-                + f'    DATABASE_FILE:  {config("DATABASE_FILE")}\n'
-                + f'    MANIFEST_DIR:   {config("MANIFEST_DIR")}\n'
-                + f'    PROCESS_DIR:    {config("PROCESS_DIR")}\n'
-                + f'    THUMBNAILS_DIR: {config("THUMBNAILS_DIR")}\n'
-                + f'    IIIF_BASE_URL:  {config("IIIF_BASE_URL")}')
+                f'    Run mode:       {mode} (using {server} server)\n'
+                f'    WSGI adapter:   {adapter}\n'
+                f'    DIBS root:      {dibs_root}\n'
+                f'    DATABASE_FILE:  {config("DATABASE_FILE")}\n'
+                f'    MANIFEST_DIR:   {config("MANIFEST_DIR")}\n'
+                f'    PROCESS_DIR:    {config("PROCESS_DIR")}\n'
+                f'    THUMBNAILS_DIR: {config("THUMBNAILS_DIR")}\n'
+                f'    IIIF_BASE_URL:  {config("IIIF_BASE_URL")}')
     log(settings)
 
 
