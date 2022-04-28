@@ -348,7 +348,7 @@ def manage_items():
 
 
 @dibs.get('/add', apply = VerifyStaffUser())
-def add():
+def add_item():
     '''Display the page to add new items.'''
     return page('edit', action = 'add', item = None,
                 thumbnails_dir = _THUMBNAILS_DIR,
@@ -356,7 +356,7 @@ def add():
 
 
 @dibs.get('/edit/<barcode:int>', apply = VerifyStaffUser())
-def edit(barcode):
+def edit_item(barcode):
     '''Display the page to add new items.'''
     return page('edit', browser_no_cache = True, action = 'edit',
                 thumbnails_dir = _THUMBNAILS_DIR,
@@ -946,7 +946,7 @@ def included_file(filename):
 
 
 @dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>')
-def included_file(filename):
-    '''Return a static file used with %include in a template.'''
+def thumbnail_file(filename):
+    '''Return a thumbnail image file.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = _THUMBNAILS_DIR)
