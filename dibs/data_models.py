@@ -14,7 +14,7 @@ file "LICENSE" for more information.
 '''
 
 from peewee import SqliteDatabase, Model
-from peewee import CharField, TextField, IntegerField, SmallIntegerField
+from peewee import CharField, TextField, SmallIntegerField
 from peewee import ForeignKeyField, DateTimeField, BooleanField, TimestampField
 from playhouse.reflection import generate_models
 

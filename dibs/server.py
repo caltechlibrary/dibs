@@ -10,18 +10,14 @@ file "LICENSE" for more information.
 '''
 
 import bottle
-from   bottle import Bottle, HTTPResponse, LocalResponse, static_file, template
-from   bottle import request, response, redirect, route, get, post, error
-from   commonpy.file_utils import delete_existing, writable, readable
+from   bottle import Bottle, LocalResponse, static_file, template
+from   bottle import request, response, redirect
+from   commonpy.file_utils import delete_existing
 from   commonpy.network_utils import net
-from   commonpy.string_utils import print_boxed
-from   datetime import datetime as dt
 from   datetime import timedelta as delta
-from   dateutil import tz
 from   enum import Enum, auto
 from   expiringdict import ExpiringDict
 from   fdsend import send_file
-import functools
 from   humanize import naturaldelta, naturalsize
 import inspect
 from   io import BytesIO, StringIO
@@ -32,11 +28,8 @@ from   os.path import realpath, dirname, join, exists
 from   peewee import *
 from   playhouse.dataset import DataSet
 from   playhouse.reflection import generate_models
-import random
 from   sidetrack import log
 from   str2bool import str2bool
-import string
-import sys
 from   textwrap import shorten
 from   trinomial import anon
 
@@ -47,7 +40,7 @@ from .email import send_email
 from .image_utils import as_jpeg
 from .lsp import LSP
 from .people import person_from_environ, GuestPerson
-from .roles import role_to_redirect, has_role, staff_user
+from .roles import staff_user
 from .settings import config, resolved_path
 
 
@@ -77,7 +70,7 @@ _PROCESS_DIR = resolved_path(config('PROCESS_DIR'))
 _THUMBNAILS_DIR = resolved_path(config('THUMBNAILS_DIR'))
 
 # Internal threshold for max size of thumbnail images uploaded via edit form.
-_MAX_THUMBNAIL_SIZE = 1 * 1024 * 1024;
+_MAX_THUMBNAIL_SIZE = 1 * 1024 * 1024
 
 # The base URL of the IIIF server endpoint.
 _IIIF_BASE_URL = config('IIIF_BASE_URL')
@@ -97,10 +90,10 @@ _HELP_URL = config('HELP_URL', default = 'https://caltechlibrary.github.io/dibs'
 
 # Remember the most recent accesses so we can provide stats on recent activity.
 # This is a dictionary whose elements are dictionaries.
-_REQUESTS = { '15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
-              '30': ExpiringDict(max_len = 1000000, max_age_seconds = 30*60),
-              '45': ExpiringDict(max_len = 1000000, max_age_seconds = 45*60),
-              '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60) }
+_REQUESTS = {'15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
+             '30': ExpiringDict(max_len = 1000000, max_age_seconds = 30*60),
+             '45': ExpiringDict(max_len = 1000000, max_age_seconds = 45*60),
+             '60': ExpiringDict(max_len = 1000000, max_age_seconds = 60*60)}
 
 # IIIF page cache.  This is a dict where the keys will be IIIF page URLs.
 _IIIF_CACHE = LRU(int(config('IIIF_CACHE_SIZE')))
@@ -112,7 +105,7 @@ _IIIF_CACHE = LRU(int(config('IIIF_CACHE_SIZE')))
 def page(name, **kargs):
     '''Create a page using template "name" with some standard variables set.'''
     person = person_from_environ(request.environ)
-    logged_in = (person != None and person.uname != '')
+    logged_in = (person is not None and person.uname != '')
     if kargs.get('browser_no_cache', False):
         response.add_header('Expires', '0')
         response.add_header('Pragma', 'no-cache')
@@ -211,7 +204,7 @@ class LoanExpirer(BottlePluginBase):
             # Change the state of active loans that are past due.
             loans = Loan.select().where(Loan.state == 'active', now >= Loan.end_time)
             if len(loans) > 0:
-                log(f'locking db to update loan states')
+                log('locking db to update loan states')
                 with database.atomic('immediate'):
                     for loan in loans:
                         barcode = loan.item.barcode
@@ -294,9 +287,9 @@ class AddPersonArgument(BottlePluginBase):
         def person_plugin_wrapper(*args, **kwargs):
             person = person_from_environ(request.environ)
             if person is None or person.uname is None:
-                log(f'person is None')
+                log('person is None')
                 return page('error', summary = 'authentication failure',
-                            message = f'Unrecognized user identity.')
+                            message = 'Unrecognized user identity.')
             if 'person' in inspect.getfullargspec(route.callback)[0]:
                 kwargs['person'] = person
             return callback(*args, **kwargs)
@@ -309,9 +302,9 @@ class VerifyStaffUser(BottlePluginBase):
         def staff_person_plugin_wrapper(*args, **kwargs):
             person = person_from_environ(request.environ)
             if person is None:
-                log(f'person is None')
+                log('person is None')
                 return page('error', summary = 'authentication failure',
-                            message = f'Unrecognized user identity.')
+                            message = 'Unrecognized user identity.')
             if not staff_user(person):
                 log(f'{request.path} invoked by non-staff {user(person)}')
                 redirect(f'{dibs.base_url}/notallowed')
@@ -336,7 +329,7 @@ def logout():
     # If we are not in debug mode, then whether the user is authenticated or
     # not is determined by the presence of REMOTE_USER.
     if request.environ.get('REMOTE_USER', None) and not debug_mode():
-        redirect(f'/Shibboleth.sso/Logout')
+        redirect('/Shibboleth.sso/Logout')
     else:
         redirect('/')
 
@@ -376,7 +369,7 @@ def edit(barcode):
 def update_item():
     '''Handle http post request to add a new item from the add-new-item page.'''
     if 'cancel' in request.POST:
-        log(f'user clicked Cancel button')
+        log('user clicked Cancel button')
         redirect(f'{dibs.base_url}/list')
         return
 
@@ -389,11 +382,11 @@ def update_item():
     duration = request.forms.get('duration').strip()
     if not duration.isdigit() or int(duration) <= 0:
         return page('error', summary = 'invalid duration',
-                    message = f'Duration must be a positive number')
+                    message = 'Duration must be a positive number')
     num_copies = request.forms.get('num_copies').strip()
     if not num_copies.isdigit() or int(num_copies) <= 0:
         return page('error', summary = 'invalid copy number',
-                    message = f'# of copies must be a positive number')
+                    message = '# of copies must be a positive number')
     notes = request.forms.get('notes').strip()
     thumbnail = request.files.get('thumbnail-image')
 
@@ -406,11 +399,11 @@ def update_item():
         lsp = LSP()
         try:
             rec = lsp.record(barcode = barcode)
-        except ValueError as ex:
+        except ValueError:
             return page('error', summary = 'Incomplete record in LSP',
                         message = (f'The item with barcode {barcode} lacks one'
-                                   + ' or more basic metadata fields (title,'
-                                   + ' author, year) in the library catalog.'))
+                                   ' or more basic metadata fields (title,'
+                                   ' author, year) in the library catalog.'))
         if not rec:
             log(f'could not find {barcode} in LSP')
             return page('error', summary = 'no such barcode',
@@ -420,7 +413,7 @@ def update_item():
                     item_id = rec.id, item_page = rec.url, year = rec.year,
                     edition = rec.edition, publisher = rec.publisher,
                     num_copies = num_copies, duration = duration, notes = notes)
-    else: # The operation is /update/edit.
+    else:  # The operation is /update/edit.
         if not item:
             log(f'there is no item with barcode {barcode}')
             return page('error', summary = 'no such barcode',
@@ -446,7 +439,7 @@ def update_item():
                         log(f'file exceeds {max_size} -- ignoring the file')
                         return page('error', summary = 'cover image is too large',
                                     message = ('The chosen image is larger than'
-                                               + f' the limit of {max_size}.'))
+                                               f' the limit of {max_size}.'))
                 dest_file = join(_THUMBNAILS_DIR, barcode + '.jpg')
                 log(f'writing {naturalsize(len(data))} image to {dest_file}')
                 with open(dest_file, 'wb') as new_file:
@@ -454,7 +447,7 @@ def update_item():
             except Exception as ex:
                 log(f'exception trying to save thumbnail: {str(ex)}')
         else:
-            log(f'user did not provide a new thumbnail image file')
+            log('user did not provide a new thumbnail image file')
     redirect(f'{dibs.base_url}/list')
 
 
@@ -538,10 +531,10 @@ def show_stats():
         last_30min = _REQUESTS['30'].get(barcode, 0)
         last_45min = _REQUESTS['45'].get(barcode, 0)
         last_60min = _REQUESTS['60'].get(barcode, 0)
-        retrievals = [ last_15min ,
-                       max(0, last_30min - last_15min),
-                       max(0, last_45min - last_30min - last_15min),
-                       max(0, last_60min - last_45min - last_30min - last_15min) ]
+        retrievals = [last_15min ,
+                      max(0, last_30min - last_15min),
+                      max(0, last_45min - last_30min - last_15min),
+                      max(0, last_60min - last_45min - last_30min - last_15min)]
         durations = [(loan.end_time - loan.start_time) for loan in history]
         if durations:
             avg_duration = sum(durations, delta()) // len(durations)
@@ -632,7 +625,7 @@ def loan_availability(user, barcode):
             status = Status.USER_HAS_OTHER
             author = shorten(other.author, width = 50, placeholder = ' …')
             explanation = ('You have another item currently on loan'
-                           + f' ("{other.title}" by {author}).')
+                           f' ("{other.title}" by {author}).')
             when_available = loan.end_time
         else:
             # The user may be allowed to loan this, but are there any copies left?
@@ -694,7 +687,7 @@ def loan_item(person):
     barcode = request.POST.barcode.strip()
     # Checking if the item is available requires steps, and we have to be sure
     # that two users don't do them concurrently, or else we might make 2 loans.
-    log(f'locking db')
+    log('locking db')
     with database.atomic('immediate'):
         item, status, explanation, when_available = loan_availability(person.uname, barcode)
         if status == Status.NOT_READY:
@@ -716,11 +709,10 @@ def loan_item(person):
                         message = ('Our policy currently prevents users from '
                                    'borrowing more than one item at a time.'))
         if status == Status.TOO_SOON:
-            loan = Loan.get_or_none(Loan.user == person.uname, Loan.item == item)
             return page('error', summary = 'too soon',
                         message = ('We ask that you wait at least '
                                    f'{naturaldelta(_RELOAN_WAIT_TIME)} before '
-                                   'requesting the same item again. Please try '
+                                   f'requesting the same item again. Please try '
                                    f'after {human_datetime(when_available)}'))
         if status == Status.NO_COPIES_LEFT:
             # The loan button shouldn't have been clickable in this case, but
@@ -888,7 +880,7 @@ def serve_uv_lib_files(filepath):
     # Don't return config files from UV because they would override ours.
     # Otherwise, return the requested file.
     if filepath.endswith('.config.json'):
-        log(f'serving file /dibs/static/uv-config.json')
+        log('serving file /dibs/static/uv-config.json')
         return static_file('uv-config.json', root = 'dibs/static')
     else:
         log(f'serving static uv file /viewer/lib/{filepath}')
@@ -921,6 +913,7 @@ def not_allowed():
     return page('error', summary = 'access error',
                 message = ('The requested page does not exist or you do not '
                            'not have permission to access the requested item.'))
+
 
 @dibs.error(404)
 def error404(error):

@@ -18,8 +18,9 @@ _role_table = {
     "library": "list",
 }
 
+
 def has_role(person, role):
-    if (person == None):
+    if person is None:
         return False
     return person.has_role(role)
 

@@ -11,7 +11,6 @@ file "LICENSE" for more information.
 
 from io import BytesIO
 from PIL import Image
-from sidetrack import log
 
 
 # Exported functions

@@ -68,7 +68,7 @@ def verified(variable, check_readable = False, check_writable = False,
         parent = dirname(dir)
         print_boxed(f'Cannot write in the parent directory of the value indicated by\n'
                     f'the configuraton variable {variable}. The directory located at\n\n'
-                    + f'{parent}\n\nis not writable. DIBS cannot function properly.',
+                    f'{parent}\n\nis not writable. DIBS cannot function properly.',
                     title = 'DIBS configuration error')
         success = False
     return success

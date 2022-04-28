@@ -33,7 +33,7 @@ from   decouple import RepositoryIni, RepositoryEnv, RepositoryEmpty
 from   decouple import UndefinedValueError
 import inspect
 import os
-from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
+from   os.path import dirname, join, isabs, exists, abspath
 from   sidetrack import log
 
 
@@ -62,8 +62,8 @@ class DIBSRepositoryIni(RepositoryIni):
     def __contains__(self, key):
         return (key in os.environ
                 or key in self.parser.sections()
-                or ('settings' in self.parser.sections() and
-                    self.parser.has_option('settings', key))
+                or ('settings' in self.parser.sections()
+                    and self.parser.has_option('settings', key))
                 or self.parser.has_option(self.section, key))
 
 
@@ -152,6 +152,7 @@ class DIBSAutoConfig(AutoConfig):
 # set to decouple's AutoConfig.)
 
 config = DIBSAutoConfig()
+
 
 def resolved_path(path, must_exist = False):
     '''Resolve "path" intelligently relative to settings.ini if possible.
