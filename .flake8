@@ -25,7 +25,11 @@ ignore =
     # In some situations, it's more readable to omit spaces around operators
     # and colons.
     E203,
-    E226
+    E226,
+    # According to Flake8 docs at https://www.flake8rules.com/rules/W503.html
+    # line breaks *should* come before a binary operator, but as of version 4,
+    # Flake8 still flags the breaks as bad. So:
+    W503
 
 per-file-ignores =
     # The plac.annotations lines contain hand-aligned text, which triggers
