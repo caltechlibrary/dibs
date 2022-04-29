@@ -9,6 +9,15 @@
 # from ~/.flake8 or ~/.config/flake8.  If you had such a config file of your
 # own, and you're looking at this config file and wondering how the two will
 # interaction, the answer is simple: they won't.  Only this file matters.
+#
+# The following flake8 plugins are assumed to be installed:
+#   flake8-bugbear
+#   flake8-builtins
+#   flake8-comprehensions
+#   flake8-executable
+#   flake8-implicit-str-concat
+#   flake8-pie
+#   flake8_simplify
 # =============================================================================
 
 [flake8]
@@ -34,6 +43,7 @@ ignore =
 per-file-ignores =
     # The plac.annotations lines contain hand-aligned text, which triggers
     # flake8's check for spaces after commas.
-    admin/*:E241, E304, E402
-    admin/run-server:E241, E304, E402, F541, W605
+    admin/*: E241, E304, E402
+    admin/run-server: E241, E304, E402, F541, W605
     admin/set-server-permissions: E241, E304, E402, F541
+    dibs/preflight.py: E241
