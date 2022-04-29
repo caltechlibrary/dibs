@@ -60,16 +60,13 @@
 # ==========================================================================
 
 import sys
-from os.path import dirname, join, basename, isabs, abspath, exists
-from getpass import getpass
-from hashlib import blake2b
-from peewee import SqliteDatabase
+from os.path import dirname, join, basename, abspath
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from dibs.data_models import database
-from dibs.people import PersonManager, setup_person_table
-from dibs.settings import config, resolved_path
+from dibs.data_models import database                      # noqa: E402
+from dibs.people import PersonManager, setup_person_table  # noqa: E402
+from dibs.settings import config, resolved_path            # noqa: E402
 
 htpasswd = resolved_path(config('HTPASSWD', default = None))
 password_file = resolved_path(config('PASSWORD_FILE', default = None))
@@ -138,8 +135,8 @@ Remove "rsdoiel"
 
    {app_name} remove uname=rsdoiel
 
-If you need to remove a value just use the `field_name=` notation. 
-It'll prompt you for the value, press enter and the value will 
+If you need to remove a value just use the `field_name=` notation.
+It'll prompt you for the value, press enter and the value will
 become an empty string. So removing my library role for "rsdoiel"
 looks like
 
@@ -149,11 +146,12 @@ Then putting it back
 
    {app_name} update uname=rsdoiel role=library
 
-Fields: uname (manditory except for list), 
+Fields: uname (manditory except for list),
         display_name, role, and secret
 
 ''')
     sys.exit(exit_code)
+
 
 if __name__ == '__main__':
     app_name = basename(sys.argv[0])
@@ -163,11 +161,11 @@ if __name__ == '__main__':
     kv = {}
     for term in sys.argv[2:]:
         if "=" in term:
-            parts = term.split("=", 2);
+            parts = term.split("=", 2)
             key = parts[0].strip()
             value = parts[1].strip().strip("'").strip('"')
             if key:
-                if (not value) and not (key == 'secret'):
+                if (not value) and (key != 'secret'):
                     value = input(f'''Enter {key}: ''')
                 kv[key] = value
     pm = PersonManager(database, htpasswd, password_file)
@@ -184,7 +182,7 @@ if __name__ == '__main__':
     elif verb == 'remove':
         pm.remove_people(kv)
         print(f'Removed {kv["uname"]}.')
-    elif verb in [ 'h', 'help', '-h', '--help', '-help']:
+    elif verb in ['h', 'help', '-h', '--help', '-help']:
         usage(app_name, 0)
     else:
         print(f'''ERROR: "{verb}" not understood''')

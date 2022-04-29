@@ -9,9 +9,9 @@ is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
-from commonpy.file_utils import delete_existing, writable, readable
+from commonpy.file_utils import writable, readable
 from commonpy.string_utils import print_boxed
-from os.path import realpath, dirname, join, exists
+from os.path import dirname
 from sidetrack import log
 
 # In order for this to work, it needs to avoid importing anything that might
@@ -34,10 +34,10 @@ def preflight_check(database = None):
     ]
 
     if all(successes):
-        log(f'preflight tests succeeded')
+        log('preflight tests succeeded')
         return True
     else:
-        log(f'preflight tests failed')
+        log('preflight tests failed')
         return False
 
 
@@ -50,7 +50,7 @@ def verified(variable, check_readable = False, check_writable = False,
                     ' DIBS cannot function properly.',
                     title = 'DIBS Fatal Error')
         return False
-    dir = resolved_path(config(variable))
+    dir = resolved_path(config(variable))  # noqa A001
     success = True
     if check_readable and not readable(dir):
         print_boxed(f'Cannot read the directory indicated by the configuration\n'
@@ -68,7 +68,7 @@ def verified(variable, check_readable = False, check_writable = False,
         parent = dirname(dir)
         print_boxed(f'Cannot write in the parent directory of the value indicated by\n'
                     f'the configuraton variable {variable}. The directory located at\n\n'
-                    + f'{parent}\n\nis not writable. DIBS cannot function properly.',
+                    f'{parent}\n\nis not writable. DIBS cannot function properly.',
                     title = 'DIBS configuration error')
         success = False
     return success

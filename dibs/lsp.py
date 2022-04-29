@@ -13,8 +13,7 @@ from   abc import ABC, abstractmethod
 from   coif import cover_image
 from   commonpy.network_utils import net
 from   dataclasses import dataclass
-import os
-from   os.path import realpath, dirname, join, exists, isabs
+from   os.path import join, exists
 import pokapi
 from   pokapi import Folio
 import re
@@ -31,7 +30,7 @@ from .settings import config, resolved_path
 @dataclass
 class LSPRecord():
     '''Common abstraction for records returned by different LSP's.'''
-    id            : str
+    id            : str                 # noqa A003
     url           : str
     title         : str
     author        : str
@@ -62,7 +61,7 @@ class LSPInterface(ABC):
     @abstractmethod
     def record(self, barcode = None):
         '''Return a record for the item identified by the "barcode".'''
-        pass
+        pass                            # noqa: PIE790
 
 
 class TindInterface(LSPInterface):
@@ -102,7 +101,7 @@ class TindInterface(LSPInterface):
                              year      = rec.year,
                              edition   = rec.edition,
                              isbn_issn = rec.isbn_issn)
-        except:
+        except Exception:
             log(f'could not find {barcode} in TIND')
             raise ValueError('No such barcode {barcode} in {self.url}')
 
@@ -144,17 +143,17 @@ class FolioInterface(LSPInterface):
             raise ValueError('Got incomplete record for {barcode} in {self.url}')
 
         thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
-        try:
-            if not exists(thumbnail_file):
-                if rec.isbn_issn:
+        if not exists(thumbnail_file):
+            if rec.isbn_issn:
+                try:
                     save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
-                else:
-                    log(f"{rec.id} has no ISBN/ISSN => can't get a thumbnail")
+                except Exception as ex:  # noqa PIE786
+                    # Log it but otherwise we won't fail just because of this.
+                    log(f'failed to save thumbnail for {barcode}: ' + str(ex))
             else:
-                log(f'thumbnail image already exists in {thumbnail_file}')
-        except Exception as ex:
-            # Log it but otherwise we won't fail just because of this.
-            log(f'failed to save thumbnail for {barcode}: ' + str(ex))
+                log(f"{rec.id} has no ISBN/ISSN => can't get a thumbnail")
+        else:
+            log(f'thumbnail image already exists in {thumbnail_file}')
 
         url = self._page_tmpl.format(accession_number = rec.accession_number)
         return LSPRecord(id        = rec.id,
@@ -208,11 +207,14 @@ class LSP(LSPInterface):
         # Select the appropriate interface type and create the object.
         lsp_type = config('LSP_TYPE').lower()
         if lsp_type == 'folio':
-            url           = config('FOLIO_OKAPI_URL',        section = 'folio')
-            token         = config('FOLIO_OKAPI_TOKEN',      section = 'folio')
-            tenant_id     = config('FOLIO_OKAPI_TENANT_ID',  section = 'folio')
-            an_prefix     = config('FOLIO_ACCESSION_PREFIX', section = 'folio')
-            page_template = config('EDS_PAGE_TEMPLATE',      section = 'folio')
+            def folio_config(key):
+                return config(key, section = 'folio')
+
+            url           = folio_config('FOLIO_OKAPI_URL')
+            token         = folio_config('FOLIO_OKAPI_TOKEN')
+            tenant_id     = folio_config('FOLIO_OKAPI_TENANT_ID')
+            an_prefix     = folio_config('FOLIO_ACCESSION_PREFIX')
+            page_template = folio_config('EDS_PAGE_TEMPLATE')
             log(f'Using FOLIO URL {url} with tenant id {tenant_id}')
             lsp = FolioInterface(url = url,
                                  token = token,
@@ -263,7 +265,7 @@ def probable_issn(value):
 
 
 def truncated_title(title):
-    modified_title = re.split(':|;|\.', title)[0].strip()
+    modified_title = re.split(r':|;|\.', title)[0].strip()
     if len(modified_title) > 60:
         return wrap(modified_title, 60)[0] + ' ...'
     else:

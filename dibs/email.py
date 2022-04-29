@@ -45,21 +45,21 @@ We hope your experience with DIBS is a pleasant one. Don't hesitate to send us f
 # .............................................................................
 
 def send_email(user, item, start, end, base_url):
-   try:
-       subject = f'DIBS loan for "{item.title}"'
-       viewer = f'{base_url}/view/{item.barcode}'
-       info_page = f'{base_url}/info'
-       body = _EMAIL.format(item      = item,
-                            start     = human_datetime(start),
-                            end       = human_datetime(end),
-                            viewer    = viewer,
-                            info_page = info_page,
-                            user      = user,
-                            subject   = subject,
-                            sender    = config('MAIL_SENDER'),
-                            feedback  = config('FEEDBACK_URL', default = ''))
-       log(f'sending mail to {anon(user)} about loan of {item.barcode}')
-       mailer  = smtplib.SMTP(config('MAIL_HOST'))
-       mailer.sendmail(config('MAIL_SENDER'), [user], body)
-   except Exception as ex:
-       log(f'unable to send mail: {str(ex)}')
+    try:
+        subject = f'DIBS loan for "{item.title}"'
+        viewer = f'{base_url}/view/{item.barcode}'
+        info_page = f'{base_url}/info'
+        body = _EMAIL.format(item     = item,
+                             start     = human_datetime(start),
+                             end       = human_datetime(end),
+                             viewer    = viewer,
+                             info_page = info_page,
+                             user      = user,
+                             subject   = subject,
+                             sender    = config('MAIL_SENDER'),
+                             feedback  = config('FEEDBACK_URL', default = ''))
+        log(f'sending mail to {anon(user)} about loan of {item.barcode}')
+        mailer  = smtplib.SMTP(config('MAIL_HOST'))
+        mailer.sendmail(config('MAIL_SENDER'), [user], body)
+    except Exception as ex:             # noqa PIE786
+        log(f'unable to send mail: {str(ex)}')

@@ -1,5 +1,14 @@
 #  Change log for DIBS<img width="70em" align="right" src="https://github.com/caltechlibrary/dibs/raw/main/docs/_static/media//dibs-icon.png">
 
+## ★ Version 0.5.4 ★
+
+The changes in this version are purely internal and do not affect functionality or templates.
+* New [Flake8](https://flake8.pycqa.org/en/latest/) project config file `.flake8`.
+* Minor adjustments to most code files based on Flake8 output.
+* Updated `requirements.txt` uses new versions of some Python libraries.
+* Minor internal code improvements.
+
+
 ## ★ Version 0.5.3 ★
 
 This version only updates `requirements.txt` to use newer versions of certain libraries, notably Pillow to address a [security issue in that package](https://github.com/advisories/GHSA-9j59-75qj-795w).

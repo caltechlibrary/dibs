@@ -14,7 +14,7 @@ file "LICENSE" for more information.
 '''
 
 from peewee import SqliteDatabase, Model
-from peewee import CharField, TextField, IntegerField, SmallIntegerField
+from peewee import CharField, TextField, SmallIntegerField
 from peewee import ForeignKeyField, DateTimeField, BooleanField, TimestampField
 from playhouse.reflection import generate_models
 
@@ -147,7 +147,7 @@ class History(BaseModel):
       stop:   when did the event stop
     '''
 
-    type       = CharField()            # String describing the event
+    type       = CharField()            # Type of event. # noqa A003
     what       = CharField()            # What is this about? (e.g. a barcode)
     start_time = DateTimeField()        # When did the event start?
     end_time   = DateTimeField()        # When did the event stop?

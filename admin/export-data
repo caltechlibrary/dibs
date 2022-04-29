@@ -14,14 +14,11 @@ from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
 import plac
 from   playhouse.dataset import DataSet
 import sys
-from   sys import exit
-import zipfile
-from   zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED
+from   zipfile import ZipFile, ZIP_STORED
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-import dibs
-from   dibs.settings import config, resolved_path
+from   dibs.settings import config, resolved_path  # noqa: E402
 
 
 # CLI definition.
@@ -30,7 +27,7 @@ from   dibs.settings import config, resolved_path
 @plac.annotations(
     base_name   = ('name files using base name "B" (e.g., B-loan.csv)',     'option', 'b'),
     database    = ('use database file "D" (default: look in settings.ini)', 'option', 'd'),
-    format      = ('write output in csv or json format (default: json)',    'option', 'f'),
+    format_     = ('write output in csv or json format (default: json)',    'option', 'f'),
     list_tables = ('list the tables in the database, and exit',             'flag',   'l'),
     output_dir  = ('write the output to directory "O"',                     'option', 'o'),
     overwrite   = ('force overwriting destination files if they exist',     'flag',   'O'),
@@ -39,7 +36,7 @@ from   dibs.settings import config, resolved_path
     no_zip      = ('do not put output files into a single ZIP file',        'flag',   'Z'),
 )
 
-def main(base_name = 'B', database = 'D', format = 'F', list_tables = False,
+def main(base_name = 'B', database = 'D', format_ = 'F', list_tables = False,
          output_dir = 'O', overwrite  = False, quiet = False, tables = 'T',
          no_zip = False):
     '''Export the DIBS database to CSV or JSON files.
@@ -118,15 +115,14 @@ Command-line options summary
 
     # Initial setup -----------------------------------------------------------
 
-    name = sys.argv[0]
-    zip  = not no_zip                   # To avoid double negatives in the code
+    make_zip = not no_zip             # To avoid double negatives in the code.
     hint = '(Use -h for help.)'
 
     db_file = config('DATABASE_FILE') if database == 'D' else database
     db_path = resolved_path(db_file, must_exist = True)
     if not db_path:
         print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
-        exit(1)
+        sys.exit(1)
     db = DataSet('sqlite:///' + db_path)
 
     def inform(msg):                    # Helper function
@@ -139,27 +135,26 @@ Command-line options summary
         inform(f'Database tables found in {db_file}')
         for table in db.tables:
             inform(f'  {table}')
-        exit(0)
+        sys.exit(0)
 
-    format = 'json' if format == 'F' else format.lower()
-    if format not in ['json', 'csv']:
-        print(f'‼️  Unsupported output format {format}. {hint}')
-        exit(1)
+    output_format = 'json' if format_ == 'F' else format_.lower()
+    if output_format not in ['json', 'csv']:
+        print(f'‼️  Unsupported output format {output_format}. {hint}')
+        sys.exit(1)
 
     if output_dir == 'O':
         output_dir = os.getcwd()
     if not isabs(output_dir):
         output_dir = realpath(join(os.getcwd(), output_dir))
-    if isdir(output_dir):
-        if not writable(output_dir):
-            print(f'‼️  Directory not writable: {output_dir}')
-            exit(1)
+    if isdir(output_dir) and not writable(output_dir):
+        print(f'‼️  Directory not writable: {output_dir}')
+        sys.exit(1)
 
     tables = db.tables if tables == 'T' else tables.split(',')
     unknown = [table for table in tables if table not in db.tables]
     if any(unknown):
         print(f'‼️  Unknown {pluralized("table", unknown)}: {", ".join(unknown)}')
-        exit(1)
+        sys.exit(1)
 
     base_name = 'dibs' if base_name == 'B' else base_name
 
@@ -172,17 +167,17 @@ Command-line options summary
     inform(f'Reading database file {db_file} ...')
     files_written = []
     for table in tables:
-        file_name = base_name + '-' + table + '.' + format
+        file_name = base_name + '-' + table + '.' + output_format
         file_path = join(output_dir, file_name)
         if exists(file_path) and not overwrite:
             print(f'‼️  Quitting because file exists: {file_path}')
-            exit(1)
+            sys.exit(1)
 
-        inform(f'Writing{" temporary" if zip else ""} {relative(file_path)} ...')
-        db.freeze(db[table].all(), format = format, filename = file_path)
+        inform(f'Writing{" temporary" if make_zip else ""} {relative(file_path)} ...')
+        db.freeze(db[table].all(), format = output_format, filename = file_path)
         files_written.append(file_name)
 
-    if zip:
+    if make_zip:
         comment  = '~ '*29
         comment += '\n\nThis archive of DIBS database contents was written on\n'
         comment += (timestamp() + ' using the program "export-data".\n\n')
@@ -191,18 +186,18 @@ Command-line options summary
         try:
             os.chdir(output_dir)
             print(f'Collecting all files into {relative(archive_file)} ...')
-            with zipfile.ZipFile(archive_file, 'w', ZIP_STORED) as zf:
+            with ZipFile(archive_file, 'w', ZIP_STORED) as zf:
                 for exported_file in files_written:
                     zf.write(exported_file)
                 zf.comment = comment.encode()
-            print(f'Deleting temporary files ...')
+            print('Deleting temporary files ...')
             for file in files_written:
                 delete_existing(file)
-        except Exception as ex:
+        except Exception as ex:         # noqa: PIE786
             print(f'‼️  Failed to write ZIP archive: {str(ex)}')
-            exit(1)
+            sys.exit(1)
 
-    # And exit ----------------------------------------------------------------
+    # Exit succesfully --------------------------------------------------------
 
     inform('Done.')
 
