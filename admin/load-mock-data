@@ -26,7 +26,7 @@ db_path = resolved_path(db_file)
 if not db_path:
     text = f'Cannot find DIBS database {db_file or "-- not configured"}'
     print(Panel(text, style = 'red', width = len(text) + 4))
-    exit(1)
+    sys.exit(1)
 
 # Initialize the database.
 database = SqliteDatabase(db_path)

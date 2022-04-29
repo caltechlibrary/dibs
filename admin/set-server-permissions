@@ -77,7 +77,7 @@ Command-line arguments summary
 
     if version:
         print_version()
-        exit(0)
+        sys.exit(0)
 
     owner = getuser() if owner == 'O' else owner
     group = getgrgid(os.getgid()).gr_name if group == 'G' else group
@@ -85,7 +85,7 @@ Command-line arguments summary
     for var in ['DATABASE_FILE', 'MANIFEST_DIR', 'PROCESS_DIR', 'THUMBNAILS_DIR']:
         if not config(var, default = None):
             print(f'‼️  Variable "{var}" has no value in settings.ini')
-            exit(1)
+            sys.exit(1)
 
     print(f'Setting permissions using owner "{owner}" and group "{group}".')
 
