@@ -61,5 +61,5 @@ def send_email(user, item, start, end, base_url):
         log(f'sending mail to {anon(user)} about loan of {item.barcode}')
         mailer  = smtplib.SMTP(config('MAIL_HOST'))
         mailer.sendmail(config('MAIL_SENDER'), [user], body)
-    except Exception as ex:
+    except Exception as ex:             # noqa PIE786
         log(f'unable to send mail: {str(ex)}')

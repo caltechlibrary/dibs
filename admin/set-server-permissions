@@ -44,8 +44,8 @@ sys.path.append(dibs_root)
 
 # Now we can load the DIBS things we need.
 
-from dibs import print_version
-from dibs.settings import config
+from dibs import print_version          # noqa: E402
+from dibs.settings import config        # noqa: E402
 
 
 # Main entry point.
@@ -160,7 +160,8 @@ def touch(path):
     try:
         os.utime(path, None)
     except OSError:
-        open(path, 'a').close()
+        with open(path, 'a'):
+            pass
 
 
 # Main invocation.

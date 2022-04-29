@@ -222,7 +222,7 @@ Command-line options summary
     zip_path = zip_file_path[0]
     try:
         zip_file = ZipFile(zip_path)
-    except Exception as ex:
+    except Exception as ex:             # noqa: PIE786
         print(f'‼️  Failed to open ZIP file: {str(ex)}')
         exit(1)
 

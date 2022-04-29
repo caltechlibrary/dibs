@@ -30,7 +30,7 @@ from .settings import config, resolved_path
 @dataclass
 class LSPRecord():
     '''Common abstraction for records returned by different LSP's.'''
-    id            : str
+    id            : str                 # noqa A003
     url           : str
     title         : str
     author        : str
@@ -61,7 +61,7 @@ class LSPInterface(ABC):
     @abstractmethod
     def record(self, barcode = None):
         '''Return a record for the item identified by the "barcode".'''
-        pass
+        pass                            # noqa: PIE790
 
 
 class TindInterface(LSPInterface):
@@ -143,17 +143,17 @@ class FolioInterface(LSPInterface):
             raise ValueError('Got incomplete record for {barcode} in {self.url}')
 
         thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
-        try:
-            if not exists(thumbnail_file):
-                if rec.isbn_issn:
+        if not exists(thumbnail_file):
+            if rec.isbn_issn:
+                try:
                     save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
-                else:
-                    log(f"{rec.id} has no ISBN/ISSN => can't get a thumbnail")
+                except Exception as ex:  # noqa PIE786
+                    # Log it but otherwise we won't fail just because of this.
+                    log(f'failed to save thumbnail for {barcode}: ' + str(ex))
             else:
-                log(f'thumbnail image already exists in {thumbnail_file}')
-        except Exception as ex:
-            # Log it but otherwise we won't fail just because of this.
-            log(f'failed to save thumbnail for {barcode}: ' + str(ex))
+                log(f"{rec.id} has no ISBN/ISSN => can't get a thumbnail")
+        else:
+            log(f'thumbnail image already exists in {thumbnail_file}')
 
         url = self._page_tmpl.format(accession_number = rec.accession_number)
         return LSPRecord(id        = rec.id,

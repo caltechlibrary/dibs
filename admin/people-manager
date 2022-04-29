@@ -165,7 +165,7 @@ if __name__ == '__main__':
             key = parts[0].strip()
             value = parts[1].strip().strip("'").strip('"')
             if key:
-                if (not value) and not (key == 'secret'):
+                if (not value) and (key != 'secret'):
                     value = input(f'''Enter {key}: ''')
                 kv[key] = value
     pm = PersonManager(database, htpasswd, password_file)

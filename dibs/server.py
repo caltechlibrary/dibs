@@ -25,7 +25,6 @@ import json
 from   lru import LRU
 import os
 from   os.path import realpath, dirname, join, exists
-from   peewee import *
 from   playhouse.dataset import DataSet
 from   playhouse.reflection import generate_models
 from   sidetrack import log
@@ -155,7 +154,7 @@ def urls_restored(text, barcode):
 
 
 def user(person):
-    if isinstance(person, Person) or isinstance(person, GuestPerson):
+    if isinstance(person, (Person, GuestPerson)):
         if person.uname:
             return 'user ' + anon(person.uname)
         else:
@@ -178,7 +177,7 @@ def user(person):
 # that you want be added to a route, put the decorators highest, above the
 # call to @dibs.get/@dibs.post.
 
-class BottlePluginBase(object):
+class BottlePluginBase():
     '''Base class for Bottle plugins for DIBS.'''
     # This sets the Bottle API version. It defaults to v.1. See
     # https://bottlepy.org/docs/dev/plugindev.html#plugin-api-changes
@@ -444,7 +443,7 @@ def update_item():
                 log(f'writing {naturalsize(len(data))} image to {dest_file}')
                 with open(dest_file, 'wb') as new_file:
                     new_file.write(as_jpeg(data))
-            except Exception as ex:
+            except Exception as ex:     # noqa: PIE786
                 log(f'exception trying to save thumbnail: {str(ex)}')
         else:
             log('user did not provide a new thumbnail image file')
@@ -471,7 +470,7 @@ def start_processing():
         try:
             log(f'creating {init_file}')
             os.close(os.open(init_file, os.O_CREAT))
-        except Exception as ex:
+        except OSError as ex:
             log(f'problem creating {init_file}: {str(ex)}')
     else:
         log(f'_PROCESS_DIR not set -- ignoring /start-processing for {barcode}')

@@ -139,7 +139,7 @@ class DIBSAutoConfig(AutoConfig):
         # Avoid unintended permission errors
         try:
             filename = self._find_file(os.path.abspath(path))
-        except Exception:
+        except OSError:
             filename = ''
         Repository = self.SUPPORTED.get(os.path.basename(filename), RepositoryEmpty)
         self.config = DIBSConfig(Repository(filename, encoding = self.encoding))
