@@ -92,8 +92,8 @@ def loans_table(category, loans, color):
     for loan in loans:
         table.add_row(loan.item.barcode,
                       loan.item.title,
-                      human_datetime(loan.start_time, format = _DATETIME_FORMAT),
-                      human_datetime(loan.end_time, format = _DATETIME_FORMAT),
+                      human_datetime(loan.start_time, date_format = _DATETIME_FORMAT),
+                      human_datetime(loan.end_time, date_format = _DATETIME_FORMAT),
                       anon(loan.user))
     return table
 
