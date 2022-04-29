@@ -386,7 +386,7 @@
         <div class="md-content">
           <article class="md-content__inner md-typeset" role="main">
             
-  <section class="tex2jax_ignore mathjax_ignore" id="using-dibs">
+  <section id="using-dibs">
 <h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this headline">¶</a></h1>
 <p>This page describes how DIBS works from the standpoint of the user interface as seen by patrons and staff.  A separate section in this document describes the <span class="xref myst">system architecture</span> that implements the functionality described here.</p>
 <section id="authentication">
@@ -433,10 +433,10 @@
 </section>
 <section id="the-staff-experience">
 <h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">¶</a></h2>
-<p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <a class="reference external" href="#the-patron-experience">patron experience</a> described in the previous section.)</p>
+<p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <span class="xref myst">patron experience</span> described in the previous section.)</p>
 <section id="how-users-are-identified-as-staff-users">
 <h3 id="how-users-are-identified-as-staff-users">How users are identified as staff users<a class="headerlink" href="#how-users-are-identified-as-staff-users" title="Permalink to this headline">¶</a></h3>
-<p>As mentioned <a class="reference external" href="#authentication">above</a>, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that system administrators need to do is tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> for that purpose. (It’s located in the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
+<p>As mentioned <span class="xref myst">above</span>, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that system administrators need to do is tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <a class="reference download internal" download="" href="_downloads/19940a7e0b5e588ca5f9115591fee4a7/people-manager"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span></a> for that purpose. (It’s located in the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@caltech.edu"</span> <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
 </pre></div>
 </div>
@@ -481,7 +481,7 @@
 </section>
 <section id="editing-existing-items">
 <h3 id="editing-existing-items">Editing existing items<a class="headerlink" href="#editing-existing-items" title="Permalink to this headline">¶</a></h3>
-<p>As mentioned above, every item on the <a class="reference external" href="#listing-all-items-in-dibs">list page</a> has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.</p>
+<p>As mentioned above, every item on the <span class="xref myst">list page</span> has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.</p>
 <figure>
 <img src="_static/media/edit-item-page.png"/>
 </figure>
@@ -579,10 +579,10 @@
               
           </div>
             Last updated on
-              Feb 09, 2022.
+              Apr 29, 2022.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
