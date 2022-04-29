@@ -20,7 +20,7 @@ from   datetime import timedelta
 def human_datetime(value, date_format = "%I:%M %p (%Z) on %Y-%m-%d"):
     '''Return a human-friendly string for the given datetime in local time.'''
     if not value:
-        return None
+        return ''
     time = arrow.get(value).to('local').strftime(date_format)
     # Stftime has no option to *not* zero-pad the numbers, so we have to do it:
     return time.lstrip('0')
