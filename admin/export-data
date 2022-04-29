@@ -116,7 +116,7 @@ Command-line options summary
 
     # Initial setup -----------------------------------------------------------
 
-    zip  = not no_zip                   # To avoid double negatives in the code
+    make_zip = not no_zip             # To avoid double negatives in the code.
     hint = '(Use -h for help.)'
 
     db_file = config('DATABASE_FILE') if database == 'D' else database
@@ -138,19 +138,18 @@ Command-line options summary
             inform(f'  {table}')
         exit(0)
 
-    format = 'json' if format == 'F' else format.lower()
-    if format not in ['json', 'csv']:
-        print(f'‼️  Unsupported output format {format}. {hint}')
+    output_format = 'json' if format == 'F' else format.lower()
+    if output_format not in ['json', 'csv']:
+        print(f'‼️  Unsupported output format {output_format}. {hint}')
         exit(1)
 
     if output_dir == 'O':
         output_dir = os.getcwd()
     if not isabs(output_dir):
         output_dir = realpath(join(os.getcwd(), output_dir))
-    if isdir(output_dir):
-        if not writable(output_dir):
-            print(f'‼️  Directory not writable: {output_dir}')
-            exit(1)
+    if isdir(output_dir) and not writable(output_dir):
+        print(f'‼️  Directory not writable: {output_dir}')
+        exit(1)
 
     tables = db.tables if tables == 'T' else tables.split(',')
     unknown = [table for table in tables if table not in db.tables]
@@ -169,17 +168,17 @@ Command-line options summary
     inform(f'Reading database file {db_file} ...')
     files_written = []
     for table in tables:
-        file_name = base_name + '-' + table + '.' + format
+        file_name = base_name + '-' + table + '.' + output_format
         file_path = join(output_dir, file_name)
         if exists(file_path) and not overwrite:
             print(f'‼️  Quitting because file exists: {file_path}')
             exit(1)
 
-        inform(f'Writing{" temporary" if zip else ""} {relative(file_path)} ...')
-        db.freeze(db[table].all(), format = format, filename = file_path)
+        inform(f'Writing{" temporary" if make_zip else ""} {relative(file_path)} ...')
+        db.freeze(db[table].all(), format = output_format, filename = file_path)
         files_written.append(file_name)
 
-    if zip:
+    if make_zip:
         comment  = '~ '*29
         comment += '\n\nThis archive of DIBS database contents was written on\n'
         comment += (timestamp() + ' using the program "export-data".\n\n')
@@ -195,7 +194,7 @@ Command-line options summary
             print('Deleting temporary files ...')
             for file in files_written:
                 delete_existing(file)
-        except Exception as ex:
+        except Exception as ex:         # noqa: PIE786
             print(f'‼️  Failed to write ZIP archive: {str(ex)}')
             exit(1)
 
