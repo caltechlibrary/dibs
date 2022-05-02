@@ -347,7 +347,8 @@ class VerifyStaffUser(BottlePluginBase):
 # to provide a way for them to un-authenticate themselves.  This is the
 # reason for the asymmetry between /logout and (lack of) login.
 
-@dibs.post('/logout')
+@dibs.post('/logout',
+           skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def logout():
     '''Handle the logout action from the navbar menu on every page.'''
     # If we are not in debug mode, then whether the user is authenticated or
@@ -885,22 +886,28 @@ def return_iiif_content(barcode, rest, person):
 # files to anyone; they don't need to be controlled.  The multiple routes
 # are because the UV files themselves reference different paths.
 
-@dibs.route('/view/uv/<filepath:path>')
-@dibs.route('/viewer/uv/<filepath:path>')
+@dibs.route('/view/uv/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/viewer/uv/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def serve_uv_files(filepath):
     log(f'serving static uv file /viewer/uv/{filepath}')
     return static_file(filepath, root = 'viewer/uv')
 
 
-@dibs.route('/view/img/<filepath:path>')
-@dibs.route('/viewer/img/<filepath:path>')
+@dibs.route('/view/img/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/viewer/img/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def serve_uv_img_files(filepath):
     log(f'serving static uv file /viewer/img/{filepath}')
     return static_file(filepath, root = 'viewer/img')
 
 
-@dibs.route('/view/lib/<filepath:path>')
-@dibs.route('/viewer/lib/<filepath:path>')
+@dibs.route('/view/lib/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/viewer/lib/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def serve_uv_lib_files(filepath):
     # Don't return config files from UV because they would override ours.
     # Otherwise, return the requested file.
@@ -912,8 +919,10 @@ def serve_uv_lib_files(filepath):
         return static_file(filepath, root = 'viewer/lib')
 
 
-@dibs.route('/view/themes/<filepath:path>')
-@dibs.route('/viewer/themes/<filepath:path>')
+@dibs.route('/view/themes/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/viewer/themes/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def serve_uv_themes_files(filepath):
     # Intercept requests for undefined themes and reroute them to a default.
     if filepath.startswith('undefined'):
@@ -922,7 +931,8 @@ def serve_uv_themes_files(filepath):
     return static_file(filepath, root = 'viewer/themes')
 
 
-@dibs.route('/viewer/<filepath:path>')
+@dibs.route('/viewer/<filepath:path>',
+            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def serve_viewer_files(filepath):
     log(f'serving static uv file /viewer/{filepath}')
     return static_file(filepath, root = 'viewer')
@@ -957,20 +967,23 @@ def error405(error):
 # Miscellaneous static pages and files.
 # .............................................................................
 
-@dibs.get('/favicon.ico')
+@dibs.get('/favicon.ico',
+          skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def favicon():
     '''Return the favicon.'''
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>')
+@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>',
+          skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def included_file(filename):
     '''Return a static file used with %include in a template.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = 'dibs/static')
 
 
-@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>')
+@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>',
+          skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
 def thumbnail_file(filename):
     '''Return a thumbnail image file.'''
     log(f'returning included file {filename}')
