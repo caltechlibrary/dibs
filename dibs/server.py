@@ -25,6 +25,7 @@ import json
 from   lru import LRU
 import os
 from   os.path import realpath, dirname, join, exists
+from   peewee import PeeweeException
 from   playhouse.dataset import DataSet
 from   playhouse.reflection import generate_models
 from   sidetrack import log
@@ -184,6 +185,25 @@ class BottlePluginBase():
     api = 2
 
 
+class DatabaseConnector(BottlePluginBase):
+    '''Wrap a route with a connection to the database.'''
+    def __call__(self, callback):
+        def database_connector(*args, **kwargs):
+            log('opening database connection')
+            database.connect()
+            try:
+                result = callback(*args, **kwargs)
+                database.commit()
+            except PeeweeException as ex:
+                log('*** database exception: ' + str(ex))
+            finally:
+                log('closing database connection')
+                database.close()
+            return result
+
+        return database_connector
+
+
 class LoanExpirer(BottlePluginBase):
     '''Wrap every route function with code that expires loans as needed.'''
 
@@ -271,11 +291,14 @@ class RouteTracer(BottlePluginBase):
         return route_tracer
 
 
-# Hook in the plugins above into all routes.
+# Hook in the plugins above into all routes. The order here matters: the first
+# one added here becomes the first one called.
 
+dibs.install(DatabaseConnector())
 dibs.install(BarcodeVerifier())
 dibs.install(LoanExpirer())
 dibs.install(RouteTracer())
+
 
 # The remaining plugins below are applied selectively to specific routes only.
 
