@@ -217,6 +217,7 @@ class LoanExpirer(BottlePluginBase):
         def loan_expirer(*args, **kwargs):
             now = time_now()
             # Delete expired loan recency records.
+            log('checking for expired loans')
             n = Loan.delete().where(Loan.state == 'recent', now >= Loan.reloan_time).execute()
             if n > 0:
                 log(f'deleted {n} recent loans that reached their reloan times')
@@ -255,6 +256,7 @@ class BarcodeVerifier(BottlePluginBase):
             # This handles both HTTP GET & POST requests.  In the case of GET,
             # there will be an argument to the function called "barcode"; in
             # the case of POST, there will be a form variable called "barcode".
+            log('running barcode verifier')
             barcode = None
             if 'barcode' in kwargs:
                 barcode = kwargs['barcode']
@@ -755,6 +757,7 @@ def loan_item(person):
                     start_time = start, end_time = end, reloan_time = reloan)
 
     send_email(person.uname, item, start, end, dibs.base_url)
+    log(f'redirecting {user(person)} to viewer page for new loan on {barcode}')
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
