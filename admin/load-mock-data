@@ -57,3 +57,6 @@ if not Item.get_or_none(Item.barcode == '350470000180226'):
 if not Person.select().exists():
     text = 'Now use admin/people-manager to add library staff users'
     print(Panel(text, style = 'dark_orange', width = len(text) + 4))
+
+if not database.is_closed():
+    database.close()
