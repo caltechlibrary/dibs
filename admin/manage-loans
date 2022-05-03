@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    manage-loans
+# @brief   Perform administrative functions on loans
+# @created 2021-04-07
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+from   datetime import timedelta as delta
+from   fastnumbers import isint
+from   os.path import dirname, join, abspath
+from   peewee import SqliteDatabase, PeeweeException
+import plac
+from   rich import box
+from   rich.console import Console
+from   rich.padding import Padding
+from   rich.panel import Panel
+from   rich.prompt import Confirm
+from   rich.style import Style
+from   rich.table import Table
+import sys
+from   trinomial import anon
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
+from   dibs import print_version
+from   dibs.data_models import database, Loan, History
+from   dibs.date_utils import human_datetime, round_minutes, time_now
+from   dibs.roles import staff_user
+from   dibs.settings import config, resolved_path
+
+
+# Globals.
+# .............................................................................
+
+db_file = config('DATABASE_FILE')
+db_path = resolved_path(db_file, must_exist = True)
+if not db_path:
+    print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
+    sys.exit(1)
+
+# Cooling-off period after a loan ends, before user can borrow same title again.
+# This is the same value used by dibs/server.py.
+_RELOAN_WAIT_TIME = delta(minutes = int(config('RELOAN_WAIT_TIME')))
+
+# Format we use to print dates for list-loans.
+_DATETIME_FORMAT = '%m/%d %I:%M %p'
+
+
+# Main entry point.
+# .............................................................................
+
+@plac.annotations(
+    end_loans  = ('forcefully end all loans on item with barcode E', 'option', 'e'),
+    list_loans = ('list the current loans',                          'flag',   'l'),
+    version    = ('print version info and exit',                     'flag',   'V'),
+)
+
+def main(end_loans = 'E', list_loans = False, version = False):
+    '''Perform some management functions on a DIBS server.
+
+If given the option --list-loans, this program prints a list of active and
+recent loans. The option takes no argument values.
+
+The option --end-loans takes one value, an item barcode, and forcefully ends
+all active loans on that item.  Note that this is EXTREMELY UNFRIENDLY TO USERS
+and should only be used in extraordinary circumstances (such as if currently
+active loans are known to be by administrators doing system testing).
+
+If given the --version option, this program will print the version and other
+information, and exit without doing anything else.
+'''
+
+    if version:
+        print_version()
+        sys.exit(0)
+
+    if list_loans and end_loans != 'E':
+        alert('Cannot use both --end-loan and --list-loans at the same time.')
+        sys.exit(1)
+
+    try:
+        database.connect()
+        if list_loans:
+            do_list()
+        if end_loans != 'E':
+            barcode = end_loans         # Rename variable for more clarity.
+            if not barcode:
+                alert('Must provide a nonempty barcode value to --end-loans.')
+                sys.exit(1)
+            # This is only a heuristic check for likely non-barcode values.
+            if not isint(barcode):
+                alert('Value does not appear to be a barcode: ' + barcode)
+                sys.exit(1)
+            do_end_loan(barcode)
+    except PeeweeException as ex:
+        alert('Database exception: ' + str(ex))
+        sys.exit(1)
+    except KeyboardInterrupt:
+        # Catch it, but don't treat it as an error; just stop execution.
+        pass
+    finally:
+        if not database.is_closed():
+            database.close()
+
+
+# Miscellaneous utilities.
+# .............................................................................
+
+def do_list():
+    expire_loans()
+    active = list(Loan.select().where(Loan.state == 'active'))
+    recent = list(Loan.select().where(Loan.state == 'recent'))
+    total = len(active) + len(recent)
+    now = time_now()
+
+    console = Console()
+    console.print(Padding(f'Current time: {human_datetime(now)}', (1, 0, 0, 1)))
+    console.print(Padding(f'Total loans:  {total}', (0, 0, 0, 1)))
+    if active:
+        console.print(loans_table('active', active, 'bold red'))
+    if recent:
+        console.print(loans_table('recent', recent, 'bold white'))
+
+
+def do_end_loan(barcode):
+    barcode = barcode.strip('"').strip("'")
+    expire_loans()
+    loans = list(Loan.select().where(Loan.state == 'active'))
+    if barcode in [loan.barcode for loan in loans]:
+        alert(f"Warning: this will terminate all patron loans for {barcode}.")
+        if Confirm.ask(f'[red]Please confirm: end loans on {barcode}?[/]'):
+            for loan in [loan for loan in loans if loan.barcode == barcode]:
+                with database.atomic('immediate'):
+                    now = time_now()
+                    loan.state = 'recent'
+                    loan.end_time = now
+                    loan.reloan_time = round_minutes(now + _RELOAN_WAIT_TIME, 'down')
+                    loan.save(only = [Loan.state, Loan.end_time, Loan.reloan_time])
+                    if not staff_user(loan.user):
+                        # We only count non-staff users in loan stats.
+                        History.create(type = 'loan', what = loan.item.barcode,
+                                       start_time = loan.start_time,
+                                       end_time = loan.end_time)
+        else:
+            inform(f'Not ending loans on {barcode} after all.')
+    else:
+        warn(f'There are no active loans for {barcode}.')
+
+
+def expire_loans():
+    now = time_now()
+    # Delete expired loan recency records.
+    for loan in Loan.select().where(Loan.state == 'recent', now >= Loan.reloan_time):
+        with database.atomic():
+            loan.delete_instance()
+
+
+def loans_table(category, loans, color):
+    table = Table(title = f'[{color}]{category.title()}[/] loans: [{color}]{len(loans)}[/]',
+                  pad_edge = False, box = box.MINIMAL_DOUBLE_HEAD)
+    table.add_column('Barcode', style = 'sky_blue2', width = 14)
+    table.add_column('Title', style = 'medium_turquoise', width = 22)
+    table.add_column('Start')
+    table.add_column('End', style = 'light_cyan3')
+    table.add_column('User')
+    for loan in loans:
+        table.add_row(loan.item.barcode,
+                      loan.item.title,
+                      human_datetime(loan.start_time, date_format = _DATETIME_FORMAT),
+                      human_datetime(loan.end_time, date_format = _DATETIME_FORMAT),
+                      anon(loan.user))
+    return table
+
+
+def inform(msg):
+    console = Console()
+    console.print('[green]' + msg + '[/]')
+
+
+def warn(msg):
+    console = Console()
+    console.print('[yellow]' + msg + '[/]')
+
+
+def alert(msg):
+    console = Console()
+    console.print('[red]' + msg + '[/]')
+
+
+# Main invocation.
+# .............................................................................
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == 'help'):
+        plac.call(main, ['-h'])
+    else:
+        plac.call(main)
