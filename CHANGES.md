@@ -3,7 +3,7 @@
 ## ★ Version 0.5.4 ★
 
 The changes in this version are purely internal and do not affect functionality or templates.
-* Helper function `admin/query-dibs` has been renamed to `admin/manage-loans` and has additional capabilities.
+* Helper function `admin/query-dibs` has been renamed to `admin/loan-manager` and has additional capabilities.
 * Internal handling of the database has changed such that it is explicitly opened and closed around every access by the server. This allows other processes to access the database. Previously, the server had the database file open continously and while this worked for multiple threads, it prevent other processes (such as the scripts in the `admin` directory) from accessing it.
 * New [Flake8](https://flake8.pycqa.org/en/latest/) project config file `.flake8`.
 * Minor adjustments to most code files based on Flake8 output.

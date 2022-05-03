@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =============================================================================
-# @file    manage-loans
+# @file    loan-manager
 # @brief   Perform administrative functions on loans
 # @created 2021-04-07
 # @license Please see the file named LICENSE in the project directory
