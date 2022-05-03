@@ -888,28 +888,26 @@ def return_iiif_content(barcode, rest, person):
 # files to anyone; they don't need to be controlled.  The multiple routes
 # are because the UV files themselves reference different paths.
 
-@dibs.route('/view/uv/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
-@dibs.route('/viewer/uv/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+_UNNECESSARY_PLUGINS = [
+    DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer
+]
+
+@dibs.route('/view/uv/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/uv/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_files(filepath):
     log(f'serving static uv file /viewer/uv/{filepath}')
     return static_file(filepath, root = 'viewer/uv')
 
 
-@dibs.route('/view/img/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
-@dibs.route('/viewer/img/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/view/img/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/img/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_img_files(filepath):
     log(f'serving static uv file /viewer/img/{filepath}')
     return static_file(filepath, root = 'viewer/img')
 
 
-@dibs.route('/view/lib/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
-@dibs.route('/viewer/lib/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/view/lib/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/lib/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_lib_files(filepath):
     # Don't return config files from UV because they would override ours.
     # Otherwise, return the requested file.
@@ -921,10 +919,8 @@ def serve_uv_lib_files(filepath):
         return static_file(filepath, root = 'viewer/lib')
 
 
-@dibs.route('/view/themes/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
-@dibs.route('/viewer/themes/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/view/themes/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/themes/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_themes_files(filepath):
     # Intercept requests for undefined themes and reroute them to a default.
     if filepath.startswith('undefined'):
@@ -933,8 +929,7 @@ def serve_uv_themes_files(filepath):
     return static_file(filepath, root = 'viewer/themes')
 
 
-@dibs.route('/viewer/<filepath:path>',
-            skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.route('/viewer/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_viewer_files(filepath):
     log(f'serving static uv file /viewer/{filepath}')
     return static_file(filepath, root = 'viewer')
@@ -969,24 +964,22 @@ def error405(error):
 # Miscellaneous static pages and files.
 # .............................................................................
 
-@dibs.get('/favicon.ico',
-          skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.get('/favicon.ico', skip = _UNNECESSARY_PLUGINS)
 def favicon():
     '''Return the favicon.'''
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>',
-          skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
-def included_file(filename):
-    '''Return a static file used with %include in a template.'''
-    log(f'returning included file {filename}')
-    return static_file(filename, root = 'dibs/static')
-
-
-@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>',
-          skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>', skip = _UNNECESSARY_PLUGINS)
 def thumbnail_file(filename):
     '''Return a thumbnail image file.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = _THUMBNAILS_DIR)
+
+
+@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>',
+          skip = _UNNECESSARY_PLUGINS)
+def included_file(filename):
+    '''Return a static file used with %include in a template.'''
+    log(f'returning included file {filename}')
+    return static_file(filename, root = 'dibs/static')
