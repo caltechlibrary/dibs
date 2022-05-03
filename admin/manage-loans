@@ -8,7 +8,6 @@
 # =============================================================================
 
 from   datetime import timedelta as delta
-from   fastnumbers import isint
 from   os.path import dirname, join, abspath
 from   peewee import SqliteDatabase, PeeweeException
 import plac
@@ -90,7 +89,7 @@ information, and exit without doing anything else.
                 alert('Must provide a nonempty barcode value to --end-loans.')
                 sys.exit(1)
             # This is only a heuristic check for likely non-barcode values.
-            if not isint(barcode):
+            if not barcode.isdigit():
                 alert('Value does not appear to be a barcode: ' + barcode)
                 sys.exit(1)
             do_end_loan(barcode)
