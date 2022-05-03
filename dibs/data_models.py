@@ -27,7 +27,7 @@ from .settings import config, resolved_path
 # managers on the database object to perform some atomic operations.
 
 _db_path = resolved_path(config('DATABASE_FILE'))
-database = SqliteDatabase(_db_path)
+database = SqliteDatabase(_db_path, autoconnect = False)
 
 # Annotate our database object with a path to the file we're using. This saves
 # us from having to duplicate the path resolution logic elsewhere. Keep it DRY!
@@ -193,7 +193,10 @@ class Person(BaseModel):
 # Initialization.
 # .............................................................................
 # We need to make sure the database has been created the first time we try to
-# use DIBS.
+# use DIBS. When this module is loaded, the following connects to the database
+# and creates the 4 required tables if they don't exist yet.
 
+database.connect()
 if generate_models(database) == {}:
     database.create_tables([Item, Loan, History, Person])
+database.close()

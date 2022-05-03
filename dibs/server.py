@@ -25,6 +25,7 @@ import json
 from   lru import LRU
 import os
 from   os.path import realpath, dirname, join, exists
+from   peewee import PeeweeException
 from   playhouse.dataset import DataSet
 from   playhouse.reflection import generate_models
 from   sidetrack import log
@@ -87,6 +88,9 @@ _FEEDBACK_URL = config('FEEDBACK_URL')
 # page, which is assumed to exist even if individual sites don't provide docs.
 _HELP_URL = config('HELP_URL', default = 'https://caltechlibrary.github.io/dibs')
 
+# If there's a site announcement file, this will be its path.
+_SITE_ANNOUNCEMENT_FILE = join(_SERVER_ROOT, 'site-announcement.html')
+
 # Remember the most recent accesses so we can provide stats on recent activity.
 # This is a dictionary whose elements are dictionaries.
 _REQUESTS = {'15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
@@ -111,8 +115,8 @@ def page(name, **kargs):
         response.add_header('Cache-Control',
                             'no-store, max-age=0, no-cache, must-revalidate')
     announcement = None
-    if exists(join(_SERVER_ROOT, 'site-announcement.html')):
-        with open(join(_SERVER_ROOT, 'site-announcement.html'), 'r') as f:
+    if exists(_SITE_ANNOUNCEMENT_FILE):
+        with open(_SITE_ANNOUNCEMENT_FILE, 'r') as f:
             announcement = f.read().strip()
         if len(announcement) == 0:
             announcement = None
@@ -184,6 +188,25 @@ class BottlePluginBase():
     api = 2
 
 
+class DatabaseConnector(BottlePluginBase):
+    '''Wrap a route with a connection to the database.'''
+    def __call__(self, callback):
+        def database_connector(*args, **kwargs):
+            log('opening database connection')
+            database.connect()
+            try:
+                result = callback(*args, **kwargs)
+                database.commit()
+            except PeeweeException as ex:
+                log('*** database exception: ' + str(ex))
+            finally:
+                log('closing database connection')
+                database.close()
+            return result
+
+        return database_connector
+
+
 class LoanExpirer(BottlePluginBase):
     '''Wrap every route function with code that expires loans as needed.'''
 
@@ -197,6 +220,7 @@ class LoanExpirer(BottlePluginBase):
         def loan_expirer(*args, **kwargs):
             now = time_now()
             # Delete expired loan recency records.
+            log('checking for expired loans')
             n = Loan.delete().where(Loan.state == 'recent', now >= Loan.reloan_time).execute()
             if n > 0:
                 log(f'deleted {n} recent loans that reached their reloan times')
@@ -235,6 +259,7 @@ class BarcodeVerifier(BottlePluginBase):
             # This handles both HTTP GET & POST requests.  In the case of GET,
             # there will be an argument to the function called "barcode"; in
             # the case of POST, there will be a form variable called "barcode".
+            log('running barcode verifier')
             barcode = None
             if 'barcode' in kwargs:
                 barcode = kwargs['barcode']
@@ -255,6 +280,10 @@ class RouteTracer(BottlePluginBase):
     '''Write a log entry for this route invocation.'''
 
     def apply(self, callback, route):
+        # Minor optimization: only install this if we're running in debug mode.
+        if not debug_mode():
+            return callback
+
         def route_tracer(*args, **kwargs):
             barcode = None
             if 'barcode' in kwargs:
@@ -263,19 +292,22 @@ class RouteTracer(BottlePluginBase):
                 barcode = request.POST.barcode.strip()
             elif request.forms.get('barcode', None):
                 barcode = request.forms.get('barcode').strip()
-            person = person_from_environ(request.environ)
-            log(f'{route.method} {route.rule} invoked by {user(person)}'
+            who = request.environ['REMOTE_USER']
+            log(f'{user(who)} invoked {route.method.lower()} {route.rule}'
                 + (f' for {barcode}' if barcode else ''))
             return callback(*args, **kwargs)
 
         return route_tracer
 
 
-# Hook in the plugins above into all routes.
+# Hook in the plugins above into all routes. The order here matters: the first
+# one added here becomes the first one called.
 
+dibs.install(DatabaseConnector())
+dibs.install(RouteTracer())
 dibs.install(BarcodeVerifier())
 dibs.install(LoanExpirer())
-dibs.install(RouteTracer())
+
 
 # The remaining plugins below are applied selectively to specific routes only.
 
@@ -732,6 +764,7 @@ def loan_item(person):
                     start_time = start, end_time = end, reloan_time = reloan)
 
     send_email(person.uname, item, start, end, dibs.base_url)
+    log(f'redirecting {user(person)} to viewer page for new loan on {barcode}')
     redirect(f'{dibs.base_url}/view/{barcode}')
 
 
@@ -859,22 +892,26 @@ def return_iiif_content(barcode, rest, person):
 # files to anyone; they don't need to be controlled.  The multiple routes
 # are because the UV files themselves reference different paths.
 
-@dibs.route('/view/uv/<filepath:path>')
-@dibs.route('/viewer/uv/<filepath:path>')
+_UNNECESSARY_PLUGINS = [
+    DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer
+]
+
+@dibs.route('/view/uv/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/uv/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_files(filepath):
     log(f'serving static uv file /viewer/uv/{filepath}')
     return static_file(filepath, root = 'viewer/uv')
 
 
-@dibs.route('/view/img/<filepath:path>')
-@dibs.route('/viewer/img/<filepath:path>')
+@dibs.route('/view/img/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/img/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_img_files(filepath):
     log(f'serving static uv file /viewer/img/{filepath}')
     return static_file(filepath, root = 'viewer/img')
 
 
-@dibs.route('/view/lib/<filepath:path>')
-@dibs.route('/viewer/lib/<filepath:path>')
+@dibs.route('/view/lib/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/lib/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_lib_files(filepath):
     # Don't return config files from UV because they would override ours.
     # Otherwise, return the requested file.
@@ -886,8 +923,8 @@ def serve_uv_lib_files(filepath):
         return static_file(filepath, root = 'viewer/lib')
 
 
-@dibs.route('/view/themes/<filepath:path>')
-@dibs.route('/viewer/themes/<filepath:path>')
+@dibs.route('/view/themes/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
+@dibs.route('/viewer/themes/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_themes_files(filepath):
     # Intercept requests for undefined themes and reroute them to a default.
     if filepath.startswith('undefined'):
@@ -896,7 +933,7 @@ def serve_uv_themes_files(filepath):
     return static_file(filepath, root = 'viewer/themes')
 
 
-@dibs.route('/viewer/<filepath:path>')
+@dibs.route('/viewer/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_viewer_files(filepath):
     log(f'serving static uv file /viewer/{filepath}')
     return static_file(filepath, root = 'viewer')
@@ -931,21 +968,22 @@ def error405(error):
 # Miscellaneous static pages and files.
 # .............................................................................
 
-@dibs.get('/favicon.ico')
+@dibs.get('/favicon.ico', skip = _UNNECESSARY_PLUGINS)
 def favicon():
     '''Return the favicon.'''
     return static_file('favicon.ico', root = 'dibs/static')
 
 
-@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>')
-def included_file(filename):
-    '''Return a static file used with %include in a template.'''
-    log(f'returning included file {filename}')
-    return static_file(filename, root = 'dibs/static')
-
-
-@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>')
+@dibs.get('/thumbnails/<filename:re:[0-9]+.jpg>', skip = _UNNECESSARY_PLUGINS)
 def thumbnail_file(filename):
     '''Return a thumbnail image file.'''
     log(f'returning included file {filename}')
     return static_file(filename, root = _THUMBNAILS_DIR)
+
+
+@dibs.get('/static/<filename:re:[-a-zA-Z0-9]+.(html|jpg|svg|css|js|json)>',
+          skip = _UNNECESSARY_PLUGINS)
+def included_file(filename):
+    '''Return a static file used with %include in a template.'''
+    log(f'returning included file {filename}')
+    return static_file(filename, root = 'dibs/static')

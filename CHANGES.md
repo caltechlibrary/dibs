@@ -1,11 +1,13 @@
 #  Change log for DIBS<img width="70em" align="right" src="https://github.com/caltechlibrary/dibs/raw/main/docs/_static/media//dibs-icon.png">
 
-## ★ Version 0.5.4 ★
+## ★ Version 0.6.0 ★
 
-The changes in this version are purely internal and do not affect functionality or templates.
+The changes in this version do not affect user functionality or site templates; however, we bumped up the minor version number (instead of making this only a patch release) because of changes to the administrative management scripts and the way the database is handled by the server.
+* The helper program `admin/query-dibs` has been renamed to `admin/loan-manager` and has additional capabilities.
+* Internal handling of the database has changed such that it is explicitly opened and closed around every access by the server. This allows other processes to access the database. Previously, the server had the database file open continously and while this worked for multiple threads, it prevent other processes (such as the programs in the `admin` directory) from accessing it.
+* Updated `requirements.txt` uses new versions of some Python libraries.
 * New [Flake8](https://flake8.pycqa.org/en/latest/) project config file `.flake8`.
 * Minor adjustments to most code files based on Flake8 output.
-* Updated `requirements.txt` uses new versions of some Python libraries.
 * Minor internal code improvements.
 
 
