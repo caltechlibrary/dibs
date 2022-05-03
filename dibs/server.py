@@ -350,8 +350,7 @@ class VerifyStaffUser(BottlePluginBase):
 # to provide a way for them to un-authenticate themselves.  This is the
 # reason for the asymmetry between /logout and (lack of) login.
 
-@dibs.post('/logout',
-           skip = [DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer])
+@dibs.post('/logout')
 def logout():
     '''Handle the logout action from the navbar menu on every page.'''
     # If we are not in debug mode, then whether the user is authenticated or
