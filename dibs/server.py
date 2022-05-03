@@ -88,6 +88,9 @@ _FEEDBACK_URL = config('FEEDBACK_URL')
 # page, which is assumed to exist even if individual sites don't provide docs.
 _HELP_URL = config('HELP_URL', default = 'https://caltechlibrary.github.io/dibs')
 
+# If there's a site announcement file, this will be its path.
+_SITE_ANNOUNCEMENT_FILE = join(_SERVER_ROOT, 'site-announcement.html')
+
 # Remember the most recent accesses so we can provide stats on recent activity.
 # This is a dictionary whose elements are dictionaries.
 _REQUESTS = {'15': ExpiringDict(max_len = 1000000, max_age_seconds = 15*60),
@@ -112,8 +115,8 @@ def page(name, **kargs):
         response.add_header('Cache-Control',
                             'no-store, max-age=0, no-cache, must-revalidate')
     announcement = None
-    if exists(join(_SERVER_ROOT, 'site-announcement.html')):
-        with open(join(_SERVER_ROOT, 'site-announcement.html'), 'r') as f:
+    if exists(_SITE_ANNOUNCEMENT_FILE):
+        with open(_SITE_ANNOUNCEMENT_FILE, 'r') as f:
             announcement = f.read().strip()
         if len(announcement) == 0:
             announcement = None
