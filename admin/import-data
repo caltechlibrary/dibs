@@ -10,22 +10,20 @@
 from   commonpy.file_utils import relative
 import json
 from   os.path import dirname, join, abspath
-from   peewee import SqliteDatabase
 import plac
-from   playhouse.reflection import generate_models
 import sys
 from   zipfile import ZipFile
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
 from   dibs.settings import config, resolved_path           # noqa: E402
-from   dibs.data_models import Item, Loan, History, Person  # noqa: E402
+from   dibs.data_models import database, Item, Loan, History, Person  # noqa: E402
 
 
 # Database object import handlers.
 # .............................................................................
 
-def import_items(data, database, quiet):
+def import_items(data, quiet):
     if not quiet:
         print('Importing items ...')
     added = 0
@@ -78,7 +76,7 @@ def import_items(data, database, quiet):
 # duration, and upgrades rare, it just doesn't seem to be an important-enough
 # concern to justify the time to implement this edge case.
 
-def import_loans(data, database, quiet):
+def import_loans(data, quiet):
     if not quiet:
         print('Importing loans ...')
     added = 0
@@ -105,7 +103,7 @@ def import_loans(data, database, quiet):
         print(f'Imported {added} loan entries')
 
 
-def import_history(data, database, quiet):
+def import_history(data, quiet):
     if not quiet:
         print('Importing history ...')
     added = 0
@@ -123,7 +121,7 @@ def import_history(data, database, quiet):
         print(f'Imported {added} history entries')
 
 
-def import_persons(data, database, quiet):
+def import_persons(data, quiet):
     if not quiet:
         print('Importing persons ...')
     added = 0
@@ -152,12 +150,11 @@ IMPORT_HANDLERS = {
 # .............................................................................
 
 @plac.annotations(
-    database  = ('use database file "D" (default: look in settings.ini)', 'option', 'd'),
-    quiet     = ('only print important messages while working',           'flag',   'q'),
+    quiet     = ('only print important messages while working', 'flag', 'q'),
     zip_file_path = 'ZIP archive file to load',
 )
 
-def main(database = 'D', quiet = False, *zip_file_path):
+def main(quiet = False, *zip_file_path):
     '''Read a DIBS database archive and append contents to a database.
 
 This program takes a ZIP archive of JSON files previously exported by the
@@ -172,17 +169,13 @@ skipped and not added to the database.  Item identities are based on barcodes,
 while Person identities are based on the "uname" field values.  These must
 be unique in a DIBS database, which is why duplicates are not allowed.
 
+This program looks for the settings.ini configuration file in the same
+directory where this program is located, or in the parent directory if not
+found in this program's directory, and reads the settings file to find the
+value of the DATABASE_FILE variable.
+
 Options
 ~~~~~~~
-
-Unless given the option --database, this program looks for the settings.ini
-configuration file in the same directory where this program is located, or in
-the parent directory if not found in this program's directory, and reads the
-settings file to find the value of the DATABASE_FILE variable.  The option
---database can be used to point it to a specific database file.
-
-Additional command-line arguments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If given the option --quiet, this program will not print informational messages
 while it is working. It will only print messages for warnings or errors.
@@ -202,7 +195,7 @@ Command-line options summary
     name = sys.argv[0]
     hint = '(Use -h for help.)'
 
-    db_file = config('DATABASE_FILE') if database == 'D' else database
+    db_file = config('DATABASE_FILE')
     db_path = resolved_path(db_file, must_exist = True)
     if not db_path:
         print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
@@ -237,12 +230,7 @@ Command-line options summary
     # Do the real work --------------------------------------------------------
 
     print(f'Opening DIBS database file {relative(db_path)} ...')
-    database = SqliteDatabase(db_path)
     database.connect()
-
-    # Create our tables if they don't exist yet.
-    if generate_models(database) == {}:
-        database.create_tables([Item, Loan, History, Person])
 
     # Read the zip file contents and load the appropriate database tables.
     print(f'Opening ZIP archive file {relative(zip_path)} ...')
@@ -254,7 +242,10 @@ Command-line options summary
                     continue
                 with zip_file.open(file_name) as contents:
                     data = json.load(contents)
-                    import_data(data, database, quiet)
+                    import_data(data, quiet)
+
+    print(f'Closing DIBS database file {relative(db_path)} ...')
+    database.close()
 
     # And exit ----------------------------------------------------------------
 

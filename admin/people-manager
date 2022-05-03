@@ -61,6 +61,7 @@
 
 import sys
 from os.path import dirname, join, basename, abspath
+from peewee import PeeweeException
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
@@ -86,7 +87,7 @@ to show the version of the program or this help page.
     version    version of software
     setup      setup {database} for the fist time
 
-    list       list users defined in {database}
+    list       list users defined in database
     add        add a user to {database}
     update     set a value for user in {database}
     remove     remove user from {database}
@@ -168,22 +169,33 @@ if __name__ == '__main__':
                 if (not value) and (key != 'secret'):
                     value = input(f'''Enter {key}: ''')
                 kv[key] = value
-    pm = PersonManager(database, htpasswd, password_file)
-    if verb == 'setup':
-        setup_person_table(database)
-    elif verb == 'list':
-        pm.list_people(kv)
-    elif verb == 'add':
-        pm.add_people(kv)
-        print(f'Added new person {kv["uname"]}.')
-    elif verb == 'update':
-        pm.update_people(kv)
-        print(f'Updated entry for {kv["uname"]}.')
-    elif verb == 'remove':
-        pm.remove_people(kv)
-        print(f'Removed {kv["uname"]}.')
-    elif verb in ['h', 'help', '-h', '--help', '-help']:
-        usage(app_name, 0)
-    else:
-        print(f'''ERROR: "{verb}" not understood''')
+    try:
+        database.connect()
+        pm = PersonManager(database, htpasswd, password_file)
+        if verb == 'setup':
+            setup_person_table(database)
+        elif verb == 'list':
+            pm.list_people(kv)
+        elif verb == 'add':
+            pm.add_people(kv)
+            print(f'Added new person {kv["uname"]}.')
+        elif verb == 'update':
+            pm.update_people(kv)
+            print(f'Updated entry for {kv["uname"]}.')
+        elif verb == 'remove':
+            pm.remove_people(kv)
+            print(f'Removed {kv["uname"]}.')
+        elif verb in ['h', 'help', '-h', '--help', '-help']:
+            usage(app_name, 0)
+        else:
+            print(f'''ERROR: "{verb}" not understood''')
+            sys.exit(1)
+    except PeeweeException as ex:
+        alert('Database exception: ' + str(ex))
         sys.exit(1)
+    except KeyboardInterrupt:
+        # Catch it, but don't treat it as an error; just stop execution.
+        pass
+    finally:
+        if not database.is_closed():
+            database.close()
