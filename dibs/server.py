@@ -280,6 +280,10 @@ class RouteTracer(BottlePluginBase):
     '''Write a log entry for this route invocation.'''
 
     def apply(self, callback, route):
+        # Minor optimization: only install this if we're running in debug mode.
+        if not debug_mode():
+            return callback
+
         def route_tracer(*args, **kwargs):
             barcode = None
             if 'barcode' in kwargs:
@@ -288,8 +292,8 @@ class RouteTracer(BottlePluginBase):
                 barcode = request.POST.barcode.strip()
             elif request.forms.get('barcode', None):
                 barcode = request.forms.get('barcode').strip()
-            person = person_from_environ(request.environ)
-            log(f'{route.method.lower()} {route.rule} invoked by {user(person)}'
+            who = request.environ['REMOTE_USER']
+            log(f'{user(who)} invoked {route.method.lower()} {route.rule}'
                 + (f' for {barcode}' if barcode else ''))
             return callback(*args, **kwargs)
 
@@ -300,9 +304,9 @@ class RouteTracer(BottlePluginBase):
 # one added here becomes the first one called.
 
 dibs.install(DatabaseConnector())
+dibs.install(RouteTracer())
 dibs.install(BarcodeVerifier())
 dibs.install(LoanExpirer())
-dibs.install(RouteTracer())
 
 
 # The remaining plugins below are applied selectively to specific routes only.
