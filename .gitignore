@@ -96,7 +96,7 @@ dibs.conf
 data/manifests/*-manifest.json
 htpasswd
 .htpasswd
-.README.md.tmp
+*.tmp
 *.bak
 data/processing/*-initiated
 data/processing/*-processing
