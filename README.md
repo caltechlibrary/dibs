@@ -89,7 +89,7 @@ We would be happy to receive your help and participation with enhancing DIBS!  P
 
 ## License
 
-Software produced by the Caltech Library is Copyright (C) 2021, Caltech.  This software is freely distributed under a BSD-type license.  Please see the [LICENSE](LICENSE) file for more information.
+Software produced by the Caltech Library is Copyright (C) 2021&ndash;2022, Caltech.  This software is freely distributed under a BSD-type license.  Please see the [LICENSE](LICENSE) file for more information.
 
 This software repository includes a copy of the [Universal Viewer](http://universalviewer.io) version 3.1.1, obtained from the [GitHub repository](https://github.com/UniversalViewer/universalviewer/releases/tag/v3.1.1) as it existed on 2021-04-27.  The Universal Viewer is released under the MIT license.   Please see the Universal Viewer website and documentation for more information about any applicable copyrights or licensing terms.
 
