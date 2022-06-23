@@ -1,5 +1,12 @@
 #  Change log for DIBS<img width="70em" align="right" src="https://github.com/caltechlibrary/dibs/raw/main/docs/_static/media//dibs-icon.png">
 
+## ★ Version 0.6.1 ★
+
+Changes in this release:
+* Update `requirements.txt` versions of Bottle and Pillow.
+* Update link to Caltech Library logo to account for recent changes in the website.
+
+
 ## ★ Version 0.6.0 ★
 
 The changes in this version do not affect user functionality or site templates; however, we bumped up the minor version number (instead of making this only a patch release) because of changes to the administrative management scripts and the way the database is handled by the server.
