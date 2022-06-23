@@ -8,7 +8,7 @@
 
 arrow           == 1.2.2
 boltons         == 21.0.0
-bottle          == 0.12.19
+bottle          == 0.12.20
 bottle-fdsend   == 0.1.1
 coif            == 0.0.1
 commonpy        == 1.9.3
