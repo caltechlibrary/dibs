@@ -1,7 +1,7 @@
 <footer class="footer bg-secondary text-center py-3 mt-5">
     <img alt="Caltech Library logo" title="Caltech Library" typeof="foaf:Image"
          class="footer-logo media-element file-block-original"
-         src="https://www.library.caltech.edu/sites/default/files/logos/CLwhitewhiteVerticalwww.png">
+         src="https://media.library.caltech.edu/assets/CLwhitewhiteVerticalwww.png">
     <div class="footer-text">
       <span class="text-white px-5">
         Mail Code 1-43, 1200 E California Blvd, Pasadena, CA 91125
