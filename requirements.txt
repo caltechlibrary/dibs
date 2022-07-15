@@ -8,31 +8,31 @@
 
 arrow           == 1.2.2
 boltons         == 21.0.0
-bottle          == 0.12.20
+bottle          == 0.12.21
 bottle-fdsend   == 0.1.1
 coif            == 0.0.1
-commonpy        == 1.9.3
-expiringdict    == 1.2.1
-humanize        == 4.0.0
-lru-dict        == 1.1.7
+commonpy        == 1.9.5
+expiringdict    == 1.2.2
+humanize        == 4.2.3
+lru-dict        == 1.1.8
 
 # Note: mod_wsgi is only needed by run-server. You can comment it out if you
 # are not using run-server and you run into problems installing it on your
 # system. (Tip: on Ubuntu 20, mod_wsgi won't install without the apache2-dev
 # library on the system. If you get an error about "apxs" missing, try doing
 # `sudo apt install apache2-dev` and then try pip install mod_wsgi again.)
-mod-wsgi        == 4.9.0
+mod-wsgi        == 4.9.2
 
-peewee          == 3.14.10
-Pillow          == 9.1.1
+peewee          == 3.15.1
+Pillow          == 9.2.0
 plac            == 1.3.5
 pokapi          == 0.3.1
 python-daemon   == 2.3.0
 python-decouple == 3.6
-rich            == 12.3.0
+rich            == 12.5.1
 sidetrack       == 2.0.1
 str2bool        == 1.1
 trinomial       == 0.0.3
 topi            == 1.1.0
 yurl            == 1.0.0
-werkzeug        == 2.1.1
+werkzeug        == 2.1.2
