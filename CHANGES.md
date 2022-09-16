@@ -1,5 +1,13 @@
 #  Change log for DIBS<img width="70em" align="right" src="https://github.com/caltechlibrary/dibs/raw/main/docs/_static/media//dibs-icon.png">
 
+## ★ Version 0.7.0 ★
+
+Changes in this release:
+* New utility available, `test-token`, for testing whether the FOLIO credentials are valid. Meant to be used in a cron job for daily testing that the FOLIO API token is still valid.
+* Updates to `requirements.txt` for many dependencies to bring them to the latest releases and deal with recent Dependabot security alerts.
+* The contents of `.gitignore` have been revised to follow new best practices.
+
+
 ## ★ Version 0.6.1 ★
 
 Changes in this release:
