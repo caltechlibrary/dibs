@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -54,6 +54,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
     <script>mermaid.initialize({startOnLoad:true});</script>
@@ -387,10 +388,10 @@
           <article class="md-content__inner md-typeset" role="main">
             
   <section id="using-dibs">
-<h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this heading">¶</a></h1>
 <p>This page describes how DIBS works from the standpoint of the user interface as seen by patrons and staff.  A separate section in this document describes the <span class="xref myst">system architecture</span> that implements the functionality described here.</p>
 <section id="authentication">
-<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permalink to this heading">¶</a></h2>
 <p>Authentication is assumed to be handled by the system hosting DIBS. In Caltech’s case, we use <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a>, an institute-wide, single sign-on system (SSO) for authentication. This means that before users ever reach DIBS, a sign-in page is presented by the web server. The screenshot below shows an example of this:</p>
 <figure>
 <img src="_static/media/sso.png"/>
@@ -398,7 +399,7 @@
 <p>DIBS itself does not do anything beyond distinguishing between regular users and those who have staff privileges (discussed below). This distinction is made based on the identity of the user as conveyed by the SSO system. DIBS does not ask for user login credentials nor store them.</p>
 </section>
 <section id="front-page">
-<h2 id="front-page">Front page<a class="headerlink" href="#front-page" title="Permalink to this headline">¶</a></h2>
+<h2 id="front-page">Front page<a class="headerlink" href="#front-page" title="Permalink to this heading">¶</a></h2>
 <p>The current design of DIBS is focused on helping instructors and students enrolled in classes.  DIBS provides fairly distinct experiences for patrons on the one hand, and staff on the other; this separation is due to expectations about how different classes of users will interact with the system:</p>
 <ol class="arabic simple">
 <li><p>We expect that patrons will be informed about the availability of specific items via course syllabi or similar resources produced by course instructors.  Consequently, DIBS does not currently expose to patrons a separate index of “all things available for digital loan”. In part, this is because we expect patrons will be directly informed about the pages describing individual items, and in part because we anticipate that in the future we will add DIBS links directly to Caltech’s <a class="reference external" href="https://www.folio.org">FOLIO</a>-based catalog.</p></li>
@@ -410,7 +411,7 @@
 </figure>
 </section>
 <section id="the-patron-experience">
-<h2 id="the-patron-experience">The patron experience<a class="headerlink" href="#the-patron-experience" title="Permalink to this headline">¶</a></h2>
+<h2 id="the-patron-experience">The patron experience<a class="headerlink" href="#the-patron-experience" title="Permalink to this heading">¶</a></h2>
 <p>As mentioned above, patrons are assumed to be provided information about individual items available for loan.  The working assumption is that they will be given URLs that take them directly to item description pages in DIBS.  An example of such an item description page is shown below:</p>
 <figure>
 <img src="_static/media/item-page.png"/>
@@ -432,24 +433,24 @@
 <p>In designing DIBS, we sought to minimize the amount of patron data requested and stored, to maintain patron privacy and reduce the impact of potential data leaks.  DIBS does not store any patron information when a loan is not in effect (after the lock-out period on a title that was just borrowed), and during a loan, it stores only the user’s institutional single sign-on (SSO) identity combined with the (single) title they have on loan during the loan period.  There are no provisions in the software for retaining the information past the loan period, or tracking identities or loan statistics based on users.</p>
 </section>
 <section id="the-staff-experience">
-<h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this headline">¶</a></h2>
+<h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this heading">¶</a></h2>
 <p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <span class="xref myst">patron experience</span> described in the previous section.)</p>
 <section id="how-users-are-identified-as-staff-users">
-<h3 id="how-users-are-identified-as-staff-users">How users are identified as staff users<a class="headerlink" href="#how-users-are-identified-as-staff-users" title="Permalink to this headline">¶</a></h3>
+<h3 id="how-users-are-identified-as-staff-users">How users are identified as staff users<a class="headerlink" href="#how-users-are-identified-as-staff-users" title="Permalink to this heading">¶</a></h3>
 <p>As mentioned <span class="xref myst">above</span>, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that system administrators need to do is tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <a class="reference download internal" download="" href="_downloads/19940a7e0b5e588ca5f9115591fee4a7/people-manager"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span></a> for that purpose. (It’s located in the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@caltech.edu"</span> <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
 </pre></div>
 </div>
 </section>
 <section id="additional-pages-available-to-staff-users">
-<h3 id="additional-pages-available-to-staff-users">Additional pages available to staff users<a class="headerlink" href="#additional-pages-available-to-staff-users" title="Permalink to this headline">¶</a></h3>
+<h3 id="additional-pages-available-to-staff-users">Additional pages available to staff users<a class="headerlink" href="#additional-pages-available-to-staff-users" title="Permalink to this heading">¶</a></h3>
 <p>Users with staff privileges see additional links in the upper-right hand corner menu on every page presented by DIBS. In particular, the menu provides access to the content list and statistics pages, as shown in the screenshot below:</p>
 <figure>
 <img src="_static/media/dropdown-menu.png"/>
 </figure>
 </section>
 <section id="listing-all-items-in-dibs">
-<h3 id="listing-all-items-in-dibs">Listing all items in DIBS<a class="headerlink" href="#listing-all-items-in-dibs" title="Permalink to this headline">¶</a></h3>
+<h3 id="listing-all-items-in-dibs">Listing all items in DIBS<a class="headerlink" href="#listing-all-items-in-dibs" title="Permalink to this heading">¶</a></h3>
 <p>Staff are redirected to the main entry point for staff, which is the list page located at <code class="docutils literal notranslate"><span class="pre">/list</span></code>:</p>
 <figure>
 <img src="_static/media/list-page.png"/>
@@ -467,7 +468,7 @@
 </ul>
 </section>
 <section id="adding-new-items">
-<h3 id="adding-new-items">Adding new items<a class="headerlink" href="#adding-new-items" title="Permalink to this headline">¶</a></h3>
+<h3 id="adding-new-items">Adding new items<a class="headerlink" href="#adding-new-items" title="Permalink to this heading">¶</a></h3>
 <p>At the bottom of the list page, there are two buttons named <span class="button color-primary">Add new item</span> and  <span class="button color-danger">Manage item list</span>.</p>
 <figure>
 <img src="_static/media/bottom-of-list-page.png"/>
@@ -480,7 +481,7 @@
 <p>Note the only item-specific information needed is the barcode.  All of the metadata shown about an item on other pages (such as the title, the authors, ISBN, etc.) is based on the barcode and obtained by looking up the item barcode LSP.</p>
 </section>
 <section id="editing-existing-items">
-<h3 id="editing-existing-items">Editing existing items<a class="headerlink" href="#editing-existing-items" title="Permalink to this headline">¶</a></h3>
+<h3 id="editing-existing-items">Editing existing items<a class="headerlink" href="#editing-existing-items" title="Permalink to this heading">¶</a></h3>
 <p>As mentioned above, every item on the <span class="xref myst">list page</span> has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.</p>
 <figure>
 <img src="_static/media/edit-item-page.png"/>
@@ -489,7 +490,7 @@
 <p>The edit page also provides the ability to replace the item’s cover image, or to delete it altogether. When there is an existing thumbnail image, the page shows the image with a small red trashcan icon overlaid on top of it in the bottom right corner. Clicking this trashcan icon will delete the existing thumbnail image file. On the other hand, clicking the “Choose file” button under the field heading <em>Replace cover image</em> allows a staff user to upload an image from their computer’s hard drive; after clicking the <span class="button color-primary">Save</span> button, the uploaded image will become the new cover image for the item.</p>
 </section>
 <section id="managing-the-list-of-items">
-<h3 id="managing-the-list-of-items">Managing the list of items<a class="headerlink" href="#managing-the-list-of-items" title="Permalink to this headline">¶</a></h3>
+<h3 id="managing-the-list-of-items">Managing the list of items<a class="headerlink" href="#managing-the-list-of-items" title="Permalink to this heading">¶</a></h3>
 <p>If the user clicks the <span class="button color-danger">Manage item list</span> button, they are presented with the following screen:</p>
 <figure>
 <img src="_static/media/manage-item-list-page.png"/>
@@ -502,7 +503,7 @@
 <p>DIBS does not currently have a facility to upload lists of items in (e.g.) CSV format. A future enhancement may bring this capability. Currently, the only way to add items to DIBS is via the web interface, or command-line tools on the server.</p>
 </section>
 <section id="viewing-loan-statistics">
-<h3 id="viewing-loan-statistics">Viewing loan statistics<a class="headerlink" href="#viewing-loan-statistics" title="Permalink to this headline">¶</a></h3>
+<h3 id="viewing-loan-statistics">Viewing loan statistics<a class="headerlink" href="#viewing-loan-statistics" title="Permalink to this heading">¶</a></h3>
 <p>DIBS offers some basic statistics on the <em>stats</em> page:</p>
 <figure>
 <img src="_static/media/stats-page.png"/>
@@ -521,7 +522,7 @@
 </section>
 </section>
 <section id="the-scanning-workflow">
-<h2 id="the-scanning-workflow">The scanning workflow<a class="headerlink" href="#the-scanning-workflow" title="Permalink to this headline">¶</a></h2>
+<h2 id="the-scanning-workflow">The scanning workflow<a class="headerlink" href="#the-scanning-workflow" title="Permalink to this heading">¶</a></h2>
 <p>Before a new item is to be made available through DIBS, it normally requires a workflow to be completed. This workflow involves steps such as scanning book pages, converting the scan images to a format suitable for IIIF, and more. DIBS supports this process in the following way.</p>
 <ol class="arabic simple">
 <li><p>After an entry is created for a new item as <a href="#adding-new-items">described above</a>, if no IIIF manifest exists yet for that entry, then DIBS shows a button named <span class="button color-primary">Process</span> in the column titled <strong>Available to loan?</strong> as shown in the figure below.  When this button is pressed, an indicator file is created in a location where the document processing workflow looks for it.  Staff do not have to press this button immediately: they can add an entry to DIBS and continue scanning pages until they are done.  Once scanning is completed and the item is ready to be converted to IIIF format, then that is when staff should press the  <span class="button color-primary">Process</span> button.  <figure><img alt="_images/process-button.png" src="_images/process-button.png"/></figure></p></li>
@@ -579,10 +580,10 @@
               
           </div>
             Last updated on
-              May 04, 2022.
+              Sep 16, 2022.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
