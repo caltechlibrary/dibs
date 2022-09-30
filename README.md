@@ -5,7 +5,7 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.8+-brightgreen.svg?style=flat-square)](https://www.python.org/downloads/release/python-380/)
 [![Latest release](https://img.shields.io/github/v/release/caltechlibrary/dibs.svg?style=flat-square&color=b44e88&label=Latest%20release)](https://github.com/caltechlibrary/dibs/releases)
-[![DOI](https://img.shields.io/badge/dynamic/json.svg?label=DOI&style=flat-square&color=lightgray&query=$.metadata.doi&uri=https://data.caltech.edu/api/record/20205)](https://data.caltech.edu/records/20205)
+[![DOI](https://img.shields.io/badge/DOI-10.22002%2FD1.20205-lightgray)](https://doi.org/10.22002/D1.20205)
 
 ## Table of contents
 
