@@ -677,7 +677,7 @@ def loan_availability(user, barcode):
 @dibs.get('/<name:re:(info|about|thankyou)>')
 def general_page(name = '/'):
     '''Display the welcome page.'''
-    if name and name in ['info', 'about', 'thankyou']:
+    if name in ['info', 'about', 'thankyou']:
         return page(f'{name}')
     else:
         return page('info')

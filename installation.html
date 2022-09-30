@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -54,7 +54,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
     <script>mermaid.initialize({startOnLoad:true});</script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -387,7 +389,7 @@
           <article class="md-content__inner md-typeset" role="main">
             
   <section id="installation-and-operation">
-<h1 id="installation--page-root">Installation and operation<a class="headerlink" href="#installation--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="installation--page-root">Installation and operation<a class="headerlink" href="#installation--page-root" title="Permalink to this heading">¶</a></h1>
 <p>On this page, you may wish to follow one of the following paths based to your situation. (Note: the boxes in this diagram are clickable links to the sections in question.)</p>
 <div align="center">
 <div class="mermaid">
@@ -415,7 +417,7 @@
   click node6 "/dibs/installation.html#running-dibs-in-production" _self;
         </div></div>
 <section id="preliminary-requirements">
-<h2 id="preliminary-requirements">Preliminary requirements<a class="headerlink" href="#preliminary-requirements" title="Permalink to this headline">¶</a></h2>
+<h2 id="preliminary-requirements">Preliminary requirements<a class="headerlink" href="#preliminary-requirements" title="Permalink to this heading">¶</a></h2>
 <p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <span class="xref myst">installation steps</span>. It also assumes a Unix-like environment (Linux, macOS) and a working Internet connection.</p>
 <p>Although DIBS relies on the existence of a IIIF image server, for initial exploration, you <em>don’t</em> need to set up a IIIF server – you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of doing that. Thus, in principle, all you need to run the DIBS demo is a Unix-like system (Linux, macOS), a Python installation, the DIBS source code, and an Internet connection.</p>
 <p>To run a proper DIBS server at another institution (other than <a class="reference external" href="https://www.caltech.edu">Caltech</a>), certain additional things are needed:</p>
@@ -428,10 +430,10 @@
 </ol>
 </section>
 <section id="installation">
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h2>
 <p>Installing DIBS is simple. It only requires downloading a copy of the software, installing Python software dependencies, and editing a configuration file.  DIBS currently does <strong>not</strong> have separate installation destination –  running DIBS means running it from the source directory.</p>
 <section id="download-a-copy-of-the-software">
-<h3 id="download-a-copy-of-the-software">Download a copy of the software<a class="headerlink" href="#download-a-copy-of-the-software" title="Permalink to this headline">¶</a></h3>
+<h3 id="download-a-copy-of-the-software">Download a copy of the software<a class="headerlink" href="#download-a-copy-of-the-software" title="Permalink to this heading">¶</a></h3>
 <p>There are several ways of getting the latest release of the DIBS source code. Here is one of the simplest:</p>
 <ol class="arabic simple">
 <li><p>Go to the <a class="reference external" href="https://github.com/caltechlibrary/dibs/releases">releases page</a> in the GitHub repository for DIBS.</p></li>
@@ -472,7 +474,7 @@
 </div>
 </section>
 <section id="install-python-dependencies">
-<h3 id="install-python-dependencies">Install Python dependencies<a class="headerlink" href="#install-python-dependencies" title="Permalink to this headline">¶</a></h3>
+<h3 id="install-python-dependencies">Install Python dependencies<a class="headerlink" href="#install-python-dependencies" title="Permalink to this heading">¶</a></h3>
 <p>Assuming that your copy of DIBS is in a subdirectory named <code class="docutils literal notranslate"><span class="pre">dibs</span></code> (as it would be after the previous step), change your shell’s current working directory to that directory, and run the following command to install the Python dependencies on your system or your virtual environment:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3 -m pip install -r requirements.txt
 </pre></div>
@@ -480,27 +482,27 @@
 </section>
 </section>
 <section id="configuration">
-<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h2>
 <p>If you are new to DIBS and all you want to do is test drive it, you can follow the instructions in the first subsection below. If you are setting up DIBS for multiuser use, you can <span class="xref myst">jump ahead to the second subsection</span>.</p>
 <section id="configuring-dibs-for-a-local-test">
-<h3 id="configuring-dibs-for-a-local-test">Configuring DIBS for a local test<a class="headerlink" href="#configuring-dibs-for-a-local-test" title="Permalink to this headline">¶</a></h3>
+<h3 id="configuring-dibs-for-a-local-test">Configuring DIBS for a local test<a class="headerlink" href="#configuring-dibs-for-a-local-test" title="Permalink to this heading">¶</a></h3>
 <p>DIBS comes with an example IIIF manifest that uses a public IIIF server operated by the <a class="reference external" href="https://wellcomelibrary.org">Wellcome Library</a>. (Thank you, Wellcome Library!) This makes it possible to run a local copy of DIBS without much effort. Please follow the simple steps below.</p>
 <section id="create-the-settings-ini-file">
-<h4 id="create-the-settings-ini-file">① Create the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-the-settings-ini-file" title="Permalink to this headline">¶</a></h4>
+<h4 id="create-the-settings-ini-file">① Create the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-the-settings-ini-file" title="Permalink to this heading">¶</a></h4>
 <p>The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file. For a test run of DIBS, it is enough to simply copy the example to create <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
 </pre></div>
 </div>
 </section>
 <section id="load-a-sample-book-into-dibs">
-<h4 id="load-a-sample-book-into-dibs">⓶ Load a sample book into DIBS<a class="headerlink" href="#load-a-sample-book-into-dibs" title="Permalink to this headline">¶</a></h4>
+<h4 id="load-a-sample-book-into-dibs">⓶ Load a sample book into DIBS<a class="headerlink" href="#load-a-sample-book-into-dibs" title="Permalink to this heading">¶</a></h4>
 <p>Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">load-mock-data</span></code></span> located in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory of the DIBS source code tree.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/load-mock-data
 </pre></div>
 </div>
 </section>
 <section id="set-a-sample-users-role">
-<h4 id="set-a-sample-users-role">⓷ Set a sample user’s role<a class="headerlink" href="#set-a-sample-users-role" title="Permalink to this headline">¶</a></h4>
+<h4 id="set-a-sample-users-role">⓷ Set a sample user’s role<a class="headerlink" href="#set-a-sample-users-role" title="Permalink to this heading">¶</a></h4>
 <p>The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of “library”.  Suppose you want to name your sample user “dibsuser”, then you could run the following command:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span><span class="s2">"dibsuser"</span>
 </pre></div>
@@ -509,10 +511,10 @@
 </section>
 </section>
 <section id="configuring-dibs-for-multiuser-use">
-<h3 id="configuring-dibs-for-multiuser-use">Configuring DIBS for multiuser use<a class="headerlink" href="#configuring-dibs-for-multiuser-use" title="Permalink to this headline">¶</a></h3>
+<h3 id="configuring-dibs-for-multiuser-use">Configuring DIBS for multiuser use<a class="headerlink" href="#configuring-dibs-for-multiuser-use" title="Permalink to this heading">¶</a></h3>
 <p>Setting up an actual server in an institutional setting will require a little bit more configuration work, as well as a IIIF server that you can use.</p>
 <section id="create-and-edit-the-settings-ini-file">
-<h4 id="create-and-edit-the-settings-ini-file">①  Create and edit the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-and-edit-the-settings-ini-file" title="Permalink to this headline">¶</a></h4>
+<h4 id="create-and-edit-the-settings-ini-file">①  Create and edit the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-and-edit-the-settings-ini-file" title="Permalink to this heading">¶</a></h4>
 <p>Certain characteristics are configured using a file named <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>, which DIBS looks for in the <code class="docutils literal notranslate"><span class="pre">dibs</span></code> directory. The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file for DIBS.  Copy the file to <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
 </pre></div>
@@ -529,7 +531,7 @@
 </ul>
 </section>
 <section id="set-up-authentication-for-dibs">
-<h4 id="set-up-authentication-for-dibs">⓶ Set up authentication for DIBS<a class="headerlink" href="#set-up-authentication-for-dibs" title="Permalink to this headline">¶</a></h4>
+<h4 id="set-up-authentication-for-dibs">⓶ Set up authentication for DIBS<a class="headerlink" href="#set-up-authentication-for-dibs" title="Permalink to this heading">¶</a></h4>
 <p>The details of this step depend on your particular institutional requirements and local system configuration. If you are using a single sign-on system such as Shibboleth, you may need to do configuration and other steps in your server environment, but it is beyond the scope of this document to explain how that can be done.</p>
 <p>If you are setting up a server behind a firewall (perhaps for local development of a new DIBS site, or within some other closed environment) and want to use <a class="reference external" href="https://httpd.apache.org/docs/2.4/howto/auth.html">basic authentication in Apache</a>, take the following steps:</p>
 <ul>
@@ -551,7 +553,7 @@
 <p>The value of the <code class="docutils literal notranslate"><span class="pre">AuthUserFile</span></code> <strong>must match the path in</strong> <code class="docutils literal notranslate"><span class="pre">PASSWORD_FILE</span></code> used in the DIBS <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file.</p>
 </section>
 <section id="add-staff-users">
-<h4 id="add-staff-users">⓷ Add staff users<a class="headerlink" href="#add-staff-users" title="Permalink to this headline">¶</a></h4>
+<h4 id="add-staff-users">⓷ Add staff users<a class="headerlink" href="#add-staff-users" title="Permalink to this heading">¶</a></h4>
 <p>As mentioned above, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, <strong>create at least one user with a role of <code class="docutils literal notranslate"><span class="pre">library</span></code></strong>.</p>
 <p>If you are using Apache basic auth, <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> will also allow you to add entries (with passwords) to the password file indicated by the <code class="docutils literal notranslate"><span class="pre">PASSWORD_FILE</span></code> variable in DIBS’ <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file.</p>
 <p>The user name must be given as the name used by people in the authentication system (e.g., the SSO sign-on login name, if you use SSO). For example, to make <code class="docutils literal notranslate"><span class="pre">fakeuser2021@someuniversity.edu</span></code> be recognized as having staff privileges, you would run the following command:</p>
@@ -560,7 +562,7 @@
 </div>
 </section>
 <section id="set-permissions-on-important-dibs-directories">
-<h4 id="set-permissions-on-important-dibs-directories">④ Set permissions on important DIBS directories<a class="headerlink" href="#set-permissions-on-important-dibs-directories" title="Permalink to this headline">¶</a></h4>
+<h4 id="set-permissions-on-important-dibs-directories">④ Set permissions on important DIBS directories<a class="headerlink" href="#set-permissions-on-important-dibs-directories" title="Permalink to this heading">¶</a></h4>
 <p>A server process such as Apache normally runs with a user identity and group identity that is different from real user accounts on the server computer. This means that the files and directories for DIBS, when they are installed by a user on the computer, may have different ownership and permissions than are needed by the web server process. To make sure that the web server process can read and write to the directories, DIBS comes with a small program to set permissions on certain critical DIBS files and directories. Run this program as shown below, replacing <code class="docutils literal notranslate"><span class="pre">PROCESS_USER</span></code> and <code class="docutils literal notranslate"><span class="pre">PROCESS_GROUP</span></code> with the actual server process user and group (and note the use of <code class="docutils literal notranslate"><span class="pre">sudo</span></code> here):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo admin/set-server-permissions --owner PROCESS_USER --group PROCESS_GROUP
 </pre></div>
@@ -569,17 +571,17 @@
 <p>Note: make sure to <strong>run <code class="docutils literal notranslate"><span class="pre">set-server-permissions</span></code> after running <code class="docutils literal notranslate"><span class="pre">people-manager</span></code></strong> for the first time, so that <code class="docutils literal notranslate"><span class="pre">set-server-permissions</span></code> can set the permissions on the DIBS database file.</p>
 </section>
 <section id="set-up-your-iiif-server">
-<h4 id="set-up-your-iiif-server">⑤ Set up your IIIF server<a class="headerlink" href="#set-up-your-iiif-server" title="Permalink to this headline">¶</a></h4>
+<h4 id="set-up-your-iiif-server">⑤ Set up your IIIF server<a class="headerlink" href="#set-up-your-iiif-server" title="Permalink to this heading">¶</a></h4>
 <p>A fully functioning DIBS installation requires a IIIF server where you put content to be served via DIBS. A final step is thus to set up a IIIF server for DIBS’ use. The instructions for doing so depend on the specific server used – please refer to the relevant documentation for whatever IIIF server you are using.</p>
 <p>Once a IIIF server is running, set the value of the <code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code> variable in the file <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> appropriately.</p>
 </section>
 </section>
 </section>
 <section id="running-dibs">
-<h2 id="running-dibs">Running DIBS<a class="headerlink" href="#running-dibs" title="Permalink to this headline">¶</a></h2>
+<h2 id="running-dibs">Running DIBS<a class="headerlink" href="#running-dibs" title="Permalink to this heading">¶</a></h2>
 <p>You can run DIBS on your local computer for initial exploration and testing, as well as during development and customization of DIBS. This is easy to do using the <code class="docutils literal notranslate"><span class="pre">run-server</span></code> program provided with DIBS. On the other hand, running DIBS on a real server, for actual use by patrons at your institution, requires the use of a full web server environment and other components. Both cases are described below.</p>
 <section id="running-dibs-locally">
-<h3 id="running-dibs-locally">Running DIBS locally<a class="headerlink" href="#running-dibs-locally" title="Permalink to this headline">¶</a></h3>
+<h3 id="running-dibs-locally">Running DIBS locally<a class="headerlink" href="#running-dibs-locally" title="Permalink to this heading">¶</a></h3>
 <p>For local experimentation and development, the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> can be used to start a built-in web server on your computer. Since a local environment will not have the authentication layer normally assumed by DIBS, you need to tell the built-in web server who to pretend to be. For example, if you used <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> to add a user named “dibsuser” as <span class="xref myst">described in the section on configuration</span>, then you can start the local server in debug mode like this:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/run-server --mode debug --debug-user dibsuser
 </pre></div>
@@ -592,7 +594,7 @@
 <p>Using the <code class="docutils literal notranslate"><span class="pre">debug</span></code> run mode changes the behavior of <code class="docutils literal notranslate"><span class="pre">run-server</span></code> in various useful ways. For example, it will automatically reload source files if any of them are edited. If you will be doing anything with DIBS such as editing the HTML templates, running with <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">debug</span></code> is highly recommended.</p>
 </section>
 <section id="running-dibs-in-production">
-<h3 id="running-dibs-in-production">Running DIBS in production<a class="headerlink" href="#running-dibs-in-production" title="Permalink to this headline">¶</a></h3>
+<h3 id="running-dibs-in-production">Running DIBS in production<a class="headerlink" href="#running-dibs-in-production" title="Permalink to this heading">¶</a></h3>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">run-server</span></code> is <strong>not intended for use in production servers</strong>. For actual use, you must configure a web server such as <a class="reference external" href="https://httpd.apache.org">Apache</a> to host the system. DIBS comes with an <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code></span> and an example <span class="xref myst">Apache conf file</span> for this purpose to help you get started. The latter file configures the web server and tells it to use <code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code> (also provided with DIBS) to define a WSGI application for DIBS.</p>
 <p>To start DIBS in this environment, you most likely need to restart the Apache process on your system.</p>
 </section>
@@ -646,10 +648,10 @@
               
           </div>
             Last updated on
-              May 04, 2022.
+              Sep 30, 2022.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -54,7 +54,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
     <script>mermaid.initialize({startOnLoad:true});</script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -388,41 +390,41 @@
           <article class="md-content__inner md-typeset" role="main">
             
   <section id="faqs-about-dibs">
-<h1 id="faqs--page-root">FAQs about DIBS<a class="headerlink" href="#faqs--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="faqs--page-root">FAQs about DIBS<a class="headerlink" href="#faqs--page-root" title="Permalink to this heading">¶</a></h1>
 <p>Here are answers to some common questions about DIBS.</p>
 <section id="what-ils-or-lsp-systems-does-dibs-support">
-<h2 id="what-ils-or-lsp-systems-does-dibs-support">What ILS or LSP systems does DIBS support?<a class="headerlink" href="#what-ils-or-lsp-systems-does-dibs-support" title="Permalink to this headline">¶</a></h2>
+<h2 id="what-ils-or-lsp-systems-does-dibs-support">What ILS or LSP systems does DIBS support?<a class="headerlink" href="#what-ils-or-lsp-systems-does-dibs-support" title="Permalink to this heading">¶</a></h2>
 <p>As of version 0.5, the DIBS software architecture features an abstraction layer for interfacing to LSP/ILS systems. Out of the box, it includes two concrete interfaces, for <a class="reference external" href="https://www.folio.org">FOLIO</a> and <a class="reference external" href="https://tind.io">TIND</a>. The use of one or the other is selectable in the DIBS site settings file.</p>
 <p>DIBS only needs to retrieve about 8 metadata fields for an item in a catalog system. These are fields such as a barcode, a title, author, year – that sort of thing.  Given the abstraction layer, and the scheme for configuring LSP parameters using the site settings file, the developers of DIBS believe it would not require significant effort to add interfaces to other LSPs. We would welcome code contributions from other institutions to enhance DIBS in this way.</p>
 </section>
 <section id="are-documents-in-dibs-stored-as-pdfs">
-<h2 id="are-documents-in-dibs-stored-as-pdfs">Are documents in DIBS stored as PDFs?<a class="headerlink" href="#are-documents-in-dibs-stored-as-pdfs" title="Permalink to this headline">¶</a></h2>
+<h2 id="are-documents-in-dibs-stored-as-pdfs">Are documents in DIBS stored as PDFs?<a class="headerlink" href="#are-documents-in-dibs-stored-as-pdfs" title="Permalink to this heading">¶</a></h2>
 <p>No. The IIIF format is image-based, and document pages are stored in a pyramidal image scheme in which each document page is represented by multiple fragments at different resolutions. The scheme minimizes the data sent to a user’s browser while still enabling the ability to zoom in and out (similar to how you can zoom in and out in Google Maps).</p>
 </section>
 <section id="is-ocr-applied-to-document-pages-can-it-be">
-<h2 id="is-ocr-applied-to-document-pages-can-it-be">Is OCR applied to document pages? Can it be?<a class="headerlink" href="#is-ocr-applied-to-document-pages-can-it-be" title="Permalink to this headline">¶</a></h2>
+<h2 id="is-ocr-applied-to-document-pages-can-it-be">Is OCR applied to document pages? Can it be?<a class="headerlink" href="#is-ocr-applied-to-document-pages-can-it-be" title="Permalink to this heading">¶</a></h2>
 <p>In principle, one could apply optical character recognition (OCR) to document pages and make the text available <em>somehow</em>. We (the Caltech developers of DIBS) did not pursue this, in part because we feared it would put DIBS on shakier legal grounds than the strict CDL approach we followed. Instead, we focused on producing a library book-lending experience in electronic form.</p>
 </section>
 <section id="is-the-viewer-compatible-with-screen-readers">
-<h2 id="is-the-viewer-compatible-with-screen-readers">Is the viewer compatible with screen readers?<a class="headerlink" href="#is-the-viewer-compatible-with-screen-readers" title="Permalink to this headline">¶</a></h2>
+<h2 id="is-the-viewer-compatible-with-screen-readers">Is the viewer compatible with screen readers?<a class="headerlink" href="#is-the-viewer-compatible-with-screen-readers" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference external" href="http://universalviewer.io">Universal Viewer</a> used in DIBS for presenting documents is (to our knowledge) unfortunately not compatible with screen readers at this time. We are not aware of any IIIF viewers that are compatible. The IIIF community has made some efforts in this direction but there does not seem to be a solution at this time.</p>
 </section>
 <section id="can-patrons-schedule-loans">
-<h2 id="can-patrons-schedule-loans">Can patrons schedule loans?<a class="headerlink" href="#can-patrons-schedule-loans" title="Permalink to this headline">¶</a></h2>
+<h2 id="can-patrons-schedule-loans">Can patrons schedule loans?<a class="headerlink" href="#can-patrons-schedule-loans" title="Permalink to this heading">¶</a></h2>
 <p>There is currently no scheduling system in DIBS. Users need to visit the information page for a given book when they are interested in borrowing it.</p>
 </section>
 <section id="do-items-have-waiting-lists-associated-with-them">
-<h2 id="do-items-have-waiting-lists-associated-with-them">Do items have waiting lists associated with them?<a class="headerlink" href="#do-items-have-waiting-lists-associated-with-them" title="Permalink to this headline">¶</a></h2>
+<h2 id="do-items-have-waiting-lists-associated-with-them">Do items have waiting lists associated with them?<a class="headerlink" href="#do-items-have-waiting-lists-associated-with-them" title="Permalink to this heading">¶</a></h2>
 <p>There is currently no queuing or wait list system in DIBS. It is a first-come, first-served system.</p>
 </section>
 <section id="isnt-the-lack-of-a-queuing-system-in-dibs-a-problem">
-<h2 id="isnt-the-lack-of-a-queuing-system-in-dibs-a-problem">Isn’t the lack of a queuing system in DIBS a problem?<a class="headerlink" href="#isnt-the-lack-of-a-queuing-system-in-dibs-a-problem" title="Permalink to this headline">¶</a></h2>
+<h2 id="isnt-the-lack-of-a-queuing-system-in-dibs-a-problem">Isn’t the lack of a queuing system in DIBS a problem?<a class="headerlink" href="#isnt-the-lack-of-a-queuing-system-in-dibs-a-problem" title="Permalink to this heading">¶</a></h2>
 <p>At the Caltech Library, our policy has been that if a book is in particularly high demand, we purchase more copies and then make more copies available in DIBS. We have not yet had to do this, nor have we encountered pressure situations on any given book.</p>
 <p>That said, we do realize that not all institutions may have the resources to take this approach; moreover, perhaps this approach works at Caltech because Caltech is particularly small and we don’t have enough students to cause problems.</p>
 <p>Finally, while we don’t have the resources to implement a queuing system at this time, we would welcome outside code contributions to implement such a feature in DIBS.</p>
 </section>
 <section id="how-does-dibs-prevent-users-from-saving-copies-of-the-materials">
-<h2 id="how-does-dibs-prevent-users-from-saving-copies-of-the-materials">How does DIBS prevent users from saving copies of the materials?<a class="headerlink" href="#how-does-dibs-prevent-users-from-saving-copies-of-the-materials" title="Permalink to this headline">¶</a></h2>
+<h2 id="how-does-dibs-prevent-users-from-saving-copies-of-the-materials">How does DIBS prevent users from saving copies of the materials?<a class="headerlink" href="#how-does-dibs-prevent-users-from-saving-copies-of-the-materials" title="Permalink to this heading">¶</a></h2>
 <p>DIBS uses multiple techniques to prevent users from saving the books they borrow through the system:</p>
 <ul class="simple">
 <li><p>Each book is stored on the IIIF server as thousands of images, not as single PDFs files.</p></li>
@@ -434,7 +436,7 @@
 <p>These measures represent a best-faith effort in DIBS to prevent copyright violations through DIBS itself. Ultimately, though, there is only so much we can do. DIBS cannot prevent users from (say) taking photos of screen images using their cell phones, just as physical libraries cannot prevent users from taking photos of physical books. Not even Amazon can prevent users of Kindle from doing the same – and if an entity with the resources of Amazon cannot prevent all methods of saving content, then we certainly cannot.</p>
 </section>
 <section id="does-dibs-use-iiif-authentication">
-<h2 id="does-dibs-use-iiif-authentication">Does DIBS use IIIF authentication?<a class="headerlink" href="#does-dibs-use-iiif-authentication" title="Permalink to this headline">¶</a></h2>
+<h2 id="does-dibs-use-iiif-authentication">Does DIBS use IIIF authentication?<a class="headerlink" href="#does-dibs-use-iiif-authentication" title="Permalink to this heading">¶</a></h2>
 <p>IIIF has an authentication protocol. We did not investigate its use in DIBS because the approach used to implement timed loans ended up encompassing all network communications and thereby obviated the need for separate authentication at the IIIF level. Not using the IIIF authentication component also has the benefit of simplifying what DIBS needs from IIIF, which in turn simplifies IIIF server configuration and management.</p>
 </section>
 </section>
@@ -486,10 +488,10 @@
               
           </div>
             Last updated on
-              May 04, 2022.
+              Sep 30, 2022.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
