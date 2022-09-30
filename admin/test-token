@@ -20,23 +20,21 @@ from   os.path import exists, dirname, join, abspath
 import plac
 import sys
 
-# Figure out where the root of the DIBS directory is located.
+# Figure out the root of the DIBS directory by looking for settings.ini.
 
 here = abspath(dirname(sys.argv[0]))
+dibs_root = None
 if exists(join(here, 'settings.ini')):
     dibs_root = here
 else:
     parent = abspath(join(here, os.path.pardir))
     if exists(join(parent, 'settings.ini')):
         dibs_root = parent
-    else:
-        print(f'‼️  File "settings.ini" not found in {here} or {parent}.')
-        print(f'‼️  Unexpected directory organization -- unable to proceed.')
-        sys.exit(1)
 
 # Adjust Python's load path accordingly.
 
-sys.path.append(dibs_root)
+if dibs_root:
+    sys.path.append(dibs_root)
 
 # Now we can load the DIBS things we need.
 
@@ -72,8 +70,8 @@ Return values
 This program exists with a return code of 0 if no problems are encountered. If
 any problems are encountered, it returns with a status code as follows:
 
-  1 = could not find the DIBS settings.ini file
-  2 = no network
+  1 = no network
+  2 = could not find the DIBS settings.ini file
   3 = one or more of the FOLIO_* variables are not set in the settings.ini file
   4 = the given FOLIO credentials are invalid
   5 = malformed or invalid value given for the Slack option
@@ -93,16 +91,21 @@ Command-line arguments summary
 
     from commonpy.network_utils import network_available
     if not network_available():
-        inform('‼️ No network')
+        inform('‼️ No network.')
+        sys.exit(1)
+
+    if not dibs_root:
+        print(f'‼️  File "settings.ini" not found in {here} or {parent}.')
+        print(f'‼️  Unexpected directory organization -- unable to proceed.')
         sys.exit(2)
 
     for var in ['FOLIO_OKAPI_URL', 'FOLIO_OKAPI_TENANT_ID', 'FOLIO_OKAPI_TOKEN']:
         if not folio_config(var):
-            inform(f'‼️ Variable "{var}" has no value in settings.ini')
+            inform(f'‼️ Variable "{var}" has no value in settings.ini.')
             sys.exit(3)
 
     if credentials_valid():
-        inform('DIBS credentials are valid')
+        inform('The DIBS credentials are valid.')
         sys.exit(0)
 
     if slack != 'C:T':
@@ -120,10 +123,12 @@ Command-line arguments summary
 # .............................................................................
 
 def folio_config(var):
+    '''Return the value of variable "var" in the settings.ini file.'''
     return config(var, section = 'folio', default = None)
 
 
 def credentials_valid():
+    '''Test if the url, tenant id, and token allow FOLIO API calls.'''
     import requests
 
     folio_url    = folio_config('FOLIO_OKAPI_URL')
@@ -146,6 +151,7 @@ def credentials_valid():
 
 
 def post_slack(text, params):
+    '''Post message "text" to the Slack channel described by "params".'''
     import requests
 
     slack_channel, slack_token = params.split(':')
@@ -155,7 +161,6 @@ def post_slack(text, params):
         'text': text,
         'username': 'DIBS token tester',
     })
-
 
 
 # Main invocation.
