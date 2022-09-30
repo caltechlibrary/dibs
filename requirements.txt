@@ -21,7 +21,7 @@ lru-dict        == 1.1.7
 # system. (Tip: on Ubuntu 20, mod_wsgi won't install without the apache2-dev
 # library on the system. If you get an error about "apxs" missing, try doing
 # `sudo apt install apache2-dev` and then try pip install mod_wsgi again.)
-mod-wsgi        == 4.9.0
+mod-wsgi        == 4.9.3
 
 peewee          == 3.14.10
 Pillow          == 9.1.1
