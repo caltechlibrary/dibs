@@ -12,3 +12,13 @@ def test_truncated_title():
     assert truncated_title('Foo: Bar') == 'Foo'
     assert truncated_title('Foo; by Bar') == 'Foo'
     assert truncated_title('Foo. Bar') == 'Foo'
+
+
+def test_names():
+    from dibs.lsp import TindInterface, FolioInterface
+
+    interface = TindInterface()
+    assert interface.name == 'TIND'
+
+    interface = FolioInterface()
+    assert interface.name == 'FOLIO'
