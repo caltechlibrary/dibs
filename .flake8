@@ -29,8 +29,8 @@ ignore =
     # We prefer two lines between methods of a class.
     E303,
     # Sometimes we want to align keywords, and these rules run counter to it.
-    E271,
     E221,
+    E271,
     # In some situations, it's more readable to omit spaces around operators
     # and colons.
     E203,
@@ -41,9 +41,4 @@ ignore =
     W503
 
 per-file-ignores =
-    # The plac.annotations lines contain hand-aligned text, which triggers
-    # flake8's check for spaces after commas.
-    admin/*: E241, E304, E402
-    admin/run-server: E241, E304, E402, F541, W605
-    admin/set-server-permissions: E241, E304, E402, F541
     dibs/preflight.py: E241
