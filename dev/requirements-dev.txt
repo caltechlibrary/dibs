@@ -10,6 +10,7 @@
 
 pytest            >= 7.0.0
 pytest-cov        >= 3.0.0
+pytest-flake8     >= 1.1.1
 pytest-isort      >= 3.0.0
 pytest-mock       >= 3.7.0
 pytest-pydocstyle >= 2.3.0
