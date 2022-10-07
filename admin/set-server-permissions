@@ -27,6 +27,7 @@ import sys
 # Figure out where the root of the DIBS directory is located.
 
 here = abspath(dirname(sys.argv[0]))
+dibs_root = None
 if exists(join(here, 'settings.ini')):
     dibs_root = here
 else:
@@ -40,7 +41,8 @@ else:
 
 # Adjust Python's load path accordingly.
 
-sys.path.append(dibs_root)
+if dibs_root:
+    sys.path.append(dibs_root)
 
 # Now we can load the DIBS things we need.
 
