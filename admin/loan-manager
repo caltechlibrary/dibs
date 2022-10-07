@@ -9,25 +9,23 @@
 
 from   datetime import timedelta as delta
 from   os.path import dirname, join, abspath
-from   peewee import SqliteDatabase, PeeweeException
+from   peewee import PeeweeException
 import plac
 from   rich import box
 from   rich.console import Console
 from   rich.padding import Padding
-from   rich.panel import Panel
 from   rich.prompt import Confirm
-from   rich.style import Style
 from   rich.table import Table
 import sys
 from   trinomial import anon
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from   dibs import print_version
-from   dibs.data_models import database, Loan, History
-from   dibs.date_utils import human_datetime, round_minutes, time_now
-from   dibs.roles import staff_user
-from   dibs.settings import config, resolved_path
+from   dibs import print_version                                   # noqa: E402
+from   dibs.data_models import database, Loan, History             # noqa: E402
+from   dibs.date_utils import human_datetime, round_minutes, time_now  # noqa: E402
+from   dibs.roles import staff_user                                # noqa: E402
+from   dibs.settings import config, resolved_path                  # noqa: E402
 
 
 # Globals.
@@ -52,10 +50,9 @@ _DATETIME_FORMAT = '%m/%d %I:%M %p'
 
 @plac.annotations(
     end_loans  = ('forcefully end all loans on item with barcode E', 'option', 'e'),
-    list_loans = ('list the current loans',                          'flag',   'l'),
-    version    = ('print version info and exit',                     'flag',   'V'),
+    list_loans = ('list the current loans'                         , 'flag'  , 'l'),
+    version    = ('print version info and exit'                    , 'flag'  , 'V'),
 )
-
 def main(end_loans = 'E', list_loans = False, version = False):
     '''Perform some management functions on a DIBS server.
 

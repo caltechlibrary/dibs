@@ -47,10 +47,9 @@ from dibs.settings import config        # noqa: E402
 
 @plac.annotations(
     slack   = ('post to Slack channel:token if token is invalid', 'option', 's'),
-    verbose = ('print info about the results',                    'flag',   'v'),
-    version = ('print version info and exit',                     'flag',   'V'),
+    verbose = ('print info about the results'                   , 'flag'  , 'v'),
+    version = ('print version info and exit'                    , 'flag'  , 'V'),
 )
-
 def main(slack = 'C:T', verbose = False, version = False):
     '''Test if the FOLIO credentials in settings.ini appear valid.
 
@@ -95,8 +94,8 @@ Command-line arguments summary
         sys.exit(1)
 
     if not dibs_root:
-        print(f'‼️  File "settings.ini" not found in {here} or {parent}.')
-        print(f'‼️  Unexpected directory organization -- unable to proceed.')
+        print(f'‼️  File "settings.ini" not found in {here} or {parent}.\n'
+              f'‼️  Unexpected directory organization -- unable to proceed.')
         sys.exit(2)
 
     for var in ['FOLIO_OKAPI_URL', 'FOLIO_OKAPI_TENANT_ID', 'FOLIO_OKAPI_TOKEN']:
