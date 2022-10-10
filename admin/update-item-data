@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    update-item-data
+# @brief   Contact LSP about each item in DIBS to update field values if needed
+# @created 2022-10-07
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+from   os.path import dirname, join, abspath
+from   peewee import PeeweeException
+import plac
+from   rich.align import Align
+from   rich.box import ROUNDED
+from   rich.console import Console
+from   rich.prompt import Confirm
+from   rich.table import Table
+import sys
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
+from   dibs import print_version                    # noqa: E402
+from   dibs.data_models import database, Item       # noqa: E402
+from   dibs.lsp import LSP                          # noqa: E402
+from   dibs.settings import config, resolved_path   # noqa: E402
+
+
+# Globals.
+# .............................................................................
+
+db_file = config('DATABASE_FILE')
+db_path = resolved_path(db_file, must_exist = True)
+if not db_path:
+    print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
+    sys.exit(1)
+
+
+# Main entry point.
+# .............................................................................
+
+@plac.annotations(
+    version    = ('print version info and exit'               , 'flag', 'V'),
+    yes        = ('assume yes for all questions'              , 'flag', 'y'),
+)
+def main(version = False, yes = False):
+    '''Contact LSP about each item in DIBS to update field values if needed.'''
+
+    if version:
+        print_version()
+        sys.exit(0)
+    try:
+        lsp = LSP()
+
+        database.connect()
+        items = Item.select()
+        # Getting lists of items up front is inefficient, but good enough.
+        if len(items) > 30:
+            warn(f'Note: getting {len(items)} records may take a long time …')
+        lsp_records = []
+        for item in items:
+            inform(f'Retrieving record for {item.barcode} from {lsp.name} …')
+            lsp_records.append(lsp.record(barcode = item.barcode))
+        database.close()
+
+        if any(record_differs(item, rec) for item, rec in zip(items, lsp_records)):
+            print_differences_table(items, lsp_records)
+            if yes or confirm('Proceed with updating DIBS database?'):
+                database.connect()
+                update_records(items, lsp_records)
+                database.close()
+                inform('DIBS database updated.')
+            else:
+                warn(f'Differences left between DIBS items and {lsp.name} records.')
+        else:
+            inform(f'No differences exist between DIBS items and {lsp.name} records.')
+    except PeeweeException as ex:
+        alert('Database exception: ' + str(ex))
+        sys.exit(1)
+    except KeyboardInterrupt:
+        # Catch it, but don't treat it as an error; just stop execution.
+        pass
+    except Exception as ex:             # noqa: PIE786
+        alert(f'An error occurred: {str(ex)}.')
+        alert('Quitting.')
+    finally:
+        if not database.is_closed():
+            database.close()
+
+
+def print_differences_table(items, lsp_records):
+    lsp = LSP()
+    table = Table(show_lines = True, box = ROUNDED)
+    table.add_column('Item (barcode)', style = 'bold', width = 15)
+    table.add_column(f'{lsp.name} data ([on #662222]old[/], [on #225522]new[/])',
+                     no_wrap = False, overflow = 'fold')
+
+    for (item, lsp_record) in zip(items, lsp_records):
+        # Each row has 2 columns, and the right column is another table.
+        right = Table(box = None, show_header = False, padding = (0, 0))
+        right.add_column(width = 11, style = 'italic', no_wrap = True)
+        right.add_column(style = 'bold', no_wrap = False, overflow = 'fold')
+
+        add_field_row(right, 'Title', 'title', item, lsp_record)
+        add_field_row(right, 'Author(s)', 'author', item, lsp_record)
+        add_field_row(right, 'Year', 'year', item, lsp_record)
+        add_field_row(right, 'Edition', 'edition', item, lsp_record)
+        add_field_row(right, 'Publisher', 'publisher', item, lsp_record)
+        add_field_row(right, 'Page URL', 'item_page', item, lsp_record)
+
+        table.add_row(Align(item.barcode, vertical="middle"), right)
+
+    console = Console()
+    console.print(table)
+    print()
+
+
+def update_records(items, lsp_records):
+    for (item, lsp_record) in zip(items, lsp_records):
+        if not record_differs(item, lsp_record):
+            continue
+        inform(f'Updating DIBS database for changes in {item.barcode} …')
+        with database.atomic('immediate'):
+            item.title     = lsp_record.title
+            item.author    = lsp_record.author
+            item.year      = lsp_record.year
+            item.publisher = lsp_record.publisher
+            item.edition   = lsp_record.edition
+            item.item_page = lsp_record.item_page
+            item.save(only = [Item.title, Item.author, Item.item_page,
+                              Item.year, Item.publisher, Item.edition])
+
+
+# Miscellaneous utilities.
+# .............................................................................
+
+def add_field_row(table, label, field, item, lsp_record):
+    label = label + ':'
+    if field_differs(field, item, lsp_record):
+        table.add_row(label, '[on #662222]' + getattr(item, field) + '[/]')
+        table.add_row(label, '[on #225522]' + getattr(lsp_record, field) + '[/]')
+    else:
+        table.add_row(label, '[bold]' + getattr(item, field) + '[/]')
+
+
+def field_differs(field, item, lsp_record):
+    return getattr(item, field) != getattr(lsp_record, field)
+
+
+def record_differs(item, lsp_record):
+    fields = ['title', 'author', 'year', 'edition', 'publisher', 'item_page']
+    return not all(getattr(item, field) == getattr(lsp_record, field)
+                   for field in fields)
+
+
+def inform(msg):
+    console = Console()
+    console.print('[green]' + msg + '[/]')
+
+
+def warn(msg):
+    console = Console()
+    console.print('[yellow]' + msg + '[/]')
+
+
+def alert(msg):
+    console = Console()
+    console.print('[red]' + msg + '[/]')
+
+
+def confirm(question):
+    return Confirm.ask(f'[bold]{question}[/]')
+
+
+# Main invocation.
+# .............................................................................
+
+if __name__ == '__main__':
+    plac.call(main)
