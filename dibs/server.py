@@ -422,46 +422,54 @@ def update_item():
     thumbnail = request.files.get('thumbnail-image')
 
     item = Item.get_or_none(Item.barcode == barcode)
-    if '/update/add' in request.path:
-        if item:
-            log(f'{barcode} already exists in the database')
-            return page('error', summary = 'duplicate entry',
-                        message = f'An item with barcode {barcode} already exists.')
-        lsp = LSP()
-        try:
+    lsp = LSP()
+    try:
+        if '/update/add' in request.path:
+            if item:
+                log(f'{barcode} already exists in the database')
+                return page('error', summary = 'duplicate entry',
+                            message = (f'Item {barcode} already exists in DIBS.'))
             rec = lsp.record(barcode = barcode)
-        except ValueError:
-            return page('error', summary = 'Incomplete record in LSP',
-                        message = (f'The item with barcode {barcode} lacks one'
-                                   ' or more basic metadata fields (title,'
-                                   ' author, year) in the library catalog.'))
-        if not rec:
-            log(f'could not find {barcode} in LSP')
-            return page('error', summary = 'no such barcode',
-                        message = f'Could not find an item with barcode {barcode}.')
-        log(f'adding item entry {barcode} for {rec.title}')
-        Item.create(barcode = barcode, title = rec.title, author = rec.author,
-                    item_id = rec.item_id, item_page = rec.item_page, year = rec.year,
-                    edition = rec.edition, publisher = rec.publisher,
-                    num_copies = num_copies, duration = duration, notes = notes)
-    else:  # The operation is /update/edit.
-        if not item:
-            log(f'there is no item with barcode {barcode}')
-            return page('error', summary = 'no such barcode',
-                        message = f'There is no item with barcode {barcode}.')
-        item.barcode    = barcode
-        item.duration   = duration
-        item.num_copies = num_copies
-        item.notes      = notes
-        log(f'saving changes to {barcode}')
-        item.save(only = [Item.barcode, Item.num_copies, Item.duration, Item.notes])
-        # FIXME if we reduced the number of copies, we need to check loans.
+            log(f'adding item entry {barcode} for {rec.title}')
+            Item.create(barcode = barcode, title = rec.title, author = rec.author,
+                        item_id = rec.item_id, item_page = rec.item_page, year = rec.year,
+                        edition = rec.edition, publisher = rec.publisher,
+                        num_copies = num_copies, duration = duration, notes = notes)
+        else:  # The operation is /update/edit.
+            if not item:
+                log(f'there is no item with barcode {barcode}')
+                return page('error', summary = 'no such barcode',
+                            message = f'There is no item with barcode {barcode}.')
 
-        # Handle replacement thumbnail images if the user chose one.
-        if thumbnail and thumbnail.filename:
-            # We don't seem to get content-length in the headers, so won't know
-            # the size ahead of time.  So, check size, & always convert to jpeg.
-            try:
+            item.duration   = duration
+            item.num_copies = num_copies
+            item.notes      = notes
+
+            log(f'saving changes to {barcode}')
+            if barcode == item.barcode:
+                item.save(only = [Item.num_copies, Item.duration, Item.notes])
+            else:
+                # Different barcode => different item. Refetch it from the LSP.
+                rec = lsp.record(barcode = barcode)
+                item.barcode   = barcode
+                item.item_id   = rec.item_id
+                item.item_page = rec.item_page
+                item.title     = rec.title
+                item.author    = rec.author
+                item.year      = rec.year
+                item.publisher = rec.publisher
+                item.edition   = rec.edition
+                # For simplicity, don't try to be smart, just rewrite all the
+                # field values, but keep the same database object.
+                item.save(only = [Item.barcode, Item.num_copies, Item.duration,
+                                  Item.notes, Item.title, Item.author,
+                                  Item.item_id, Item.image_page, Item.year,
+                                  Item.publisher, Item.edition])
+
+            if thumbnail and thumbnail.filename and thumbnail.filename != 'empty':
+                log('user provided a thumbnail image file; will upload & save')
+                # We don't get content-length in the headers, so won't know the
+                # size ahead of time. Read by chunks & check against max size.
                 data = b''
                 while (chunk := thumbnail.file.read(1024)):
                     data += chunk
@@ -475,10 +483,20 @@ def update_item():
                 log(f'writing {naturalsize(len(data))} image to {dest_file}')
                 with open(dest_file, 'wb') as new_file:
                     new_file.write(as_jpeg(data))
-            except Exception as ex:     # noqa: PIE786
-                log(f'exception trying to save thumbnail: {str(ex)}')
-        else:
-            log('user did not provide a new thumbnail image file')
+    except ValueError:
+        return page('error', summary = f'Problem with {barcode} in {lsp.name}',
+                    message = (f'Either {lsp.name} does not have an item'
+                               f' with barcode {barcode}, or the item record'
+                               ' is incomplete and cannot be used by DIBS.'))
+    except OSError as ex:
+        # Log it but don't fail just because of this.
+        log(f'exception trying to save thumbnail: {str(ex)}')
+    except Exception as ex:         # noqa: PIE786
+        log(f'exception looking up barcode {barcode} in {lsp.name}: ', str(ex))
+        return page('error', summary = f'Unable to get record from {lsp.name}',
+                    message = ('An internal error occurred while looking'
+                               f' up barcode {barcode} in {lsp.name}. Please'
+                               'notify the site administrators.'))
     redirect(f'{dibs.base_url}/list')
 
 
