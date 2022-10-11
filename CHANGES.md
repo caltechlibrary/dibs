@@ -2,10 +2,27 @@
 
 ## ★ Version 0.7.0 ★
 
-Changes in this release:
-* New utility available, `test-token`, for testing whether the FOLIO credentials are valid. Meant to be used in a cron job for daily testing that the FOLIO API token is still valid.
-* Updates to `requirements.txt` for many dependencies to bring them to the latest releases and deal with recent Dependabot security alerts.
-* The contents of `.gitignore` have been revised to follow new best practices.
+### What's new
+* New utility, `update-item-data`, to update the DIBS database items with current values from the corresponding LSP records. This is particularly useful for updating the item page URLs when FOLIO changes the permalink scheme, which in turn breaks the LSP links of all items in DIBS.
+* New utility, `test-token`, for testing whether the FOLIO credentials are valid. Meant to be used in a cron job for daily testing that the FOLIO API token being used by the DIBS server is still valid.
+* New file, `dev/requirements-dev.txt`, for Python requirements such as `pytest` needed for development.
+
+
+### What's fixed
+
+* Fixed issue #100: provide a way to bulk-update permalinks. This is now possible using the new `update-item-data` utility program mentione above. This utility also partly solves issue #7.
+* Fixed issue #102: if a (library staff) user edited an item and changed the barcode when doing so, then the internal DIBS record could have become inconsistent with the LSP entry because DIBS only updated a limited number of fields during the edit operation. DIBS now compares the barcode and updates all internal object fields if the barcode is changed.
+* Fixed a misleading error message when creating new entries, in which "Incomplete record in LSP" was printed even if the record was missing entirely.
+* Fixed a bug in the item editing page, in which thumbnail images were not checked for being zero length files. This led to internal exceptions when the server attempted to read the file.
+
+
+### What's changed
+
+* The object classes for LSP interfaces in `lsp.py` have had some internal changes. The fields `id` and `url` are now `item_id` and `item_page`, respectively, to avoid confusion in calling code about the "id" and "url" in question. These names also match the corresponding field names in the database objects defined in `data_models.py`. In addition, the LSP interface classes now have a `name` property, which can be used to print more informative messages. A few lines in `server.py` have had corresponding changes to account for the changes in `lsp.py`.
+* Added a description to the DIBS documentation, in the section on item editing, to explain what can happen if the number of available copies of an item is decreased while all available digital copies are currently loaned out.
+* Updated `requirements.txt` for many dependencies to bring them to the latest releases and deal with recent Dependabot security alerts.
+* Updated the contents of `.gitignore` to follow new best practices.
+* Added more unit tests. (Still isn't nearly enough, but it's more than before!)
 
 
 ## ★ Version 0.6.1 ★
