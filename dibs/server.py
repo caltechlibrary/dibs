@@ -914,6 +914,7 @@ _UNNECESSARY_PLUGINS = [
     DatabaseConnector, LoanExpirer, BarcodeVerifier, RouteTracer
 ]
 
+
 @dibs.route('/view/uv/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 @dibs.route('/viewer/uv/<filepath:path>', skip = _UNNECESSARY_PLUGINS)
 def serve_uv_files(filepath):
