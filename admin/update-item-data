@@ -7,6 +7,7 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
+import faulthandler
 from   os.path import dirname, join, abspath
 from   peewee import PeeweeException
 import plac
@@ -61,6 +62,7 @@ any problems are encountered, it returns with a status code of 1.
 Command-line options summary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 '''
+    faulthandler.enable()
 
     if version:
         print_version()
@@ -70,7 +72,7 @@ Command-line options summary
 
         database.connect()
         items = Item.select()
-        # Getting lists of items up front is inefficient, but good enough.
+        # Getting all items up front is inefficient, but good enough for this.
         if len(items) > 30:
             warn(f'Note: getting {len(items)} records may take a long time …')
         lsp_records = []
@@ -80,7 +82,7 @@ Command-line options summary
         database.close()
 
         if any(record_differs(item, rec) for item, rec in zip(items, lsp_records)):
-            print_differences_table(items, lsp_records)
+            show_differences(items, lsp_records)
             if yes or confirm('Proceed with updating DIBS database?'):
                 database.connect()
                 update_records(items, lsp_records)
@@ -104,9 +106,10 @@ Command-line options summary
             database.close()
 
 
-def print_differences_table(items, lsp_records):
+def show_differences(items, lsp_records):
     lsp = LSP()
-    table = Table(show_lines = True, box = ROUNDED)
+    table = Table(title = f'Differences found between DIBS and {lsp.name} data',
+                  show_lines = True, box = ROUNDED)
     table.add_column('Item (barcode)', style = 'bold', width = 15)
     table.add_column(f'{lsp.name} data ([on #662222]old[/], [on #225522]new[/])',
                      no_wrap = False, overflow = 'fold')
@@ -126,8 +129,8 @@ def print_differences_table(items, lsp_records):
 
         table.add_row(Align(item.barcode, vertical="middle"), right)
 
-    console = Console()
-    console.print(table)
+    print()
+    Console().print(table)
     print()
 
 
@@ -146,9 +149,6 @@ def update_records(items, lsp_records):
             item.save(only = [Item.title, Item.author, Item.item_page,
                               Item.year, Item.publisher, Item.edition])
 
-
-# Miscellaneous utilities.
-# .............................................................................
 
 def add_field_row(table, label, field, item, lsp_record):
     label = label + ':'
@@ -168,20 +168,20 @@ def record_differs(item, lsp_record):
     return not all(getattr(item, field) == getattr(lsp_record, field)
                    for field in fields)
 
+
+# Miscellaneous utilities.
+# .............................................................................
 
 def inform(msg):
-    console = Console()
-    console.print('[green]' + msg + '[/]')
+    Console().print('[green]' + msg + '[/]')
 
 
 def warn(msg):
-    console = Console()
-    console.print('[yellow]' + msg + '[/]')
+    Console().print('[yellow]' + msg + '[/]')
 
 
 def alert(msg):
-    console = Console()
-    console.print('[red]' + msg + '[/]')
+    Console().print('[red]' + msg + '[/]')
 
 
 def confirm(question):
