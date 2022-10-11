@@ -10,19 +10,19 @@
     "author": [
         {
             "@type": "Person",
-            "givenName": "Robert",
-            "familyName": "Doiel",
-            "affiliation": "Caltech Library",
-            "email": "rsdoiel@caltech.edu",
-            "@id": "https://orcid.org/0000-0003-0900-6903"
-        },
-        {
-            "@type": "Person",
             "givenName": "Michael",
             "familyName": "Hucka",
             "affiliation": "California Institute of Technology Library",
             "email": "mhucka@caltech.edu",
             "@id": "https://orcid.org/0000-0001-9105-5960"
+        },
+        {
+            "@type": "Person",
+            "givenName": "Robert",
+            "familyName": "Doiel",
+            "affiliation": "Caltech Library",
+            "email": "rsdoiel@caltech.edu",
+            "@id": "https://orcid.org/0000-0003-0900-6903"
         },
         {
             "@type": "Person",
