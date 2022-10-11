@@ -39,11 +39,28 @@ if not db_path:
 # .............................................................................
 
 @plac.annotations(
-    version    = ('print version info and exit'               , 'flag', 'V'),
-    yes        = ('assume yes for all questions'              , 'flag', 'y'),
+    version  = ('print version info and exit'  , 'flag', 'V'),
+    yes      = ('assume yes for all questions' , 'flag', 'y'),
 )
 def main(version = False, yes = False):
-    '''Contact LSP about each item in DIBS to update field values if needed.'''
+    '''Contact LSP about each item in DIBS to update field values if needed.
+
+This program reads the DIBS database file and compares every item's metadata
+fields to the values of the corresponding record in the LSP, displays the
+differences, and offers to update the DIBS objects to match the LSP records.
+
+If given the option --yes, it will not stop for confirmation before updating
+the DIBS database records.
+
+Return values
+~~~~~~~~~~~~~
+
+This program exists with a return code of 0 if no problems are encountered. If
+any problems are encountered, it returns with a status code of 1.
+
+Command-line options summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+'''
 
     if version:
         print_version()
