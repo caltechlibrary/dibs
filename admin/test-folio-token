@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # =============================================================================
-# @file    test-token
+# @file    test-folio-token
 # @brief   Check if the token in the DIBS settings.ini file seems valid
 # @created 2022-09-16
 # @license Please see the file named LICENSE in the project directory
@@ -59,9 +59,9 @@ form "slack-channel:slack-token"; this program will post a message to the
 channel if the FOLIO credentials are invalid.
 
 Here is an example of a crontab line for daily testing of the FOLIO credentials
-and posting to a (fake) Slack channel:
+and posting to a (fake) Slack channel named "my-channel":
 
-  0 8 * * *  /path/to/dibs/test-token --slack  some-channel:xoxb-89765-asfd1234
+  0 8 * * * /path/to/dibs/test-folio-token --slack my-channel:xoxb-895-asfd123
 
 Return values
 ~~~~~~~~~~~~~
