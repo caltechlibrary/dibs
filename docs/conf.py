@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'DIBS'
-project_copyright = '2021, Caltech Library'
+project_copyright = '2022, Caltech Library'
 author = 'Caltech Library'
 
 
