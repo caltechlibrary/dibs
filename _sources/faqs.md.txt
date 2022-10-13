@@ -47,7 +47,7 @@ Finally, while we don't have the resources to implement a queuing system at this
 
 DIBS uses multiple techniques to prevent users from saving the books they borrow through the system:
 
-* Each book is stored on the IIIF server as thousands of images, not as single PDFs files.
+* Each book is stored on the IIIF server as thousands of images, not as single PDFs files (or other complete document files).
 
 * The IIIF format is structured in such a way that individual pages are not stored as complete page images, but rather as multiple fragments of each page. The data received by the user's browser consists of (many) fragments for any given page. Clever users may think of opening a browser's web developer interface and inspecting the image content, but they will not find complete pages stored anywhere.
 
@@ -57,7 +57,7 @@ DIBS uses multiple techniques to prevent users from saving the books they borrow
 
 * Caltech has an [Honor Code](https://deans.caltech.edu/HonorCode), a code of ethics that guides the entire campus of students, staff, and faculty. At Caltech, we point out to users that attempting to circumvent the intellectual property protections built into DIBS is a violation of trust and therefore the honor code. Honor code violations are punishable.
 
-These measures represent a best-faith effort in DIBS to prevent copyright violations through DIBS itself. Ultimately, though, there is only so much we can do. DIBS cannot prevent users from (say) taking photos of screen images using their cell phones, just as physical libraries cannot prevent users from taking photos of physical books. Not even Amazon can prevent users of Kindle from doing the same &ndash; and if an entity with the resources of Amazon cannot prevent all methods of saving content, then we certainly cannot.
+These measures represent a best-faith effort in DIBS to prevent copyright violations through DIBS itself. Ultimately, though, there is only so much we can do. DIBS cannot prevent users from (say) taking photos of screen images using their cell phones, just as physical libraries cannot prevent users from taking photos of physical books. Not even Amazon can prevent users of Kindle from doing the same &ndash; and if an entity with the resources of Amazon cannot prevent all methods of saving content, then _we_ certainly cannot.
 
 
 ## Does DIBS use IIIF authentication?
