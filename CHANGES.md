@@ -2,9 +2,11 @@
 
 ## ★ Version 0.7.0 ★
 
+This release adds a couple of utility programs (including one for updating DIBS's stored item metadata with the latest values from the LSP), fixes some minor bugs, updates the versions of some dependencies to deal with Dependabot security udpates, and adds a little bit more documentation. There are minor changes to two template files; if you have an existing DIBS installation, a git pull should hopefully merge the changes without trouble. There are no changes to the database data object model.
+
 ### What's new
-* New utility, `update-item-data`, to update the DIBS database items with current values from the corresponding LSP records. This is particularly useful for updating the item page URLs when FOLIO changes the permalink scheme, which in turn breaks the LSP links of all items in DIBS.
-* New utility, `test-token`, for testing whether the FOLIO credentials are valid. Meant to be used in a cron job for daily testing that the FOLIO API token being used by the DIBS server is still valid.
+* New utility, `update-item-data`, to update the DIBS database items with current values from the corresponding LSP records. This is particularly useful for updating the item page URLs when FOLIO changes the permalink scheme.
+* New utility, `test-token`, for testing whether the FOLIO credentials are valid. This is meant to be used in a cron job for daily testing that the FOLIO API token being used by the DIBS server is still valid.
 * New README file in the `admin` subdirectory, to describe the various utility programs in that directory.
 * New file, `dev/requirements-dev.txt`, to list Python requirements such as `pytest` needed for development.
 
