@@ -30,14 +30,14 @@ from .settings import config, resolved_path
 @dataclass
 class LSPRecord():
     '''Common abstraction for records returned by different LSP's.'''
-    id            : str                 # noqa A003
-    url           : str
-    title         : str
-    author        : str
-    publisher     : str
-    edition       : str
-    year          : str
-    isbn_issn     : str
+    item_id   : str
+    item_page : str
+    title     : str
+    author    : str
+    publisher : str
+    edition   : str
+    year      : str
+    isbn_issn : str
 
 
 class LSPInterface(ABC):
@@ -58,6 +58,13 @@ class LSPInterface(ABC):
         return "<{} for {}>".format(self.__class__.__name__, self.url)
 
 
+    @property
+    @abstractmethod
+    def name(self):
+        '''Return the name of this LSP, for use in (e.g.) error messages.'''
+        pass                            # noqa: PIE790
+
+
     @abstractmethod
     def record(self, barcode = None):
         '''Return a record for the item identified by the "barcode".'''
@@ -72,6 +79,12 @@ class TindInterface(LSPInterface):
         self.url = url
         self._thumbnails_dir = thumbnails_dir
         self._tind = Tind(url)
+
+
+    @property
+    def name(self):
+        '''Return the name of this LSP, for use in (e.g.) error messages.'''
+        return 'TIND'
 
 
     def record(self, barcode = None):
@@ -93,8 +106,8 @@ class TindInterface(LSPInterface):
                     log(f"{barcode} lacks ISBN & thumbnail URL => no thumbnail")
             else:
                 log(f'thumbnail image already exists in {thumbnail_file}')
-            return LSPRecord(id        = rec.tind_id,
-                             url       = rec.tind_url,
+            return LSPRecord(item_id   = rec.tind_id,
+                             item_page = rec.tind_url,
                              title     = truncated_title(rec.title),
                              author    = rec.author,
                              publisher = rec.publisher,
@@ -124,6 +137,12 @@ class FolioInterface(LSPInterface):
                             an_prefix     = an_prefix)
 
 
+    @property
+    def name(self):
+        '''Return the name of this LSP, for use in (e.g.) error messages.'''
+        return 'FOLIO'
+
+
     def record(self, barcode = None):
         '''Return a record for the item identified by the "barcode".
 
@@ -148,16 +167,16 @@ class FolioInterface(LSPInterface):
                 try:
                     save_thumbnail(thumbnail_file, isbn = rec.isbn_issn)
                 except Exception as ex:  # noqa PIE786
-                    # Log it but otherwise we won't fail just because of this.
+                    # Log it and go on; don't fail just because of this.
                     log(f'failed to save thumbnail for {barcode}: ' + str(ex))
             else:
                 log(f"{rec.id} has no ISBN/ISSN => can't get a thumbnail")
         else:
             log(f'thumbnail image already exists in {thumbnail_file}')
 
-        url = self._page_tmpl.format(accession_number = rec.accession_number)
-        return LSPRecord(id        = rec.id,
-                         url       = url,
+        page = self._page_tmpl.format(accession_number = rec.accession_number)
+        return LSPRecord(item_id   = rec.id,
+                         item_page = page,
                          title     = truncated_title(rec.title),
                          author    = rec.author,
                          year      = rec.year,
@@ -176,8 +195,8 @@ class UnconfiguredInterface(LSPInterface):
 
     def record(self, barcode = None):
         '''Return a record for the item identified by the "barcode".'''
-        return LSPRecord(id        = 'LSP not configured',
-                         url       = '',
+        return LSPRecord(item_id   = 'LSP not configured',
+                         item_page = '',
                          title     = 'LSP not configured',
                          author    = 'LSP not configured',
                          publisher = 'LSP not configured',

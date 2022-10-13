@@ -320,6 +320,13 @@
       <a href="installation.html#running-dibs" class="md-nav__link">Running DIBS</a>
       
     
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="installation.html#administrative-utilities" class="md-nav__link">Administrative utilities</a>
+      
+    
     </li></ul>
     
     </li>
@@ -427,13 +434,13 @@
 <h2 id="how-does-dibs-prevent-users-from-saving-copies-of-the-materials">How does DIBS prevent users from saving copies of the materials?<a class="headerlink" href="#how-does-dibs-prevent-users-from-saving-copies-of-the-materials" title="Permalink to this heading">¶</a></h2>
 <p>DIBS uses multiple techniques to prevent users from saving the books they borrow through the system:</p>
 <ul class="simple">
-<li><p>Each book is stored on the IIIF server as thousands of images, not as single PDFs files.</p></li>
+<li><p>Each book is stored on the IIIF server as thousands of images, not as single PDFs files (or other complete document files).</p></li>
 <li><p>The IIIF format is structured in such a way that individual pages are not stored as complete page images, but rather as multiple fragments of each page. The data received by the user’s browser consists of (many) fragments for any given page. Clever users may think of opening a browser’s web developer interface and inspecting the image content, but they will not find complete pages stored anywhere.</p></li>
 <li><p>Downloading is disabled in the Universal Viewer (the system used for rendering documents in user’s web browsers). There is no “download” button, and UV does not provide a way to “open the image” of a document page that users see in their browsers.</p></li>
 <li><p>The DIBS server acts as a traffic cop between the IIIF server and the user. All URLs to document images retrieved by the viewer go through the DIBS server, and the server checks a user’s loan status for every image retrieval. If the user’s loan period has ended (or they have not borrowed the requested item), the server refuses all network requests for image retrievals. Users can save the URLs to loaned books, but those URLs are useless outside of the limited periods of time when the user has an active loan in progress.</p></li>
 <li><p>Caltech has an <a class="reference external" href="https://deans.caltech.edu/HonorCode">Honor Code</a>, a code of ethics that guides the entire campus of students, staff, and faculty. At Caltech, we point out to users that attempting to circumvent the intellectual property protections built into DIBS is a violation of trust and therefore the honor code. Honor code violations are punishable.</p></li>
 </ul>
-<p>These measures represent a best-faith effort in DIBS to prevent copyright violations through DIBS itself. Ultimately, though, there is only so much we can do. DIBS cannot prevent users from (say) taking photos of screen images using their cell phones, just as physical libraries cannot prevent users from taking photos of physical books. Not even Amazon can prevent users of Kindle from doing the same – and if an entity with the resources of Amazon cannot prevent all methods of saving content, then we certainly cannot.</p>
+<p>These measures represent a best-faith effort in DIBS to prevent copyright violations through DIBS itself. Ultimately, though, there is only so much we can do. DIBS cannot prevent users from (say) taking photos of screen images using their cell phones, just as physical libraries cannot prevent users from taking photos of physical books. Not even Amazon can prevent users of Kindle from doing the same – and if an entity with the resources of Amazon cannot prevent all methods of saving content, then <em>we</em> certainly cannot.</p>
 </section>
 <section id="does-dibs-use-iiif-authentication">
 <h2 id="does-dibs-use-iiif-authentication">Does DIBS use IIIF authentication?<a class="headerlink" href="#does-dibs-use-iiif-authentication" title="Permalink to this heading">¶</a></h2>
@@ -484,11 +491,11 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2021, Caltech Library.
+              &#169; Copyright 2022, Caltech Library.
               
           </div>
             Last updated on
-              Sep 30, 2022.
+              Oct 13, 2022.
             <br/>
             Created using
             <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.2.3.

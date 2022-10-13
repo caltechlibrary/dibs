@@ -328,6 +328,13 @@
       <a href="installation.html#running-dibs" class="md-nav__link">Running DIBS</a>
       
     
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="installation.html#administrative-utilities" class="md-nav__link">Administrative utilities</a>
+      
+    
     </li></ul>
     
     </li>
@@ -489,6 +496,7 @@
 </figure>
 <p>As you might have guessed, staff can modify entries by editing these values and then clicking the  <span class="button color-primary">Save</span> button to save the changes to the database.</p>
 <p>The edit page also provides the ability to replace the item’s cover image, or to delete it altogether. When there is an existing thumbnail image, the page shows the image with a small red trashcan icon overlaid on top of it in the bottom right corner. Clicking this trashcan icon will delete the existing thumbnail image file. On the other hand, clicking the “Choose file” button under the field heading <em>Replace cover image</em> allows a staff user to upload an image from their computer’s hard drive; after clicking the <span class="button color-primary">Save</span> button, the uploaded image will become the new cover image for the item.</p>
+<p>There can arise an awkward situation when editing item entries. If you reduce the number of available copies of an item (from some number $M$ to $N$, where $N &lt; M$), and at the time you do it, there are loans out on all available copies (all $M$), then temporarily there will be more copies loaned than the new permitted number of loans ($N$). This will persist until some loans expire; more precisely, until $M - N$ loans expire. DIBS does it this way because the alternative would be to terminate $M - N$ loans forcefully. Not only would that be frustrating for users (who would experience loans ending before the time they were promised);  it would also lead to the question of how to decide fairly <em>which</em> loans to terminate. The current approach in DIBS is probably a reasonable tradeoff when loan durations are short, but for long loan durations (say, longer than a day), staff should make sure to <strong>wait until the number of loans has dropped to $N$ or less before putting physical copies back into circulation</strong>, to avoid the possibility that there are more digital copies on loan than have been pulled from physical circulation.</p>
 </section>
 <section id="managing-the-list-of-items">
 <h3 id="managing-the-list-of-items">Managing the list of items<a class="headerlink" href="#managing-the-list-of-items" title="Permalink to this heading">¶</a></h3>
@@ -577,11 +585,11 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2021, Caltech Library.
+              &#169; Copyright 2022, Caltech Library.
               
           </div>
             Last updated on
-              Sep 30, 2022.
+              Oct 13, 2022.
             <br/>
             Created using
             <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
