@@ -15,7 +15,7 @@ This directory contains a number of small administrative utilities for DIBS. The
 * [`update-item-data`](#update-item-data-update-item-records-with-current-values-from-lsp)
 
 
-## `export-data`: export data a DIBS database
+## `export-data`: export data from a DIBS database
 
 This program reads a DIBS database file and, based on the options given on the command line, writes one or more files containing the contents of one or more tables from the DIBS database.  Each table holds a different kind of model instance, such as `Item`, `History`, etc.  The default action is to put all the files into one ZIP archive as the output. You can run this program with the `-h` option to get more information about its usage.
 
@@ -24,10 +24,10 @@ This program and `import-data` (below) can be useful for migrating servers, back
 
 ## `import-data`: import data into a DIBS database
 
-This program is the opposite of `export-data`;  takes a ZIP archive of JSON files previously exported by `export-data` (above), and loads a DIBS database using that data. The ZIP archive must contain 4 files corresponding to the 4 database object tables in a DIBS database. The path to the archive file is expected to be the last argument on the command line. You can run it with the `-h` option to get more information about its usage.
+This program is the opposite of `export-data`;  it takes a ZIP archive of JSON files previously exported by `export-data` (above), and loads a DIBS database using that data. The ZIP archive must contain 4 files corresponding to the 4 database object tables in a DIBS database. The path to the archive file is expected to be the last argument on the command line. You can run it with the `-h` option to get more information about its usage.
 
 
-## `load-mock-data`: load some sample data for DIBS
+## `load-mock-data`: load sample data into DIBS
 
 When first starting out with DIBS, for testing purposes, you may want to add some sample data. The program `load-mock-data` can be used for this purpose. It takes no arguments and is intended to be run from the DIBS directory root:
 ```sh
@@ -52,11 +52,11 @@ This administrative utility lets you simultaneously (1) add/remove/edit people's
 There are 2 layers of access control in DIBS when deployed in a web server:
 
 1) can an incoming user access any part of DIBS at all?
-2) can the user access staff pages, or only patron pages?
+2) can the user access DIBS staff pages, or only patron pages?
 
 Layer #1 is implemented in the web server environment, and the details of how it's done depends on the specifics of the installation.  As far as DIBS is concerned, it only cares about whether a user has been authenticated or not.  When a page or API endpoint is requested from DIBS, the request environment given to DIBS by the web server will either include a user identity (if the use has been authenticated) or not.  DIBS simply refuses access to everything it controls if a user identity is not present in the request environment.
 
-Layer #2 is implemented in DIBS itself.  DIBS's database uses Person objects to distinguish between people known to have staff access (i.e., who can access pages like `/list`), and everyone else.  When a request for a page or an endpoint comes in, DIBS looks for the user identifier in the HTTP request environment given to it from the web server, checks if that user is in the Person table, and checks if the user has a role of `library`.  If the role is `library`, access to staff pages is granted; if the Person entry doesn't have a role of 'library', the user is not shown links to the staff pages nor can they access the relevant endpoints.
+Layer #2 is implemented in DIBS itself.  DIBS's database uses Person objects to distinguish between people known to have staff access (i.e., who can access pages like `/list`), and everyone else.  When a request for a page or an endpoint comes in, DIBS looks for the user identifier in the HTTP request environment given to it from the web server, checks if that user is in the Person table, and checks if the user has a role of `library`.  If the role is `library`, access to staff pages is granted; if the Person entry doesn't have a role of `library`, the user is not shown links to the staff pages nor can they access the relevant endpoints.
 
 ### Managing users using `people-manager`
 
@@ -79,7 +79,7 @@ There are 3 run modes available. Two of the modes can be set using the `settings
 
 *  `normal`: uses the Python `mod_wsgi-express` module without debugging options. The server will run multiple threads, will not reload if source files are changed, will not reload templates if they are changed, and will not stop for exceptions. It looks for a file named `adapter.wsgi` in the current directory and passes it to `mod_wsgi`. This mode is a close approximation to running DIBS in a basic Apache2 `mod_wsgi` environment, with `adapter.wsgi`.
 
-* `verbose`: like normal mode, but will produce detailed logging to the terminal.  This mode is useful for testing DIBS using `adapter.wsgi` in `mod_wsgi`.  Verbose mode is invoked using the option `--mode verbose`, or setting `RUN_MODE` to `verbose` in settings.ini. (Using `--mode verbose` overrides `settings.ini`.)
+* `verbose`: like normal mode, but will produce detailed logging to the terminal.  This mode is useful for testing DIBS using `adapter.wsgi` in `mod_wsgi`.  Verbose mode is invoked using the option `--mode verbose`, or setting `RUN_MODE` to `verbose` in settings.ini. (Using `--mode verbose` with `run-server` overrides the value in `settings.ini`.)
 
 * `debug`: this uses [Bottle](https://bottlepy.org)'s development server instead of `mod_wsgi-express` and turns on maximum debugging options. This mode does **not** use `adapter.wsgi`. It will turn off template caching, will drop into pdb upon exceptions, and unlike `mod_wsgi-express`, the [Bottle](https://bottlepy.org) server will also automatically reload any changed source files. In addition, the reloan wait time and loan expirations are set to 1 minute (overriding values set on individual items), and finally, the statistics gathering will include loans by staff users. (Normally, staff users are not included in the statistics to avoid skewing the results.) Debug mode is invoked using the option `--mode debug`. It has no corresponding `RUN_MODE` value in `settings.ini`.
 
