@@ -16,7 +16,7 @@ from   zipfile import ZipFile
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from   dibs.settings import config, resolved_path           # noqa: E402
+from   dibs.settings import config, resolved_path                     # noqa: E402
 from   dibs.data_models import database, Item, Loan, History, Person  # noqa: E402
 
 
@@ -150,10 +150,9 @@ IMPORT_HANDLERS = {
 # .............................................................................
 
 @plac.annotations(
-    quiet     = ('only print important messages while working', 'flag', 'q'),
+    quiet         = ('only print important messages while working', 'flag', 'q'),
     zip_file_path = 'ZIP archive file to load',
 )
-
 def main(quiet = False, *zip_file_path):
     '''Read a DIBS database archive and append contents to a database.
 

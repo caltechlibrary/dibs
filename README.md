@@ -5,7 +5,6 @@ Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") is the Caltech Library's
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://choosealicense.com/licenses/bsd-3-clause)
 [![Python](https://img.shields.io/badge/Python-3.8+-brightgreen.svg?style=flat-square)](https://www.python.org/downloads/release/python-380/)
 [![Latest release](https://img.shields.io/github/v/release/caltechlibrary/dibs.svg?style=flat-square&color=b44e88&label=Latest%20release)](https://github.com/caltechlibrary/dibs/releases)
-[![DOI](https://img.shields.io/badge/dynamic/json.svg?label=DOI&style=flat-square&color=lightgray&query=$.metadata.doi&uri=https://data.caltech.edu/api/record/20205)](https://data.caltech.edu/records/20205)
 
 ## Table of contents
 
@@ -59,8 +58,6 @@ In order to run a multiuser DIBS server at another institution, certain addition
 ## Installation and operation
 
 Please refer to the [detailed installation instructions in the DIBS manual](https://caltechlibrary.github.io/dibs/installation.html).
-
-**Backwards compatibility warning**: If you previously used a DIBS version before version 0.5, you will not be able to run 0.5 without migrating the database and doing other work.  Some migration help can be found in the [DIBS wiki on GitHub](https://github.com/caltechlibrary/dibs/wiki).  The version 0.5 release brings significant changes and new features, but it is also not fully backward compatible with previous versions. We apologize for breaking backward compatibility; we lack the resources to do it differently or create a proper migration engine.
 
 
 ## General information

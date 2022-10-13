@@ -1,19 +1,9 @@
-import os
-import pytest
-import sys
 from datetime import datetime
 
 
-try:
-    thisdir = os.path.dirname(os.path.abspath(__file__))
-    sys.path.append(os.path.join(thisdir, '..'))
-except:
-    sys.path.append('..')
-
-from dibs.date_utils import round_minutes, human_datetime
-
-
 def test_round_minutes():
+    from dibs.date_utils import round_minutes
+
     x = datetime(2021, 4, 6, 23, 56, 3, 546899)
     assert round_minutes(x, 'down') == datetime(2021, 4, 6, 23, 56)
     assert round_minutes(x, 'up')   == datetime(2021, 4, 6, 23, 57)
@@ -36,6 +26,8 @@ def test_round_minutes():
 
 
 def test_human_datetime():
+    from dibs.date_utils import human_datetime
+
     x = datetime(2021, 4, 6, 23, 0, 0, 0)
     hx = human_datetime(x)
     assert hx[0:8] == '4:00 PM '

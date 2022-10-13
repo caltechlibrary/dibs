@@ -27,6 +27,7 @@ import sys
 # Figure out where the root of the DIBS directory is located.
 
 here = abspath(dirname(sys.argv[0]))
+dibs_root = None
 if exists(join(here, 'settings.ini')):
     dibs_root = here
 else:
@@ -34,13 +35,14 @@ else:
     if exists(join(parent, 'settings.ini')):
         dibs_root = parent
     else:
-        print(f'‼️  File "settings.ini" not found in {here} or {parent}.')
-        print(f'‼️  Unexpected directory organization -- unable to proceed.')
+        print(f'‼️  File "settings.ini" not found in {here} or {parent}.\n'
+              f'‼️  Unexpected directory organization -- unable to proceed.')
         sys.exit(1)
 
 # Adjust Python's load path accordingly.
 
-sys.path.append(dibs_root)
+if dibs_root:
+    sys.path.append(dibs_root)
 
 # Now we can load the DIBS things we need.
 
@@ -52,11 +54,10 @@ from dibs.settings import config        # noqa: E402
 # .............................................................................
 
 @plac.annotations(
-    owner   = ('set ownership to user "O" (default: current user)',  'option', 'o'),
+    owner   = ('set ownership to user "O" (default: current user)' , 'option', 'o'),
     group   = ('set ownership to user "G" (default: user\'s group)', 'option', 'g'),
-    version = ('print version info and exit',                        'flag',   'V'),
+    version = ('print version info and exit'                       , 'flag'  , 'V'),
 )
-
 def main(owner = 'O', group = 'G', version = False):
     '''Set the permissions on certain DIBS directories for a server setting.
 
