@@ -5,8 +5,8 @@
 ### What's new
 * New utility, `update-item-data`, to update the DIBS database items with current values from the corresponding LSP records. This is particularly useful for updating the item page URLs when FOLIO changes the permalink scheme, which in turn breaks the LSP links of all items in DIBS.
 * New utility, `test-token`, for testing whether the FOLIO credentials are valid. Meant to be used in a cron job for daily testing that the FOLIO API token being used by the DIBS server is still valid.
-* A new README file in the `admin` subdirectory summarizes the various utility programs in that directory.
-* New file, `dev/requirements-dev.txt`, for Python requirements such as `pytest` needed for development.
+* New README file in the `admin` subdirectory, to describe the various utility programs in that directory.
+* New file, `dev/requirements-dev.txt`, to list Python requirements such as `pytest` needed for development.
 
 
 ### What's fixed
