@@ -20,6 +20,7 @@
 ### What's changed
 
 * The object classes for LSP interfaces in `lsp.py` have had some internal changes. The fields `id` and `url` are now `item_id` and `item_page`, respectively, to avoid confusion in calling code about the "id" and "url" in question. These names also match the corresponding field names in the database objects defined in `data_models.py`. In addition, the LSP interface classes now have a `name` property, which can be used to print more informative messages. A few lines in `server.py` have had corresponding changes to account for the changes in `lsp.py`.
+* The template files `dibs/templates/edit.tpl` and `dibs/templates/item.tpl` have had small changes made, to check for zero-length thumbnail files. The changes are in commits 30a9eb9 and 16a63da, respectively.
 * Added a description to the DIBS documentation, in the section on item editing, to explain what can happen if the number of available copies of an item is decreased while all available digital copies are currently loaned out.
 * Updated `requirements.txt` for many dependencies to bring them to the latest releases and deal with recent Dependabot security alerts.
 * Updated the contents of `.gitignore` to follow new best practices.
