@@ -36,6 +36,7 @@
       %include('common/navbar.tpl')
       %from os import stat
       %from os.path import join, exists
+      %from commonpy.file_utils import nonempty
 
       <div class="container-fluid main-container">
         <div class="row d-flex justify-content-center w-100 pt-3 my-3 mx-auto item-info-row">
@@ -92,7 +93,7 @@
 
           <div class="col-sm-2 col-xs-0 item-thumbnail">
             %thumbnail_file = join(thumbnails_dir, item.barcode + ".jpg")
-            %if exists(thumbnail_file):
+            %if exists(thumbnail_file) and nonempty(thumbnail_file):
               %timestamp = stat(thumbnail_file).st_mtime
             <img class="thumbnail thumbnail-image img-responsive"
                  src="{{base_url}}/thumbnails/{{item.barcode}}.jpg?{{timestamp}}">
