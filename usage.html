@@ -446,7 +446,7 @@
 <section id="how-users-are-identified-as-staff-users">
 <h3 id="how-users-are-identified-as-staff-users">How users are identified as staff users<a class="headerlink" href="#how-users-are-identified-as-staff-users" title="Permalink to this heading">¶</a></h3>
 <p>As mentioned <span class="xref myst">above</span>, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that system administrators need to do is tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <a class="reference download internal" download="" href="_downloads/19940a7e0b5e588ca5f9115591fee4a7/people-manager"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span></a> for that purpose. (It’s located in the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@caltech.edu"</span> <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager<span class="w"> </span>add<span class="w"> </span><span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@caltech.edu"</span><span class="w"> </span><span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
 </pre></div>
 </div>
 </section>
@@ -589,10 +589,10 @@
               
           </div>
             Last updated on
-              Oct 13, 2022.
+              Jan 18, 2023.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
