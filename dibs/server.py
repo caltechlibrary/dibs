@@ -992,6 +992,14 @@ def error405(error):
                 message = ('The requested method does not exist or you do '
                            'not have permission to perform the action.'))
 
+
+@dibs.error(500)
+def error500(error):
+    log(f'{request.method} called on {request.path}, resulting in {error}')
+    return page('error', summary = 'internal error',
+                message = ('An internal error has occurred in DIBS. Please'
+                           ' report this to the site admnistrators.'))
+
 
 # Miscellaneous static pages and files.
 # .............................................................................
