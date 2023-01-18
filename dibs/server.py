@@ -38,7 +38,7 @@ from .data_models import database, Item, Loan, History, Person
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
 from .image_utils import as_jpeg
-from .lsp import LSP
+from .lsp import LSP, LSPAccessError, LSPRecordNotFoundError, LSPBadRecordError
 from .people import person_from_environ, GuestPerson
 from .roles import staff_user
 from .settings import config, resolved_path
@@ -483,11 +483,20 @@ def update_item():
                 log(f'writing {naturalsize(len(data))} image to {dest_file}')
                 with open(dest_file, 'wb') as new_file:
                     new_file.write(as_jpeg(data))
-    except ValueError:
-        return page('error', summary = f'Problem with {barcode} in {lsp.name}',
-                    message = (f'Either {lsp.name} does not have an item'
-                               f' with barcode {barcode}, or the item record'
-                               ' is incomplete and cannot be used by DIBS.'))
+    except LSPAccessError:
+        return page('error', summary = f'Problem accessing {lsp.name}',
+                    message = ('DIBS has experienced a problem involving'
+                               ' permissions or credentials for access to'
+                               f' {lsp.name}. Please notify the site admins.'))
+    except LSPRecordNotFoundError:
+        return page('error', summary = f'Problem with {barcode}',
+                    message = (f'Could not find an item with {barcode}'
+                               f' in {lsp.name}.'))
+    except LSPBadRecordError:
+        return page('error', summary = f'Problem with {barcode}',
+                    message = (f'The item record with barcode {barcode} in'
+                               f' {lsp.name} is incomplete or otherwise unusable'
+                               ' by DIBS. Please check the record in the LSP.'))
     except OSError as ex:
         # Log it but don't fail just because of this.
         log('exception trying to save thumbnail: ' + str(ex))
