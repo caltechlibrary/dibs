@@ -496,7 +496,7 @@ def update_item():
         return page('error', summary = f'Unable to get record from {lsp.name}',
                     message = ('An internal error occurred while looking'
                                f' up barcode {barcode} in {lsp.name}. Please'
-                               'notify the site administrators.'))
+                               ' notify the site administrators.'))
     redirect(f'{dibs.base_url}/list')
 
 
