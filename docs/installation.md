@@ -39,7 +39,7 @@ Although DIBS relies on the existence of a IIIF image server, for initial explor
 
 To run a proper DIBS server at another institution (other than [Caltech](https://www.caltech.edu)), certain additional things are needed:
 
-1. A **IIIF server**. At Caltech, we use a [serverless component](https://github.com/nulib/serverless-iiif) running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). If you're looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.
+1. A **IIIF server**. At Caltech, we use a [serverless component](https://github.com/samvera-labs/serverless-iiif) running on an Amazon cloud instance, but [many other IIIF server options exist](https://github.com/IIIF/awesome-iiif#image-servers). If you're looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.
 2. A **web server** to host DIBS.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.14, Mojave). DIBS comes with a [WSGI adapter file](https://github.com/caltechlibrary/dibs/blob/main/adapter.wsgi) adapter file and [sample config file for Apache](https://github.com/caltechlibrary/dibs/blob/main/dibs.conf-example), but it should be possible to run DIBS in other WSGI-compliant servers.
 3. An **authentication layer**. DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach DIBS pages are allowed to view content. DIBS itself only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the [Shibboleth](https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture) single sign-on system, but it is possible to use other schemes. For a local server behind firewalls, [Apache Basic Authentication](https://httpd.apache.org/docs/2.4/howto/auth.html) can also be used. The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.
 4. The use of [FOLIO](https://www.folio.org) LSP or [TIND](https://tind.io) ILS for retrieving metadata based on barcodes or unique identifiers, _or_  a willingness to extend the existing metadata retrieval layer in DIBS. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item's barcode, and lacking a universal scheme to do that, we had to write our own interface layer. The use of another LSP will require extending this interface layer. (Thankfully, the [code is short](https://github.com/caltechlibrary/dibs/blob/main/dibs/lsp.py) and the amount of metadata required is small.)
@@ -341,7 +341,7 @@ A number of additional command-line options for `run-server` allow you to overri
 
 * `--database`: override the value of `DATABASE_FILE`
 * `--manifests`: override the value of `MANIFEST_DIR`
-* `--iiif_url`: override the value of `IIIF_BASE_URL`
+* `--iiif-url`: override the value of `IIIF_BASE_URL`
 
 Please consult the comments in `settings.ini` or the DIBS documentation for more information about the purpose of these configuration variables.
 
