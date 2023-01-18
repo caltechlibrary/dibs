@@ -485,9 +485,9 @@ def update_item():
                     new_file.write(as_jpeg(data))
     except LSPAccessError:
         return page('error', summary = f'Problem accessing {lsp.name}',
-                    message = ('DIBS has experienced a problem involving'
-                               ' permissions or credentials for access to'
-                               f' {lsp.name}. Please notify the site admins.'))
+                    message = ('DIBS has encountered a problem with permissions'
+                               f' or credentials for access to {lsp.name}.'
+                               ' Please notify the site administrators.'))
     except LSPRecordNotFoundError:
         return page('error', summary = f'Problem with {barcode}',
                     message = (f'Could not find an item with {barcode}'
@@ -496,7 +496,7 @@ def update_item():
         return page('error', summary = f'Problem with {barcode}',
                     message = (f'The item record with barcode {barcode} in'
                                f' {lsp.name} is incomplete or otherwise unusable'
-                               ' by DIBS. Please check the record in the LSP.'))
+                               f' by DIBS. Please check the record in {lsp.name}.'))
     except OSError as ex:
         # Log it but don't fail just because of this.
         log('exception trying to save thumbnail: ' + str(ex))
@@ -988,8 +988,8 @@ def error404(error):
 @dibs.error(405)
 def error405(error):
     log(f'{request.method} called on {request.path}, resulting in {error}')
-    return page('error', summary = 'method not allowed',
-                message = ('The requested method does not exist or you do not '
+    return page('error', summary = 'not allowed',
+                message = ('The requested method does not exist or you do '
                            'not have permission to perform the action.'))
 
 
