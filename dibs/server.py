@@ -490,9 +490,9 @@ def update_item():
                                ' is incomplete and cannot be used by DIBS.'))
     except OSError as ex:
         # Log it but don't fail just because of this.
-        log(f'exception trying to save thumbnail: {str(ex)}')
+        log('exception trying to save thumbnail: ' + str(ex))
     except Exception as ex:         # noqa: PIE786
-        log(f'exception looking up barcode {barcode} in {lsp.name}: ', str(ex))
+        log(f'exception looking up barcode {barcode} in {lsp.name}: ' + str(ex))
         return page('error', summary = f'Unable to get record from {lsp.name}',
                     message = ('An internal error occurred while looking'
                                f' up barcode {barcode} in {lsp.name}. Please'
@@ -521,7 +521,7 @@ def start_processing():
             log(f'creating {init_file}')
             os.close(os.open(init_file, os.O_CREAT))
         except OSError as ex:
-            log(f'problem creating {init_file}: {str(ex)}')
+            log(f'problem creating {init_file}: ' + str(ex))
     else:
         log(f'_PROCESS_DIR not set -- ignoring /start-processing for {barcode}')
     redirect(f'{dibs.base_url}/list')

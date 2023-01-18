@@ -62,4 +62,4 @@ def send_email(user, item, start, end, base_url):
         mailer  = smtplib.SMTP(config('MAIL_HOST'))
         mailer.sendmail(config('MAIL_SENDER'), [user], body)
     except Exception as ex:             # noqa PIE786
-        log(f'unable to send mail: {str(ex)}')
+        log('unable to send mail: ' + str(ex))
