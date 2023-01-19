@@ -10,7 +10,6 @@
 # primarily to hook in setup.cfg and requirements.txt.
 # =============================================================================
 
-import os
 from   os.path import exists, join, abspath, dirname
 from   setuptools import setup
 

@@ -7,43 +7,44 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
-from   commonpy.data_utils import pluralized
-from   commonpy.file_utils import writable
+from   commonpy.data_utils import pluralized, timestamp
+from   commonpy.file_utils import writable, delete_existing, relative
 import os
 from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
 import plac
 from   playhouse.dataset import DataSet
 import sys
-from   sys import exit
+from   zipfile import ZipFile, ZIP_STORED
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from   dibs.data_models import Item, Loan, History, Person, database
-from   dibs.settings import config, dibs_path
+from   dibs.settings import config, resolved_path  # noqa: E402
 
 
 # CLI definition.
 # .............................................................................
 
 @plac.annotations(
-    base_name   = ('name files using base name "B" (e.g., B-loan.csv)',     'option', 'b'),
+    base_name   = ('name files using base name "B" (e.g., B-loan.csv)'    , 'option', 'b'),
     database    = ('use database file "D" (default: look in settings.ini)', 'option', 'd'),
-    format      = ('write output in csv or json format (default: csv)',     'option', 'f'),
-    list_tables = ('list the tables in the database, and exit',             'flag',   'l'),
-    output_dir  = ('write the output to directory "O"',                     'option', 'o'),
-    overwrite   = ('force overwriting destination files if they exist',     'flag',   'O'),
-    quiet       = ('only print important messages while working',           'flag',   'q'),
-    tables      = ('names of tables to write out (default: "all")',         'option', 't'),
+    format_     = ('write output in csv or json format (default: json)'   , 'option', 'f'),
+    list_tables = ('list the tables in the database, and exit'            , 'flag'  , 'l'),
+    output_dir  = ('write the output to directory "O"'                    , 'option', 'o'),
+    overwrite   = ('force overwriting destination files if they exist'    , 'flag'  , 'O'),
+    quiet       = ('only print important messages while working'          , 'flag'  , 'q'),
+    tables      = ('names of tables to write out (default: "all")'        , 'option', 't'),
+    no_zip      = ('do not put output files into a single ZIP file'       , 'flag'  , 'Z'),
 )
-
-def main(base_name = 'B', database = 'D', format = 'F', list_tables = False,
-         output_dir = 'O', overwrite  = False, quiet = False, tables = 'T'):
+def main(base_name = 'B', database = 'D', format_ = 'F', list_tables = False,
+         output_dir = 'O', overwrite  = False, quiet = False, tables = 'T',
+         no_zip = False):
     '''Export the DIBS database to CSV or JSON files.
 
 This program reads a DIBS database file and, based on the options given on
 the command line, writes one or more files containing the contents of one or
 more tables in the DIBS database.  Each table holds a different kind of model
-instance, such as Item, History, etc.
+instance, such as Item, History, etc.  The default action is to gather the
+files and produce one ZIP archive as the output.
 
 Options
 ~~~~~~~
@@ -64,16 +65,13 @@ For example:
 
     export-data --tables item,history
 
-Option --format can be used to select the output format.  The default is CSV
-(comma-separated values).  The available alternatives are JSON and CSV.
-
-Option --output-dir sets the destination directory where files will be
-written.  If not provided, the files are written to the current directory.
+Option --format can be used to select the output format.  The default is JSON.
+The available alternatives are JSON and CSV (comma-separated values).
 
 Option --base-name can be used to set the base name for the files that are
 written.  For example, the following command,
 
-    export-data --base-name saved-2021-09-17 --format json
+    export-data --base-name saved-2021-09-17
 
 will cause the program to write files named as follows:
 
@@ -81,6 +79,18 @@ will cause the program to write files named as follows:
     saved-2021-09-17-loan.json
     saved-2021-09-17-history.json
     saved-2021-09-17-person.json
+
+Option --output-dir sets the destination directory where files will be
+written.  If not provided, the files are written to the current directory.
+
+By default, all of the files will be gathered into a single ZIP archive file
+instead of leaving the output as separate files.  The ZIP will be uncompressed
+for greater ZIP program compatibility and because it tends to be safer that
+compressed formats, for archiving purposes.  The option --base-name is applied
+to the name of the ZIP archive as well.
+
+If the option --no-zip is given, then the ZIP file is not produced, and instead
+the separate files are left as output.
 
 This program will not overwrite existing files unless the option --overwrite
 is also given.  (I.e., if "saved-2021-09-17-item.json" already exists, this
@@ -104,14 +114,14 @@ Command-line options summary
 
     # Initial setup -----------------------------------------------------------
 
-    name = sys.argv[0]
+    make_zip = not no_zip             # To avoid double negatives in the code.
     hint = '(Use -h for help.)'
 
     db_file = config('DATABASE_FILE') if database == 'D' else database
-    db_path = dibs_path(db_file, must_exist = True)
+    db_path = resolved_path(db_file, must_exist = True)
     if not db_path:
         print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
-        exit(1)
+        sys.exit(1)
     db = DataSet('sqlite:///' + db_path)
 
     def inform(msg):                    # Helper function
@@ -124,27 +134,26 @@ Command-line options summary
         inform(f'Database tables found in {db_file}')
         for table in db.tables:
             inform(f'  {table}')
-        exit(0)
+        sys.exit(0)
 
-    format = 'csv' if format == 'F' else format.lower()
-    if format not in ['json', 'csv']:
-        print(f'‼️  Unsupported output format {format}. {hint}')
-        exit(1)
+    output_format = 'json' if format_ == 'F' else format_.lower()
+    if output_format not in ['json', 'csv']:
+        print(f'‼️  Unsupported output format {output_format}. {hint}')
+        sys.exit(1)
 
     if output_dir == 'O':
         output_dir = os.getcwd()
     if not isabs(output_dir):
         output_dir = realpath(join(os.getcwd(), output_dir))
-    if isdir(output_dir):
-        if not writable(output_dir):
-            print(f'‼️  Directory not writable: {output_dir}')
-            exit(1)
+    if isdir(output_dir) and not writable(output_dir):
+        print(f'‼️  Directory not writable: {output_dir}')
+        sys.exit(1)
 
     tables = db.tables if tables == 'T' else tables.split(',')
     unknown = [table for table in tables if table not in db.tables]
     if any(unknown):
         print(f'‼️  Unknown {pluralized("table", unknown)}: {", ".join(unknown)}')
-        exit(1)
+        sys.exit(1)
 
     base_name = 'dibs' if base_name == 'B' else base_name
 
@@ -154,17 +163,40 @@ Command-line options summary
         inform(f'Creating directory {output_dir}')
         os.makedirs(output_dir)
 
-    inform(f'Using database found at {db_file}')
+    inform(f'Reading database file {db_file} ...')
+    files_written = []
     for table in tables:
-        dest_file = join(output_dir, base_name + '-' + table + '.' + format)
-        if exists(dest_file) and not overwrite:
-            print(f'‼️  Quitting because file exists: {dest_file}')
-            exit(1)
+        file_name = base_name + '-' + table + '.' + output_format
+        file_path = join(output_dir, file_name)
+        if exists(file_path) and not overwrite:
+            print(f'‼️  Quitting because file exists: {file_path}')
+            sys.exit(1)
 
-        inform(f'Writing {dest_file} ...')
-        db.freeze(db[table].all(), format = format, filename = dest_file)
+        inform(f'Writing{" temporary" if make_zip else ""} {relative(file_path)} ...')
+        db.freeze(db[table].all(), format = output_format, filename = file_path)
+        files_written.append(file_name)
 
-    # And exit ----------------------------------------------------------------
+    if make_zip:
+        comment  = '~ '*29
+        comment += '\n\nThis archive of DIBS database contents was written on\n'
+        comment += (timestamp() + ' using the program "export-data".\n\n')
+        comment += '~ '*29
+        archive_file = join(output_dir, base_name + '.zip')
+        try:
+            os.chdir(output_dir)
+            print(f'Collecting all files into {relative(archive_file)} ...')
+            with ZipFile(archive_file, 'w', ZIP_STORED) as zf:
+                for exported_file in files_written:
+                    zf.write(exported_file)
+                zf.comment = comment.encode()
+            print('Deleting temporary files ...')
+            for file in files_written:
+                delete_existing(file)
+        except Exception as ex:         # noqa: PIE786
+            print(f'‼️  Failed to write ZIP archive: {str(ex)}')
+            sys.exit(1)
+
+    # Exit succesfully --------------------------------------------------------
 
     inform('Done.')
 

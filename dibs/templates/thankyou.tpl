@@ -15,9 +15,12 @@
           Thank you for using Caltech DIBS!
         </h1>
         <p class="mx-auto col-6 my-5 text-center text-info font-italic">
-          If you have any comments or suggestions, please don't hesitate
-          to let us know by using our <a href="{{feedback_url}}">
-          anonymous feedback form</a>.
+          If you experienced any problems or have any suggestions for
+          this service, please let us know!
+          %if feedback_url:
+          You can use our simple <a href="{{feedback_url}}">
+          <nobr>feedback form</nobr></a>.
+          %end
         </p>
       </div>
 

@@ -6,7 +6,7 @@ application will likely evolve over time.
 Copyright
 ---------
 
-Copyright (c) 2021 by the California Institute of Technology.  This code
+Copyright (c) 2021-2022 by the California Institute of Technology.  This code
 is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
@@ -18,8 +18,9 @@ _role_table = {
     "library": "list",
 }
 
+
 def has_role(person, role):
-    if (person == None):
+    if person is None:
         return False
     return person.has_role(role)
 

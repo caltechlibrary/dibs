@@ -15,6 +15,7 @@ on:
   push:
     branches:
       - develop
+      - main
 
 jobs:
   deploy:
@@ -22,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
@@ -48,6 +49,7 @@ jobs:
         run: |
           python3 -m pip install "myst-parser[linkify]"
           python3 -m pip install sphinx-material
+          python3 -m pip install sphinxcontrib-mermaid
 
       - name: Build
         run: |

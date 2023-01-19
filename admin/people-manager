@@ -60,19 +60,18 @@
 # ==========================================================================
 
 import sys
-from os.path import dirname, join, basename, isabs, abspath, exists
-from getpass import getpass
-from hashlib import blake2b
-from peewee import SqliteDatabase
+from os.path import dirname, join, basename, abspath
+from peewee import PeeweeException
+from rich.console import Console
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from dibs.data_models import database
-from dibs.people import PersonManager, setup_person_table
-from dibs.settings import config, dibs_path
+from dibs.data_models import database                      # noqa: E402
+from dibs.people import PersonManager, setup_person_table  # noqa: E402
+from dibs.settings import config, resolved_path            # noqa: E402
 
-htpasswd = dibs_path(config('HTPASSWD', default = None))
-password_file = dibs_path(config('PASSWORD_FILE', default = None))
+htpasswd = resolved_path(config('HTPASSWD', default = None))
+password_file = resolved_path(config('PASSWORD_FILE', default = None))
 
 
 def usage(app_name, exit_code):
@@ -87,12 +86,12 @@ to show the version of the program or this help page.
 
     help       this help page.
     version    version of software
-    setup      setup {database} for the fist time
+    setup      set up the database for the fist time
 
-    list       list users defined in {database}
-    add        add a user to {database}
-    update     set a value for user in {database}
-    remove     remove user from {database}
+    list       list users defined in the database
+    add        add a user to the database
+    update     set a value for user in the database
+    remove     remove user from the database
 
 Each account (person) has several fields associated with it.
 
@@ -108,10 +107,10 @@ then you will be prompted to enter it. Pressing enter without setting
 the value will clear any existing value in the field.
 
 All verbs to manager accounts are add, update, remove and list.
-Adding an account creates a new record in {database}. Updates
+Adding an account creates a new record in the database. Updates
 changes the values of fields in an existing account. Only the
 fields specified get changed.  Remove deletes an account from
-{database} and list lists all accounts. List will also list a
+the database and list lists all accounts. List will also list a
 specific account if you provide the value for the field "uname".
 
 EXAMPLES
@@ -138,8 +137,8 @@ Remove "rsdoiel"
 
    {app_name} remove uname=rsdoiel
 
-If you need to remove a value just use the `field_name=` notation. 
-It'll prompt you for the value, press enter and the value will 
+If you need to remove a value just use the `field_name=` notation.
+It'll prompt you for the value, press enter and the value will
 become an empty string. So removing my library role for "rsdoiel"
 looks like
 
@@ -149,11 +148,12 @@ Then putting it back
 
    {app_name} update uname=rsdoiel role=library
 
-Fields: uname (manditory except for list), 
+Fields: uname (manditory except for list),
         display_name, role, and secret
 
 ''')
     sys.exit(exit_code)
+
 
 if __name__ == '__main__':
     app_name = basename(sys.argv[0])
@@ -163,26 +163,41 @@ if __name__ == '__main__':
     kv = {}
     for term in sys.argv[2:]:
         if "=" in term:
-            parts = term.split("=", 2);
+            parts = term.split("=", 2)
             key = parts[0].strip()
             value = parts[1].strip().strip("'").strip('"')
             if key:
-                if (not value) and not (key == 'secret'):
+                if (not value) and (key != 'secret'):
                     value = input(f'''Enter {key}: ''')
                 kv[key] = value
-    pm = PersonManager(database, htpasswd, password_file)
-    if verb == 'setup':
-        setup_person_table(database)
-    elif verb == 'list':
-        pm.list_people(kv)
-    elif verb == 'add':
-        pm.add_people(kv)
-    elif verb == 'update':
-        pm.update_people(kv)
-    elif verb == 'remove':
-        pm.remove_people(kv)
-    elif verb in [ 'h', 'help', '-h', '--help', '-help']:
-        usage(app_name, 0)
-    else:
-        print(f'''ERROR: "{verb}" not understood''')
+    try:
+        database.connect()
+        pm = PersonManager(database, htpasswd, password_file)
+        if verb == 'setup':
+            setup_person_table(database)
+        elif verb == 'list':
+            pm.list_people(kv)
+        elif verb == 'add':
+            pm.add_people(kv)
+            print(f'Added new person {kv["uname"]}.')
+        elif verb == 'update':
+            pm.update_people(kv)
+            print(f'Updated entry for {kv["uname"]}.')
+        elif verb == 'remove':
+            pm.remove_people(kv)
+            print(f'Removed {kv["uname"]}.')
+        elif verb in ['h', 'help', '-h', '--help', '-help']:
+            usage(app_name, 0)
+        else:
+            print(f'''ERROR: "{verb}" not understood''')
+            sys.exit(1)
+    except PeeweeException as ex:
+        console = Console()
+        console.print('[red]Database exception: ' + str(ex) + '[/]')
         sys.exit(1)
+    except KeyboardInterrupt:
+        # Catch it, but don't treat it as an error; just stop execution.
+        pass
+    finally:
+        if not database.is_closed():
+            database.close()

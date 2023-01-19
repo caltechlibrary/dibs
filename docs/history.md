@@ -5,7 +5,7 @@ _"If you have an apple and I have an apple and we exchange these apples then you
 
 ## Origin story
 
-[Controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) (CDL) is an approach for making print books available to digital patrons in a "lend like print" fashion. Although the concept of CDL predates the start of the [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019) in 2020, the need for educational institutions to support remote access to their collections during 2020–2021 resulted in renewed interest in CDL systems. Like many institutions, the [Caltech Library](https://www.library.caltech.edu) sought to satisfy requests for electronic access from quarantined course instructors and patrons in late 2020, but we found no suitable off-the-shelf system that could provide access to digitized publications in a manner that mimics the loaning of legally-purchased materials.  We implemented Caltech DIBS ("_**Di**gital **B**orrowing **S**ystem_") in response.
+[Controlled digital lending](https://en.wikipedia.org/wiki/Controlled_digital_lending) (CDL) is an approach for making print books available to digital patrons in a "lend like print" fashion. Although the concept of CDL predates the start of the [COVID-19 pandemic](https://www.who.int/emergencies/diseases/novel-coronavirus-2019) in 2020, the need for educational institutions to support remote access to their collections during 2020–2021 resulted in renewed interest in CDL systems. Like many institutions, the [Caltech Library sought to satisfy requests for electronic access](https://www.library.caltech.edu/DIBS-overview) from quarantined course instructors and patrons in late 2020, but we found no suitable off-the-shelf system that could provide access to digitized publications in a manner that mimics the loaning of legally-purchased materials.  We implemented [DIBS](https://github.com/caltechlibrary/dibs) ("_**Di**gital **B**orrowing **S**ystem_") in response.
 
 The DIBS software system is the work of <a href="https://github.com/mhucka">Michael Hucka</a>, <a href="https://github.com/rsdoiel">Robert Doiel</a>, <a href="https://github.com/t4k">Tommy Keswick</a> and <a href="https://github.com/nosivads">Stephen Davison</a> from the Caltech Library's <a href="https://www.library.caltech.edu/staff?&field_directory_department%5B0%5D=754">Digital Library Development team</a>. The software is written primarily in Python and uses the JavaScript-based <a href="http://universalviewer.io">Universal Viewer</a> for displaying scanned books and other items that comply with the [International Image Interoperability Framework](https://iiif.io) (IIIF).  The icons used on DIBS pages are from <a href="https://fontawesome.com">Font Awesome</a>, with additional special icons created by <a href="https://thenounproject.com/roywj/">Royyan Wijaya</a>, <a href="https://thenounproject.com/thezyna/">Scott Desmond</a> and <a href="https://thenounproject.com/slidegenius">SlideGenius</a> for the <a href="https://thenounproject.com">Noun Project</a>. A photo of books in Caltech's Sherman Fairchild Library is included by permission of the author, Rebecca Minarez, and distributed under a [CC BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/?ref=chooser-v1) license.
 
@@ -15,6 +15,16 @@ DIBS is <a href="https://en.wikipedia.org/wiki/Open-source_software">open-source
 ## Version history
 
 The following subsections summarize the major released versions of DIBS.
+
+### Version 0.6.0 (May 3, 2022)
+
+[Release 0.6.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.6.0) has no user-visible changes. The changes only affect a utility program used by site administrators, and internal handling of database locking. Additionally, some minor internal code cleanups have been done.
+
+
+### Version 0.5.0 (October 8, 2021)
+
+[Release 0.5.0](https://github.com/caltechlibrary/dibs/releases/tag/v0.5.0) brings significant new features and some backwards-incompatible changes. The new features include **support for FOLIO** as an alternative to TIND.io; support for triggering IIIF conversion workflows after adding a new item to DIBS; the ability to download the item database and history as CSV files; the ability to replace book cover thumbnail images with your own preferred images; and the ability to show a site banner for announcements. The breaking changes include changes to the database object models, changes to the format of the settings file, and some changes to the HTML page templates. Finally, this release fixes a number of bugs and adds some other enhancements.
+
 
 ### Version 0.4.0 (May 28, 2021)
 

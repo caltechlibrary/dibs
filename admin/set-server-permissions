@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    set-server-permissions
+# @brief   Set essential permissions on DIBS directories for a server config
+# @created 2021-09-28
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+#
+# The main reason this is a Python program and not a shell script is that it
+# needs to read the configuration values in settings.ini in the same way that
+# DIBS reads it.  To do that in a shell script would have required calling out
+# to Python somehow, and if we have to do that, we may as well just write it
+# all in Python.  And here we are.
+# =============================================================================
+
+# Initial imports. More things are imported later below.
+
+from   getpass import getuser
+from   grp import getgrgid
+import os
+from   os.path import exists, dirname, join, abspath
+import plac
+from   shutil import chown
+import stat
+import sys
+
+# Figure out where the root of the DIBS directory is located.
+
+here = abspath(dirname(sys.argv[0]))
+dibs_root = None
+if exists(join(here, 'settings.ini')):
+    dibs_root = here
+else:
+    parent = abspath(join(here, os.path.pardir))
+    if exists(join(parent, 'settings.ini')):
+        dibs_root = parent
+    else:
+        print(f'‼️  File "settings.ini" not found in {here} or {parent}.\n'
+              f'‼️  Unexpected directory organization -- unable to proceed.')
+        sys.exit(1)
+
+# Adjust Python's load path accordingly.
+
+if dibs_root:
+    sys.path.append(dibs_root)
+
+# Now we can load the DIBS things we need.
+
+from dibs import print_version          # noqa: E402
+from dibs.settings import config        # noqa: E402
+
+
+# Main entry point.
+# .............................................................................
+
+@plac.annotations(
+    owner   = ('set ownership to user "O" (default: current user)' , 'option', 'o'),
+    group   = ('set ownership to user "G" (default: user\'s group)', 'option', 'g'),
+    version = ('print version info and exit'                       , 'flag'  , 'V'),
+)
+def main(owner = 'O', group = 'G', version = False):
+    '''Set the permissions on certain DIBS directories for a server setting.
+
+This program sets certain basic file and directory permissions for a typical
+server configuration of DIBS.  It only affects a small number of items that
+will not have the correct permissions after cloning the git repository.
+
+The arguments --owner and --group can be used to choose the owner and group
+to be used for the permissions.  Normally, this would be the Apache server
+user and group.  For example, if the user name is "www-data" and the group
+name is "www-data", then you would run this program as follows:
+
+  set-server-permissions --owner www-data --group www-data
+
+Command-line arguments summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+'''
+
+    if version:
+        print_version()
+        sys.exit(0)
+
+    owner = getuser() if owner == 'O' else owner
+    group = getgrgid(os.getgid()).gr_name if group == 'G' else group
+
+    for var in ['DATABASE_FILE', 'MANIFEST_DIR', 'PROCESS_DIR', 'THUMBNAILS_DIR']:
+        if not config(var, default = None):
+            print(f'‼️  Variable "{var}" has no value in settings.ini')
+            sys.exit(1)
+
+    print(f'Setting permissions using owner "{owner}" and group "{group}".')
+
+    db_file = abspath(join(dibs_root, config('DATABASE_FILE')))
+    db_dir  = dirname(db_file)
+    chown(db_dir, user = owner, group = group)
+    chmod(db_dir, 'rwxrwx***')
+    print(f'Set {db_dir}')
+
+    touch(db_file)
+    chown(db_file, user = owner, group = group)
+    chmod(db_file, 'rw-rw-***')
+    print(f'Set {db_file}')
+
+    pr_dir = abspath(join(dibs_root, config('PROCESS_DIR')))
+    chown(pr_dir, user = owner, group = group)
+    chmod(pr_dir, 'rwxrwx***')
+    print(f'Set {pr_dir}')
+
+    th_dir = abspath(join(dibs_root, config('THUMBNAILS_DIR')))
+    chown(th_dir, user = owner, group = group)
+    chmod(th_dir, 'rwxrwx***')
+    print(f'Set {th_dir}')
+
+    print('Done.')
+
+
+# Helper functions.
+# .............................................................................
+
+# I hate working with Unix octal permission masks so much that I wrote this
+# function to work with symbolic permission names.
+
+def chmod(path, permissions):
+    '''Variant of chmod that takes a character-style permissions specification.
+
+    The value must have 9 characters, of the form "rwxrwxrwx".  The values can
+    be asterisks to specify "don't change".  For example, "rwxrwx***" means
+    set user permissions to rwx, group to rwx, and leave other as-is.  A dash
+    means turn off that bit.
+    '''
+
+    st = os.stat(path)
+    mode = st.st_mode
+
+    for index, bit in enumerate([stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR]):
+        flag = ['r', 'w', 'x'][index]
+        if permissions[index] == flag:
+            mode |= bit
+        elif permissions[index] == '-':
+            mode &= ~bit
+
+    for index, bit in enumerate([stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP]):
+        flag = ['r', 'w', 'x'][index]
+        if permissions[index + 3] == flag:
+            mode |= bit
+        elif permissions[index + 3] == '-':
+            mode &= ~bit
+
+    for index, bit in enumerate([stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH]):
+        flag = ['r', 'w', 'x'][index]
+        if permissions[index + 6] == flag:
+            mode |= bit
+        elif permissions[index + 6] == '-':
+            mode &= ~bit
+
+    os.chmod(path, mode)
+
+
+def touch(path):
+    '''Create a file if it doesn't already exiset.'''
+    try:
+        os.utime(path, None)
+    except OSError:
+        with open(path, 'a'):
+            pass
+
+
+# Main invocation.
+# .............................................................................
+
+plac.call(main)

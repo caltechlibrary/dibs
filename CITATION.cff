@@ -16,18 +16,13 @@ authors:
     family-names: Keswick
     given-names: Tommy
     orcid: "https://orcid.org/0000-0001-5644-440X"
-  -
-    affiliation: "Caltech Library"
-    family-names: Morrell
-    given-names: "Thomas E."
-    orcid: "https://orcid.org/0000-0001-9266-5146"
 cff-version: "1.1.0"
-date-released: 2021-06-04
-doi: 10.22002/D1.1988
+date-released: 2022-10-13
+doi: 10.22002/D1.20029
 keywords: 
   - controlled digital lending
 message: "If you use this software, please cite it using these metadata."
 repository-code: "https://github.com/caltechlibrary/dibs"
 title: "DIBS: An implementation of Controlled Digital Lending"
-version: "0.4.1"
+version: "0.7.0"
 ...

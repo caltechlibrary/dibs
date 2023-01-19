@@ -8,17 +8,17 @@ having to know much about SQL.
 Copyright
 ---------
 
-Copyright (c) 2021 by the California Institute of Technology.  This code
+Copyright (c) 2021-2022 by the California Institute of Technology.  This code
 is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
 
 from peewee import SqliteDatabase, Model
-from peewee import CharField, TextField, IntegerField, SmallIntegerField
+from peewee import CharField, TextField, SmallIntegerField
 from peewee import ForeignKeyField, DateTimeField, BooleanField, TimestampField
 from playhouse.reflection import generate_models
 
-from .settings import config, dibs_path
+from .settings import config, resolved_path
 
 
 # Database connection.
@@ -26,8 +26,8 @@ from .settings import config, dibs_path
 # Note: symbol "database" is exported, because other code needs to use context
 # managers on the database object to perform some atomic operations.
 
-_db_path = dibs_path(config('DATABASE_FILE', default = 'data/dibs.db'))
-database = SqliteDatabase(_db_path)
+_db_path = resolved_path(config('DATABASE_FILE'))
+database = SqliteDatabase(_db_path, autoconnect = False)
 
 # Annotate our database object with a path to the file we're using. This saves
 # us from having to duplicate the path resolution logic elsewhere. Keep it DRY!
@@ -147,7 +147,7 @@ class History(BaseModel):
       stop:   when did the event stop
     '''
 
-    type       = CharField()            # String describing the event
+    type       = CharField()            # Type of event. # noqa A003
     what       = CharField()            # What is this about? (e.g. a barcode)
     start_time = DateTimeField()        # When did the event start?
     end_time   = DateTimeField()        # When did the event stop?
@@ -193,7 +193,10 @@ class Person(BaseModel):
 # Initialization.
 # .............................................................................
 # We need to make sure the database has been created the first time we try to
-# use DIBS.
+# use DIBS. When this module is loaded, the following connects to the database
+# and creates the 4 required tables if they don't exist yet.
 
+database.connect()
 if generate_models(database) == {}:
     database.create_tables([Item, Loan, History, Person])
+database.close()

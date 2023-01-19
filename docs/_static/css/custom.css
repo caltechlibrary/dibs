@@ -1,3 +1,7 @@
+html {
+  scroll-padding-top: 48px;
+}
+
 nav.md-tabs {
   display: none
 }
@@ -41,4 +45,22 @@ figure {
 .color-not-available {
   background-color: #a6a6a6;
   color: #fff;
+}
+
+h1 {
+  font-weight: 500 !important;
+  color: #000 !important;
+}
+
+h2 {
+  font-weight: 500 !important;
+  color: #000;
+}
+
+h3 {
+  color: #000;
+}
+
+h4 {
+  font-style: italic;
 }

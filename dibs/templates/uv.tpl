@@ -150,7 +150,7 @@
      });
 
      // Calculate the delay to exiration (in msec) and force a reload then.
-     var now = new Date().getTime();
+     var now = new Date().toLocaleString('en-US', {timeZone: 'US/Pacific'}).getTime();
      var end = new Date("{{js_end_time}}").getTime();
      var timeout = (end - now) + 1000;
      setTimeout(() => { window.location.reload(); }, timeout);

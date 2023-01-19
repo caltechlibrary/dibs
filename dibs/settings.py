@@ -14,14 +14,14 @@ more information about Python Decouple, see its GitHub repository at
 https://github.com/henriquebastos/python-decouple
 
 Apart from the extensions to Decouple, this module adds a new function,
-dibs_path(...), for return an absolute path given a path relative to the
+resolved_path(...), for return an absolute path given a path relative to the
 settings file.  This is useful for converting relative paths used as values in
 the settings file (e.g., "DATABASE_FILE") to actual paths on the file system.
 
 Copyright
 ---------
 
-Copyright (c) 2021 by the California Institute of Technology.  This code
+Copyright (c) 2021-2022 by the California Institute of Technology.  This code
 is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
@@ -33,7 +33,7 @@ from   decouple import RepositoryIni, RepositoryEnv, RepositoryEmpty
 from   decouple import UndefinedValueError
 import inspect
 import os
-from   os.path import dirname, join, isabs, isdir, exists, abspath, realpath
+from   os.path import dirname, join, isabs, exists, abspath
 from   sidetrack import log
 
 
@@ -62,8 +62,8 @@ class DIBSRepositoryIni(RepositoryIni):
     def __contains__(self, key):
         return (key in os.environ
                 or key in self.parser.sections()
-                or ('settings' in self.parser.sections() and
-                    self.parser.has_option('settings', key))
+                or ('settings' in self.parser.sections()
+                    and self.parser.has_option('settings', key))
                 or self.parser.has_option(self.section, key))
 
 
@@ -139,7 +139,7 @@ class DIBSAutoConfig(AutoConfig):
         # Avoid unintended permission errors
         try:
             filename = self._find_file(os.path.abspath(path))
-        except Exception:
+        except OSError:
             filename = ''
         Repository = self.SUPPORTED.get(os.path.basename(filename), RepositoryEmpty)
         self.config = DIBSConfig(Repository(filename, encoding = self.encoding))
@@ -153,50 +153,63 @@ class DIBSAutoConfig(AutoConfig):
 
 config = DIBSAutoConfig()
 
-def dibs_path(path, must_exist = False):
-    '''Resolve "path" intelligently relative to DIBS settings file.
+
+def resolved_path(path, must_exist = False):
+    '''Resolve "path" intelligently relative to settings.ini if possible.
 
     The algorithm followed by this function goes like this:
 
-      1. if "path" is absolute, return it as-is
-      2. else, if path exists as-is, return it
+      1. if "path" exists as given, return it (as an absolute path)
+      2. else, if "path" is absolute:
+          if must_exist is False, return "path"
+          else return None (because it didn't exist when tested by step #1)
       3. else, try the following alternatives in turn:
-         a) prepend directory of caller's file; if result exists, return it
-         b) prepend parent dir of caller's file; if result exists, return it
-         c) prepend path of settings.ini; if result exists, return it
-      4. else, if must_exist == False (the default), return "path" unchanged
-      5. else, return None
+          a) prepend directory of caller's file; if result exists, return it
+          b) prepend parent dir of caller's file; if result exists, return it
+          c) prepend path of settings.ini; if result exists, return it
+      4. else,
+          if must_exist is False, return "path" relative to settings.ini
+          else, return None
 
     "Caller's file" refers to the file containing the code of the caller of
     this function.  Note the file's path is not necessarily the same as the
     current directory of the process of the calling function.  File paths only
     make sense relative to some static on-disk landmarks like the settings
     file, because parent processes may change directories or be rooted in
-    different locations than where DIBS is installed.
+    different locations than where the application is installed.
+
+    The path returned is always made an absolute path.
     '''
 
     if not path:
         return None
-    if isabs(path) or exists(path):
-        return path
+    if exists(path):
+        return abspath(path)
+    if isabs(path):
+        # Path is absolute and we already know it doesn't exist.
+        if not must_exist:
+            return path
+        else:
+            return None
 
     # Try looking in the directory of the calling function, or its parent dir.
     frame = inspect.stack()[1]
     caller_file = frame[0].f_code.co_filename
     if caller_file:
         dir_of_caller = dirname(caller_file)
-        relative_to_caller = abspath(join(dir_of_caller, path))
-        if exists(relative_to_caller):
-            return relative_to_caller
+        path_in_caller_dir = abspath(join(dir_of_caller, path))
+        if exists(path_in_caller_dir):
+            return path_in_caller_dir
         parent_dir_of_caller = join(dir_of_caller, os.path.pardir)
-        relative_to_parent_of_caller = abspath(join(parent_dir_of_caller, path))
-        if exists(relative_to_parent_of_caller):
-            return relative_to_parent_of_caller
+        path_in_parent_dir_of_caller = abspath(join(parent_dir_of_caller, path))
+        if exists(path_in_parent_dir_of_caller):
+            return path_in_parent_dir_of_caller
 
-    # Try looking in the directory where settings.ini was found.
-    relative_to_settings = abspath(join(dirname(config.config_file), path))
-    if exists(relative_to_settings):
-        return relative_to_settings
-
-    # Give up.
-    return path if not must_exist else None
+    # Try looking in the directory where settings.ini was found.  This is also
+    # our final answer if we don't require the path to exist.
+    path_in_settings_dir = abspath(join(dirname(config.config_file), path))
+    if exists(path_in_settings_dir) or not must_exist:
+        return path_in_settings_dir
+    else:
+        # Give up.
+        return None

@@ -7,48 +7,49 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
-from   peewee import SqliteDatabase
-from   os.path import exists, dirname, join, abspath
+from   os.path import dirname, join, abspath
+from   rich import print
+from   rich.panel import Panel
 import sys
 
 sys.path.append(join(dirname(abspath(__file__)), '..'))
 
-from dibs.data_models import Item, Loan, History, Person
-from dibs.settings import config, dibs_path
+from dibs.data_models import database, Item, Person  # noqa: E402
+from dibs.settings import config, resolved_path      # noqa: E402
 
-# In the present case, the database file will not exist yet, so we construct
-# a path to where it should be but don't require that it exists.
+# Loading dibs.data_models should create a database if it doesn't exist yet.
+# Check that the file exists.
 db_file = config('DATABASE_FILE', default = 'data/dibs.db')
-db_path = dibs_path(db_file)
+db_path = resolved_path(db_file)
 if not db_path:
-    print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
-    exit(1)
+    text = f'Cannot find DIBS database {db_file or "-- not configured"}'
+    print(Panel(text, style = 'red', width = len(text) + 4))
+    sys.exit(1)
 
-# Initialize the database.
-database = SqliteDatabase(db_path)
+# Connect to the database.
 database.connect()
-
-# Create our tables.
-database.create_tables([Item, Loan, History, Person])
 
 # This next one is a demo item.  We provide a manifest in ./manifests/ and
 # it references an open copy of the book at the Wellcome Collection in the UK.
-Item.create(barcode    = '350470000363458',
-            item_id    = '514607',
-            item_page  = 'https://caltech.tind.io/record/514607',
-            title      = 'The Biocrats',
-            author     = 'Gerald Leach',
-            year       = '1970',
-            publisher  = 'McGraw-Hill',
-            edition    = 'First',
-            num_copies = 1,
-            duration   = 6,
-            notes      = ('This is just a random book chosen because it was'
-                          + ' the only title we could find in both a public'
-                          + ' external IIIF server and in our Caltech catalog'),
-            ready      = True,
-)
+if not Item.get_or_none(Item.barcode == '350470000180226'):
+    Item.create(barcode    = '350470000180226',
+                item_id    = '2b2e4a55-7d82-4a97-9ed3-62e48b10699c',
+                item_page  = 'https://search.ebscohost.com/login.aspx?direct=true&site=eds-live&scope=site&authtype=ip,guest&profid=eds&custid=s8984125&groupid=main&db=cat08655a&AN=clc.2b2e4a55.7d82.4a97.9ed3.62e48b10699c',
+                title      = 'Bibliographical history of electricity & magnetism, chronologically arranged',
+                author     = 'Mottelay, Paul Fleury',
+                year       = '1922',
+                publisher  = 'C. Griffin & company limited',
+                edition    = '',
+                num_copies = 1,
+                duration   = 3,
+                notes      = ('This is just a random book chosen because it was'
+                              ' a title we could find in both an external'
+                              ' public IIIF server and our Caltech catalog.'),
+                ready      = True)
 
-print('-'*50)
-print('Now use people-manager to add users')
-print('-'*50)
+if not Person.select().exists():
+    text = 'Now use admin/people-manager to add library staff users'
+    print(Panel(text, style = 'dark_orange', width = len(text) + 4))
+
+if not database.is_closed():
+    database.close()

@@ -4,7 +4,7 @@ email.py: email utilities for DIBS
 Copyright
 ---------
 
-Copyright (c) 2021 by the California Institute of Technology.  This code
+Copyright (c) 2021-2022 by the California Institute of Technology.  This code
 is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
@@ -37,7 +37,7 @@ Please note that DIBS only functions in web browsers that support JavaScript. DI
 
 Information about loan policies can be found at {info_page}
 
-We hope your experience with DIBS is a pleasant one. Don't hesitate to send us feedback, and please report any problems. You can do it directly via email to {sender} or using our completely anonymous feedback form at {feedback}
+We hope your experience with DIBS is a pleasant one. Don't hesitate to send us feedback, and please report any problems. You can do it directly via email to {sender} or using our anonymous feedback form at {feedback}
 '''
 
 
@@ -45,21 +45,21 @@ We hope your experience with DIBS is a pleasant one. Don't hesitate to send us f
 # .............................................................................
 
 def send_email(user, item, start, end, base_url):
-   try:
-       subject = f'DIBS loan for "{item.title}"'
-       viewer = f'{base_url}/view/{item.barcode}'
-       info_page = f'{base_url}/info'
-       body = _EMAIL.format(item      = item,
-                            start     = human_datetime(start),
-                            end       = human_datetime(end),
-                            viewer    = viewer,
-                            info_page = info_page,
-                            user      = user,
-                            subject   = subject,
-                            sender    = config('MAIL_SENDER'),
-                            feedback  = config('FEEDBACK_URL'))
-       log(f'sending mail to {anon(user)} about loan of {item.barcode}')
-       mailer  = smtplib.SMTP(config('MAIL_HOST'))
-       mailer.sendmail(config('MAIL_SENDER'), [user], body)
-   except Exception as ex:
-       log(f'unable to send mail: {str(ex)}')
+    try:
+        subject = f'DIBS loan for "{item.title}"'
+        viewer = f'{base_url}/view/{item.barcode}'
+        info_page = f'{base_url}/info'
+        body = _EMAIL.format(item     = item,
+                             start     = human_datetime(start),
+                             end       = human_datetime(end),
+                             viewer    = viewer,
+                             info_page = info_page,
+                             user      = user,
+                             subject   = subject,
+                             sender    = config('MAIL_SENDER'),
+                             feedback  = config('FEEDBACK_URL', default = ''))
+        log(f'sending mail to {anon(user)} about loan of {item.barcode}')
+        mailer  = smtplib.SMTP(config('MAIL_HOST'))
+        mailer.sendmail(config('MAIL_SENDER'), [user], body)
+    except Exception as ex:             # noqa PIE786
+        log('unable to send mail: ' + str(ex))

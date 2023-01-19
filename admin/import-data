@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+# =============================================================================
+# @file    import-data
+# @brief   Import data into DIBS from a previously exported data archive
+# @created 2021-09-17
+# @license Please see the file named LICENSE in the project directory
+# @website https://github.com/caltechlibrary/dibs
+# =============================================================================
+
+from   commonpy.file_utils import relative
+import json
+from   os.path import dirname, join, abspath
+import plac
+import sys
+from   zipfile import ZipFile
+
+sys.path.append(join(dirname(abspath(__file__)), '..'))
+
+from   dibs.settings import config, resolved_path                     # noqa: E402
+from   dibs.data_models import database, Item, Loan, History, Person  # noqa: E402
+
+
+# Database object import handlers.
+# .............................................................................
+
+def import_items(data, quiet):
+    if not quiet:
+        print('Importing items ...')
+    added = 0
+    for entry in data:
+        if Item.get_or_none(Item.barcode == entry['barcode']):
+            print(f'  Skipping duplicate item with barcode {entry["barcode"]}')
+            continue
+        if 'tind_id' in data:
+            # Version 0.4 database format.
+            Item.create(barcode    = entry['barcode'],
+                        item_id    = entry['tind_id'],
+                        item_page  = '',
+                        title      = entry['title'],
+                        author     = entry['author'],
+                        year       = entry['year'],
+                        edition    = entry['edition'],
+                        publisher  = '',
+                        num_copies = entry['num_copies'],
+                        duration   = entry['duration'],
+                        ready      = entry['ready'],
+                        notes      = '')
+        else:
+            # Version 0.5 database format.
+            Item.create(barcode    = entry['barcode'],
+                        item_id    = entry['item_id'],
+                        item_page  = entry['item_page'],
+                        title      = entry['title'],
+                        author     = entry['author'],
+                        year       = entry['year'],
+                        edition    = entry['edition'],
+                        publisher  = entry['publisher'],
+                        num_copies = entry['num_copies'],
+                        duration   = entry['duration'],
+                        ready      = entry['ready'],
+                        notes      = entry['notes'])
+        added += 1
+    if not quiet:
+        print(f'Imported {added} item entries')
+
+
+# Version 0.5 uses the barcodes as the loan item field values, while 0.4 used
+# item id numbers from the Item object table.  It would be possible to import
+# loans from a version 0.4 database, but doing so would require changing the
+# architecture of this program.  It would need to read the item table first
+# and then, while importing loans, dereference item id's to get the barcode
+# numbers to use as the 'item' field values in 0.5's database format.
+# However, the only reason to go to the effort of implementing such a
+# capability is if we wanted ongoing loans to be restored across a major
+# upgrade of a DIBS server installation.  Since loans are few, and short in
+# duration, and upgrades rare, it just doesn't seem to be an important-enough
+# concern to justify the time to implement this edge case.
+
+def import_loans(data, quiet):
+    if not quiet:
+        print('Importing loans ...')
+    added = 0
+    for entry in data:
+        if 'itemid' in data:
+            # Version 0.4 database format.
+            print('  Skipping loans (can\'t import from pre-version 0.5).')
+            return
+        else:
+            # Version 0.5 database format.
+            if Loan.get_or_none(Loan.item == entry['barcode'],
+                                Loan.user == entry['user'],
+                                Loan.start_time == entry['start_time']):
+                print(f'  Skipping duplicate loan entry for {entry["barcode"]}')
+                continue
+            Loan.create(item        = entry['barcode'],
+                        state       = entry['state'],
+                        user        = entry['user'],
+                        start_time  = entry['start_time'],
+                        end_time    = entry['end_time'],
+                        reloan_time = entry['reloan_time'])
+            added += 1
+    if not quiet:
+        print(f'Imported {added} loan entries')
+
+
+def import_history(data, quiet):
+    if not quiet:
+        print('Importing history ...')
+    added = 0
+    for entry in data:
+        if History.get_or_none(History.what == entry['what'],
+                               History.start_time == entry['start_time']):
+            print(f'  Skipping duplicate history entry for {entry["what"]}')
+            continue
+        History.create(type       = entry['type'],
+                       what       = entry['what'],
+                       start_time = entry['start_time'],
+                       end_time   = entry['end_time'])
+        added += 1
+    if not quiet:
+        print(f'Imported {added} history entries')
+
+
+def import_persons(data, quiet):
+    if not quiet:
+        print('Importing persons ...')
+    added = 0
+    for entry in data:
+        if Person.get_or_none(Person.uname == entry['uname']):
+            print(f'  Skipping duplicate person with uname {entry["uname"]}')
+            continue
+        Person.create(uname        = entry['uname'],
+                      role         = entry['role'],
+                      display_name = entry['display_name'],
+                      updated      = entry['updated'])
+        added += 1
+    if not quiet:
+        print(f'Imported {added} person entries')
+
+
+IMPORT_HANDLERS = {
+    'item'    : import_items,
+    'loan'    : import_loans,
+    'history' : import_history,
+    'person'  : import_persons,
+}
+
+
+# CLI definition.
+# .............................................................................
+
+@plac.annotations(
+    quiet         = ('only print important messages while working', 'flag', 'q'),
+    zip_file_path = 'ZIP archive file to load',
+)
+def main(quiet = False, *zip_file_path):
+    '''Read a DIBS database archive and append contents to a database.
+
+This program takes a ZIP archive of JSON files previously exported by the
+program "export-data", and loads a DIBS database using the data.  The ZIP
+archive must contain 4 files corresponding to the 4 database object tables
+in a DIBS database.  The path to the archive file is expected to be the
+last argument on the command line.
+
+If the database contains Item or Person entries that appear to be duplicates
+of what is in the ZIP archive, those entries in the ZIP archive will be
+skipped and not added to the database.  Item identities are based on barcodes,
+while Person identities are based on the "uname" field values.  These must
+be unique in a DIBS database, which is why duplicates are not allowed.
+
+This program looks for the settings.ini configuration file in the same
+directory where this program is located, or in the parent directory if not
+found in this program's directory, and reads the settings file to find the
+value of the DATABASE_FILE variable.
+
+Options
+~~~~~~~
+
+If given the option --quiet, this program will not print informational messages
+while it is working. It will only print messages for warnings or errors.
+
+Return values
+~~~~~~~~~~~~~
+
+This program exists with a return code of 0 if no problems are encountered. If
+any problems are encountered, it returns with a status code of 1.
+
+Command-line options summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+'''
+
+    # Initial setup -----------------------------------------------------------
+
+    name = sys.argv[0]
+    hint = '(Use -h for help.)'
+
+    db_file = config('DATABASE_FILE')
+    db_path = resolved_path(db_file, must_exist = True)
+    if not db_path:
+        print(f'‼️  Cannot find DIBS database {db_file or "-- not configured"}')
+        sys.exit(1)
+
+    def inform(msg):                    # Helper function
+        if not quiet:
+            print(msg)
+
+    # Preprocess arguments and handle early exits -----------------------------
+
+    if not zip_file_path or len(zip_file_path) > 1:
+        print(f'‼️  Must provide a single file as an argument. {hint}')
+        sys.exit(1)
+
+    zip_path = zip_file_path[0]
+    try:
+        zip_file = ZipFile(zip_path)
+    except Exception as ex:             # noqa: PIE786
+        print(f'‼️  Failed to open ZIP file: {str(ex)}')
+        sys.exit(1)
+
+    num_files = len(zip_file.namelist())
+    if num_files != 4:
+        print(f'‼️  Expecting 4 files inside ZIP archive but found {num_files}')
+        sys.exit(1)
+    for name in zip_file.namelist():
+        if not any(expected in name for expected in IMPORT_HANDLERS.keys()):
+            print(f'‼️  Unexpected file in ZIP archive: {name}')
+            sys.exit(1)
+
+    # Do the real work --------------------------------------------------------
+
+    print(f'Opening DIBS database file {relative(db_path)} ...')
+    database.connect()
+
+    # Read the zip file contents and load the appropriate database tables.
+    print(f'Opening ZIP archive file {relative(zip_path)} ...')
+    for file_name in zip_file.namelist():
+        for table_name, import_data in IMPORT_HANDLERS.items():
+            if table_name in file_name:
+                if zip_file.getinfo(file_name).file_size < 50:
+                    print(f'File {file_name} inside ZIP archive has no data')
+                    continue
+                with zip_file.open(file_name) as contents:
+                    data = json.load(contents)
+                    import_data(data, quiet)
+
+    print(f'Closing DIBS database file {relative(db_path)} ...')
+    database.close()
+
+    # And exit ----------------------------------------------------------------
+
+    inform('Done.')
+
+
+# Main invocation.
+# .............................................................................
+
+if __name__ == '__main__':
+    plac.call(main)

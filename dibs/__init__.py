@@ -5,7 +5,7 @@ digital lending by the Caltech Library.
 Copyright
 ---------
 
-Copyright (c) 2021 by the California Institute of Technology.  This code
+Copyright (c) 2021-2022 by the California Institute of Technology.  This code
 is open-source software released under a 3-clause BSD license.  Please see the
 file "LICENSE" for more information.
 '''
@@ -22,7 +22,7 @@ file "LICENSE" for more information.
 #  |    by the Makefile. Manual changes to these values will be lost.      |
 #  ╰────────────────────── Notice ── Notice ── Notice ─────────────────────╯
 
-__version__     = '0.5.0'
+__version__     = '0.7.0'
 __description__ = 'DIBS (Digital Borrowing System) is an implementation of Controlled Digital Lending'
 __url__         = 'https://github.com/caltechlibrary/dibs'
 __author__      = 'Michael Hucka, Robert S. Doiel, Tommy Keswick, Stephen Davison'

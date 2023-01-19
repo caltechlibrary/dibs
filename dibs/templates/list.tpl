@@ -146,7 +146,7 @@
                     {{item.num_copies}}
                   </td>
 
-                  <td style="padding-right: 0">
+                  <td class="pl-1 pr-0 mr-0">
                     <button id="copyBtn" type="button" class="btn btn-secondary btn-sm"
                             onclick="copyToClipboard(this, '{{base_url}}/item/{{item.barcode}}');"
                             % if not manifest_exists:
@@ -156,7 +156,7 @@
                       Copy&nbsp;link</button>
                   </td>
 
-                  <td style="padding-left: 0">
+                  <td style="pl-1 pr-0">
                     <form action="{{base_url}}/edit/{{item.barcode}}" method="GET">
                       <input type="hidden" name="barcode" value="{{item.barcode}}"/>
                       <input type="submit" name="edit" value="Edit&nbsp;entry"
