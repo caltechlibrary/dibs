@@ -429,7 +429,7 @@
 <p>Although DIBS relies on the existence of a IIIF image server, for initial exploration, you <em>don’t</em> need to set up a IIIF server – you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of doing that. Thus, in principle, all you need to run the DIBS demo is a Unix-like system (Linux, macOS), a Python installation, the DIBS source code, and an Internet connection.</p>
 <p>To run a proper DIBS server at another institution (other than <a class="reference external" href="https://www.caltech.edu">Caltech</a>), certain additional things are needed:</p>
 <ol class="arabic simple">
-<li><p>A <strong>IIIF server</strong>. At Caltech, we use a <a class="reference external" href="https://github.com/nulib/serverless-iiif">serverless component</a> running on an Amazon cloud instance, but <a class="reference external" href="https://github.com/IIIF/awesome-iiif#image-servers">many other IIIF server options exist</a>. If you’re looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.</p></li>
+<li><p>A <strong>IIIF server</strong>. At Caltech, we use a <a class="reference external" href="https://github.com/samvera-labs/serverless-iiif">serverless component</a> running on an Amazon cloud instance, but <a class="reference external" href="https://github.com/IIIF/awesome-iiif#image-servers">many other IIIF server options exist</a>. If you’re looking at DIBS, presumably it means you want to serve content that is not freely available in a public IIIF server, which means you will need to set up a server of your own.</p></li>
 <li><p>A <strong>web server</strong> to host DIBS.  The current version of DIBS has only been tested with Apache2 on Linux (specifically, Ubuntu 20) and macOS (specifically 10.14, Mojave). DIBS comes with a <a class="reference external" href="https://github.com/caltechlibrary/dibs/blob/main/adapter.wsgi">WSGI adapter file</a> adapter file and <a class="reference external" href="https://github.com/caltechlibrary/dibs/blob/main/dibs.conf-example">sample config file for Apache</a>, but it should be possible to run DIBS in other WSGI-compliant servers.</p></li>
 <li><p>An <strong>authentication layer</strong>. DIBS assumes that the web server takes care of user authentication in such a way that DIBS is behind the authentication layer and all users who can reach DIBS pages are allowed to view content. DIBS itself only implements checks to distinguish between regular users versus staff who are allowed to access restricted pages. For the authentication layer, at Caltech we use the <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a> single sign-on system, but it is possible to use other schemes. For a local server behind firewalls, <a class="reference external" href="https://httpd.apache.org/docs/2.4/howto/auth.html">Apache Basic Authentication</a> can also be used. The installation and configuration of a single sign-on system depends on the specifics of a given institution, and are not described here.</p></li>
 <li><p>The use of <a class="reference external" href="https://www.folio.org">FOLIO</a> LSP or <a class="reference external" href="https://tind.io">TIND</a> ILS for retrieving metadata based on barcodes or unique identifiers, <em>or</em>  a willingness to extend the existing metadata retrieval layer in DIBS. We strove to limit dependencies on external systems, but the interface for staff to add items to DIBS requires looking up some limited metadata based on an item’s barcode, and lacking a universal scheme to do that, we had to write our own interface layer. The use of another LSP will require extending this interface layer. (Thankfully, the <a class="reference external" href="https://github.com/caltechlibrary/dibs/blob/main/dibs/lsp.py">code is short</a> and the amount of metadata required is small.)</p></li>
@@ -483,7 +483,7 @@
 <section id="install-python-dependencies">
 <h3 id="install-python-dependencies">Install Python dependencies<a class="headerlink" href="#install-python-dependencies" title="Permalink to this heading">¶</a></h3>
 <p>Assuming that your copy of DIBS is in a subdirectory named <code class="docutils literal notranslate"><span class="pre">dibs</span></code> (as it would be after the previous step), change your shell’s current working directory to that directory, and run the following command to install the Python dependencies on your system or your virtual environment:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3 -m pip install -r requirements.txt
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
 </div>
 </section>
@@ -497,7 +497,7 @@
 <section id="create-the-settings-ini-file">
 <h4 id="create-the-settings-ini-file">① Create the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-the-settings-ini-file" title="Permalink to this heading">¶</a></h4>
 <p>The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file. For a test run of DIBS, it is enough to simply copy the example to create <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>settings.ini-example<span class="w"> </span>settings.ini
 </pre></div>
 </div>
 </section>
@@ -511,7 +511,7 @@
 <section id="set-a-sample-users-role">
 <h4 id="set-a-sample-users-role">⓷ Set a sample user’s role<a class="headerlink" href="#set-a-sample-users-role" title="Permalink to this heading">¶</a></h4>
 <p>The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of “library”.  Suppose you want to name your sample user “dibsuser”, then you could run the following command:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span><span class="s2">"dibsuser"</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager<span class="w"> </span>add<span class="w"> </span><span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span><span class="w"> </span><span class="nv">uname</span><span class="o">=</span><span class="s2">"dibsuser"</span>
 </pre></div>
 </div>
 <p>After this, proceed to the section on <span class="xref myst">Running DIBS locally</span> below.</p>
@@ -523,7 +523,7 @@
 <section id="create-and-edit-the-settings-ini-file">
 <h4 id="create-and-edit-the-settings-ini-file">①  Create and edit the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file<a class="headerlink" href="#create-and-edit-the-settings-ini-file" title="Permalink to this heading">¶</a></h4>
 <p>Certain characteristics are configured using a file named <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>, which DIBS looks for in the <code class="docutils literal notranslate"><span class="pre">dibs</span></code> directory. The file <code class="docutils literal notranslate"><span class="pre">settings.ini-example</span></code> is a sample configuration file for DIBS.  Copy the file to <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>,</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp settings.ini-example settings.ini
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>settings.ini-example<span class="w"> </span>settings.ini
 </pre></div>
 </div>
 <p>then edit its contents in a text editor to suit your local installation. The comments in the file explain what each of the variables does, but we elaborate on some notable variables below:</p>
@@ -564,14 +564,14 @@
 <p>As mentioned above, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, <strong>create at least one user with a role of <code class="docutils literal notranslate"><span class="pre">library</span></code></strong>.</p>
 <p>If you are using Apache basic auth, <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> will also allow you to add entries (with passwords) to the password file indicated by the <code class="docutils literal notranslate"><span class="pre">PASSWORD_FILE</span></code> variable in DIBS’ <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file.</p>
 <p>The user name must be given as the name used by people in the authentication system (e.g., the SSO sign-on login name, if you use SSO). For example, to make <code class="docutils literal notranslate"><span class="pre">fakeuser2021@someuniversity.edu</span></code> be recognized as having staff privileges, you would run the following command:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span> <span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@someuniversity.edu</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager<span class="w"> </span>add<span class="w"> </span><span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span><span class="w"> </span><span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@someuniversity.edu</span>
 </pre></div>
 </div>
 </section>
 <section id="set-permissions-on-important-dibs-directories">
 <h4 id="set-permissions-on-important-dibs-directories">④ Set permissions on important DIBS directories<a class="headerlink" href="#set-permissions-on-important-dibs-directories" title="Permalink to this heading">¶</a></h4>
 <p>A server process such as Apache normally runs with a user identity and group identity that is different from real user accounts on the server computer. This means that the files and directories for DIBS, when they are installed by a user on the computer, may have different ownership and permissions than are needed by the web server process. To make sure that the web server process can read and write to the directories, DIBS comes with a small program to set permissions on certain critical DIBS files and directories. Run this program as shown below, replacing <code class="docutils literal notranslate"><span class="pre">PROCESS_USER</span></code> and <code class="docutils literal notranslate"><span class="pre">PROCESS_GROUP</span></code> with the actual server process user and group (and note the use of <code class="docutils literal notranslate"><span class="pre">sudo</span></code> here):</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo admin/set-server-permissions --owner PROCESS_USER --group PROCESS_GROUP
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>admin/set-server-permissions<span class="w"> </span>--owner<span class="w"> </span>PROCESS_USER<span class="w"> </span>--group<span class="w"> </span>PROCESS_GROUP
 </pre></div>
 </div>
 <p>For example, on our servers, <code class="docutils literal notranslate"><span class="pre">PROCESS_USER</span></code> and <code class="docutils literal notranslate"><span class="pre">PROCESS_GROUP</span></code> are both <code class="docutils literal notranslate"><span class="pre">www-data</span></code>, so for our installation, the command uses the arguments <code class="docutils literal notranslate"><span class="pre">--owner</span> <span class="pre">www-data</span> <span class="pre">--group</span> <span class="pre">www-data</span></code>.</p>
@@ -590,7 +590,7 @@
 <section id="running-dibs-locally">
 <h3 id="running-dibs-locally">Running DIBS locally<a class="headerlink" href="#running-dibs-locally" title="Permalink to this heading">¶</a></h3>
 <p>For local experimentation and development, the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> can be used to start a built-in web server on your computer. Since a local environment will not have the authentication layer normally assumed by DIBS, you need to tell the built-in web server who to pretend to be. For example, if you used <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> to add a user named “dibsuser” as <span class="xref myst">described in the section on configuration</span>, then you can start the local server in debug mode like this:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/run-server --mode debug --debug-user dibsuser
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/run-server<span class="w"> </span>--mode<span class="w"> </span>debug<span class="w"> </span>--debug-user<span class="w"> </span>dibsuser
 </pre></div>
 </div>
 <p>This will start a local web server listening on <code class="docutils literal notranslate"><span class="pre">localhost</span></code> port 8080.  Open a browser window on <code class="docutils literal notranslate"><span class="pre">http://localhost:8080</span></code> and you should see the DIBS welcome page, as well as be able to see the “List” and “Loan statistics” options in the pull-down menu:</p>
@@ -628,7 +628,7 @@
 <section id="loan-manager-perform-administrative-functions-on-loans">
 <h3 id="loan-manager-perform-administrative-functions-on-loans"><code class="docutils literal notranslate"><span class="pre">loan-manager</span></code>: perform administrative functions on loans<a class="headerlink" href="#loan-manager-perform-administrative-functions-on-loans" title="Permalink to this heading">¶</a></h3>
 <p>This program can be used to perform some loan management functions on a DIBS server. Currently, it offers functions for listing active and recent loans, as well as forcefully ending active loans on a given item. You can run it with the <code class="docutils literal notranslate"><span class="pre">-h</span></code> option to get more information about its usage. For example:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/loan-manager --list-loans
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/loan-manager<span class="w"> </span>--list-loans
 </pre></div>
 </div>
 </section>
@@ -665,8 +665,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">debug</span></code>: this uses <a class="reference external" href="https://bottlepy.org">Bottle</a>’s development server instead of <code class="docutils literal notranslate"><span class="pre">mod_wsgi-express</span></code> and turns on maximum debugging options. This mode does <strong>not</strong> use <code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code>. It will turn off template caching, will drop into pdb upon exceptions, and unlike <code class="docutils literal notranslate"><span class="pre">mod_wsgi-express</span></code>, the <a class="reference external" href="https://bottlepy.org">Bottle</a> server will also automatically reload any changed source files. In addition, the reloan wait time and loan expirations are set to 1 minute (overriding values set on individual items), and finally, the statistics gathering will include loans by staff users. (Normally, staff users are not included in the statistics to avoid skewing the results.) Debug mode is invoked using the option <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">debug</span></code>. It has no corresponding <code class="docutils literal notranslate"><span class="pre">RUN_MODE</span></code> value in <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>.</p></li>
 </ul>
 <p>Since debug mode uses <a class="reference external" href="https://bottlepy.org">Bottle</a>’s default server, the normal authentication mechanism is nonfunctional and you will not be able to access most pages <em>unless</em> you define a person using DIBS’s <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> script (above) and give them the role of <code class="docutils literal notranslate"><span class="pre">library</span></code>, and then tell <code class="docutils literal notranslate"><span class="pre">run-server</span></code> the identity of that user.  To do this, use option <code class="docutils literal notranslate"><span class="pre">--user</span></code> with the name of the user you defined.  Here is an example of running in debug mode:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager add <span class="nv">uname</span><span class="o">=</span><span class="s2">"debuguser"</span> <span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
-admin/run-server --mode debug --debug-user debuguser
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager<span class="w"> </span>add<span class="w"> </span><span class="nv">uname</span><span class="o">=</span><span class="s2">"debuguser"</span><span class="w"> </span><span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
+admin/run-server<span class="w"> </span>--mode<span class="w"> </span>debug<span class="w"> </span>--debug-user<span class="w"> </span>debuguser
 </pre></div>
 </div>
 <p>This will start a local web server listening on <code class="docutils literal notranslate"><span class="pre">localhost</span></code> port 8080.  You can open a browser window on <code class="docutils literal notranslate"><span class="pre">http://localhost:8080</span></code> and you should see the DIBS welcome page, as well as be able to see the “List” and “Loan statistics” options in the pull-down menu from the upper right of the page.</p>
@@ -677,7 +677,7 @@ admin/run-server --mode debug --debug-user debuguser
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--database</span></code>: override the value of <code class="docutils literal notranslate"><span class="pre">DATABASE_FILE</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--manifests</span></code>: override the value of <code class="docutils literal notranslate"><span class="pre">MANIFEST_DIR</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">--iiif_url</span></code>: override the value of <code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--iiif-url</span></code>: override the value of <code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code></p></li>
 </ul>
 <p>Please consult the comments in <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> or the DIBS documentation for more information about the purpose of these configuration variables.</p>
 </section>
@@ -690,7 +690,7 @@ admin/run-server --mode debug --debug-user debuguser
 <section id="set-server-permissions-set-essential-directory-permissions">
 <h3 id="set-server-permissions-set-essential-directory-permissions"><code class="docutils literal notranslate"><span class="pre">set-server-permissions</span></code>: set essential directory permissions<a class="headerlink" href="#set-server-permissions-set-essential-directory-permissions" title="Permalink to this heading">¶</a></h3>
 <p>This program sets certain basic file and directory permissions for a typical server configuration of DIBS.  It only affects a small number of items that will not have the correct permissions after cloning the git repository. The arguments <code class="docutils literal notranslate"><span class="pre">--owner</span></code> and <code class="docutils literal notranslate"><span class="pre">--group</span></code> can be used to choose the owner and group to be used for the permissions.  Normally, this would be the Apache server user and group.  For example, if the user name is “www-data” and the group name is “www-data”, then you would run this program as follows:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/set-server-permissions --owner www-data --group www-data
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/set-server-permissions<span class="w"> </span>--owner<span class="w"> </span>www-data<span class="w"> </span>--group<span class="w"> </span>www-data
 </pre></div>
 </div>
 </section>
@@ -760,10 +760,10 @@ admin/run-server --mode debug --debug-user debuguser
               
           </div>
             Last updated on
-              Oct 13, 2022.
+              Jan 18, 2023.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
