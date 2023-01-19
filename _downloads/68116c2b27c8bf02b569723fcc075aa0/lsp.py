@@ -24,25 +24,6 @@ from   topi import Tind
 from .settings import config, resolved_path
 
 
-# Classes for communicating exceptions.
-# .............................................................................
-
-class LSPException(Exception):
-    '''Base class for LSP exceptions.'''
-
-
-class LSPAccessError(LSPException):
-    '''Encountered a problem with the LSP credentials or access permissions.'''
-
-
-class LSPRecordNotFoundError(LSPException):
-    '''The requested record could not be found.'''
-
-
-class LSPBadRecordError(LSPException):
-    '''The requested record is incomplete or otherwise unusable.'''
-
-
 # Classes implementing interface to specific LSPs.
 # .............................................................................
 
@@ -135,7 +116,7 @@ class TindInterface(LSPInterface):
                              isbn_issn = rec.isbn_issn)
         except Exception:
             log(f'could not find {barcode} in TIND')
-            raise LSPRecordNotFoundError('Could not find {barcode} in {self.url}')
+            raise ValueError('No such barcode {barcode} in {self.url}')
 
 
 class FolioInterface(LSPInterface):
@@ -172,17 +153,13 @@ class FolioInterface(LSPInterface):
         try:
             rec = self._folio.record(barcode = barcode)
         except pokapi.exceptions.NotFound:
-            raise LSPRecordNotFoundError(f'Could not find {barcode}.')
-        except pokapi.exceptions.FolioPermissionError:
-            raise LSPAccessError(f'Cannot access {barcode} in FOLIO')
-        except Exception as ex:
-            log('got exception from FOLIO: ' + str(ex))
-            raise
+            log(f'could not find {barcode} in FOLIO')
+            return None
 
         log(f'record for {barcode} has id {rec.id}')
         if not all([rec.title, rec.author, rec.year]):
             log(f'record for {barcode} in FOLIO lacks minimum metadata')
-            raise LSPBadRecordError('{barcode} is incomplete in {self.url}')
+            raise ValueError('Got incomplete record for {barcode} in {self.url}')
 
         thumbnail_file = join(self._thumbnails_dir, barcode + '.jpg')
         if not exists(thumbnail_file):
