@@ -29,14 +29,15 @@
           <div class="mb-3 table-responsive">
             <table class="table table-borderless"
                    data-page-size="50"
-                   data-toggle="table" data-pagination="true" data-escape="false">
+                   data-toggle="table"
+		   data-search="true"
+		   data-sort-name="barcode"
+		   data-search-align="left" data-pagination="true" data-escape="false">
               <thead class="thead-light align-bottom align-text-bottom">
                 <tr>
-                  <th data-sortable="true" data-sorter="linkedNumberSort"
-                      data-field="barcode">&nbsp;<br>&nbsp;<br>Barcode</th>
+                  <th data-sortable="true" data-field="barcode">&nbsp;<br>&nbsp;<br>Barcode</th>
 
-                  <th data-sortable="true" data-sorter="linkedTextSort"
-                      data-field="title">&nbsp;<br>&nbsp;<br>Title</th>
+                  <th data-sortable="true" data-field="title">&nbsp;<br>&nbsp;<br>Title</th>
 
                   <th data-sortable="true" data-field="author">&nbsp;<br>&nbsp;<br>Author</th>
 
@@ -68,7 +69,8 @@
                   </td>
 
                   <td>
-                    <a href="{{base_url}}/item/{{item.barcode}}">{{item.title}}</a>
+		      <div hidden>{{item.title}}</div>
+                      <a href="{{base_url}}/item/{{item.barcode}}">{{item.title}}</a>
                   </td>
 
                   <td>
