@@ -25,6 +25,7 @@ from rich import box
 from rich.console import Console
 from rich.padding import Padding
 from rich.table import Table
+from sidetrack import log
 from subprocess import Popen, PIPE
 
 import os
@@ -63,18 +64,20 @@ class GuestPerson():
 
 
 def person_from_environ(environ):
+    person = None
     if 'REMOTE_USER' in environ:
         # NOTE: If we're shibbed then we always return a Person object.
         # Either they are a known person (e.g. library staff) or other community
         # member without a role.
-        person = Person.get_or_none(Person.uname == environ['REMOTE_USER'])
-        if person is None:
-            person = GuestPerson()
-            person.uname = environ['REMOTE_USER']
-            person.display_name = environ['REMOTE_USER']
-        return person
-    else:
-        return None
+        try:
+            person = Person.get_or_none(Person.uname == environ['REMOTE_USER'])
+            if person is None:
+                person = GuestPerson()
+                person.uname = environ['REMOTE_USER']
+                person.display_name = environ['REMOTE_USER']
+        except Exception as ex:             # noqa: PIE786
+            log('exception accessing database: ' + str(ex.__class__) + ' ' + str(ex))
+    return person
 
 
 def normalize_str(s):

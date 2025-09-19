@@ -24,6 +24,7 @@
 # .............................................................................
 
 *.bak
+*~
 
 # Python-specific things to ignore
 # .............................................................................
@@ -55,3 +56,12 @@ data/processing/*-initiated
 data/processing/*-processing
 data/processing/*-problem
 data/thumbnails/*.jpg
+build/
+bin/
+lib/
+lib64
+pyvenv.cfg
+settings.ini-original
+settings.ini-ubuntu.20.04
+settings.ini.bak-20250127
+add-caltech-library-staff-people

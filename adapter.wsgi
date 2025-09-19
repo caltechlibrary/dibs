@@ -6,6 +6,19 @@
 # @website https://github.com/caltechlibrary/dibs
 # =============================================================================
 
+# Make sure we're running from the right directory dnd picking up the env.
+
+## Make sure we're running in the venv
+python_home = '/Sites/dibs.library.caltech.edu/.venv'
+activate_this = python_home + '/bin/activate_this.py'
+with open(activate_this) as file_:
+  exec(file_.read(), dict(__file__=activate_this))
+
+import sys
+
+sys.path.insert(0, '/Sites/dibs.library.caltech.edu/')
+
+
 # Initial imports. More things are imported later below.
 
 import bottle
@@ -58,11 +71,9 @@ from dibs.settings import config
 # multiple threads (depending on the server configuration), which means this
 # module (adapter.wsgi) will be invoked multiple times.
 
-dibs._config_done = False
-
 def dibs_application(env, start_response):
     '''DIBS wrapper around Bottle WSGI application.'''
-    if not dibs._config_done:
+    if not hasattr(dibs, '_config_done'):
         # VERBOSE in env overrides RUN_MODE which overrides settings.ini.
         mode = env.get('RUN_MODE', '') or config('RUN_MODE', default = 'normal')
         if env.get('VERBOSE', False) or mode == 'verbose':
@@ -75,11 +86,17 @@ def dibs_application(env, start_response):
         scheme = env.get('wsgi.url_scheme', '') or env.get('REQUEST_SCHEME', '')
         host   = get_host(env)
         path   = get_script_name(env)
-        dibs.base_url = f'{scheme}://{host}{path}'
+        if hasattr(dibs, 'base_url'):
+           print(f"Attribute _config_done already exists on dibs object -> ${dibs.base_url}")
+        else:
+           dibs.base_url = f'{scheme}://{host}{path}'
         log(f'dibs.base_url = {dibs.base_url}')
 
         # Mark this done.
-        dibs._config_done = True
+        if hasattr(dibs, '_config_done'):
+           print(f"Attribute _config_done already exists on dibs object -> ${dibs._config_done}")
+        else:
+           dibs._config_done = True
 
     # Now call the real DIBS Bottle server to process the request.
     return dibs(env, start_response)

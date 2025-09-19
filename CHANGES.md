@@ -1,5 +1,22 @@
 #  Change log for DIBS<img width="70em" align="right" src="https://github.com/caltechlibrary/dibs/raw/main/docs/_static/media//dibs-icon.png">
 
+## ★ Version 0.7.1 ★
+
+This is a maintenance release; there are no new features.
+
+### What's fixed
+
+* Fixed issue #105: wrong number of arguments to an internal log call.
+* Fixed documentation issue (PR #104): wrong name for argument taken by `run-server` and out-of-date serverless-iiif link.
+
+
+### What's changed
+
+* Improved handling of errors when the LSP layer (particular for FOLIO) can't access a record due to permissions or credentials. Also improved reporting of some other error situations by being more specific about the problem.
+* Internally, a new set of exceptions classes are used for finer-grained communication of problems from the LSP interface.
+* Bumped up versions of some Python packages in the `requirements.txt` file.
+
+
 ## ★ Version 0.7.0 ★
 
 This release adds a couple of utility programs (including one for updating DIBS's stored item metadata with the latest values from the LSP), fixes some minor bugs, updates the versions of some dependencies to deal with Dependabot security udpates, and adds a little bit more documentation. There are minor changes to two template files; if you have an existing DIBS installation, a git pull should hopefully merge the changes without trouble. There are no changes to the database data object model.

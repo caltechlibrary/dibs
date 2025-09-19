@@ -38,7 +38,7 @@ from .data_models import database, Item, Loan, History, Person
 from .date_utils import human_datetime, round_minutes, time_now
 from .email import send_email
 from .image_utils import as_jpeg
-from .lsp import LSP
+from .lsp import LSP, LSPAccessError, LSPRecordNotFoundError, LSPBadRecordError
 from .people import person_from_environ, GuestPerson
 from .roles import staff_user
 from .settings import config, resolved_path
@@ -480,20 +480,29 @@ def update_item():
                 log(f'writing {naturalsize(len(data))} image to {dest_file}')
                 with open(dest_file, 'wb') as new_file:
                     new_file.write(as_jpeg(data))
-    except ValueError:
-        return page('error', summary = f'Problem with {barcode} in {lsp.name}',
-                    message = (f'Either {lsp.name} does not have an item'
-                               f' with barcode {barcode}, or the item record'
-                               ' is incomplete and cannot be used by DIBS.'))
+    except LSPAccessError:
+        return page('error', summary = f'Problem accessing {lsp.name}',
+                    message = ('DIBS has encountered a problem with permissions'
+                               f' or credentials for access to {lsp.name}.'
+                               ' Please notify the site administrators.'))
+    except LSPRecordNotFoundError:
+        return page('error', summary = f'Problem with {barcode}',
+                    message = (f'Could not find an item with {barcode}'
+                               f' in {lsp.name}.'))
+    except LSPBadRecordError:
+        return page('error', summary = f'Problem with {barcode}',
+                    message = (f'The item record with barcode {barcode} in'
+                               f' {lsp.name} is incomplete or otherwise unusable'
+                               f' by DIBS. Please check the record in {lsp.name}.'))
     except OSError as ex:
         # Log it but don't fail just because of this.
-        log(f'exception trying to save thumbnail: {str(ex)}')
+        log('exception trying to save thumbnail: ' + str(ex))
     except Exception as ex:         # noqa: PIE786
-        log(f'exception looking up barcode {barcode} in {lsp.name}: ', str(ex))
+        log(f'exception looking up barcode {barcode} in {lsp.name}: ' + str(ex))
         return page('error', summary = f'Unable to get record from {lsp.name}',
                     message = ('An internal error occurred while looking'
                                f' up barcode {barcode} in {lsp.name}. Please'
-                               'notify the site administrators.'))
+                               ' notify the site administrators.'))
     redirect(f'{dibs.base_url}/list')
 
 
@@ -518,7 +527,7 @@ def start_processing():
             log(f'creating {init_file}')
             os.close(os.open(init_file, os.O_CREAT))
         except OSError as ex:
-            log(f'problem creating {init_file}: {str(ex)}')
+            log(f'problem creating {init_file}: ' + str(ex))
     else:
         log(f'_PROCESS_DIR not set -- ignoring /start-processing for {barcode}')
     redirect(f'{dibs.base_url}/list')
@@ -976,9 +985,17 @@ def error404(error):
 @dibs.error(405)
 def error405(error):
     log(f'{request.method} called on {request.path}, resulting in {error}')
-    return page('error', summary = 'method not allowed',
-                message = ('The requested method does not exist or you do not '
+    return page('error', summary = 'not allowed',
+                message = ('The requested method does not exist or you do '
                            'not have permission to perform the action.'))
+
+
+@dibs.error(500)
+def error500(error):
+    log(f'{request.method} called on {request.path}, resulting in {error}')
+    return page('error', summary = 'internal error',
+                message = ('An internal error has occurred in DIBS. Please'
+                           ' report this to the site admnistrators.'))
 
 
 # Miscellaneous static pages and files.

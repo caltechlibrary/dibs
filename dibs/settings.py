@@ -55,8 +55,9 @@ class DIBSRepositoryIni(RepositoryIni):
         self.section = section
         self.parser = ConfigParser()
         log(f'reading ini file {source}')
-        with open(source, encoding = encoding) as file_:
-            self.parser.readfp(file_)
+        self.parser.read_file(open(source))
+        #with open(source, encoding = encoding) as file_:
+        #    self.parser.readfp(file_)
 
 
     def __contains__(self, key):
