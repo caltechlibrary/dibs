@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -48,18 +47,13 @@
   
   
     <title>Using DIBS &#8212; Caltech DIBS</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/material.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({startOnLoad:true});</script>
-    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=75810a84" />
+    <link rel="stylesheet" type="text/css" href="_static/material.css?v=79c92029" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=b88a9f50" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="System architecture" href="architecture.html" />
@@ -90,8 +84,7 @@
         <a href="index.html" title="Caltech DIBS"
            class="md-header-nav__button md-logo">
           
-              <img src="_static/dibs-icon-white-sm.png" height="26"
-                   alt="Home logo">
+            &nbsp;
           
         </a>
       </div>
@@ -111,7 +104,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" action="search.html" method="get" name="search">
-      <input type="text" class="md-search__input" name="q" placeholder="Search"
+      <input type="text" class="md-search__input" name="q" placeholder=""Search""
              autocapitalize="off" autocomplete="off" spellcheck="false"
              data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
@@ -178,7 +171,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="index.html" title="Caltech DIBS" class="md-nav__button md-logo">
       
-        <img src="_static/dibs-icon-white-sm.png" alt=" logo" width="48" height="48">
+        <img src="_static/" alt=" logo" width="48" height="48">
       
     </a>
     <a href="index.html"
@@ -397,7 +390,7 @@
             
   <section id="using-dibs">
 <h1 id="usage--page-root">Using DIBS<a class="headerlink" href="#usage--page-root" title="Permalink to this heading">¶</a></h1>
-<p>This page describes how DIBS works from the standpoint of the user interface as seen by patrons and staff.  A separate section in this document describes the <span class="xref myst">system architecture</span> that implements the functionality described here.</p>
+<p>This page describes how DIBS works from the standpoint of the user interface as seen by patrons and staff.  A separate section in this document describes the <a class="reference internal" href="#architecture.html"><span class="xref myst">system architecture</span></a> that implements the functionality described here.</p>
 <section id="authentication">
 <h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permalink to this heading">¶</a></h2>
 <p>Authentication is assumed to be handled by the system hosting DIBS. In Caltech’s case, we use <a class="reference external" href="https://en.wikipedia.org/wiki/Shibboleth_Single_Sign-on_architecture">Shibboleth</a>, an institute-wide, single sign-on system (SSO) for authentication. This means that before users ever reach DIBS, a sign-in page is presented by the web server. The screenshot below shows an example of this:</p>
@@ -442,10 +435,10 @@
 </section>
 <section id="the-staff-experience">
 <h2 id="the-staff-experience">The staff experience<a class="headerlink" href="#the-staff-experience" title="Permalink to this heading">¶</a></h2>
-<p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <span class="xref myst">patron experience</span> described in the previous section.)</p>
+<p>Overall, the workflow to add new items to DIBS is simple: staff scan books and store the results in a secure location (one with a shared file system accessible to the DIBS server) and add basic metadata to the DIBS database. Once the item is added to DIBS and flagged as ready to be loaned, a web page for the item allows institutional patrons to request time-limited loans and view the items in the Universal Viewer.  (That is the <a class="reference internal" href="#the-patron-experience"><span class="xref myst">patron experience</span></a> described in the previous section.)</p>
 <section id="how-users-are-identified-as-staff-users">
 <h3 id="how-users-are-identified-as-staff-users">How users are identified as staff users<a class="headerlink" href="#how-users-are-identified-as-staff-users" title="Permalink to this heading">¶</a></h3>
-<p>As mentioned <span class="xref myst">above</span>, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that system administrators need to do is tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <a class="reference download internal" download="" href="_downloads/19940a7e0b5e588ca5f9115591fee4a7/people-manager"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span></a> for that purpose. (It’s located in the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
+<p>As mentioned <a class="reference internal" href="#authentication"><span class="std std-ref">above</span></a>, users are authenticated by a separate software layer before they can access DIBS. This simplifies DIBS’s implementation and reduces what it must do to distinguish different user roles.  By default, every authenticated user is assumed to have non-staff privileges, so all that system administrators need to do is tell DIBS which users should have staff privileges. DIBS comes with a command-line utility program called <a class="reference download internal" download="" href="_downloads/19940a7e0b5e588ca5f9115591fee4a7/people-manager"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span></a> for that purpose. (It’s located in the <a class="reference internal" href="#.../admin"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">admin</span></code></span></a> subdirectory of the DIBS source repository). For example, to add a user with identity <code class="docutils literal notranslate"><span class="pre">fakeuser2021@caltech.edu</span></code> as a staff user, a system administrator needs to run the following command on the server where DIBS is installed:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager<span class="w"> </span>add<span class="w"> </span><span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@caltech.edu"</span><span class="w"> </span><span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span>
 </pre></div>
 </div>
@@ -490,7 +483,7 @@
 </section>
 <section id="editing-existing-items">
 <h3 id="editing-existing-items">Editing existing items<a class="headerlink" href="#editing-existing-items" title="Permalink to this heading">¶</a></h3>
-<p>As mentioned above, every item on the <span class="xref myst">list page</span> has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.</p>
+<p>As mentioned above, every item on the <a class="reference internal" href="#listing-all-items-in-dibs"><span class="xref myst">list page</span></a> has a button named <span class="button color-info">Edit entry</span> next to it. Clicking on this button shows a page essentially identical to the page for adding a new item, except now the fields in the form are filled in with values from the existing item being edited.</p>
 <figure>
 <img src="_static/media/edit-item-page.png"/>
 </figure>
@@ -561,7 +554,7 @@
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> Caltech Library Digital Borrowing System </span>
+                      class="md-footer-nav__direction"> "Previous" </span> Caltech Library Digital Borrowing System </span>
               </div>
             </a>
           
@@ -571,7 +564,7 @@
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> System architecture </span>
+                class="md-footer-nav__direction"> "Next" </span> System architecture </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
@@ -589,10 +582,10 @@
               
           </div>
             Last updated on
-              Jan 19, 2023.
+              Sep 19, 2025.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>

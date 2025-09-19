@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -48,18 +47,21 @@
   
   
     <title>Installation and operation &#8212; Caltech DIBS</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/material.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({startOnLoad:true});</script>
-    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=75810a84" />
+    <link rel="stylesheet" type="text/css" href="_static/material.css?v=79c92029" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=b88a9f50" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="General information" href="general.html" />
@@ -90,8 +92,7 @@
         <a href="index.html" title="Caltech DIBS"
            class="md-header-nav__button md-logo">
           
-              <img src="_static/dibs-icon-white-sm.png" height="26"
-                   alt="Home logo">
+            &nbsp;
           
         </a>
       </div>
@@ -111,7 +112,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" action="search.html" method="get" name="search">
-      <input type="text" class="md-search__input" name="q" placeholder="Search"
+      <input type="text" class="md-search__input" name="q" placeholder=""Search""
              autocapitalize="off" autocomplete="off" spellcheck="false"
              data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
@@ -178,7 +179,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="index.html" title="Caltech DIBS" class="md-nav__button md-logo">
       
-        <img src="_static/dibs-icon-white-sm.png" alt=" logo" width="48" height="48">
+        <img src="_static/" alt=" logo" width="48" height="48">
       
     </a>
     <a href="index.html"
@@ -399,8 +400,8 @@
 <h1 id="installation--page-root">Installation and operation<a class="headerlink" href="#installation--page-root" title="Permalink to this heading">¶</a></h1>
 <p>On this page, you may wish to follow one of the following paths based to your situation. (Note: the boxes in this diagram are clickable links to the sections in question.)</p>
 <div align="center">
-<div class="mermaid">
-            flowchart TD;
+<pre class="mermaid">
+        flowchart TD;
   node1(Preliminary requirements)--&gt;node2(Installation);
 
   node2--&gt;node3(Configuring DIBS for a local test);
@@ -422,10 +423,10 @@
   click node4 "/dibs/installation.html#configuring-dibs-for-multiuser-use" _self;
   click node5 "/dibs/installation.html#running-dibs-locally" _self;
   click node6 "/dibs/installation.html#running-dibs-in-production" _self;
-        </div></div>
+    </pre></div>
 <section id="preliminary-requirements">
 <h2 id="preliminary-requirements">Preliminary requirements<a class="headerlink" href="#preliminary-requirements" title="Permalink to this heading">¶</a></h2>
-<p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <span class="xref myst">installation steps</span>. It also assumes a Unix-like environment (Linux, macOS) and a working Internet connection.</p>
+<p>The core DIBS server is written in <a class="reference external" href="https://www.python.org">Python 3</a> and makes use of some additional Python software libraries that are installed automatically during the <a class="reference internal" href="#installation"><span class="std std-ref">installation steps</span></a>. It also assumes a Unix-like environment (Linux, macOS) and a working Internet connection.</p>
 <p>Although DIBS relies on the existence of a IIIF image server, for initial exploration, you <em>don’t</em> need to set up a IIIF server – you can reference content located in any of a number of publicly-accessible IIIF servers around the world, and DIBS includes a sample <a class="reference external" href="https://iiif.io/explainers/using_iiif_resources/#iiif-manifest">IIIF manifest</a> as an example of doing that. Thus, in principle, all you need to run the DIBS demo is a Unix-like system (Linux, macOS), a Python installation, the DIBS source code, and an Internet connection.</p>
 <p>To run a proper DIBS server at another institution (other than <a class="reference external" href="https://www.caltech.edu">Caltech</a>), certain additional things are needed:</p>
 <ol class="arabic simple">
@@ -490,7 +491,7 @@
 </section>
 <section id="configuration">
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h2>
-<p>If you are new to DIBS and all you want to do is test drive it, you can follow the instructions in the first subsection below. If you are setting up DIBS for multiuser use, you can <span class="xref myst">jump ahead to the second subsection</span>.</p>
+<p>If you are new to DIBS and all you want to do is test drive it, you can follow the instructions in the first subsection below. If you are setting up DIBS for multiuser use, you can <a class="reference internal" href="#configuring-dibs-for-real-use"><span class="xref myst">jump ahead to the second subsection</span></a>.</p>
 <section id="configuring-dibs-for-a-local-test">
 <h3 id="configuring-dibs-for-a-local-test">Configuring DIBS for a local test<a class="headerlink" href="#configuring-dibs-for-a-local-test" title="Permalink to this heading">¶</a></h3>
 <p>DIBS comes with an example IIIF manifest that uses a public IIIF server operated by the <a class="reference external" href="https://wellcomelibrary.org">Wellcome Library</a>. (Thank you, Wellcome Library!) This makes it possible to run a local copy of DIBS without much effort. Please follow the simple steps below.</p>
@@ -503,18 +504,18 @@
 </section>
 <section id="load-a-sample-book-into-dibs">
 <h4 id="load-a-sample-book-into-dibs">⓶ Load a sample book into DIBS<a class="headerlink" href="#load-a-sample-book-into-dibs" title="Permalink to this heading">¶</a></h4>
-<p>Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">load-mock-data</span></code></span> located in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory of the DIBS source code tree.</p>
+<p>Prior to starting the DIBS server for the first time, for testing purposes, you may want to add some sample data. This can be done by running the script <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">load-mock-data</span></code></span></a> located in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory of the DIBS source code tree.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/load-mock-data
 </pre></div>
 </div>
 </section>
 <section id="set-a-sample-users-role">
 <h4 id="set-a-sample-users-role">⓷ Set a sample user’s role<a class="headerlink" href="#set-a-sample-users-role" title="Permalink to this heading">¶</a></h4>
-<p>The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of “library”.  Suppose you want to name your sample user “dibsuser”, then you could run the following command:</p>
+<p>The program <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span></a> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for adding user and role information.  To be able to manage DIBS content, create at least one user with a role of “library”.  Suppose you want to name your sample user “dibsuser”, then you could run the following command:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager<span class="w"> </span>add<span class="w"> </span><span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span><span class="w"> </span><span class="nv">uname</span><span class="o">=</span><span class="s2">"dibsuser"</span>
 </pre></div>
 </div>
-<p>After this, proceed to the section on <span class="xref myst">Running DIBS locally</span> below.</p>
+<p>After this, proceed to the section on <a class="reference internal" href="#running-dibs-locally"><span class="xref myst">Running DIBS locally</span></a> below.</p>
 </section>
 </section>
 <section id="configuring-dibs-for-multiuser-use">
@@ -530,11 +531,11 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">LSP_TYPE</span></code>: When items are added to DIBS via the web form, the system looks up basic metadata about an item in an LSP or ILS. This variable determines the adapter layer used. Currently, the only two options are <code class="docutils literal notranslate"><span class="pre">folio</span></code> or <code class="docutils literal notranslate"><span class="pre">tind</span></code>. Also make sure to <strong>set the corresponding variables in the sections for <code class="docutils literal notranslate"><span class="pre">[folio]</span></code> or <code class="docutils literal notranslate"><span class="pre">[tind]</span></code></strong>, respectively, near the bottom of the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MANIFEST_DIR</span></code>: This variable sets the path to the directory where DIBS looks for manifest files.  Each file name should follow the pattern <i><code>N</code></i><code>-manifest.json</code>, where <i><code>N</code></i> is the item barcode.  The source distribution of DIBS comes with a sample manifest for illustration purposes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">PROCESS_DIR</span></code>: The section on <span class="xref myst">the scanning workflow</span> describes the basic scheme that DIBS implements for initiating an external workflow that will convert book scans into the format needed by IIIF.  This scheme involves reading and writing files to the directory indicated by the variable <code class="docutils literal notranslate"><span class="pre">PROCESS_DIR</span></code> in the settings file.  When a new item is added to DIBS from the /list page, a button named <span class="button color-primary">Process</span> is shown next to the new item; when library staff press that button, DIBS writes a file in the <code class="docutils literal notranslate"><span class="pre">PROCESS_DIR</span></code> location and watches for the presence of other files.  The end point of the workflow is assumed to be the appearance of a IIIF manifest for the item in the <code class="docutils literal notranslate"><span class="pre">MANIFEST_DIR</span></code>. f you do not want to use the workflow scheme, leave this value empty; DIBS will skip the <span class="button color-primary">Process</span> button, and will only monitor for the existence of the manifest file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PROCESS_DIR</span></code>: The section on <a class="reference internal" href="#usage.html#the-scanning-workflow"><span class="xref myst">the scanning workflow</span></a> describes the basic scheme that DIBS implements for initiating an external workflow that will convert book scans into the format needed by IIIF.  This scheme involves reading and writing files to the directory indicated by the variable <code class="docutils literal notranslate"><span class="pre">PROCESS_DIR</span></code> in the settings file.  When a new item is added to DIBS from the /list page, a button named <span class="button color-primary">Process</span> is shown next to the new item; when library staff press that button, DIBS writes a file in the <code class="docutils literal notranslate"><span class="pre">PROCESS_DIR</span></code> location and watches for the presence of other files.  The end point of the workflow is assumed to be the appearance of a IIIF manifest for the item in the <code class="docutils literal notranslate"><span class="pre">MANIFEST_DIR</span></code>. f you do not want to use the workflow scheme, leave this value empty; DIBS will skip the <span class="button color-primary">Process</span> button, and will only monitor for the existence of the manifest file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code>: The value of this variable should have the form <code class="docutils literal notranslate"><span class="pre">https://youriiifserver.yourdomain.edu/iiif/2</span></code>, and it should be the common base for IIIF URLs served by your IIIF server. (This means that the value should appear throughout your manifest files, as the common root of all page images.) This URL will not be shared with clients.  <strong>You should protect this URL from becoming public</strong> if you are making copyrighted works available via DIBS, because knowledge of this URL would allow anyone with familiarity with IIIF to bypass restrictions in DIBS and access your IIIF content directly. When DIBS reads a manifest, it replaces all instances of the value of <code class="docutils literal notranslate"><span class="pre">IIIF_BASE_URL</span></code> with a URL rooted at the DIBS server’s address, and this modified manifest is what it serves to clients. When a client requests page images via the translated URL, DIBS reverses the transformation to construct the IIIF URL from where it can get the page image, and then returns that data back to the client. The client never sees the real URL of the IIIF server or the images. The <em>controlled digital lending</em> aspect of DIBS is that it also refuses to return IIIF content unless the client has been authenticated and the user has borrowed the item through DIBS’ loan system.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MAIL_HOST</span></code>, <code class="docutils literal notranslate"><span class="pre">MAIL_PORT</span></code>, <code class="docutils literal notranslate"><span class="pre">MAIL_SENDER</span></code>: When a patron starts a loan, DIBS send send them an email message that summarizes information about the loan, including a link to the viewer page. The destination address for the email message is the sign-on received from the authentication layer.  The variables <code class="docutils literal notranslate"><span class="pre">MAIL_HOST</span></code>, <code class="docutils literal notranslate"><span class="pre">MAIL_PORT</span></code>, and <code class="docutils literal notranslate"><span class="pre">MAIL_SENDER</span></code> set the mail server details used by DIBS. Note that for this to work, the account owning the web server process must be able to send email from the machine where the web server is running to the patrons.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">FEEDBACK_URL</span></code>: After a patron ends a loan, they are taken to thank-you page on which is shown a link to a feedback page. This variable sets the web address of the feedback form. At Caltech, we use a simple Google form with only three questions; you may wish to do something similar, or perhaps use an existing issue tracking/feedback system at your site.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">RUN_MODE</span></code>: This variable takes one of two values: <code class="docutils literal notranslate"><span class="pre">normal</span></code> or <code class="docutils literal notranslate"><span class="pre">verbose</span></code>. In <code class="docutils literal notranslate"><span class="pre">verbose</span></code> mode, DIBS logs debug-level information in the server logs (or the standard output, if being run using the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> program included with DIBS). Patron names/email addresses are anonymized, so there is relatively little privacy risk in running in <code class="docutils literal notranslate"><span class="pre">verbose</span></code> mode in production. It can be very useful to use <code class="docutils literal notranslate"><span class="pre">verbose</span></code> mode while learning how DIBS works, even if you later decide to switch to <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUN_MODE</span></code>: This variable takes one of two values: <code class="docutils literal notranslate"><span class="pre">normal</span></code> or <code class="docutils literal notranslate"><span class="pre">verbose</span></code>. In <code class="docutils literal notranslate"><span class="pre">verbose</span></code> mode, DIBS logs debug-level information in the server logs (or the standard output, if being run using the <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span></a> program included with DIBS). Patron names/email addresses are anonymized, so there is relatively little privacy risk in running in <code class="docutils literal notranslate"><span class="pre">verbose</span></code> mode in production. It can be very useful to use <code class="docutils literal notranslate"><span class="pre">verbose</span></code> mode while learning how DIBS works, even if you later decide to switch to <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p></li>
 </ul>
 </section>
 <section id="set-up-authentication-for-dibs">
@@ -561,7 +562,7 @@
 </section>
 <section id="add-staff-users">
 <h4 id="add-staff-users">⓷ Add staff users<a class="headerlink" href="#add-staff-users" title="Permalink to this heading">¶</a></h4>
-<p>As mentioned above, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, <strong>create at least one user with a role of <code class="docutils literal notranslate"><span class="pre">library</span></code></strong>.</p>
+<p>As mentioned above, DIBS needs to distinguish between users who are allowed to perform administrative tasks (such as adding new items for loans and setting loan parameters) and regular users. The program <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">people-manager</span></code></span></a> in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> subdirectory is an interface for telling DIBS about users who have staff privileges.  To be able to manage DIBS content, <strong>create at least one user with a role of <code class="docutils literal notranslate"><span class="pre">library</span></code></strong>.</p>
 <p>If you are using Apache basic auth, <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> will also allow you to add entries (with passwords) to the password file indicated by the <code class="docutils literal notranslate"><span class="pre">PASSWORD_FILE</span></code> variable in DIBS’ <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file.</p>
 <p>The user name must be given as the name used by people in the authentication system (e.g., the SSO sign-on login name, if you use SSO). For example, to make <code class="docutils literal notranslate"><span class="pre">fakeuser2021@someuniversity.edu</span></code> be recognized as having staff privileges, you would run the following command:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/people-manager<span class="w"> </span>add<span class="w"> </span><span class="nv">role</span><span class="o">=</span><span class="s2">"library"</span><span class="w"> </span><span class="nv">uname</span><span class="o">=</span><span class="s2">"fakeuser2021@someuniversity.edu</span>
@@ -586,10 +587,10 @@
 </section>
 <section id="running-dibs">
 <h2 id="running-dibs">Running DIBS<a class="headerlink" href="#running-dibs" title="Permalink to this heading">¶</a></h2>
-<p>You can run DIBS on your local computer for initial exploration and testing, as well as during development and customization of DIBS. This is easy to do using the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> program provided with DIBS. On the other hand, running DIBS on a real server, for actual use by patrons at your institution, requires the use of a full web server environment and other components. Both cases are described below.</p>
+<p>You can run DIBS on your local computer for initial exploration and testing, as well as during development and customization of DIBS. This is easy to do using the <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span></a> program provided with DIBS. On the other hand, running DIBS on a real server, for actual use by patrons at your institution, requires the use of a full web server environment and other components. Both cases are described below.</p>
 <section id="running-dibs-locally">
 <h3 id="running-dibs-locally">Running DIBS locally<a class="headerlink" href="#running-dibs-locally" title="Permalink to this heading">¶</a></h3>
-<p>For local experimentation and development, the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> can be used to start a built-in web server on your computer. Since a local environment will not have the authentication layer normally assumed by DIBS, you need to tell the built-in web server who to pretend to be. For example, if you used <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> to add a user named “dibsuser” as <span class="xref myst">described in the section on configuration</span>, then you can start the local server in debug mode like this:</p>
+<p>For local experimentation and development, the script <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span></a> can be used to start a built-in web server on your computer. Since a local environment will not have the authentication layer normally assumed by DIBS, you need to tell the built-in web server who to pretend to be. For example, if you used <code class="docutils literal notranslate"><span class="pre">people-manager</span></code> to add a user named “dibsuser” as <a class="reference internal" href="#configuring-dibs-for-a-local-test"><span class="xref myst">described in the section on configuration</span></a>, then you can start the local server in debug mode like this:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>admin/run-server<span class="w"> </span>--mode<span class="w"> </span>debug<span class="w"> </span>--debug-user<span class="w"> </span>dibsuser
 </pre></div>
 </div>
@@ -597,12 +598,12 @@
 <div style="width:70%; margin-left: auto; margin-right: auto">
 <p><img alt="Welcome page" src="_images/dropdown-menu.png"/></p>
 </div>
-<p>If you cannot access the welcome page, check the shell window for any messages that may provide clues about what went wrong. If you can see the page but do not have the “List” and “Loan statistics” items in the menu, then it means that there is a mismatch between the current user as set by the <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> command line (“dibsuser” in our example here) and the roles configured in DIBS using <code class="docutils literal notranslate"><span class="pre">people-manager</span></code>. Check that <span class="xref myst">the step described earlier</span> has been performed and the same user names are used in both places.</p>
-<p>Using the <code class="docutils literal notranslate"><span class="pre">debug</span></code> run mode changes the behavior of <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> in various useful ways. For example, it will automatically reload source files if any of them are edited. If you will be doing anything with DIBS such as editing the HTML templates, running with <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">debug</span></code> is highly recommended.</p>
+<p>If you cannot access the welcome page, check the shell window for any messages that may provide clues about what went wrong. If you can see the page but do not have the “List” and “Loan statistics” items in the menu, then it means that there is a mismatch between the current user as set by the <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span></a> command line (“dibsuser” in our example here) and the roles configured in DIBS using <code class="docutils literal notranslate"><span class="pre">people-manager</span></code>. Check that <a class="reference internal" href="#load-a-sample-user-into-dibs"><span class="xref myst">the step described earlier</span></a> has been performed and the same user names are used in both places.</p>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">debug</span></code> run mode changes the behavior of <a class="reference internal" href="#administrative-utilities"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span></a> in various useful ways. For example, it will automatically reload source files if any of them are edited. If you will be doing anything with DIBS such as editing the HTML templates, running with <code class="docutils literal notranslate"><span class="pre">--mode</span> <span class="pre">debug</span></code> is highly recommended.</p>
 </section>
 <section id="running-dibs-in-production">
 <h3 id="running-dibs-in-production">Running DIBS in production<a class="headerlink" href="#running-dibs-in-production" title="Permalink to this heading">¶</a></h3>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">run-server</span></code> is <strong>not intended for use in production servers</strong>. For actual use, you must configure a web server such as <a class="reference external" href="https://httpd.apache.org">Apache</a> to host the system. DIBS comes with an <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code></span> and an example <span class="xref myst">Apache conf file</span> for this purpose to help you get started. The latter file configures the web server and tells it to use <code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code> (also provided with DIBS) to define a WSGI application for DIBS.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">run-server</span></code> is <strong>not intended for use in production servers</strong>. For actual use, you must configure a web server such as <a class="reference external" href="https://httpd.apache.org">Apache</a> to host the system. DIBS comes with an <a class="reference internal" href="#adapter.wsgi"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code></span></a> and an example <a class="reference internal" href="#dibs.conf-example"><span class="xref myst">Apache conf file</span></a> for this purpose to help you get started. The latter file configures the web server and tells it to use <code class="docutils literal notranslate"><span class="pre">adapter.wsgi</span></code> (also provided with DIBS) to define a WSGI application for DIBS.</p>
 <p>To start DIBS in this environment, you most likely need to restart the Apache process on your system.</p>
 </section>
 </section>
@@ -655,7 +656,7 @@
 </section>
 <section id="run-server-start-a-local-dibs-server-for-testing">
 <h3 id="run-server-start-a-local-dibs-server-for-testing"><code class="docutils literal notranslate"><span class="pre">run-server</span></code>: start a local DIBS server for testing<a class="headerlink" href="#run-server-start-a-local-dibs-server-for-testing" title="Permalink to this heading">¶</a></h3>
-<p>For local experimentation and development, the script <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span> can be used to start a local DIBS server on your computer. It looks for a file named <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> in the current directory or the parent directory, and reads it to set various DIBS configuration variables. The command-line options to run-server can override some of the configuration values in <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>.</p>
+<p>For local experimentation and development, the script <a class="reference internal" href="#run-server"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">run-server</span></code></span></a> can be used to start a local DIBS server on your computer. It looks for a file named <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> in the current directory or the parent directory, and reads it to set various DIBS configuration variables. The command-line options to run-server can override some of the configuration values in <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>.</p>
 <section id="run-modes">
 <h4 id="run-modes">Run modes<a class="headerlink" href="#run-modes" title="Permalink to this heading">¶</a></h4>
 <p>There are 3 run modes available. Two of the modes can be set using the <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code> file, but are overriden via the option <code class="docutils literal notranslate"><span class="pre">--mode</span></code> on the command line.  If no <code class="docutils literal notranslate"><span class="pre">--mode</span></code> option is given, then this program uses the <code class="docutils literal notranslate"><span class="pre">RUN_MODE</span></code> value from <code class="docutils literal notranslate"><span class="pre">settings.ini</span></code>. In addition, this program offers a third run mode only available using the <code class="docutils literal notranslate"><span class="pre">--mode</span></code> option. The possible run modes and their effects are as follows:</p>
@@ -732,7 +733,7 @@ admin/run-server<span class="w"> </span>--mode<span class="w"> </span>debug<span
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> System architecture </span>
+                      class="md-footer-nav__direction"> "Previous" </span> System architecture </span>
               </div>
             </a>
           
@@ -742,7 +743,7 @@ admin/run-server<span class="w"> </span>--mode<span class="w"> </span>debug<span
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> General information </span>
+                class="md-footer-nav__direction"> "Next" </span> General information </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
@@ -760,10 +761,10 @@ admin/run-server<span class="w"> </span>--mode<span class="w"> </span>debug<span
               
           </div>
             Last updated on
-              Jan 19, 2023.
+              Sep 19, 2025.
             <br/>
             Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
              and
             <a href="https://github.com/bashtage/sphinx-material/">Material for
               Sphinx</a>
