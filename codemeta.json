@@ -30,6 +30,14 @@
   ],
   "maintainer": [
     {
+      "id": "https://orcid.org/0000-0001-5644-440X",
+      "type": "Person",
+      "givenName": "Tommy",
+      "familyName": "Keswick",
+      "affiliation": "California Institute of Technology Library",
+      "email": "tkeswick@caltech.edu"
+    },
+    {
       "id": "https://orcid.org/0000-0003-0900-6903",
       "type": "Person",
       "givenName": "Robert",
@@ -38,7 +46,15 @@
       "email": "rsdoiel@caltech.edu"
     }
   ],
+  "dateCreated": "2021-06-21",
+  "dateModified": "2025-09-22",
+  "datePublished": "2025-09-22",
   "description": "Caltech Library's Digital Borrowing System",
+  "funder": [
+    {
+      "name": "Caltech Library"
+    }
+  ],
   "keywords": [
     "software"
   ],
@@ -53,8 +69,11 @@
     "pip",
     "SQLite3"
   ],
-  "version": "0.7.2",
+  "version": "0.7.3",
   "developmentStatus": "active",
   "issueTracker": "https://github.com/caltechlibrary/dibs/issues",
-  "downloadUrl": "https://github.com/caltechlibrary/dibs/archive/master.zip"
+  "downloadUrl": "https://github.com/caltechlibrary/dibs/archive/master.zip",
+  "releaseNotes": "Cummulation of changes to get things to work under Ubuntu 24.04 LTS.",
+  "copyrightYear": 2021,
+  "copyrightHolder": "California Institute of Technology"
 }
