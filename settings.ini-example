@@ -45,8 +45,11 @@ MANIFEST_DIR = data/manifests
 # processing of scans for IIIF.  This scheme involves reading and writing
 # files to a directory -- the PROCESS_DIR.  When a new item is added to DIBS
 # from the /list page, a button named "Process" is shown next to the new item;
-# when library staff press that button, DIBS writes a file in the PROCESS_DIR
-# location and watches for the presence of other files.  The end point of the
+# when library staff press that button, DIBS writes a file named
+# BARCODE-initiated in the PROCESS_DIR location and watches for the presence
+# of other files.  The file holds a JSON object with the item's barcode,
+# title, author, edition, and year, for the workflow to use in the manifest
+# (so the viewer shows the same details as DIBS).  The end point of the
 # workflow is assumed to be the appearance of a IIIF manifest for the item in
 # the MANIFEST_DIR.  If you do not want to use the workflow scheme, leave this
 # value empty; DIBS will skip the "Process" button, and will only monitor for
