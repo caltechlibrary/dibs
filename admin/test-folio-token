@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # =============================================================================
 # @file    test-folio-token
-# @brief   Check if the token in the DIBS settings.ini file seems valid
+# @brief   Check if the FOLIO login in the DIBS settings.ini file works
 # @created 2022-09-16
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/dibs
 #
-# This is a simple utility meant to be used as a scheduled job (e.g., with
-# cron) to regularly test if the FOLIO token in the DIBS settings.ini file
-# is still valid.  If it's invalid, it will return a non-zero status value,
-# and optionally can post a message to a Slack channel if given suitable
-# Slack configuration variables on the command line.
+# This is a simple utility to test if the FOLIO service account in the DIBS
+# settings.ini file can log in and look up instances, which is what DIBS does
+# when staff add items.  Run it after setting up the account, changing its
+# password, or changing FOLIO tenants.  If the test fails, it returns a
+# non-zero status value, and optionally can post a message to a Slack channel
+# if given suitable Slack configuration variables on the command line.
 # =============================================================================
 
 # Initial imports. More things are imported later below.
@@ -53,15 +54,19 @@ from dibs.settings import config        # noqa: E402
 def main(slack = 'C:T', verbose = False, version = False):
     '''Test if the FOLIO credentials in settings.ini appear valid.
 
+This logs in with the FOLIO service account and asks FOLIO for instance
+records, which needs the same permission (inventory.instances.collection.get)
+that DIBS uses when staff add items.  Use -v to print what happened.
+
 Without any arguments, this will simply return a non-zero status number if the
 credentials are invalid.  If given the --slack argument, it must be in the
 form "slack-channel:slack-token"; this program will post a message to the
 channel if the FOLIO credentials are invalid.
 
-Here is an example of a crontab line for daily testing of the FOLIO credentials
-and posting to a (fake) Slack channel named "my-channel":
+Run it with the Python environment that DIBS uses, so that the packages DIBS
+needs are available:
 
-  0 8 * * * /path/to/dibs/test-folio-token --slack my-channel:xoxb-895-asfd123
+  /path/to/venv/bin/python /path/to/dibs/admin/test-folio-token -v
 
 Return values
 ~~~~~~~~~~~~~
@@ -72,7 +77,7 @@ any problems are encountered, it returns with a status code as follows:
   1 = no network
   2 = could not find the DIBS settings.ini file
   3 = one or more of the FOLIO_* variables are not set in the settings.ini file
-  4 = the given FOLIO credentials are invalid
+  4 = the account can't log in, or lacks permission to look up instances
   5 = malformed or invalid value given for the Slack option
   6 = an unknown error occurred
 
@@ -98,12 +103,13 @@ Command-line arguments summary
               f'‼️  Unexpected directory organization -- unable to proceed.')
         sys.exit(2)
 
-    for var in ['FOLIO_OKAPI_URL', 'FOLIO_OKAPI_TENANT_ID', 'FOLIO_OKAPI_TOKEN']:
+    for var in ['FOLIO_OKAPI_URL', 'FOLIO_OKAPI_TENANT_ID',
+                'FOLIO_OKAPI_USERNAME', 'FOLIO_OKAPI_PASSWORD']:
         if not folio_config(var):
             inform(f'‼️ Variable "{var}" has no value in settings.ini.')
             sys.exit(3)
 
-    if credentials_valid():
+    if credentials_valid(inform):
         inform('The DIBS credentials are valid.')
         sys.exit(0)
 
@@ -126,27 +132,41 @@ def folio_config(var):
     return config(var, section = 'folio', default = None)
 
 
-def credentials_valid():
-    '''Test if the url, tenant id, and token allow FOLIO API calls.'''
+def credentials_valid(inform):
+    '''Test if the service account can log in and look up FOLIO instances.'''
     import requests
+    from dibs.lsp import FolioTokens, LSPAccessError
 
     folio_url    = folio_config('FOLIO_OKAPI_URL')
     folio_tenant = folio_config('FOLIO_OKAPI_TENANT_ID')
-    folio_token  = folio_config('FOLIO_OKAPI_TOKEN')
+    tokens = FolioTokens(url       = folio_url,
+                         tenant_id = folio_tenant,
+                         username  = folio_config('FOLIO_OKAPI_USERNAME'),
+                         password  = folio_config('FOLIO_OKAPI_PASSWORD'))
+    try:
+        folio_token = tokens.token()
+    except LSPAccessError as ex:
+        inform(f'‼️ {ex}.')
+        return False
 
     headers = {'Accept'         : 'application/json',
                'X-Okapi-Tenant' : f'{folio_tenant}',
                'x-Okapi-token'  : f'{folio_token}'}
 
     try:
-        resp = requests.get(f'{folio_url}/instance-statuses', headers = headers)
-        if resp:
-            resp.raise_for_status()
-            return resp.status_code < 400
-        else:
-            return False
-    except requests.exceptions.HTTPError:
+        # This is the same API DIBS uses to look up items by barcode.
+        resp = requests.get(f'{folio_url}/inventory/instances?limit=0',
+                            headers = headers, timeout = 30)
+    except requests.exceptions.RequestException as ex:
+        inform(f'‼️ Could not contact FOLIO: {ex}')
         sys.exit(6)
+    if resp.status_code in (401, 403):
+        inform(f'‼️ Logged in, but FOLIO refused to list instances'
+               f' ({resp.status_code}). The account may lack the permission'
+               f' inventory.instances.collection.get.')
+    elif not resp.ok:
+        inform(f'‼️ FOLIO returned status code {resp.status_code}.')
+    return resp.ok
 
 
 def post_slack(text, params):

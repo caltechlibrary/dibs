@@ -11,7 +11,7 @@ This directory contains a number of small administrative utilities for DIBS. The
 * [`people-manager`](#people-manager-manage-user-roles-in-dibss-people-table)
 * [`run-server`](#run-server-start-a-local-dibs-server-for-testing)
 * [`set-server-permissions`](#set-server-permissions-set-essential-directory-permissions)
-* [`test-token`](#test-folio-token-check-the-folio-token-is-still-valid)
+* [`test-token`](#test-folio-token-check-the-folio-credentials-still-work)
 * [`update-item-data`](#update-item-data-update-item-records-with-current-values-from-lsp)
 
 
@@ -120,15 +120,17 @@ admin/set-server-permissions --owner www-data --group www-data
 ```
 
 
-## `test-folio-token`: check the FOLIO token is still valid
+## `test-folio-token`: check the FOLIO credentials still work
 
-When using FOLIO as the LSP, DIBS needs to contact FOLIO for metadata when staff add new items to DIBS. FOLIO uses API tokens for authentication, and those tokens eventually get invalidated. When that happens, DIBS calls will fail. Consequently, it's a good idea to periodically test the FOLIO credentials and update the token stored in the `settings.ini` file. The utility `test-folio-token` is useful for that purpose.
+When using FOLIO as the LSP, DIBS needs to contact FOLIO for metadata when staff add new items to DIBS. DIBS logs in to FOLIO with the service account username and password in the `settings.ini` file and gets short-lived access tokens as needed. If the account's password is changed or expires, the account is disabled, or it loses its permissions, adding items will fail, and staff will see an error page saying DIBS can't access FOLIO.
 
-Without any arguments, it will simply return a non-zero status number if the credentials are invalid.  If given the `--slack` argument, the value must be in the form _slack-channel:slack-token_; in that case, this program will post a message to the channel if the FOLIO credentials are invalid. Here is an example of a crontab line for daily testing of the FOLIO credentials and posting to a (fake) Slack channel named "my-channel":
+The utility `test-folio-token` checks the account. It logs in and asks FOLIO for instance records, which needs the same permission DIBS uses (`inventory.instances.collection.get`). Run it after setting up the account, changing its password, or moving to a different FOLIO tenant. Run it with the Python environment DIBS uses, so the packages DIBS needs are available, and use `-v` to print what happened:
 
 ```
-0 8 * * * /path/to/dibs/admin/test-folio-token --slack my-channel:xoxb-895-asfd123
+/path/to/venv/bin/python /path/to/dibs/admin/test-folio-token -v
 ```
+
+It returns a non-zero status number if the check fails; run it with `-h` for the list of status values. It can also post a message to a Slack channel if the check fails, with the `--slack` argument in the form _slack-channel:slack-token_.
 
 
 ## `update-item-data`: update item records with current values from LSP 
