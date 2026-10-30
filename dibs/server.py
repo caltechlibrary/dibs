@@ -14,6 +14,7 @@ from   bottle import Bottle, LocalResponse, static_file, template
 from   bottle import request, response, redirect
 from   commonpy.file_utils import delete_existing
 from   commonpy.network_utils import net
+from   contextlib import suppress
 from   datetime import timedelta as delta
 from   enum import Enum, auto
 from   expiringdict import ExpiringDict
@@ -521,13 +522,30 @@ def edit(barcode):
 def start_processing():
     '''Handle http post request to start the processing workflow.'''
     barcode = request.POST.barcode.strip()
-    if _PROCESS_DIR:
+    item = Item.get_or_none(Item.barcode == barcode)
+    if not item:
+        log(f'unknown barcode {barcode} -- ignoring /start-processing')
+    elif _PROCESS_DIR:
+        # The processing workflow builds the IIIF manifest from these values,
+        # so that the viewer shows the same details as DIBS.
+        metadata = {'barcode' : item.barcode,
+                    'title'   : item.title,
+                    'author'  : item.author,
+                    'edition' : item.edition,
+                    'year'    : item.year}
         init_file = join(_PROCESS_DIR, f'{barcode}-initiated')
+        # Write under a name the workflow doesn't look for, then rename it,
+        # so the workflow never reads a partly-written file.
+        tmp_file = join(_PROCESS_DIR, f'.{barcode}-initiated.tmp')
         try:
             log(f'creating {init_file}')
-            os.close(os.open(init_file, os.O_CREAT))
+            with open(tmp_file, 'w', encoding = 'utf-8') as f:
+                json.dump(metadata, f)
+            os.replace(tmp_file, init_file)
         except OSError as ex:
             log(f'problem creating {init_file}: ' + str(ex))
+            with suppress(OSError):
+                os.remove(tmp_file)
     else:
         log(f'_PROCESS_DIR not set -- ignoring /start-processing for {barcode}')
     redirect(f'{dibs.base_url}/list')

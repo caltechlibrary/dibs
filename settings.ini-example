@@ -45,8 +45,11 @@ MANIFEST_DIR = data/manifests
 # processing of scans for IIIF.  This scheme involves reading and writing
 # files to a directory -- the PROCESS_DIR.  When a new item is added to DIBS
 # from the /list page, a button named "Process" is shown next to the new item;
-# when library staff press that button, DIBS writes a file in the PROCESS_DIR
-# location and watches for the presence of other files.  The end point of the
+# when library staff press that button, DIBS writes a file named
+# BARCODE-initiated in the PROCESS_DIR location and watches for the presence
+# of other files.  The file holds a JSON object with the item's barcode,
+# title, author, edition, and year, for the workflow to use in the manifest
+# (so the viewer shows the same details as DIBS).  The end point of the
 # workflow is assumed to be the appearance of a IIIF manifest for the item in
 # the MANIFEST_DIR.  If you do not want to use the workflow scheme, leave this
 # value empty; DIBS will skip the "Process" button, and will only monitor for
@@ -111,9 +114,11 @@ TIND_SERVER_URL =
 
 [folio]
 # If you use FOLIO, set the URL to the URL for your FOLIO API (which is known
-# as "Okapi") server, the tenant id, and the API access token.  (There is
-# sample code in https://github.com/FOLIO-FSE/tech-partner-demo that may help
-# you figure how to create a token for your FOLIO installation.)
+# as "Okapi") server, the tenant id, and the username and password of a FOLIO
+# service account.  DIBS logs in with the account to get short-lived access
+# tokens, and logs in again when a token is about to expire.  The account
+# needs only the permission inventory.instances.collection.get.  Use
+# admin/test-folio-token to check that the account works.
 #
 # The accession prefix is the string that appears in front of accession
 # numbers in your instance of FOLIO. As an example of a prefix for accession
@@ -126,7 +131,8 @@ TIND_SERVER_URL =
 # record accession numbers when creating hyperlinks to the record pages.
 FOLIO_OKAPI_URL = 
 FOLIO_OKAPI_TENANT_ID = 
-FOLIO_OKAPI_TOKEN = 
+FOLIO_OKAPI_USERNAME = 
+FOLIO_OKAPI_PASSWORD = 
 FOLIO_ACCESSION_PREFIX = 
 EDS_PAGE_TEMPLATE = 
 

@@ -1,9 +1,17 @@
+# How to set up or reset the FOLIO credentials for DIBS
 
-When folio is updated we need to regerate the token used by DIBs to access the "okapi".  The steps below are what we do at Caltech Library and may reflect a similar setup in your institution. The values in angle brackes should be replaced with your organization's values.
+DIBS logs in to FOLIO with a service account. It uses the account's username and password to get short-lived access tokens from FOLIO, and logs in again when a token is about to expire or FOLIO rejects it. Nobody needs to create tokens by hand.
 
-1. There is a <ADMIN_ACCOUNT> account that has access to Folio's dashboard. Use the URL: https://<YOUR_INSTITUION>.folio.ebsco.com/dashboard
-2. On the dashboard login page in very tiny print (below the fold on my monitor) is a password reset link, the <ADMIN_ACCOUNT> account is just like any other library folio account in this regards (we always reset the password since we have access to the associated EMail account)
-3. The Folio API DIBs uses os the okapi (I think that is the same as the foliage stuff generally). 
-4. We have some tools in a private repository that automate generating the new token. They use the Folio API to generate the token. Our `get-api-token` script requires the <ADMIN_ACCOUNT> name and the tenant id found in the "settings.ini" of DIBs.  The resulting program generates a file called "okapi-login.json". It needs to have the appropriate permissions for the app to read it.
-5. Copy the generated token displayed by `get-api-token` and update the line in DIB's `settings.ini` with  FOLIO_OKAPI_TOKEN
-6. Restart Apache2 to make sure that DIBs is reloaded and the stale token isn't being used.
+The steps below are what we do at Caltech Library and may reflect a similar setup in your institution. Replace the values in angle brackets with your organization's values.
+
+1. Create a FOLIO user for DIBS (or use the existing one), named here <SERVICE_ACCOUNT>, in the tenant DIBS uses. Give it a password and a role with the permission `inventory.instances.collection.get`, which is all DIBS needs. Ask for a password that doesn't expire and an account that isn't subject to lockout or multi-factor login, since DIBS logs in on its own. The account doesn't need the FOLIO web interface.
+2. In the `[folio]` section of DIBS's `settings.ini`, set:
+   * `FOLIO_OKAPI_URL` to the FOLIO API URL (for example, `https://api-<YOUR_INSTITUTION>.folio.ebsco.com`)
+   * `FOLIO_OKAPI_TENANT_ID` to the tenant ID
+   * `FOLIO_OKAPI_USERNAME` to <SERVICE_ACCOUNT>
+   * `FOLIO_OKAPI_PASSWORD` to its password
+3. Make sure `settings.ini` can be read by the account that runs DIBS and not by other users, since it holds the password.
+4. Run `admin/test-folio-token -v` with the Python environment DIBS uses, to check that the account can log in and look up instances.
+5. Restart Apache so DIBS reads the new settings.
+
+If the account's password is reset, or DIBS is moved to a different FOLIO tenant, repeat steps 2 through 5. Service accounts belong to a tenant, so a new tenant needs a new account.

@@ -30,6 +30,7 @@ plac
 pokapi
 python-daemon
 python-decouple
+requests
 rich
 sidetrack
 str2bool
