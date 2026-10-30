@@ -10,6 +10,7 @@ file "LICENSE" for more information.
 '''
 
 from   abc import ABC, abstractmethod
+import arrow
 from   coif import cover_image
 from   commonpy.network_utils import net
 from   dataclasses import dataclass
@@ -17,8 +18,10 @@ from   os.path import join, exists
 import pokapi
 from   pokapi import Folio
 import re
+import requests
 from   sidetrack import log
 from   textwrap import wrap
+from   threading import Lock
 from   topi import Tind
 
 from .settings import config, resolved_path
@@ -138,20 +141,108 @@ class TindInterface(LSPInterface):
             raise LSPRecordNotFoundError('Could not find {barcode} in {self.url}')
 
 
+class FolioTokens():
+    '''Logs in to FOLIO with a service account and keeps the token current.
+
+    FOLIO access tokens expire after a few minutes, so this logs in again
+    when the token is missing or close to expiring, and when FOLIO rejects
+    it.  DIBS runs with multiple threads, so renewal is guarded by a lock.
+    '''
+
+    # Log in again when the token has less than this many seconds left.
+    _MARGIN = 60
+
+    def __init__(self, url = None, tenant_id = None, username = None,
+                 password = None):
+        self._url = url
+        self._tenant_id = tenant_id
+        self._username = username
+        self._password = password
+        self._token = None
+        self._expires = None
+        self._lock = Lock()
+
+
+    def token(self):
+        '''Return an access token, logging in first if necessary.'''
+        with self._lock:
+            if not self._token or self._expiring():
+                self._login()
+            return self._token
+
+
+    def renewed(self, rejected_token):
+        '''Return a new token to replace "rejected_token".
+
+        If another thread has already replaced it, this returns that token
+        instead of logging in again.
+        '''
+        with self._lock:
+            if not self._token or self._token == rejected_token:
+                self._login()
+            return self._token
+
+
+    def _expiring(self):
+        if not self._expires:
+            # Without an expiration time, rely on FOLIO rejecting the token.
+            return False
+        return arrow.utcnow().shift(seconds = self._MARGIN) >= self._expires
+
+
+    def _login(self):
+        if not all([self._url, self._tenant_id, self._username, self._password]):
+            raise LSPAccessError('FOLIO login settings are incomplete')
+        log(f'logging in to FOLIO as {self._username}')
+        self._token = self._expires = None
+        try:
+            resp = requests.post(self._url + '/authn/login-with-expiry',
+                                 headers = {'X-Okapi-Tenant': self._tenant_id,
+                                            'Content-Type': 'application/json'},
+                                 json = {'tenant': self._tenant_id,
+                                         'username': self._username,
+                                         'password': self._password},
+                                 timeout = 30)
+        except requests.exceptions.RequestException as ex:
+            log('could not contact FOLIO to log in: ' + str(ex))
+            raise LSPAccessError('Could not contact FOLIO to log in')
+        if resp.status_code != 201:
+            log(f'FOLIO login failed with status code {resp.status_code}')
+            raise LSPAccessError(f'FOLIO login failed ({resp.status_code})')
+        # Some deployments send the token in a header; others only in a cookie.
+        token = (resp.headers.get('x-okapi-token')
+                 or resp.cookies.get('folioAccessToken'))
+        if not token:
+            log('FOLIO login response did not include an access token')
+            raise LSPAccessError('FOLIO login did not return an access token')
+        self._token = token
+        try:
+            expiration = resp.json().get('accessTokenExpiration')
+            self._expires = arrow.get(expiration) if expiration else None
+        except Exception as ex:         # noqa: PIE786
+            log('could not read token expiration from FOLIO: ' + str(ex))
+        log(f'logged in to FOLIO; token expires {self._expires or "(unknown)"}')
+
+
 class FolioInterface(LSPInterface):
     '''Interface layer for FOLIO hosted LSP servers.'''
 
-    def __init__(self, url = None, token = None, tenant_id = None,
-                 an_prefix = None, page_template = None, thumbnails_dir = None):
+    def __init__(self, url = None, tenant_id = None, username = None,
+                 password = None, an_prefix = None, page_template = None,
+                 thumbnails_dir = None):
         '''Create an interface for the server at "url".'''
         self.url = url
-        self._token = token
         self._tenant_id = tenant_id
         self._an_prefix = an_prefix
         self._page_tmpl = page_template
         self._thumbnails_dir = thumbnails_dir
+        self._tokens = FolioTokens(url = url,
+                                   tenant_id = tenant_id,
+                                   username = username,
+                                   password = password)
+        # The token is set before each use; see _folio_record().
         self._folio = Folio(okapi_url     = url,
-                            okapi_token   = token,
+                            okapi_token   = None,
                             tenant_id     = tenant_id,
                             an_prefix     = an_prefix)
 
@@ -170,11 +261,13 @@ class FolioInterface(LSPInterface):
         the 3 most basic metadata fields of title, author and year.
         '''
         try:
-            rec = self._folio.record(barcode = barcode)
+            rec = self._folio_record(barcode)
         except pokapi.exceptions.NotFound:
             raise LSPRecordNotFoundError(f'Could not find {barcode}.')
         except pokapi.exceptions.FolioPermissionError:
             raise LSPAccessError(f'Cannot access {barcode} in FOLIO')
+        except LSPException:
+            raise
         except Exception as ex:
             log('got exception from FOLIO: ' + str(ex))
             raise
@@ -206,6 +299,18 @@ class FolioInterface(LSPInterface):
                          publisher = rec.publisher or '',
                          edition   = rec.edition or '',
                          isbn_issn = rec.isbn_issn or '')
+
+
+    def _folio_record(self, barcode):
+        '''Get the record from FOLIO, logging in again once if it's refused.'''
+        token = self._tokens.token()
+        self._folio.okapi_token = token
+        try:
+            return self._folio.record(barcode = barcode)
+        except pokapi.exceptions.FolioPermissionError:
+            log('FOLIO refused the access token; logging in again')
+            self._folio.okapi_token = self._tokens.renewed(token)
+            return self._folio.record(barcode = barcode)
 
 
 class UnconfiguredInterface(LSPInterface):
@@ -253,14 +358,16 @@ class LSP(LSPInterface):
                 return config(key, section = 'folio')
 
             url           = folio_config('FOLIO_OKAPI_URL')
-            token         = folio_config('FOLIO_OKAPI_TOKEN')
             tenant_id     = folio_config('FOLIO_OKAPI_TENANT_ID')
+            username      = folio_config('FOLIO_OKAPI_USERNAME')
+            password      = folio_config('FOLIO_OKAPI_PASSWORD')
             an_prefix     = folio_config('FOLIO_ACCESSION_PREFIX')
             page_template = folio_config('EDS_PAGE_TEMPLATE')
             log(f'Using FOLIO URL {url} with tenant id {tenant_id}')
             lsp = FolioInterface(url = url,
-                                 token = token,
                                  tenant_id = tenant_id,
+                                 username = username,
+                                 password = password,
                                  an_prefix = an_prefix,
                                  page_template = page_template,
                                  thumbnails_dir = thumbnails_dir)
