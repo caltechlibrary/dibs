@@ -330,9 +330,11 @@ def start_bottle_server(scheme, host, port, extra_path, debug_user):
 
     # Set our special "base_url" attribute on our dibs application object.
     # Note: Bottle doesn't have a way to pass extra_path, so it's ignored here.
-    dibs.base_url = f'{scheme}://{host}'
+    # Bottle doesn't allow an attribute to be set twice, so set it once.
+    base_url = f'{scheme}://{host}'
     if port not in ['80', '443']:
-        dibs.base_url = f'{dibs.base_url}:{port}'
+        base_url = f'{base_url}:{port}'
+    dibs.base_url = base_url
 
     @dibs.hook('before_request')
     def add_remote_user():
