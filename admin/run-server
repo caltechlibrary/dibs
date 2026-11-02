@@ -22,9 +22,10 @@
 # Initial imports. More things are imported later below.
 
 from   configparser import ConfigParser
-import pkg_resources
+from   importlib.metadata import version, PackageNotFoundError
 import os
 from   os.path import exists, dirname, join, basename, abspath
+from   packaging.requirements import Requirement
 import sys
 
 
@@ -48,24 +49,19 @@ else:
         sys.exit(1)
 
 with open(join(dibs_root, 'requirements.txt'), 'r') as req_file:
+    lines = [line.split('#')[0].strip() for line in req_file]
+for req in [Requirement(line) for line in lines if line]:
+    if req.marker and not req.marker.evaluate():
+        continue
     try:
-        pkg_resources.require(req_file)
-    except pkg_resources.DistributionNotFound:
+        got = version(req.name)
+    except PackageNotFoundError:
         print('‼️  Not all Python dependencies have been installed.')
         print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
         sys.exit(1)
-    except pkg_resources.VersionConflict as ex:
-        if hasattr(ex, 'dist'):
-            name = ex.dist.project_name
-            got  = ex.dist.version
-            if len(ex.req.specs) == 1:  # Most common case.
-                want = ''.join(ex.req.specs[0])
-            else:
-                want = '(' + ' and '.join([''.join(spec) for spec in ex.req.specs]) + ')'
-            print(f'‼️  Encountered conflicting Python package requirements.')
-            print(f'‼️  Need {name} version {want} but version {got} is installed.')
-        else:
-            print('‼️  Conflicting Python package requirement: ' + str(ex))
+    if not req.specifier.contains(got, prereleases = True):
+        print(f'‼️  Encountered conflicting Python package requirements.')
+        print(f'‼️  Need {req.name} version {req.specifier} but version {got} is installed.')
         print('‼️  Please run "pip3 install -r requirements.txt" or equivalent.')
         sys.exit(1)
 
