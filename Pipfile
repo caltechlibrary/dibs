@@ -5,7 +5,12 @@ name = "pypi"
 
 [packages]
 bottle = "*"
-mod-wsgi = "*"
+# mod-wsgi is not listed here because it only installs on systems with the
+# Apache development files (for apxs), which breaks dependency resolution
+# elsewhere, including Dependabot's. Production uses the system package
+# libapache2-mod-wsgi-py3. admin/run-server needs it for its "normal" and
+# "verbose" modes; to use those, run `pip install mod-wsgi` in the pipenv
+# environment (on Ubuntu, install apache2-dev first).
 python-decouple = "*"
 python-daemon = "*"
 configparser = "*"
