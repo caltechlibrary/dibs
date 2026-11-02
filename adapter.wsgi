@@ -26,7 +26,7 @@ from   os import chdir
 from   os.path import realpath, dirname
 from   sidetrack import log, set_debug
 import sys
-from   werkzeug.wsgi import get_host, get_script_name
+from   werkzeug.wsgi import get_host
 
 # The following sets the default directory to the current app's directory, so
 # that imports and calls to config(...) work as expected.  It also prevents a
@@ -85,7 +85,7 @@ def dibs_application(env, start_response):
         # property on the dibs Bottle object so our server code can read it.
         scheme = env.get('wsgi.url_scheme', '') or env.get('REQUEST_SCHEME', '')
         host   = get_host(env)
-        path   = get_script_name(env)
+        path   = env.get('SCRIPT_NAME', '')
         if hasattr(dibs, 'base_url'):
            print(f"Attribute _config_done already exists on dibs object -> ${dibs.base_url}")
         else:

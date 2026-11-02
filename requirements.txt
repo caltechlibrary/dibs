@@ -37,5 +37,5 @@ str2bool
 trinomial
 topi
 yurl
-werkzeug        == 2.1.2
+werkzeug        >= 3.1.9
 
