@@ -42,6 +42,7 @@ __pycache__/
 
 dibs.db
 docs/_build
+_site
 load-staff-members.bash
 settings.ini
 *.swp

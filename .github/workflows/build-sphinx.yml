@@ -1,12 +1,14 @@
 # =============================================================================
-# @file    build-myst.yml
-# @brief   GitHub Actions workflow to build DIBS docs using MyST 
+# @file    build-sphinx.yml
+# @brief   GitHub Actions workflow to build the DIBS docs with Sphinx
 # @author  Michael Hucka <mhucka@caltech.edu>
 # @license Please see the file named LICENSE in the project directory
 # @website https://github.com/caltechlibrary/dibs
 #
-# This workflow file was originally based on work by GitHub user "peaceiris":
-# https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-static-site-generators-with-python
+# Builds with the shared build-sphinx action from caltechlibrary/workflows,
+# using the dependencies in docs/requirements.txt, and publishes the result
+# with GitHub Pages. Pull requests get a build check but are not deployed.
+# Pages must be set to deploy from GitHub Actions in the repository settings.
 # =============================================================================
 
 name: Update docs on GitHub
@@ -14,50 +16,42 @@ name: Update docs on GitHub
 on:
   push:
     branches:
-      - develop
       - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - uses: caltechlibrary/workflows/.github/actions/build-sphinx@v1
         with:
-          python-version: '3.8'
+          requirements: docs/requirements.txt
+          python-version: "3.12"
 
-      - name: Upgrade pip
-        run: |
-          # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
-
-      - name: Get pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: Cache dependencies
-        uses: actions/cache@v6
+      - uses: caltechlibrary/workflows/.github/actions/deploy-site@v1
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          path: _site
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install "myst-parser[linkify]"
-          python3 -m pip install sphinx-material
-          python3 -m pip install sphinxcontrib-mermaid
-
-      - name: Build
-        run: |
-          cd docs
-          make html
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/_build/html
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
